@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Herbal Park — Inventory</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -24,12 +22,11 @@
   --BS:0 4px 20px rgba(61,107,79,0.08);
   --BM:0 8px 40px rgba(61,107,79,0.13);
   --BL:0 20px 60px rgba(61,107,79,0.18);
-  --blur:saturate(180%) blur(18px);
+  --blur:blur(18px);
   --r:18px;--rs:10px;--rx:6px;--rf:100px;
   --nb:68px;
 }
-html,body{height:100%;overscroll-behavior:none}
-body{font-family:'Outfit',sans-serif;color:var(--ch);background:linear-gradient(145deg,#DFF0E5 0%,#F5EFE5 50%,#E0EBF5 100%);background-attachment:fixed;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html,body{height:100%;overscroll-behavior:none;font-family:'Outfit',sans-serif;color:var(--ch);background:linear-gradient(145deg,#DFF0E5 0%,#F5EFE5 50%,#E0EBF5 100%);background-attachment:fixed;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 10% 0%,rgba(90,140,110,0.22),transparent),radial-gradient(ellipse 60% 50% at 90% 100%,rgba(184,150,90,0.18),transparent);pointer-events:none;z-index:0}
 
 /* GLASS */
@@ -105,7 +102,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ci{width:28px;height:28px;border-radius:var(--rx);display:flex;align-items:center;justify-content:center;font-size:13px}
 .cig{background:var(--g3)}.cio{background:var(--gold2)}.cir{background:var(--red2)}.cib{background:rgba(100,140,200,0.1)}
 
-/* TABLE - Fixed for mobile text collapse */
+/* TABLE */
 .ts{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{padding:10px 18px;text-align:left;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--lt);font-weight:600;background:rgba(61,107,79,0.04);border-bottom:1px solid rgba(61,107,79,0.07);white-space:nowrap}
@@ -225,18 +222,21 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .bsb{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
 .bsf{padding:16px 24px;border-top:1px solid rgba(61,107,79,0.07);display:flex;justify-content:flex-end;gap:12px;background:rgba(61,107,79,0.02)}
 
-/* LOGIN SCREEN - STRICT BLOCK FORMAT TO PREVENT SAFARI CRUSH */
-.lw{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(145deg,#C8E0D2 0%,#E8DFCF 55%,#C8D8E8 100%); overflow-y:auto;}
-.lb{width:100%;max-width:420px;border-radius:26px;box-shadow:var(--BL);animation:popIn .35s ease-out;background:#fff; display:block; margin:auto;}
+/* LOGIN SCREEN - MOBILE CRUSH FIX */
+.lw{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(145deg,#C8E0D2 0%,#E8DFCF 55%,#C8D8E8 100%);overflow-y:auto;}
+.lb{width:100%;max-width:420px;border-radius:26px;box-shadow:var(--BL);animation:popIn .35s ease-out;background:#fff;display:block;margin:auto;}
 .lbh{padding:28px 26px 16px;text-align:center;background:#fff;border-radius:26px 26px 0 0;}
+.lbr{font-size:28px;font-weight:700;color:var(--ch);position:relative;letter-spacing:0.5px}
+.lbs{font-size:11px;color:var(--mid);letter-spacing:2.5px;text-transform:uppercase;margin-top:6px;position:relative}
 .lbb{padding:0 22px 26px;background:#fff;border-radius:0 0 26px 26px;}
-.lbl{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;display:block;}
-.sl{display:block; max-height:400px; overflow-y:auto; padding:4px 0;}
-.si2{display:flex;align-items:center;padding:14px 16px;border-radius:var(--rs);background:rgba(255,255,255,.78);border:1.5px solid rgba(61,107,79,.09);cursor:pointer;margin-bottom:10px;}
-.sa{width:40px;height:40px;border-radius:50%;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--g);flex-shrink:0;margin-right:14px;}
-.sii{flex:1;}
-.sn2{font-size:15px;font-weight:600;color:var(--ch);display:block;}
+.lbl{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:0;}
+.sl{display:block;max-height:400px;overflow-y:auto;padding:4px 0;}
+.si2{display:block;padding:14px 16px;border-radius:var(--rs);background:rgba(255,255,255,.78);border:1.5px solid rgba(61,107,79,.09);cursor:pointer;margin-bottom:10px;}
+.sa{width:40px;height:40px;border-radius:50%;background:var(--g3);display:inline-block;text-align:center;line-height:40px;font-size:16px;font-weight:700;color:var(--g);vertical-align:middle;margin-right:14px;}
+.sii{display:inline-block;vertical-align:middle;width:calc(100% - 90px);}
+.sn2{font-size:15px;font-weight:600;color:var(--ch);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sr2{font-size:11px;color:var(--mid);margin-top:3px;display:block;}
+.sav{display:inline-block;vertical-align:middle;color:var(--lt);font-weight:700;text-align:right;width:20px;}
 
 /* BOTTOM NAV (MOBILE) */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--nb);background:rgba(255,255,255,.95);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-top:1px solid rgba(61,107,79,.1);z-index:250;align-items:center;justify-content:space-around;padding:0 12px;box-shadow:0 -4px 20px rgba(61,107,79,.08)}
@@ -303,6 +303,10 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   .bnav{padding:0 8px}.bb{min-width:54px;padding:8px}.bb-ic{font-size:24px}.bb-lb{font-size:10px}
   .bfab{width:56px;height:56px;font-size:26px;margin-top:-16px}
   
+  .lb{border-radius:22px;margin:16px; max-height:90vh;}
+  .lbh{padding:26px 22px 16px;}
+  .lbb{padding:0 20px 24px;}
+  
   .ar{padding:12px 16px;gap:12px}.ad{width:34px;height:34px}.an{font-size:13px}.at{font-size:11px}
   .rsg{grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}.rs{padding:14px}.rsv{font-size:26px}
   .rr{padding:14px 16px;gap:12px}.rn{font-size:13px}.rm{font-size:11px}
@@ -337,7 +341,10 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
     <div class="lbb">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <span class="lbl">Select Your Name</span>
-          <button onclick="syncAll(true)" style="background:none; border:none; color:var(--g); font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
+          <div>
+            <button onclick="syncAll(true)" style="background:none; border:none; color:var(--g); font-size:12px; font-weight:700; cursor:pointer; margin-right:12px;">↻ Sync</button>
+            <button onclick="showConfig()" style="background:none; border:none; color:var(--mid); font-size:12px; font-weight:700; cursor:pointer;">⚙ Setup</button>
+          </div>
       </div>
       <div class="sl" id="staff-list"></div>
     </div>
@@ -744,7 +751,9 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 // CONFIG & STATE
 // ============================================================
 var WA_NUM = '971502380538';
-var WEBAPP_URL = localStorage.getItem('hp-webapp-url') || '';
+// HARDCODED FALLBACK: This guarantees mobile will always load the sheet even if local storage is cleared
+var defaultUrl = 'https://script.google.com/macros/s/AKfycbxjUENJrOfdFcYLxdAqxs6ggZtxGcythH48oGiCIlx0tWIEoJBaPHJuZoQf6qFzmLg3Dg/exec';
+var WEBAPP_URL = localStorage.getItem('hp-webapp-url') || defaultUrl;
 
 var DB = { staff:[], items:[], linen:[], movements:[], requests:[], rooms:[] };
 var SESSION = null; var linenTarget = null; var currentRepPeriod = 'daily'; var T_FILT = 'all';
@@ -756,7 +765,7 @@ var F = { ms:'all', ss:'all', mov:'all' };
 function displayDT(dateStr) {
   if (!dateStr) return '—';
   try {
-      if (dateStr.endsWith('Z')) {
+      if (dateStr.indexOf('Z') !== -1) {
           var d = new Date(dateStr);
           var opts = { timeZone: 'Asia/Dubai', year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
           return new Intl.DateTimeFormat('en-US', opts).format(d); 
@@ -767,13 +776,14 @@ function displayDT(dateStr) {
 function fmtDT(d) {
   var opts = { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, second: '2-digit' };
   var p = new Intl.DateTimeFormat('en-GB', opts).formatToParts(d);
-  var pts = {}; p.forEach(function(x) { pts[x.type] = x.value; });
+  var pts = {}; 
+  for(var i=0; i<p.length; i++) { pts[p[i].type] = p[i].value; }
   return pts.year + '-' + pts.month + '-' + pts.day + ' ' + pts.hour + ':' + pts.minute + ':' + pts.second;
 }
 function todayStr() { return fmtDT(new Date()).slice(0, 10); }
 
 function getIcon(name, cat) {
-  var n = name.toLowerCase();
+  var n = String(name).toLowerCase();
   if(n.indexOf('oil') !== -1 || n.indexOf('lotion') !== -1) return '🧴';
   if(n.indexOf('towel') !== -1 || n.indexOf('linen') !== -1 || n.indexOf('sheet') !== -1) return '🧺';
   if(n.indexOf('pill') !== -1 || n.indexOf('tablet') !== -1) return '💊';
@@ -785,71 +795,88 @@ function getIcon(name, cat) {
 function mapData(obj) {
     var norm = {};
     for (var key in obj) {
-        norm[key.toLowerCase().trim().replace(/\s+/g, '')] = obj[key];
+        if(obj.hasOwnProperty(key)) {
+            norm[key.toLowerCase().trim().replace(/\s+/g, '')] = obj[key];
+        }
     }
     return norm;
 }
 
 // ============================================================
-// API CALLS (SAFELY WRAPPED)
+// API CALLS (NO-CORS XMLHttpRequest BYPASS)
 // ============================================================
-function apiFetch(params) {
-  if (!WEBAPP_URL) return Promise.resolve(null);
-  return new Promise(function(resolve) {
-    document.getElementById('syncbar').classList.add('on');
-    var cbName = 'hp_cb_' + Date.now();
-    var timeout = setTimeout(function() {
-      try { delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null); } catch(e){}
-    }, 12000);
-    window[cbName] = function(data) {
-      clearTimeout(timeout); 
-      try { delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(data); } catch(e){}
-    };
-    
-    var pStr = '';
-    for(var key in params) { pStr += key + '=' + encodeURIComponent(params[key]) + '&'; }
-    pStr += 'callback=' + cbName;
-    
-    var script = document.createElement('script'); script.src = WEBAPP_URL + '?' + pStr;
-    script.onerror = function() { clearTimeout(timeout); try{ delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null); }catch(e){} };
-    document.head.appendChild(script);
-  });
-}
-
-function apiPost(body) {
-  if (!WEBAPP_URL) return Promise.resolve({ ok: true, offline: true });
+function apiFetch(params, callback) {
+  if (!WEBAPP_URL) { if(callback) callback(null); return; }
+  
   document.getElementById('syncbar').classList.add('on');
-  return fetch(WEBAPP_URL, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-        body: JSON.stringify(body)
-    })
-    .then(function(res) {
-        document.getElementById('syncbar').classList.remove('on');
-        return res.json();
-    })
-    .catch(function(e) {
-        document.getElementById('syncbar').classList.remove('on');
-        return { ok: true }; 
-    });
+  var cbName = 'hp_cb_' + Math.round(Math.random() * 1000000);
+  
+  var timeout = setTimeout(function() {
+    try { delete window[cbName]; } catch(e){}
+    document.getElementById('syncbar').classList.remove('on'); 
+    if(callback) callback(null);
+  }, 15000);
+  
+  window[cbName] = function(data) {
+    clearTimeout(timeout); 
+    try { delete window[cbName]; } catch(e){}
+    document.getElementById('syncbar').classList.remove('on'); 
+    if(callback) callback(data);
+  };
+  
+  var pStr = '';
+  for(var key in params) { pStr += key + '=' + encodeURIComponent(params[key]) + '&'; }
+  pStr += 'callback=' + cbName;
+  
+  var script = document.createElement('script'); 
+  script.src = WEBAPP_URL + '?' + pStr;
+  script.onerror = function() { 
+      clearTimeout(timeout); 
+      try{ delete window[cbName]; } catch(e){}
+      document.getElementById('syncbar').classList.remove('on'); 
+      if(callback) callback(null); 
+  };
+  document.head.appendChild(script);
 }
 
-function syncAll(showMsg) {
+// Bulletproof XMLHttpRequest ensures data saves even if Safari blocks Fetch
+function apiPost(body) {
+  if (!WEBAPP_URL) return;
+  document.getElementById('syncbar').classList.add('on');
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", WEBAPP_URL, true);
+  xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+  xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+          document.getElementById('syncbar').classList.remove('on');
+      }
+  };
+  try {
+      xhr.send(JSON.stringify(body));
+  } catch(e) {
+      document.getElementById('syncbar').classList.remove('on');
+  }
+}
+
+function syncAll(showMsg, onComplete) {
   if (!WEBAPP_URL) {
     document.getElementById('cfg-banner').style.display = 'flex';
-    if (showMsg) toast('Connect Google Sheet first','tinf'); return Promise.resolve();
+    if (showMsg) toast('Connect Google Sheet first','tinf'); 
+    if(onComplete) onComplete();
+    return;
   }
   document.getElementById('cfg-banner').style.display = 'none';
-  return apiFetch({ action: 'getAll' }).then(function(data) {
+  
+  apiFetch({ action: 'getAll' }, function(data) {
       if (data) {
         if (data.staff) {
             DB.staff = data.staff.map(function(s) {
                 var mapped = mapData(s);
                 return {
-                    id: mapped.id || ('s'+Math.random()),
-                    name: mapped.name || mapped.fullname || mapped.staffname || '',
-                    roles: mapped.roles || mapped.role || '',
-                    store: mapped.store || mapped.storeaccess || ''
+                    id: String(mapped.id || ('s'+Math.random())),
+                    name: String(mapped.name || mapped.fullname || mapped.staffname || mapped.therapist || ''),
+                    roles: String(mapped.roles || mapped.role || ''),
+                    store: String(mapped.store || mapped.storeaccess || '')
                 };
             });
         }
@@ -858,13 +885,13 @@ function syncAll(showMsg) {
             DB.rooms = data.rooms.map(function(r) {
                 var mapped = mapData(r);
                 return {
-                    id: mapped.id || ('rm'+Math.random()),
-                    num: mapped.num || mapped.roomno || mapped.roomnumber || mapped.number || '',
-                    name: mapped.name || mapped.roomname || '',
-                    type: mapped.type || mapped.roomtype || 'Treatment',
-                    cap: mapped.cap || mapped.capacity || 1,
-                    status: mapped.status || 'Active',
-                    notes: mapped.notes || ''
+                    id: String(mapped.id || ('rm'+Math.random())),
+                    num: String(mapped.num || mapped.roomno || mapped.roomnumber || mapped.number || ''),
+                    name: String(mapped.name || mapped.roomname || mapped.room || ''),
+                    type: String(mapped.type || mapped.roomtype || 'Treatment'),
+                    cap: Number(mapped.cap || mapped.capacity || 1),
+                    status: String(mapped.status || 'Active'),
+                    notes: String(mapped.notes || '')
                 };
             });
         } else { DB.rooms = []; }
@@ -873,10 +900,10 @@ function syncAll(showMsg) {
             DB.items = data.items.map(function(i) {
                 var mapped = mapData(i);
                 return {
-                    code: mapped.code || mapped.itemcode || '',
-                    name: mapped.name || mapped.itemname || '',
-                    cat: mapped.cat || mapped.category || '',
-                    unit: mapped.unit || '',
+                    code: String(mapped.code || mapped.itemcode || ''),
+                    name: String(mapped.name || mapped.itemname || mapped.item || ''),
+                    cat: String(mapped.cat || mapped.category || ''),
+                    unit: String(mapped.unit || ''),
                     mainStock: Number(mapped.mainstock || mapped.main || 0),
                     subStock: Number(mapped.substock || mapped.sub || 0),
                     reorder: Number(mapped.reorder || mapped.reorderlevel || 0),
@@ -887,9 +914,11 @@ function syncAll(showMsg) {
 
         if (data.linen) {
             DB.linen = data.linen.map(function(l) {
+                var mapped = mapData(l);
                 return {
-                    id: l.id, name: l.name,
-                    total: Number(l.total)||0, available: Number(l.available)||0, inUse: Number(l.inUse)||0, inWash: Number(l.inWash)||0
+                    id: String(mapped.id || ('l'+Math.random())), 
+                    name: String(mapped.name || mapped.item || ''),
+                    total: Number(mapped.total)||0, available: Number(mapped.available)||0, inUse: Number(mapped.inuse)||0, inWash: Number(mapped.inwash)||0
                 };
             });
         }
@@ -900,21 +929,17 @@ function syncAll(showMsg) {
         rebuildLogin();
         refreshPage(currentPage);
       } else {
-        if (showMsg) toast('Sync failed — check Web App URL','terr');
+        if (showMsg) toast('Sync failed — check connection','terr');
       }
+      if(onComplete) onComplete();
   });
 }
 
 // ============================================================
-// INIT WITH SAFEFALLBACK
+// INIT
 // ============================================================
 window.addEventListener('load', function() {
-  syncAll(false).then(function() {
-      document.getElementById('loading-screen').style.display = 'none';
-      document.getElementById('login-screen').style.display = 'flex';
-  }).catch(function(e) {
-      console.error(e);
-      toast('Error loading data. Check console.', 'terr');
+  syncAll(false, function() {
       document.getElementById('loading-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
   });
@@ -929,11 +954,11 @@ function rebuildLogin() {
   for(var i=0; i<DB.staff.length; i++) {
       var s = DB.staff[i];
       var roles = typeof s.roles === 'string' ? s.roles.split('|') : (s.roles||[]);
-      var initial = (s.name && s.name.length > 0) ? s.name.charAt(0).toUpperCase() : '?';
+      var safeName = String(s.name || 'Unnamed');
+      var initial = safeName.charAt(0).toUpperCase();
       htmlStr += '<div class="si2" onclick="login(\'' + s.id + '\')">' +
         '<div class="sa">' + initial + '</div>' +
-        '<div class="sii"><div class="sn2">' + (s.name || 'Unnamed Staff') + '</div><div class="sr2">' + roles.join(' · ') + '</div></div>' +
-        '<div class="sav" style="color:var(--lt);font-weight:700;">→</div>' +
+        '<div class="sii"><div class="sn2">' + safeName + '</div><div class="sr2">' + roles.join(' · ') + '</div></div>' +
       '</div>';
   }
   g.innerHTML = htmlStr || '<div style="text-align:center;color:var(--mid);padding:20px;font-size:14px;font-weight:600;">No staff loaded.</div>';
@@ -1079,7 +1104,7 @@ function toggleSB(){
 }
 
 // ============================================================
-// THERAPIST GRID LOGIC & MODAL (WITH SEARCH & FILTERS)
+// THERAPIST GRID LOGIC & MODAL
 // ============================================================
 function clearTSearch() {
     var el = document.getElementById('t-search');
@@ -1205,7 +1230,6 @@ function submitTc() {
   renderTherapistGrid();
 }
 
-
 // ============================================================
 // DASHBOARD
 // ============================================================
@@ -1246,7 +1270,7 @@ function renderDash() {
   document.getElementById('dash-mov').innerHTML = recent.length ? recent.map(function(m) {
     return '<tr>' +
     '<td class="tc">'+displayDT(m.datetime)+'</td>' +
-    '<td class="tn"><span class="sa hide-m" style="width:24px;height:24px;font-size:10px;">'+(m.staff||'-').charAt(0)+'</span> '+(m.staff||'—')+'</td>' +
+    '<td class="tn"><span class="sa hide-m" style="width:24px;height:24px;font-size:10px;margin-right:6px;">'+(m.staff||'-').charAt(0)+'</span> '+(m.staff||'—')+'</td>' +
     '<td class="tn">'+(m.itemName||'—')+'</td>' +
     '<td><span class="bdg '+(m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':m.type==='WASH'?'bws':'bot')+'">'+m.type+'</span></td>' +
     '<td class="sn">'+m.qty+'</td>' +
@@ -1554,7 +1578,7 @@ function renderMovements() {
 }
 
 // ============================================================
-// REPORTS (Advanced)
+// REPORTS
 // ============================================================
 function showRepTab(period,el){
   var tbs=document.querySelectorAll('#page-reports .tb'); for(var i=0;i<tbs.length;i++)tbs[i].classList.remove('on');
@@ -1685,7 +1709,6 @@ function markDone(id){
 // ADMIN MASTERS (Staff, Items, Rooms)
 // ============================================================
 
-// --- STAFF ---
 function renderStaff(){
   var tbody=document.getElementById('staff-tbody');
   if(!tbody) return;
@@ -1745,7 +1768,7 @@ function addStaff(){
   
   apiPost({action:'saveStaff', staff: DB.staff});
   renderStaff(); rebuildLogin(); resetStaffForm();
-  toast(editId ? '✓ Staff Updated' : '✓ Staff added to Sheet','tok');
+  toast(editId ? '✓ Staff Updated' : '✓ Staff added','tok');
   showAdminTab('sl','staffmgmt', document.querySelectorAll('#page-staffmgmt .tb')[0]);
 }
 
@@ -1823,7 +1846,7 @@ function addItem(){
 
   apiPost({action:'saveItems', items: DB.items});
   renderItemsMaster(); populateAll(); resetItemForm();
-  toast(editMode ? '✓ Item Updated' : '✓ Item added to Sheet','tok');
+  toast(editMode ? '✓ Item Updated' : '✓ Item added','tok');
   showAdminTab('il','itemsmgmt', document.querySelectorAll('#page-itemsmgmt .tb')[0]);
 }
 
@@ -1891,7 +1914,7 @@ function addRoom(){
       var r = DB.rooms.find(function(x){ return x.id===editId; });
       if(r) { r.num=num; r.name=name; r.type=type; r.cap=cap; r.status=status; r.notes=notes; }
   } else {
-      if(DB.rooms.find(function(r){ return r.num.toLowerCase()===num.toLowerCase(); })){ toast('⚠ Room "'+num+'" already exists','terr'); return; }
+      if(DB.rooms.find(function(r){ return String(r.num).toLowerCase()===String(num).toLowerCase(); })){ toast('⚠ Room "'+num+'" already exists','terr'); return; }
       var id='rm'+Date.now();
       DB.rooms.push({id:id,num:num,name:name,type:type,cap:cap,status:status,notes:notes});
   }
@@ -1910,9 +1933,8 @@ function deleteRoom(id){
   toast('Room removed','tok');
 }
 
-
 // ============================================================
-// CONFIG
+// CONFIG & MISC
 // ============================================================
 function showConfig(){
   document.getElementById('cfg-url').value=WEBAPP_URL||'';
@@ -1927,9 +1949,6 @@ function saveConfig(){
   syncAll(true);
 }
 
-// ============================================================
-// WHATSAPP
-// ============================================================
 function checkCritical(item){
   if(Number(item.subStock)<=Number(item.critical)||Number(item.mainStock)<=Number(item.critical)){
     sendWA(item.name, item.mainStock + ' ' + item.unit, item.subStock + ' ' + item.unit);
@@ -1940,9 +1959,6 @@ function sendWA(name,main,sub){
   window.open('https://wa.me/'+WA_NUM+'?text='+encodeURIComponent(msg),'_blank');
 }
 
-// ============================================================
-// HELPERS
-// ============================================================
 function populateSel(id,store){
   var sel=document.getElementById(id);if(!sel) return;
   sel.innerHTML='<option value="">— Select —</option>'+DB.items.map(function(i){ return '<option value="'+i.code+'">['+i.code+'] '+i.name+'</option>'; }).join('');

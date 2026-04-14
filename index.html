@@ -6,7 +6,7 @@
 <title>Herbal Park — Inventory</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -34,31 +34,31 @@ body::after{width:500px;height:500px;background:radial-gradient(circle,#B8965A,t
 .glass2{background:var(--glass2);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid rgba(255,255,255,0.5)}
 .app{position:relative;z-index:1;display:flex;min-height:100vh}
 .sidebar{width:256px;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;z-index:100;background:rgba(31,43,36,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,0.1);transition:transform 0.3s}
-.main{margin-left:256px;flex:1;display:flex;flex-direction:column;min-height:100vh; transition: margin-left 0.3s;}
+.main{margin-left:256px;flex:1;display:flex;flex-direction:column;min-height:100vh}
 .topbar{background:rgba(255,255,255,0.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
 .content{padding:24px 28px;flex:1}
 .sb-logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.1)}
 .sb-logo .leaf{font-size:26px;display:block;margin-bottom:6px}
-.sb-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:#fff}
+.sb-brand{font-size:18px;font-weight:700;color:#fff}
 .sb-sub{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
 .sb-user{margin:12px;padding:10px 14px;background:rgba(255,255,255,0.07);border-radius:var(--r-sm);border:1px solid rgba(255,255,255,0.1)}
 .sb-uname{font-size:13px;font-weight:500;color:#fff}
 .sb-urole{font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px}
 .sb-ustore{font-size:10px;color:var(--gold);margin-top:2px;font-weight:500}
 .nav-sec{padding:16px 16px 6px;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);font-weight:600}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:2px 8px;border-radius:var(--r-sm);cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;font-weight:400;transition:all 0.18s;text-decoration:none;border:1px solid transparent}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;margin:2px 8px;border-radius:var(--r-sm);cursor:pointer;color:rgba(255,255,255,0.6);font-size:14px;font-weight:400;transition:all 0.18s;text-decoration:none;border:1px solid transparent}
 .nav-item:hover{background:rgba(255,255,255,0.08);color:#fff}
 .nav-item.active{background:rgba(90,140,110,0.3);color:#fff;border-color:rgba(90,140,110,0.4);font-weight:500}
-.nav-item .ni{width:16px;text-align:center;font-size:14px}
+.nav-item .ni{width:22px;text-align:center;font-size:18px}
 .sb-footer{margin-top:auto;padding:14px;border-top:1px solid rgba(255,255,255,0.08)}
 .logout-btn{width:100%;padding:9px;border-radius:var(--r-sm);background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.3);color:rgba(255,120,100,0.9);font-size:12px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.2s}
 .logout-btn:hover{background:rgba(192,57,43,0.35)}
-.page-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--charcoal)}
+.page-title{font-size:20px;font-weight:600;color:var(--charcoal)}
 .topbar-right{display:flex;align-items:center;gap:10px}
 .store-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600}
 .store-main{background:rgba(61,107,79,0.15);color:var(--sage)}
 .store-sub{background:rgba(184,150,90,0.15);color:var(--gold)}
-.hamburger{display:none;background:none;border:none;cursor:pointer;font-size:20px;color:var(--charcoal)}
+.hamburger{display:none;background:none;border:none;cursor:pointer;font-size:24px;color:var(--charcoal)}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Outfit',sans-serif;transition:all 0.18s;white-space:nowrap}
 .btn-primary{background:var(--sage);color:#fff}.btn-primary:hover{background:var(--sage2);transform:translateY(-1px)}
 .btn-glass{background:rgba(255,255,255,0.5);color:var(--charcoal);border:1px solid var(--glass-border);backdrop-filter:blur(8px)}.btn-glass:hover{background:rgba(255,255,255,0.7)}
@@ -69,7 +69,7 @@ body::after{width:500px;height:500px;background:radial-gradient(circle,#B8965A,t
 .stat-card{border-radius:var(--r);padding:18px;position:relative;overflow:hidden;transition:transform 0.2s}.stat-card:hover{transform:translateY(-2px)}
 .stat-accent{position:absolute;bottom:-20px;right:-10px;font-size:60px;opacity:0.07;pointer-events:none}
 .stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);font-weight:600;margin-bottom:8px}
-.stat-value{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;line-height:1;color:var(--charcoal)}
+.stat-value{font-size:34px;font-weight:700;line-height:1;color:var(--charcoal)}
 .stat-sub{font-size:11px;color:var(--mid);margin-top:4px}
 .section{border-radius:var(--r);margin-bottom:20px;overflow:hidden}
 .sec-head{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
@@ -81,14 +81,14 @@ tbody td{padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.25);vertic
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:rgba(255,255,255,0.2)}
 .item-name{font-weight:500;font-size:13px}
-.item-code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mid)}
+.item-code{font-size:12px;font-weight:500;color:var(--mid)}
 .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:0.5px}
 .b-ok{background:var(--ok-bg);color:var(--sage)}.b-warn{background:var(--warn-bg);color:var(--warn)}.b-alert{background:var(--alert-bg);color:var(--alert)}
 .b-gold{background:rgba(184,150,90,0.15);color:var(--gold)}.b-mid{background:rgba(107,122,113,0.12);color:var(--mid)}
 .b-in{background:rgba(61,107,79,0.12);color:var(--sage)}.b-out{background:rgba(196,123,82,0.12);color:var(--terra)}.b-wash{background:rgba(100,130,180,0.12);color:#4A6FA5}
 .sbar{width:72px;height:5px;background:rgba(0,0,0,0.08);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
 .sbar-fill{height:100%;border-radius:3px}
-.snum{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500}
+.snum{font-size:13px;font-weight:600}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;padding:20px}
 .fg{display:flex;flex-direction:column;gap:5px}.fg.full{grid-column:1/-1}
 label{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:0.5px;text-transform:uppercase}
@@ -112,7 +112,7 @@ textarea{resize:vertical;min-height:72px}
 .login-box{width:100%;max-width:420px;border-radius:var(--r-lg);overflow:hidden;animation:popIn 0.35s ease-out}
 .login-head{padding:32px 28px 20px;text-align:center;background:rgba(31,43,36,0.9);backdrop-filter:blur(20px)}
 .login-logo{font-size:36px;margin-bottom:12px}
-.login-brand{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#fff}
+.login-brand{font-size:28px;font-weight:700;color:#fff}
 .login-tagline{font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
 .login-body{padding:24px 28px 28px}
 .login-label{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:block}
@@ -132,7 +132,7 @@ textarea{resize:vertical;min-height:72px}
 .report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;padding:20px}
 .report-stat{border-radius:var(--r-sm);padding:16px;background:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.5)}
 .report-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--mid);font-weight:600;margin-bottom:6px}
-.report-stat-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--charcoal)}
+.report-stat-val{font-size:28px;font-weight:700;color:var(--charcoal)}
 .linen-card{background:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.5);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:16px;margin-bottom:10px;transition:all 0.2s;flex-wrap:wrap}
 .linen-card:hover{background:rgba(255,255,255,0.5)}
 .linen-name{font-size:14px;font-weight:500}
@@ -152,7 +152,7 @@ textarea{resize:vertical;min-height:72px}
 
 /* THERAPIST SPECIFIC STYLES */
 .t-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.t-header-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; color: var(--sage); }
+.t-header-title { font-size: 26px; font-weight: 600; color: var(--sage); }
 .t-header-sub { font-size: 13px; color: var(--mid); margin-top: 4px; }
 .t-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; padding-bottom: 80px; }
 .t-card { background: var(--glass); border: 2px solid var(--glass-border); border-radius: var(--r); padding: 20px 15px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -185,11 +185,35 @@ textarea{resize:vertical;min-height:72px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .empty{text-align:center;padding:40px;color:var(--light)}
 .empty-ico{font-size:36px;margin-bottom:10px;opacity:0.5}
-.toast{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:500;z-index:1000;transform:translateY(60px);opacity:0;transition:all 0.3s;max-width:300px;backdrop-filter:blur(12px)}
-.toast.show{transform:translateY(0);opacity:1}
-.t-ok{background:rgba(61,107,79,0.9);color:#fff;border:1px solid rgba(90,140,110,0.5)}
-.t-err{background:rgba(192,57,43,0.9);color:#fff}
-.t-info{background:rgba(31,43,36,0.85);color:#fff;border:1px solid rgba(255,255,255,0.2)}
+
+/* CENTERED TOAST NOTIFICATIONS */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  opacity: 0;
+  padding: 16px 24px;
+  border-radius: var(--r-sm);
+  font-size: 15px;
+  font-weight: 600;
+  z-index: 9999;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 80%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+}
+.toast.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.t-ok{background:rgba(61,107,79,0.95);color:#fff;border:1px solid rgba(90,140,110,0.5)}
+.t-err{background:rgba(192,57,43,0.95);color:#fff}
+.t-info{background:rgba(31,43,36,0.9);color:#fff;border:1px solid rgba(255,255,255,0.2)}
+
 @media(max-width:768px){
   .sidebar{transform:translateX(-260px)}.sidebar.open{transform:translateX(0)}
   .main{margin-left:0}.hamburger{display:block}
@@ -273,7 +297,7 @@ textarea{resize:vertical;min-height:72px}
   </header>
 
   <div class="content">
-
+    
     <div class="page" id="page-therapist">
         <div class="t-header">
             <div>
@@ -283,9 +307,7 @@ textarea{resize:vertical;min-height:72px}
             <button class="btn btn-danger btn-sm" onclick="logout()">⏻ Logout</button>
         </div>
         
-        <div class="t-grid" id="therapist-grid">
-            </div>
-
+        <div class="t-grid" id="therapist-grid"></div>
         <button class="btn btn-gold t-fab" onclick="openRequest()">📨 Request Material</button>
     </div>
 
@@ -608,9 +630,31 @@ let linenTarget = null;
 const F = { ms:'all', ss:'all', mov:'all' };
 
 // ============================================================
+// TIMEZONE HANDLERS (UAE TIME)
+// ============================================================
+function displayDT(dateStr) {
+  if (!dateStr) return '—';
+  try {
+      if (dateStr.endsWith('Z')) {
+          const d = new Date(dateStr);
+          const opts = { timeZone: 'Asia/Dubai', year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
+          return new Intl.DateTimeFormat('en-US', opts).format(d); 
+      }
+      return dateStr.slice(0, 16); 
+  } catch(e) { return dateStr; }
+}
+function fmtDT(d) {
+  const opts = { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, second: '2-digit' };
+  const p = new Intl.DateTimeFormat('en-GB', opts).formatToParts(d);
+  const pts = {}; p.forEach(x => pts[x.type] = x.value);
+  return `${pts.year}-${pts.month}-${pts.day} ${pts.hour}:${pts.minute}:${pts.second}`;
+}
+function todayStr() { return fmtDT(new Date()).slice(0, 10); }
+
+
+// ============================================================
 // API CALLS
 // ============================================================
-// JSONP fetch — bypasses CORS for Google Apps Script
 function apiFetch(params) {
   if (!WEBAPP_URL) return Promise.resolve(null);
   return new Promise((resolve) => {
@@ -620,7 +664,6 @@ function apiFetch(params) {
       delete window[cbName];
       if (script.parentNode) script.parentNode.removeChild(script);
       showSyncBar(false);
-      console.warn('JSONP timeout');
       resolve(null);
     }, 12000);
 
@@ -639,7 +682,6 @@ function apiFetch(params) {
       clearTimeout(timeout);
       delete window[cbName];
       showSyncBar(false);
-      console.warn('JSONP script error');
       resolve(null);
     };
     document.head.appendChild(script);
@@ -647,10 +689,7 @@ function apiFetch(params) {
 }
 
 async function apiPost(body) {
-  if (!WEBAPP_URL) {
-    // Offline mode — update local DB only
-    return { ok: true, offline: true };
-  }
+  if (!WEBAPP_URL) return { ok: true, offline: true };
   try {
     showSyncBar(true);
     const res = await fetch(WEBAPP_URL, {
@@ -664,19 +703,10 @@ async function apiPost(body) {
     return data;
   } catch(e) {
     showSyncBar(false);
-    // Apps Script no-cors fallback
     try {
-      await fetch(WEBAPP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        mode: 'no-cors'
-      });
+      await fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), mode: 'no-cors' });
       return { ok: true };
-    } catch(e2) {
-      console.warn('POST failed:', e2.message);
-      return { ok: false, error: e2.message };
-    }
+    } catch(e2) { return { ok: false, error: e2.message }; }
   }
 }
 
@@ -696,21 +726,9 @@ async function syncAll(showMsg) {
     if (data.requests)                        DB.requests  = data.requests;
     if (data.washlog)                         DB.washlog   = data.washlog;
     if (data.suppliers && data.suppliers.length) DB.suppliers = data.suppliers;
-    // Normalise numeric fields
-    DB.items = DB.items.map(i => ({
-      ...i,
-      mainStock: Number(i.mainStock)||0,
-      subStock:  Number(i.subStock)||0,
-      reorder:   Number(i.reorder)||0,
-      critical:  Number(i.critical)||0,
-    }));
-    DB.linen = DB.linen.map(l => ({
-      ...l,
-      total:     Number(l.total)||0,
-      available: Number(l.available)||0,
-      inUse:     Number(l.inUse)||0,
-      inWash:    Number(l.inWash)||0,
-    }));
+    
+    DB.items = DB.items.map(i => ({...i, mainStock: Number(i.mainStock)||0, subStock: Number(i.subStock)||0, reorder: Number(i.reorder)||0, critical: Number(i.critical)||0}));
+    DB.linen = DB.linen.map(l => ({...l, total: Number(l.total)||0, available: Number(l.available)||0, inUse: Number(l.inUse)||0, inWash: Number(l.inWash)||0}));
     if (showMsg) toast('✓ Synced from Google Sheet','ok');
     rebuildLogin();
     refreshPage(currentPage);
@@ -741,7 +759,7 @@ function rebuildLogin() {
       <div class="staff-btn-role">${roles.join(' · ')}</div>
       <div class="staff-btn-store">${s.store==='both'?'Main + Sub':'Sub Store Only'}</div>
     </div>`;
-  }).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--mid);padding:20px;font-size:13px">No staff loaded. Connect Google Sheet first.</div>';
+  }).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--mid);padding:20px;font-size:13px">No staff loaded.</div>';
 }
 
 function login(id) {
@@ -767,15 +785,14 @@ function applySession() {
   if (s.store==='both') { pill.className='store-pill store-main'; pill.textContent='🏪 Main + Sub'; }
   else { pill.className='store-pill store-sub'; pill.textContent='🧴 Sub Store'; }
 
-  // THERAPIST UI ROUTING OVERRIDE
+  // THERAPIST RESTRICTION
   if (isTher) {
       document.getElementById('sidebar').style.display = 'none';
       document.getElementById('main-topbar').style.display = 'none';
       document.querySelector('.main').style.marginLeft = '0';
       nav('therapist');
-      return; // Stop normal setup to keep them locked in Therapist view
+      return; 
   } else {
-      // Restore Admin View UI elements just in case we are switching from a therapist
       document.getElementById('sidebar').style.display = 'flex';
       document.getElementById('main-topbar').style.display = 'flex';
       document.querySelector('.main').style.marginLeft = window.innerWidth <= 768 ? '0' : '256px';
@@ -791,10 +808,9 @@ function applySession() {
 
   const cStore = document.getElementById('c-store');
   if (isTher) { cStore.value='sub'; cStore.disabled=true; } else cStore.disabled=false;
-
   document.getElementById('c-staff').value = s.name;
   document.getElementById('t-staff').value = s.name;
-
+  
   populateAll();
   nav('dashboard');
 }
@@ -814,8 +830,7 @@ const TITLES = {
   linen:'Linen & Towels', consume:'Record Consumption', transfer:'Transfer to Sub Store',
   grn:'Stock IN (GRN)', requests:'Stock Requests', movements:'Movement Log',
   reports:'Summary Reports', alerts:'Stock Alerts',
-  staffmgmt:'Staff Management', itemsmgmt:'Items Master', suppliers:'Suppliers',
-  therapist:'Sub Store Area'
+  staffmgmt:'Staff Management', itemsmgmt:'Items Master', suppliers:'Suppliers', therapist: 'Sub Store Area'
 };
 let currentPage = 'dashboard';
 
@@ -859,8 +874,6 @@ function toggleSB(){document.getElementById('sidebar').classList.toggle('open');
 // ============================================================
 function renderTherapistGrid() {
   const grid = document.getElementById('therapist-grid');
-  
-  // 1. Render all sub-store items
   let html = DB.items.map(i => {
     const stock = Number(i.subStock);
     const icon = i.cat === 'Medicines & Oils' ? '🌿' : '🧴';
@@ -873,7 +886,6 @@ function renderTherapistGrid() {
     `;
   }).join('');
 
-  // 2. Render all Linen/Towels
   html += DB.linen.map(l => {
     return `
       <div class="t-card linen-t" onclick="therapistConsume('${l.id}', 'linen')">
@@ -883,79 +895,42 @@ function renderTherapistGrid() {
       </div>
     `;
   }).join('');
-
   grid.innerHTML = html || '<div class="empty" style="grid-column:1/-1">No items available in Sub Store</div>';
 }
 
 async function therapistConsume(id, type) {
   const isItem = type === 'item';
   const target = isItem ? DB.items.find(i => i.code === id) : DB.linen.find(l => String(l.id) === String(id));
-  
   if (!target) return;
 
   const unit = isItem ? target.unit : 'items';
   const avail = isItem ? Number(target.subStock) : Number(target.available);
 
-  // Simple native browser prompt for speed
   const qtyStr = prompt(`How many ${target.name} are you taking?`, "1");
-  
-  // If user hits cancel
   if (qtyStr === null) return;
   
   const qty = parseInt(qtyStr);
-
-  if (isNaN(qty) || qty <= 0) {
-    toast('Please enter a valid number', 'err');
-    return;
-  }
-  
-  if (qty > avail) {
-    toast(`Only ${avail} ${unit} available in Sub Store!`, 'err');
-    return;
-  }
+  if (isNaN(qty) || qty <= 0) { toast('Please enter a valid number', 'err'); return; }
+  if (qty > avail) { toast(`Only ${avail} ${unit} available in Sub Store!`, 'err'); return; }
 
   const dt = fmtDT(new Date());
 
   if (isItem) {
-    // Process Item Consumption
     target.subStock = avail - qty;
-    const mov = {
-      action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name,
-      qty, store: 'Sub', staff: SESSION.name, purpose: 'Therapist Issue', remarks: ''
-    };
+    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub', staff: SESSION.name, purpose: 'Therapist Issue', remarks: '' };
     DB.movements.push({...mov});
-    
     await apiPost(mov);
     await apiPost({action: 'updateStock', code: target.code, mainDelta: 0, subDelta: -qty});
-    checkCritical(target);
-    
   } else {
-    // Process Linen Consumption
-    target.available = avail - qty;
-    target.inUse = Number(target.inUse) + qty;
-    
-    // Log movement specifically for towels to track staff usage
-    const mov = {
-      action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name,
-      qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: 'Therapist Issue', remarks: ''
-    };
+    target.available = avail - qty; target.inUse = Number(target.inUse) + qty;
+    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: 'Therapist Issue', remarks: '' };
     DB.movements.push({...mov});
-
     await apiPost(mov);
-    await apiPost({
-      action: 'updateLinen', 
-      id: target.id, 
-      total: target.total, 
-      available: target.available, 
-      inUse: target.inUse, 
-      inWash: target.inWash
-    });
+    await apiPost({action: 'updateLinen', id: target.id, total: target.total, available: target.available, inUse: target.inUse, inWash: target.inWash});
   }
-
   toast(`✓ Recorded ${qty} ${target.name}`, 'ok');
-  renderTherapistGrid(); // Refresh the numbers on the cards instantly
+  renderTherapistGrid(); 
 }
-
 
 // ============================================================
 // DASHBOARD
@@ -994,7 +969,7 @@ function renderDash() {
 
   const recent = [...DB.movements].reverse().slice(0,8);
   document.getElementById('dash-mov').innerHTML = recent.length ? recent.map(m=>`<tr>
-    <td style="font-size:11px;color:var(--mid)">${String(m.datetime||'').slice(11,16)}</td>
+    <td style="font-size:11px;color:var(--mid)">${displayDT(m.datetime)}</td>
     <td style="font-size:12px">${m.staff||'—'}</td>
     <td><div class="item-name">${m.itemName||'—'}</div></td>
     <td><span class="badge ${m.type==='IN'?'b-in':m.type==='TRANSFER'?'b-gold':m.type==='WASH'?'b-wash':'b-out'}">${m.type}</span></td>
@@ -1070,7 +1045,7 @@ function renderLinen() {
 
   const rows = [...DB.washlog].reverse().slice(0,20);
   document.getElementById('wash-tbody').innerHTML = rows.length ? rows.map(w=>`<tr>
-    <td style="font-size:12px">${w.datetime||w.id||'—'}</td>
+    <td style="font-size:12px">${displayDT(w.datetime||w.id)}</td>
     <td>${w.item}</td>
     <td class="snum">${w.sent||0}</td>
     <td class="snum">${w.returned||0}</td>
@@ -1121,7 +1096,7 @@ async function submitLinen() {
 }
 
 // ============================================================
-// CONSUME (ADMIN)
+// CONSUME
 // ============================================================
 function updateCI(){populateSel('c-item',document.getElementById('c-store').value);}
 function updateCS(){
@@ -1166,7 +1141,7 @@ function renderMyIssues() {
   const tbody=document.getElementById('my-issues');
   if(!tbody) return;
   tbody.innerHTML=rows.length?rows.map(m=>`<tr>
-    <td style="font-size:12px">${String(m.datetime||'').slice(11,16)}</td>
+    <td style="font-size:12px">${displayDT(m.datetime)}</td>
     <td class="item-name">${m.itemName}</td>
     <td class="snum" style="color:var(--terra)">-${m.qty}</td>
     <td style="font-size:12px">${m.purpose}</td>
@@ -1207,7 +1182,7 @@ function renderTransfers(){
   const tbody=document.getElementById('tr-tbody');
   if(!tbody) return;
   tbody.innerHTML=rows.length?rows.map(m=>`<tr>
-    <td style="font-size:12px">${m.datetime}</td><td class="item-name">${m.itemName}</td>
+    <td style="font-size:12px">${displayDT(m.datetime)}</td><td class="item-name">${m.itemName}</td>
     <td class="snum">${m.qty}</td><td style="font-size:12px">${m.staff}</td><td style="font-size:12px">${m.purpose}</td>
   </tr>`).join(''):'<tr><td colspan="5"><div class="empty">No transfers yet</div></td></tr>';
 }
@@ -1245,7 +1220,7 @@ function renderMovements() {
   if(F.mov!=='all') rows=rows.filter(m=>m.type===F.mov);
   if(q) rows=rows.filter(m=>String(m.itemName||'').toLowerCase().includes(q)||String(m.staff||'').toLowerCase().includes(q));
   document.getElementById('mov-tbody').innerHTML=rows.length?rows.map(m=>`<tr>
-    <td style="font-size:11px;white-space:nowrap">${m.datetime||'—'}</td>
+    <td style="font-size:11px;white-space:nowrap">${displayDT(m.datetime)}</td>
     <td><span class="badge ${m.type==='IN'?'b-in':m.type==='TRANSFER'?'b-gold':m.type==='WASH'?'b-wash':'b-out'}">${m.type}</span></td>
     <td><div class="item-name">${m.itemName||'—'}</div></td>
     <td class="snum">${m.qty}</td>
@@ -1270,8 +1245,8 @@ function renderReports(period) {
   const today=todayStr();
   let start;
   if(period==='daily') start=today;
-  else if(period==='weekly'){const d=new Date(now);d.setDate(d.getDate()-6);start=d.toISOString().slice(0,10);}
-  else{const d=new Date(now);d.setDate(1);start=d.toISOString().slice(0,10);}
+  else if(period==='weekly'){const d=new Date(now);d.setDate(d.getDate()-6);start=fmtDT(d).slice(0,10);}
+  else{const d=new Date(now);d.setDate(1);start=fmtDT(d).slice(0,10);}
   const rows=DB.movements.filter(m=>String(m.datetime||'')>=start);
   const out=rows.filter(m=>m.type==='OUT');
   const inR=rows.filter(m=>m.type==='IN');
@@ -1282,7 +1257,7 @@ function renderReports(period) {
     <div class="report-stat"><div class="report-stat-label">Transfers</div><div class="report-stat-val">${tr.length}</div></div>
     <div class="report-stat"><div class="report-stat-label">Active Staff</div><div class="report-stat-val">${new Set(out.map(r=>r.staff)).size}</div></div>`;
   document.getElementById('rt-'+period).innerHTML=[...rows].reverse().map(m=>`<tr>
-    <td style="font-size:11px;white-space:nowrap">${String(m.datetime||'').slice(0,16)}</td>
+    <td style="font-size:11px;white-space:nowrap">${displayDT(m.datetime)}</td>
     <td class="item-name">${m.itemName||'—'}</td>
     <td><span class="badge ${m.type==='IN'?'b-in':m.type==='TRANSFER'?'b-gold':'b-out'}">${m.type}</span></td>
     <td class="snum">${m.qty}</td>
@@ -1297,6 +1272,9 @@ function renderReports(period) {
 function renderAlertsFull() {
   const critical=DB.items.filter(i=>Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical));
   const warns=DB.items.filter(i=>!critical.includes(i)&&(Number(i.subStock)<=Number(i.reorder)||Number(i.mainStock)<=Number(i.reorder)));
+  
+  const canAlert = SESSION && SESSION.rolesArr && (SESSION.rolesArr.includes('Admin') || SESSION.rolesArr.includes('Store Supervisor'));
+
   document.getElementById('alerts-list').innerHTML=[...critical,...warns].map(i=>{
     const isCrit=Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical);
     return `<div class="alert-item">
@@ -1307,7 +1285,7 @@ function renderAlertsFull() {
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <span class="badge ${isCrit?'b-alert':'b-warn'}">${isCrit?'⊘ Critical':'⚠ Low'}</span>
-        <button class="btn btn-primary btn-xs" onclick="sendWA('${i.name}','${i.mainStock} ${i.unit}','${i.subStock} ${i.unit}')">📲 Alert</button>
+        ${canAlert ? `<button class="btn btn-primary btn-xs" onclick="sendWA('${i.name}','${i.mainStock} ${i.unit}','${i.subStock} ${i.unit}')">📲 Alert</button>` : ''}
       </div>
     </div>`;
   }).join('')||'<div class="empty"><div class="empty-ico">✅</div>All stock levels OK</div>';
@@ -1343,7 +1321,7 @@ function renderRequests(){
     <div class="req-dot" style="background:${r.status==='Pending'?'var(--warn)':'var(--sage)'}"></div>
     <div style="flex:1">
       <div class="item-name">${r.item}</div>
-      <div style="font-size:11px;color:var(--mid);margin-top:2px">${r.datetime||''} · ${r.staff} · Qty: ${r.qty} · <strong>${r.urgency}</strong></div>
+      <div style="font-size:11px;color:var(--mid);margin-top:2px">${displayDT(r.datetime)} · ${r.staff} · Qty: ${r.qty} · <strong>${r.urgency}</strong></div>
       ${r.msg?`<div style="font-size:12px;color:var(--mid);margin-top:3px">${r.msg}</div>`:''}
     </div>
     <span class="badge ${r.status==='Pending'?'b-warn':'b-ok'}">${r.status}</span>
@@ -1456,4 +1434,66 @@ function showConfig(){
 }
 function hideConfig(){document.getElementById('cfg-overlay').classList.remove('show');}
 async function saveConfig(){
-  WEBAPP_URL=document.getElementById('
+  WEBAPP_URL=document.getElementById('cfg-url').value.trim();
+  localStorage.setItem('hp-webapp-url',WEBAPP_URL);
+  hideConfig();
+  toast('Config saved — syncing...','info');
+  await syncAll(true);
+}
+
+// ============================================================
+// WHATSAPP
+// ============================================================
+function checkCritical(item){
+  if(Number(item.subStock)<=Number(item.critical)||Number(item.mainStock)<=Number(item.critical)){
+    sendWA(item.name,`${item.mainStock} ${item.unit}`,`${item.subStock} ${item.unit}`);
+  }
+}
+function sendWA(name,main,sub){
+  const msg=`🚨 *CRITICAL STOCK ALERT — Herbal Park*\n\n*Item:* ${name}\n*Main Store:* ${main}\n*Sub Store:* ${sub}\n\nImmediate reorder required.\n_${fmtDT(new Date())}_`;
+  window.open(`https://wa.me/${WA_NUM}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function populateSel(id,store){
+  const sel=document.getElementById(id);if(!sel) return;
+  sel.innerHTML='<option value="">— Select —</option>'+DB.items.map(i=>`<option value="${i.code}">[${i.code}] ${i.name}</option>`).join('');
+}
+function populateSupSel(){
+  const sel=document.getElementById('g-sup');if(!sel) return;
+  sel.innerHTML='<option value="">— Select —</option>'+DB.suppliers.map(s=>`<option value="${s.code}">${s.name}</option>`).join('');
+}
+function populateAll(){
+  populateSel('c-item',document.getElementById('c-store')?.value||'sub');
+  populateSel('t-item','main');
+  populateSel('g-item','all');
+  populateSel('req-item','all');
+  populateSupSel();
+}
+function quickConsume(code,store){nav('consume');setTimeout(()=>{document.getElementById('c-store').value=store;document.getElementById('c-item').value=code;updateCS();},100);}
+function quickTransfer(code){nav('transfer');setTimeout(()=>{document.getElementById('t-item').value=code;updateTS();},100);}
+function showAdminTab(id,page,el){
+  const pg=document.getElementById('page-'+page);
+  pg.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  pg.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tc-'+id).classList.add('active');
+  el.classList.add('active');
+}
+function exportCSV(type){
+  let rows,headers;
+  if(type==='main'){headers=['Code','Name','Category','Unit','Main Stock','Sub Stock','Reorder','Critical'];rows=DB.items.map(i=>[i.code,i.name,i.cat,i.unit,i.mainStock,i.subStock,i.reorder,i.critical]);}
+  else{headers=['DateTime','Type','Item','Qty','Store','Staff','Purpose'];rows=[...DB.movements].reverse().map(m=>[m.datetime,m.type,m.itemName,m.qty,m.store||'',m.staff||'',m.purpose||'']);}
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`HP_${type}_${todayStr()}.csv`;a.click();
+  toast('✓ CSV exported','ok');
+}
+function setTxt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function show(id,visible){const e=document.getElementById(id);if(e)e.style.display=visible?'flex':'none';}
+function showSyncBar(on){document.getElementById('sync-bar').classList[on?'add':'remove']('show');}
+let _tt;
+function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast show t-${type}`;clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3200);}
+</script>
+</body>
+</html>

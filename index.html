@@ -135,7 +135,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 
 /* SEARCH ROW */
 .sr{padding:12px 20px;border-bottom:1px solid rgba(61,107,79,0.06);display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:rgba(255,255,255,0.4)}
-.sw2{position:relative;flex:1;min-width:160px;}
+.sw2{position:relative;flex:1;min-width:160px;max-width:280px}
 .sw2 input{padding-left:36px;border-radius:var(--rf); padding-right: 40px;}
 .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--lt);font-size:14px;pointer-events:none}
 .si-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--mid);font-size:16px;cursor:pointer;display:none; font-weight:700;}
@@ -829,7 +829,7 @@ async function syncAll(showMsg) {
     if (data.linen) DB.linen = data.linen.map(l => ({...l, total: Number(l.total)||0, available: Number(l.available)||0, inUse: Number(l.inUse)||0, inWash: Number(l.inWash)||0}));
     if (data.movements) DB.movements = data.movements;
     if (data.requests) DB.requests = data.requests;
-    if (data.rooms) DB.rooms = data.rooms; else DB.rooms = [];
+    if (data.rooms && data.rooms.length) DB.rooms = data.rooms; else DB.rooms = [];
     
     if (showMsg) toast('✓ Synced from Google Sheet','tok');
     rebuildLogin();
@@ -942,7 +942,7 @@ const TITLES = {
   dashboard:'Dashboard', mainstore:'Main Store', substore:'Sub Store',
   linen:'Linen & Towels', consume:'Issue Stock', transfer:'Transfer',
   grn:'Stock IN (GRN)', requests:'Stock Requests', movements:'Movement Log',
-  reports:'Summary Reports', alerts:'Stock Alerts', roomsmgmt:'Room Master',
+  reports:'Summary Reports', alerts:'Stock Alerts', roomsmgmt:'Rooms Master',
   staffmgmt:'Staff Master', itemsmgmt:'Items Master', therapist: 'Sub Store Area'
 };
 let currentPage = 'dashboard';
@@ -1164,7 +1164,7 @@ function renderDash() {
   const recent = [...DB.movements].reverse().slice(0,8);
   document.getElementById('dash-mov').innerHTML = recent.length ? recent.map(m=>`<tr>
     <td class="tc">${displayDT(m.datetime)}</td>
-    <td class="tn"><span class="sa hide-m" style="width:24px;height:24px;font-size:10px;">${(m.staff||'-').charAt(0)}</span> ${m.staff||'—'}</td>
+    <td class="tn">${m.staff||'—'}</td>
     <td class="tn">${m.itemName||'—'}</td>
     <td><span class="bdg ${m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':m.type==='WASH'?'bws':'bot'}">${m.type}</span></td>
     <td class="sn">${m.qty}</td>
@@ -1324,7 +1324,6 @@ async function submitConsume() {
   const store=document.getElementById('c-store').value;
   const code=document.getElementById('c-item').value;
   const qty=parseInt(document.getElementById('c-qty').value)||0;
-  const purpose=document.getElementById('c-purpose').value;
   const room=document.getElementById('c-room').value;
   const remarks=document.getElementById('c-remarks').value;
 
@@ -1338,14 +1337,10 @@ async function submitConsume() {
 
   if(store==='main') item.mainStock=avail-qty; else item.subStock=avail-qty;
   const dt=fmtDT(new Date());
-  
-  // Combine purpose and room
-  let finalPurpose = room;
-  if(purpose && purpose !== 'Other') finalPurpose = `${purpose} — ${room}`;
 
   const mov={
     action:'logMovement', datetime:dt, type:'OUT', itemName:item.name, qty, 
-    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:finalPurpose, remarks
+    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:`${room}`, remarks
   };
   
   DB.movements.push({...mov});
@@ -1742,7 +1737,7 @@ async function deleteItemM(code){
   toast('Item deleted','tok');
 }
 
-// --- ROOMS (Updated Schema) ---
+// --- ROOMS ---
 function renderRoomsMaster(){
   const tbody=document.getElementById('rooms-tbody');
   if(!tbody) return;

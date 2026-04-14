@@ -102,7 +102,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ci{width:28px;height:28px;border-radius:var(--rx);display:flex;align-items:center;justify-content:center;font-size:13px}
 .cig{background:var(--g3)}.cio{background:var(--gold2)}.cir{background:var(--red2)}.cib{background:rgba(100,140,200,0.1)}
 
-/* TABLE */
+/* TABLE - Fixed for mobile text collapse */
 .ts{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{padding:10px 18px;text-align:left;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--lt);font-weight:600;background:rgba(61,107,79,0.04);border-bottom:1px solid rgba(61,107,79,0.07);white-space:nowrap}
@@ -132,7 +132,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 
 /* SEARCH ROW */
 .sr{padding:12px 20px;border-bottom:1px solid rgba(61,107,79,0.06);display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:rgba(255,255,255,0.4)}
-.sw2{position:relative;flex:1;min-width:160px;max-width:280px}
+.sw2{position:relative;flex:1;min-width:160px;}
 .sw2 input{padding-left:36px;border-radius:var(--rf); padding-right: 40px;}
 .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--lt);font-size:14px;pointer-events:none}
 .si-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--mid);font-size:16px;cursor:pointer;display:none; font-weight:700;}
@@ -222,7 +222,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .bsb{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
 .bsf{padding:16px 24px;border-top:1px solid rgba(61,107,79,0.07);display:flex;justify-content:flex-end;gap:12px;background:rgba(61,107,79,0.02)}
 
-/* LOGIN SCREEN - MOBILE CRUSH FIX */
+/* LOGIN SCREEN - MOBILE BLOCK FIX */
 .lw{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(145deg,#C8E0D2 0%,#E8DFCF 55%,#C8D8E8 100%);overflow-y:auto;}
 .lb{width:100%;max-width:420px;border-radius:26px;box-shadow:var(--BL);animation:popIn .35s ease-out;background:#fff;display:block;margin:auto;}
 .lbh{padding:28px 26px 16px;text-align:center;background:#fff;border-radius:26px 26px 0 0;}
@@ -231,12 +231,15 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .lbb{padding:0 22px 26px;background:#fff;border-radius:0 0 26px 26px;}
 .lbl{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:0;}
 .sl{display:block;max-height:400px;overflow-y:auto;padding:4px 0;}
-.si2{display:block;padding:14px 16px;border-radius:var(--rs);background:rgba(255,255,255,.78);border:1.5px solid rgba(61,107,79,.09);cursor:pointer;margin-bottom:10px;}
-.sa{width:40px;height:40px;border-radius:50%;background:var(--g3);display:inline-block;text-align:center;line-height:40px;font-size:16px;font-weight:700;color:var(--g);vertical-align:middle;margin-right:14px;}
-.sii{display:inline-block;vertical-align:middle;width:calc(100% - 90px);}
-.sn2{font-size:15px;font-weight:600;color:var(--ch);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sr2{font-size:11px;color:var(--mid);margin-top:3px;display:block;}
-.sav{display:inline-block;vertical-align:middle;color:var(--lt);font-weight:700;text-align:right;width:20px;}
+
+/* Robust block styling to prevent Safari mobile bugs */
+.si2 { display: block; padding: 14px 16px; border-radius: var(--rs); background: rgba(255,255,255,.78); border: 1.5px solid rgba(61,107,79,.09); cursor: pointer; margin-bottom: 10px; width: 100%; box-sizing: border-box; }
+.si2:hover { background: #fff; border-color: var(--g); transform: translateX(3px); box-shadow: var(--BS); }
+.sa { width: 40px; height: 40px; border-radius: 50%; background: var(--g3); display: inline-block; text-align: center; line-height: 40px; font-size: 16px; font-weight: 700; color: var(--g); vertical-align: middle; margin-right: 14px; }
+.sii { display: inline-block; vertical-align: middle; width: calc(100% - 90px); }
+.sn2 { font-size: 15px; font-weight: 600; color: var(--ch); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+.sr2 { font-size: 11px; color: var(--mid); margin-top: 3px; display: block; line-height: 1.2; }
+.sav { display: inline-block; vertical-align: middle; color: var(--lt); font-weight: 700; font-size: 14px; text-align: right; width: 20px; }
 
 /* BOTTOM NAV (MOBILE) */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--nb);background:rgba(255,255,255,.95);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-top:1px solid rgba(61,107,79,.1);z-index:250;align-items:center;justify-content:space-around;padding:0 12px;box-shadow:0 -4px 20px rgba(61,107,79,.08)}
@@ -751,9 +754,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 // CONFIG & STATE
 // ============================================================
 var WA_NUM = '971502380538';
-// HARDCODED FALLBACK: This guarantees mobile will always load the sheet even if local storage is cleared
-var defaultUrl = 'https://script.google.com/macros/s/AKfycbxjUENJrOfdFcYLxdAqxs6ggZtxGcythH48oGiCIlx0tWIEoJBaPHJuZoQf6qFzmLg3Dg/exec';
-var WEBAPP_URL = localStorage.getItem('hp-webapp-url') || defaultUrl;
+var WEBAPP_URL = localStorage.getItem('hp-webapp-url') || '';
 
 var DB = { staff:[], items:[], linen:[], movements:[], requests:[], rooms:[] };
 var SESSION = null; var linenTarget = null; var currentRepPeriod = 'daily'; var T_FILT = 'all';
@@ -796,89 +797,87 @@ function mapData(obj) {
     var norm = {};
     for (var key in obj) {
         if(obj.hasOwnProperty(key)) {
-            norm[key.toLowerCase().trim().replace(/\s+/g, '')] = obj[key];
+            var safeKey = String(key).toLowerCase().trim().replace(/\s+/g, '');
+            if(safeKey) norm[safeKey] = obj[key];
         }
     }
     return norm;
 }
 
 // ============================================================
-// API CALLS (NO-CORS XMLHttpRequest BYPASS)
+// API CALLS (NO-CORS BYPASS & JSONP)
 // ============================================================
-function apiFetch(params, callback) {
-  if (!WEBAPP_URL) { if(callback) callback(null); return; }
-  
-  document.getElementById('syncbar').classList.add('on');
-  var cbName = 'hp_cb_' + Math.round(Math.random() * 1000000);
-  
-  var timeout = setTimeout(function() {
-    try { delete window[cbName]; } catch(e){}
-    document.getElementById('syncbar').classList.remove('on'); 
-    if(callback) callback(null);
-  }, 15000);
-  
-  window[cbName] = function(data) {
-    clearTimeout(timeout); 
-    try { delete window[cbName]; } catch(e){}
-    document.getElementById('syncbar').classList.remove('on'); 
-    if(callback) callback(data);
-  };
-  
-  var pStr = '';
-  for(var key in params) { pStr += key + '=' + encodeURIComponent(params[key]) + '&'; }
-  pStr += 'callback=' + cbName;
-  
-  var script = document.createElement('script'); 
-  script.src = WEBAPP_URL + '?' + pStr;
-  script.onerror = function() { 
-      clearTimeout(timeout); 
-      try{ delete window[cbName]; } catch(e){}
+function apiFetch(params) {
+  if (!WEBAPP_URL) return Promise.resolve(null);
+  return new Promise(function(resolve) {
+    document.getElementById('syncbar').classList.add('on');
+    var cbName = 'hp_cb_' + Math.floor(Math.random() * 1000000);
+    var timeout = setTimeout(function() {
+      try { delete window[cbName]; } catch(e){}
       document.getElementById('syncbar').classList.remove('on'); 
-      if(callback) callback(null); 
-  };
-  document.head.appendChild(script);
+      resolve(null);
+    }, 12000);
+    
+    window[cbName] = function(data) {
+      clearTimeout(timeout); 
+      try { delete window[cbName]; } catch(e){}
+      document.getElementById('syncbar').classList.remove('on'); 
+      resolve(data);
+    };
+    
+    var pStr = '';
+    for(var key in params) { pStr += key + '=' + encodeURIComponent(params[key]) + '&'; }
+    pStr += 'callback=' + cbName;
+    
+    var script = document.createElement('script'); 
+    script.src = WEBAPP_URL + '?' + pStr;
+    script.onerror = function() { 
+        clearTimeout(timeout); 
+        try{ delete window[cbName]; } catch(e){}
+        document.getElementById('syncbar').classList.remove('on'); 
+        resolve(null); 
+    };
+    document.head.appendChild(script);
+  });
 }
 
-// Bulletproof XMLHttpRequest ensures data saves even if Safari blocks Fetch
 function apiPost(body) {
-  if (!WEBAPP_URL) return;
+  if (!WEBAPP_URL) return Promise.resolve({ ok: true, offline: true });
   document.getElementById('syncbar').classList.add('on');
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", WEBAPP_URL, true);
-  xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
-  xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-          document.getElementById('syncbar').classList.remove('on');
-      }
-  };
-  try {
-      xhr.send(JSON.stringify(body));
-  } catch(e) {
+  return fetch(WEBAPP_URL, { 
+      method: 'POST', 
+      body: JSON.stringify(body), 
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+  }).then(function() {
       document.getElementById('syncbar').classList.remove('on');
-  }
+      return { ok: true };
+  }).catch(function() {
+      document.getElementById('syncbar').classList.remove('on');
+      return { ok: false };
+  });
 }
 
-function syncAll(showMsg, onComplete) {
+function syncAll(showMsg) {
   if (!WEBAPP_URL) {
     document.getElementById('cfg-banner').style.display = 'flex';
     if (showMsg) toast('Connect Google Sheet first','tinf'); 
-    if(onComplete) onComplete();
-    return;
+    return Promise.resolve();
   }
   document.getElementById('cfg-banner').style.display = 'none';
   
-  apiFetch({ action: 'getAll' }, function(data) {
+  return apiFetch({ action: 'getAll' }).then(function(data) {
       if (data) {
         if (data.staff) {
             DB.staff = data.staff.map(function(s) {
                 var mapped = mapData(s);
                 return {
                     id: String(mapped.id || ('s'+Math.random())),
-                    name: String(mapped.name || mapped.fullname || mapped.staffname || mapped.therapist || ''),
-                    roles: String(mapped.roles || mapped.role || ''),
-                    store: String(mapped.store || mapped.storeaccess || '')
+                    name: String(mapped.name || mapped.fullname || mapped.staffname || mapped.therapist || '').trim(),
+                    roles: String(mapped.roles || mapped.role || '').trim(),
+                    store: String(mapped.store || mapped.storeaccess || '').trim()
                 };
-            });
+            }).filter(function(s){ return s.name !== ''; });
         }
         
         if (data.rooms) {
@@ -886,22 +885,22 @@ function syncAll(showMsg, onComplete) {
                 var mapped = mapData(r);
                 return {
                     id: String(mapped.id || ('rm'+Math.random())),
-                    num: String(mapped.num || mapped.roomno || mapped.roomnumber || mapped.number || ''),
-                    name: String(mapped.name || mapped.roomname || mapped.room || ''),
+                    num: String(mapped.num || mapped.roomno || mapped.roomnumber || mapped.number || '').trim(),
+                    name: String(mapped.name || mapped.roomname || mapped.room || '').trim(),
                     type: String(mapped.type || mapped.roomtype || 'Treatment'),
                     cap: Number(mapped.cap || mapped.capacity || 1),
                     status: String(mapped.status || 'Active'),
                     notes: String(mapped.notes || '')
                 };
-            });
+            }).filter(function(r){ return r.num !== '' || r.name !== ''; });
         } else { DB.rooms = []; }
 
         if (data.items) {
             DB.items = data.items.map(function(i) {
                 var mapped = mapData(i);
                 return {
-                    code: String(mapped.code || mapped.itemcode || ''),
-                    name: String(mapped.name || mapped.itemname || mapped.item || ''),
+                    code: String(mapped.code || mapped.itemcode || '').trim(),
+                    name: String(mapped.name || mapped.itemname || mapped.item || '').trim(),
                     cat: String(mapped.cat || mapped.category || ''),
                     unit: String(mapped.unit || ''),
                     mainStock: Number(mapped.mainstock || mapped.main || 0),
@@ -909,7 +908,7 @@ function syncAll(showMsg, onComplete) {
                     reorder: Number(mapped.reorder || mapped.reorderlevel || 0),
                     critical: Number(mapped.critical || mapped.criticallevel || 0)
                 };
-            });
+            }).filter(function(i){ return i.name !== '' && i.code !== ''; });
         }
 
         if (data.linen) {
@@ -917,11 +916,12 @@ function syncAll(showMsg, onComplete) {
                 var mapped = mapData(l);
                 return {
                     id: String(mapped.id || ('l'+Math.random())), 
-                    name: String(mapped.name || mapped.item || ''),
+                    name: String(mapped.name || mapped.item || '').trim(),
                     total: Number(mapped.total)||0, available: Number(mapped.available)||0, inUse: Number(mapped.inuse)||0, inWash: Number(mapped.inwash)||0
                 };
-            });
+            }).filter(function(l){ return l.name !== ''; });
         }
+        
         if (data.movements) DB.movements = data.movements;
         if (data.requests) DB.requests = data.requests;
         
@@ -931,15 +931,16 @@ function syncAll(showMsg, onComplete) {
       } else {
         if (showMsg) toast('Sync failed — check connection','terr');
       }
-      if(onComplete) onComplete();
   });
 }
 
 // ============================================================
-// INIT
+// INIT WITH SAFEFALLBACK
 // ============================================================
 window.addEventListener('load', function() {
-  syncAll(false, function() {
+  syncAll(false).catch(function(e) {
+      console.error(e);
+  }).finally(function() {
       document.getElementById('loading-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
   });
@@ -959,9 +960,10 @@ function rebuildLogin() {
       htmlStr += '<div class="si2" onclick="login(\'' + s.id + '\')">' +
         '<div class="sa">' + initial + '</div>' +
         '<div class="sii"><div class="sn2">' + safeName + '</div><div class="sr2">' + roles.join(' · ') + '</div></div>' +
+        '<div class="sav" style="color:var(--lt);font-weight:700;">→</div>' +
       '</div>';
   }
-  g.innerHTML = htmlStr || '<div style="text-align:center;color:var(--mid);padding:20px;font-size:14px;font-weight:600;">No staff loaded.</div>';
+  g.innerHTML = htmlStr || '<div style="text-align:center;color:var(--mid);padding:20px;font-size:14px;font-weight:600;">No staff loaded. Check Google Sheet.</div>';
 }
 
 function login(id) {
@@ -1104,7 +1106,7 @@ function toggleSB(){
 }
 
 // ============================================================
-// THERAPIST GRID LOGIC & MODAL
+// THERAPIST GRID LOGIC & MODAL (WITH SEARCH & FILTERS)
 // ============================================================
 function clearTSearch() {
     var el = document.getElementById('t-search');
@@ -1229,6 +1231,7 @@ function submitTc() {
   closeTc();
   renderTherapistGrid();
 }
+
 
 // ============================================================
 // DASHBOARD
@@ -1578,7 +1581,7 @@ function renderMovements() {
 }
 
 // ============================================================
-// REPORTS
+// REPORTS (Advanced)
 // ============================================================
 function showRepTab(period,el){
   var tbs=document.querySelectorAll('#page-reports .tb'); for(var i=0;i<tbs.length;i++)tbs[i].classList.remove('on');
@@ -1709,6 +1712,7 @@ function markDone(id){
 // ADMIN MASTERS (Staff, Items, Rooms)
 // ============================================================
 
+// --- STAFF ---
 function renderStaff(){
   var tbody=document.getElementById('staff-tbody');
   if(!tbody) return;
@@ -1932,6 +1936,7 @@ function deleteRoom(id){
   renderRoomsMaster(); populateAll();
   toast('Room removed','tok');
 }
+
 
 // ============================================================
 // CONFIG & MISC

@@ -187,7 +187,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .rtx{font-size:12px;color:var(--mid);margin-top:6px;font-style:italic}
 
 /* QUICK ISSUE GRID (THERAPIST) */
-.qg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;padding:16px 20px}
+.qg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;padding:0 20px 16px}
 .qb{padding:20px 14px;border-radius:var(--r);background:rgba(255,255,255,0.75);border:1.5px solid rgba(255,255,255,0.88);cursor:pointer;text-align:center;transition:all .2s;font-family:'Outfit',sans-serif}
 .qb:hover{background:#fff;border-color:var(--g);transform:translateY(-3px);box-shadow:var(--BM)}
 .qb:active{transform:scale(.96)}
@@ -294,7 +294,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   .fi label{font-size:11px}
   .fi input,.fi select,.fi textarea{padding:12px;font-size:16px}
   .ff{padding:14px 16px;flex-wrap:wrap}.ff .btn{flex:1;min-width:100px;justify-content:center}
-  .qg{grid-template-columns:repeat(2,1fr);gap:12px;padding:14px}
+  .qg{grid-template-columns:repeat(2,1fr);gap:12px;padding:0 14px 14px}
   .qb{padding:16px 12px}.qb-em{font-size:32px}.qb-nm{font-size:14px}.qb-st{font-size:12px}
   .lg{grid-template-columns:1fr;gap:12px;padding:14px}.lc{padding:16px}
   .bs{border-radius:22px; margin:20px;}
@@ -392,13 +392,18 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   <div class="body">
     
     <div class="page" id="page-therapist">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
             <div>
                 <div style="font-size:26px; font-weight:700; color:var(--g);">Sub Store Materials</div>
                 <div style="font-size:14px; color:var(--mid); margin-top:4px;">Tap an item to record usage</div>
             </div>
             <button class="btn bd bsm" onclick="logout()">⏻ Logout</button>
         </div>
+        
+        <div class="sr" style="margin-bottom: 20px; border-radius: var(--r); border: 1.5px solid rgba(255,255,255,0.88); background: rgba(255,255,255,0.65);">
+            <div class="sw2" style="max-width: 100%; flex: 1;"><span class="si">⌕</span><input id="t-search" type="text" placeholder="Search materials or towels..." oninput="renderTherapistGrid()"/></div>
+        </div>
+
         <div class="qg" id="therapist-grid"></div>
         <button class="btn bg" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); padding:18px 36px; border-radius:50px; font-size:16px; font-weight:700; z-index:100; box-shadow:0 8px 24px rgba(155,120,64,0.4);" onclick="openRequest()">📨 Request Material</button>
     </div>
@@ -475,7 +480,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
             <div class="fi"><label>Available Limit</label><input id="c-avail" readonly/></div>
             <div class="fi"><label>Quantity * <span id="c-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="c-qty" min="1" placeholder="0"/></div>
             <div class="fi"><label>Purpose</label><select id="c-purpose"><option>Treatment</option><option>Consultation</option><option>Other</option></select></div>
-            <div class="fi"><label>Room</label><select id="c-room" class="room-select"></select></div>
+            <div class="fi"><label>Room *</label><select id="c-room" class="room-select"></select></div>
             <div class="fi f2"><label>Revenue Generated (AED)</label><input type="number" id="c-rev" placeholder="0.00" step="0.01"/></div>
             <div class="fi fa"><label>Remarks</label><textarea id="c-remarks" placeholder="Optional..."></textarea></div>
           </div>
@@ -654,7 +659,21 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   <button class="bb" onclick="nav('alerts')"><span class="bb-ic">⚠</span><span class="bb-lb">Alerts</span></button>
 </div>
 
-</div> <div class="ov" id="cfg-overlay">
+</div> <div class="ov" id="tc-overlay">
+  <div class="bs">
+    <div class="bshd"><div class="bst" id="tc-title">Issue Stock</div><button class="bsc" onclick="closeTc()">✕</button></div>
+    <div class="bsb">
+      <input type="hidden" id="tc-id"/>
+      <input type="hidden" id="tc-type"/>
+      <div class="fi"><label>Quantity * <span id="tc-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="tc-qty" min="1" value="1"/></div>
+      <div class="fi"><label>Room *</label><select id="tc-room" class="room-select"></select></div>
+      <div class="fi"><label>Revenue Generated (AED)</label><input type="number" id="tc-rev" placeholder="0.00" step="0.01"/></div>
+    </div>
+    <div class="bsf"><button class="btn bw" onclick="closeTc()">Cancel</button><button class="btn bp" onclick="submitTc()">Confirm</button></div>
+  </div>
+</div>
+
+<div class="ov" id="cfg-overlay">
   <div class="bs">
     <div class="bshd"><div class="bst">⚙ Google Sheet Config</div><button class="bsc" onclick="hideConfig()">✕</button></div>
     <div class="bsb">
@@ -684,8 +703,10 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   <div class="bs">
     <div class="bshd"><div class="bst" id="linen-modal-title">Linen Action</div><button class="bsc" onclick="closeLinen()">✕</button></div>
     <div class="bsb">
-      <div class="fi"><label>Action</label><select id="la-type"><option value="issue">Issue</option><option value="wash">To Wash</option><option value="return">Return Clean</option></select></div>
+      <div class="fi"><label>Action</label><select id="la-type" onchange="toggleLinenRoom()"><option value="issue">Issue to Room</option><option value="wash">To Wash</option><option value="return">Return Clean</option></select></div>
       <div class="fi"><label>Quantity *</label><input type="number" id="la-qty" min="1" placeholder="0"/></div>
+      <div class="fi" id="la-room-fg"><label>Room *</label><select id="la-room" class="room-select"></select></div>
+      <div class="fi" id="la-rev-fg"><label>Revenue (AED)</label><input type="number" id="la-rev" placeholder="0.00" step="0.01"/></div>
     </div>
     <div class="bsf"><button class="btn bw" onclick="closeLinen()">Cancel</button><button class="btn bp" onclick="submitLinen()">Confirm</button></div>
   </div>
@@ -784,7 +805,7 @@ async function syncAll(showMsg) {
     if (data.linen) DB.linen = data.linen.map(l => ({...l, total: Number(l.total)||0, available: Number(l.available)||0, inUse: Number(l.inUse)||0, inWash: Number(l.inWash)||0}));
     if (data.movements) DB.movements = data.movements;
     if (data.requests) DB.requests = data.requests;
-    if (data.rooms) DB.rooms = data.rooms; else DB.rooms = [{id:'r1',name:'Treatment Room 1'},{id:'r2',name:'Treatment Room 2'},{id:'r3',name:'Doctor Room'}];
+    if (data.rooms && data.rooms.length) DB.rooms = data.rooms; else DB.rooms = [{id:'r1',name:'Treatment Room 1',status:'Active'},{id:'r2',name:'Treatment Room 2',status:'Active'},{id:'r3',name:'Doctor Room',status:'Active'}];
     
     if (showMsg) toast('✓ Synced from Google Sheet','tok');
     rebuildLogin();
@@ -951,11 +972,21 @@ function toggleSB(){
 }
 
 // ============================================================
-// THERAPIST GRID LOGIC
+// THERAPIST GRID LOGIC & MODAL (WITH SEARCH)
 // ============================================================
 function renderTherapistGrid() {
+  const q = (document.getElementById('t-search')?.value || '').toLowerCase();
   const grid = document.getElementById('therapist-grid');
-  let html = DB.items.map(i => {
+  
+  let items = DB.items;
+  let linen = DB.linen;
+  
+  if (q) {
+      items = items.filter(i => i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q));
+      linen = linen.filter(l => l.name.toLowerCase().includes(q));
+  }
+
+  let html = items.map(i => {
     const stock = Number(i.subStock);
     const icon = getIcon(i.name, i.cat);
     return `
@@ -967,7 +998,7 @@ function renderTherapistGrid() {
     `;
   }).join('');
 
-  html += DB.linen.map(l => {
+  html += linen.map(l => {
     return `
       <div class="qb g1" style="border-color:rgba(100,130,200,0.3)" onclick="therapistConsume('${l.id}', 'linen')">
         <span class="qb-em">🧺</span>
@@ -976,10 +1007,37 @@ function renderTherapistGrid() {
       </div>
     `;
   }).join('');
-  grid.innerHTML = html || '<div class="empty" style="grid-column:1/-1">No items available in Sub Store</div>';
+  grid.innerHTML = html || '<div class="empty" style="grid-column:1/-1"><div class="ei">⌕</div>No matching items found</div>';
 }
 
-async function therapistConsume(id, type) {
+function therapistConsume(id, type) {
+  const isItem = type === 'item';
+  const target = isItem ? DB.items.find(i => i.code === id) : DB.linen.find(l => String(l.id) === String(id));
+  if (!target) return;
+
+  const unit = isItem ? target.unit : 'items';
+  
+  document.getElementById('tc-title').textContent = `Issue ${target.name}`;
+  document.getElementById('tc-id').value = id;
+  document.getElementById('tc-type').value = type;
+  document.getElementById('tc-qty').value = '1';
+  document.getElementById('tc-unit').textContent = `(${unit})`;
+  document.getElementById('tc-rev').value = '';
+  document.getElementById('tc-overlay').classList.add('on');
+}
+
+function closeTc() { document.getElementById('tc-overlay').classList.remove('on'); }
+
+async function submitTc() {
+  const id = document.getElementById('tc-id').value;
+  const type = document.getElementById('tc-type').value;
+  const qty = parseInt(document.getElementById('tc-qty').value);
+  const room = document.getElementById('tc-room').value;
+  const rev = parseFloat(document.getElementById('tc-rev').value) || 0;
+
+  if (!qty || qty <= 0) { toast('Invalid quantity', 'terr'); return; }
+  if (!room) { toast('Please select a room', 'terr'); return; }
+
   const isItem = type === 'item';
   const target = isItem ? DB.items.find(i => i.code === id) : DB.linen.find(l => String(l.id) === String(id));
   if (!target) return;
@@ -987,31 +1045,29 @@ async function therapistConsume(id, type) {
   const unit = isItem ? target.unit : 'items';
   const avail = isItem ? Number(target.subStock) : Number(target.available);
 
-  const qtyStr = prompt(`How many ${target.name} (${unit}) are you taking?`, "1");
-  if (qtyStr === null) return;
-  
-  const qty = parseInt(qtyStr);
-  if (isNaN(qty) || qty <= 0) { toast('Please enter a valid number', 'terr'); return; }
-  if (qty > avail) { toast(`Only ${avail} ${unit} available in Sub Store!`, 'terr'); return; }
+  if (qty > avail) { toast(`Only ${avail} ${unit} available!`, 'terr'); return; }
 
   const dt = fmtDT(new Date());
 
   if (isItem) {
     target.subStock = avail - qty;
-    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub', staff: SESSION.name, purpose: 'Therapist Issue', remarks: '' };
+    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub', staff: SESSION.name, purpose: `Therapist Issue — ${room}`, remarks: '', revenue: rev };
     DB.movements.push({...mov});
     await apiPost(mov);
     await apiPost({action: 'updateStock', code: target.code, mainDelta: 0, subDelta: -qty});
   } else {
     target.available = avail - qty; target.inUse = Number(target.inUse) + qty;
-    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: 'Therapist Issue', remarks: '' };
+    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: `Therapist Issue — ${room}`, remarks: '', revenue: rev };
     DB.movements.push({...mov});
     await apiPost(mov);
     await apiPost({action: 'updateLinen', id: target.id, total: target.total, available: target.available, inUse: target.inUse, inWash: target.inWash});
   }
+
   toast(`✓ Recorded ${qty} ${unit} of ${target.name}`, 'tok');
-  renderTherapistGrid(); 
+  closeTc();
+  renderTherapistGrid();
 }
+
 
 // ============================================================
 // DASHBOARD
@@ -1137,6 +1193,12 @@ function renderLinen() {
   </tr>`).join('') : '<tr><td colspan="5"><div class="empty">No wash cycles yet</div></td></tr>';
 }
 
+function toggleLinenRoom() {
+    const isIssue = document.getElementById('la-type').value === 'issue';
+    document.getElementById('la-room-fg').style.display = isIssue ? 'flex' : 'none';
+    document.getElementById('la-rev-fg').style.display = isIssue ? 'flex' : 'none';
+}
+
 function openLinen(id, type) {
   linenTarget = DB.linen.find(l=>String(l.id)===String(id));
   if(!linenTarget) return;
@@ -1144,6 +1206,8 @@ function openLinen(id, type) {
   document.getElementById('linen-modal-title').textContent = `${linenTarget.name} — ${labels[type]||type}`;
   document.getElementById('la-type').value = type;
   document.getElementById('la-qty').value = '';
+  document.getElementById('la-rev').value = '';
+  toggleLinenRoom();
   document.getElementById('linen-overlay').classList.add('on');
 }
 function closeLinen(){document.getElementById('linen-overlay').classList.remove('on');}
@@ -1158,7 +1222,15 @@ async function submitLinen() {
 
   if(t==='issue'){
     if(qty>l.available){toast('Not enough available','terr');return;}
+    const room = document.getElementById('la-room').value;
+    const rev = parseFloat(document.getElementById('la-rev').value) || 0;
+    if(!room) { toast('Please select a room', 'terr'); return; }
+
     l.available=Number(l.available)-qty; l.inUse=Number(l.inUse)+qty;
+    
+    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: l.name, qty, store: 'Sub (Linen)', staff, purpose: `Issue — ${room}`, remarks: '', revenue: rev };
+    DB.movements.push({...mov});
+    apiPost(mov); 
   } else if(t==='wash'){
     if(qty>l.inUse){toast('Cannot exceed in-use count','terr');return;}
     l.inUse=Number(l.inUse)-qty; l.inWash=Number(l.inWash)+qty;
@@ -1204,6 +1276,8 @@ async function submitConsume() {
   const rev=parseFloat(document.getElementById('c-rev').value)||0;
 
   if(!code||qty<=0){toast('Select item and quantity','terr');return;}
+  if(!room){toast('Select a room','terr');return;}
+  
   const item=DB.items.find(i=>i.code===code);
   if(!item) return;
   const avail=Number(store==='main'?item.mainStock:item.subStock);
@@ -1522,7 +1596,6 @@ async function addStaff(){
       DB.staff.push({id,name,roles:rolesStr,store});
   }
   
-  // NOTE: Simulate updating sheet (since original GS might not support updateStaff). We send the entire array.
   await apiPost({action:'saveStaff', staff: DB.staff});
   renderStaff(); rebuildLogin(); resetStaffForm();
   toast(editId ? '✓ Staff Updated' : '✓ Staff added to Sheet','tok');
@@ -1543,7 +1616,7 @@ function renderItemsMaster(){
   if(!tbody) return;
   tbody.innerHTML=DB.items.map(i=>`<tr>
     <td><span class="tc">${i.code}</span></td>
-    <td class="tn">${i.name}</td>
+    <td class="tn">${getIcon(i.name,i.cat)} ${i.name}</td>
     <td><span class="bdg ${i.cat==='Medicines & Oils'?'bgd':'bmd'}">${i.cat}</span></td>
     <td>${i.unit}</td>
     <td class="sn">${i.reorder}</td>
@@ -1567,7 +1640,7 @@ function editItemM(code) {
     if(!i) return;
     document.getElementById('ni-edit-mode').value = '1';
     document.getElementById('ni-code').value = i.code;
-    document.getElementById('ni-code').readOnly = true; // Don't allow changing code
+    document.getElementById('ni-code').readOnly = true; 
     document.getElementById('ni-name').value = i.name;
     document.getElementById('ni-cat').value = i.cat;
     document.getElementById('ni-unit').value = i.unit;

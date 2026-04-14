@@ -225,7 +225,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .bsb{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
 .bsf{padding:16px 24px;border-top:1px solid rgba(61,107,79,0.07);display:flex;justify-content:flex-end;gap:12px;background:rgba(61,107,79,0.02)}
 
-/* LOGIN SCREEN REDESIGN (FLEXBOX OVERFLOW BUG FIX) */
+/* LOGIN SCREEN - BULLETPROOF FLEXBOX FIX */
 .lw{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(145deg,#C8E0D2 0%,#E8DFCF 55%,#C8D8E8 100%)}
 .lb{width:100%;max-width:420px;border-radius:26px;overflow:hidden;box-shadow:var(--BL);animation:popIn .35s ease-out;background:#fff; display:flex; flex-direction:column; max-height:85vh;}
 .lbh{padding:28px 26px 16px;text-align:center;background:#fff;position:relative; flex-shrink:0;}
@@ -233,13 +233,12 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .lbs{font-size:11px;color:var(--mid);letter-spacing:2.5px;text-transform:uppercase;margin-top:6px;position:relative}
 .lbb{padding:0 22px 26px;background:#fff; display:flex; flex-direction:column; flex:1; min-height:0;}
 .lbl{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;display:block; flex-shrink:0; margin-bottom:0;}
-.sl{display:flex;flex-direction:column;gap:10px;overflow-y:auto; flex:1; padding:4px 0;}
-.si2{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--rs);background:rgba(255,255,255,.78);border:1.5px solid rgba(61,107,79,.09);cursor:pointer;transition:all .17s;font-family:'Outfit',sans-serif;text-align:left}
-.si2:hover{background:#fff;border-color:var(--g);transform:translateX(3px);box-shadow:var(--BS)}
-.sa{width:40px;height:40px;border-radius:50%;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--g);flex-shrink:0}
-.sii{flex:1;min-width:0}
-.sn2{font-size:14px;font-weight:600;color:var(--ch); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.sr2{font-size:11px;color:var(--mid);margin-top:3px}
+.sl{display:block; overflow-y:auto; flex:1; padding:4px 0;}
+.si2{display:flex;align-items:center;padding:14px 16px;border-radius:var(--rs);background:rgba(255,255,255,.78);border:1.5px solid rgba(61,107,79,.09);cursor:pointer;margin-bottom:10px;}
+.sa{width:40px;height:40px;border-radius:50%;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--g);flex-shrink:0;margin-right:14px;}
+.sii{flex:1;}
+.sn2{font-size:15px;font-weight:600;color:var(--ch);display:block;white-space:normal;}
+.sr2{font-size:11px;color:var(--mid);margin-top:3px;display:block;}
 
 /* BOTTOM NAV (MOBILE) */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--nb);background:rgba(255,255,255,.95);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-top:1px solid rgba(61,107,79,.1);z-index:250;align-items:center;justify-content:space-around;padding:0 12px;box-shadow:0 -4px 20px rgba(61,107,79,.08)}
@@ -306,11 +305,9 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   .bnav{padding:0 8px}.bb{min-width:54px;padding:8px}.bb-ic{font-size:24px}.bb-lb{font-size:10px}
   .bfab{width:56px;height:56px;font-size:26px;margin-top:-16px}
   
-  /* LOGIN MOBILE OVERRIDES */
   .lb{border-radius:22px;margin:16px; max-height:90vh;}
   .lbh{padding:26px 22px 16px;}
   .lbb{padding:0 20px 24px;}
-  .si2{padding:12px 14px}.sn2{font-size:14px}.sr2{font-size:11px}
   
   .ar{padding:12px 16px;gap:12px}.ad{width:34px;height:34px}.an{font-size:13px}.at{font-size:11px}
   .rsg{grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}.rs{padding:14px}.rsv{font-size:26px}
@@ -752,12 +749,12 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 // ============================================================
 // CONFIG & STATE
 // ============================================================
-const WA_NUM = '971502380538';
-let WEBAPP_URL = localStorage.getItem('hp-webapp-url') || '';
+var WA_NUM = '971502380538';
+var WEBAPP_URL = localStorage.getItem('hp-webapp-url') || '';
 
-let DB = { staff:[], items:[], linen:[], movements:[], requests:[], rooms:[] };
-let SESSION = null; let linenTarget = null; let currentRepPeriod = 'daily'; let T_FILT = 'all';
-const F = { ms:'all', ss:'all', mov:'all' };
+var DB = { staff:[], items:[], linen:[], movements:[], requests:[], rooms:[] };
+var SESSION = null; var linenTarget = null; var currentRepPeriod = 'daily'; var T_FILT = 'all';
+var F = { ms:'all', ss:'all', mov:'all' };
 
 // ============================================================
 // TIMEZONE & DATA MAPPING HELPERS
@@ -766,34 +763,34 @@ function displayDT(dateStr) {
   if (!dateStr) return '—';
   try {
       if (dateStr.endsWith('Z')) {
-          const d = new Date(dateStr);
-          const opts = { timeZone: 'Asia/Dubai', year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
+          var d = new Date(dateStr);
+          var opts = { timeZone: 'Asia/Dubai', year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
           return new Intl.DateTimeFormat('en-US', opts).format(d); 
       }
       return dateStr.slice(0, 16); 
   } catch(e) { return dateStr; }
 }
 function fmtDT(d) {
-  const opts = { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, second: '2-digit' };
-  const p = new Intl.DateTimeFormat('en-GB', opts).formatToParts(d);
-  const pts = {}; p.forEach(x => pts[x.type] = x.value);
-  return `${pts.year}-${pts.month}-${pts.day} ${pts.hour}:${pts.minute}:${pts.second}`;
+  var opts = { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, second: '2-digit' };
+  var p = new Intl.DateTimeFormat('en-GB', opts).formatToParts(d);
+  var pts = {}; p.forEach(function(x) { pts[x.type] = x.value; });
+  return pts.year + '-' + pts.month + '-' + pts.day + ' ' + pts.hour + ':' + pts.minute + ':' + pts.second;
 }
 function todayStr() { return fmtDT(new Date()).slice(0, 10); }
 
 function getIcon(name, cat) {
-  const n = name.toLowerCase();
-  if(n.includes('oil')||n.includes('lotion')) return '🧴';
-  if(n.includes('towel')||n.includes('linen')||n.includes('sheet')) return '🧺';
-  if(n.includes('pill')||n.includes('tablet')) return '💊';
-  if(n.includes('herb')||n.includes('leaf')) return '🌿';
-  if(n.includes('cream')) return '🫙';
+  var n = name.toLowerCase();
+  if(n.indexOf('oil') !== -1 || n.indexOf('lotion') !== -1) return '🧴';
+  if(n.indexOf('towel') !== -1 || n.indexOf('linen') !== -1 || n.indexOf('sheet') !== -1) return '🧺';
+  if(n.indexOf('pill') !== -1 || n.indexOf('tablet') !== -1) return '💊';
+  if(n.indexOf('herb') !== -1 || n.indexOf('leaf') !== -1) return '🌿';
+  if(n.indexOf('cream') !== -1) return '🫙';
   return cat === 'Medicines & Oils' ? '🌿' : '📦';
 }
 
 function mapData(obj) {
-    const norm = {};
-    for (let key in obj) {
+    var norm = {};
+    for (var key in obj) {
         norm[key.toLowerCase().trim().replace(/\s+/g, '')] = obj[key];
     }
     return norm;
@@ -804,166 +801,183 @@ function mapData(obj) {
 // ============================================================
 function apiFetch(params) {
   if (!WEBAPP_URL) return Promise.resolve(null);
-  return new Promise((resolve) => {
+  return new Promise(function(resolve) {
     document.getElementById('syncbar').classList.add('on');
-    const cbName = 'hp_cb_' + Date.now();
-    const timeout = setTimeout(() => {
+    var cbName = 'hp_cb_' + Date.now();
+    var timeout = setTimeout(function() {
       try { delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null); } catch(e){}
     }, 12000);
     window[cbName] = function(data) {
       clearTimeout(timeout); 
       try { delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(data); } catch(e){}
     };
-    const p = new URLSearchParams({...params, callback: cbName});
-    const script = document.createElement('script'); script.src = WEBAPP_URL + '?' + p.toString();
-    script.onerror = () => { clearTimeout(timeout); try{ delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null); }catch(e){} };
+    
+    // Polyfill for URLSearchParams
+    var pStr = '';
+    for(var key in params) { pStr += key + '=' + encodeURIComponent(params[key]) + '&'; }
+    pStr += 'callback=' + cbName;
+    
+    var script = document.createElement('script'); script.src = WEBAPP_URL + '?' + pStr;
+    script.onerror = function() { clearTimeout(timeout); try{ delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null); }catch(e){} };
     document.head.appendChild(script);
   });
 }
 
-async function apiPost(body) {
-  if (!WEBAPP_URL) return { ok: true, offline: true };
-  try {
-    document.getElementById('syncbar').classList.add('on');
-    const res = await fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), mode: 'cors' });
-    const data = await res.json();
-    document.getElementById('syncbar').classList.remove('on');
-    return data;
-  } catch(e) {
-    document.getElementById('syncbar').classList.remove('on');
-    try { await fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), mode: 'no-cors' }); return { ok: true }; } catch(e2) { return { ok: false }; }
-  }
+function apiPost(body) {
+  if (!WEBAPP_URL) return Promise.resolve({ ok: true, offline: true });
+  document.getElementById('syncbar').classList.add('on');
+  return fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), mode: 'cors' })
+    .then(function(res) {
+        document.getElementById('syncbar').classList.remove('on');
+        return res.json();
+    })
+    .catch(function(e) {
+        document.getElementById('syncbar').classList.remove('on');
+        return fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), mode: 'no-cors' })
+            .then(function() { return { ok: true }; })
+            .catch(function(e2) { return { ok: false }; });
+    });
 }
 
-async function syncAll(showMsg) {
+function syncAll(showMsg) {
   if (!WEBAPP_URL) {
     document.getElementById('cfg-banner').style.display = 'flex';
-    if (showMsg) toast('Connect Google Sheet first','tinf'); return;
+    if (showMsg) toast('Connect Google Sheet first','tinf'); return Promise.resolve();
   }
   document.getElementById('cfg-banner').style.display = 'none';
-  const data = await apiFetch({ action: 'getAll' });
-  if (data) {
-    if (data.staff) {
-        DB.staff = data.staff.map(s => {
-            const mapped = mapData(s);
-            return {
-                id: mapped.id || ('s'+Math.random()),
-                name: mapped.name || mapped.fullname || mapped.staffname || '',
-                roles: mapped.roles || mapped.role || '',
-                store: mapped.store || mapped.storeaccess || ''
-            };
-        });
-    }
-    
-    if (data.rooms) {
-        DB.rooms = data.rooms.map(r => {
-            const mapped = mapData(r);
-            return {
-                id: mapped.id || ('rm'+Math.random()),
-                num: mapped.num || mapped.roomno || mapped.roomnumber || mapped.number || '',
-                name: mapped.name || mapped.roomname || '',
-                type: mapped.type || mapped.roomtype || 'Treatment',
-                cap: mapped.cap || mapped.capacity || 1,
-                status: mapped.status || 'Active',
-                notes: mapped.notes || ''
-            };
-        });
-    } else { DB.rooms = []; }
+  return apiFetch({ action: 'getAll' }).then(function(data) {
+      if (data) {
+        if (data.staff) {
+            DB.staff = data.staff.map(function(s) {
+                var mapped = mapData(s);
+                return {
+                    id: mapped.id || ('s'+Math.random()),
+                    name: mapped.name || mapped.fullname || mapped.staffname || '',
+                    roles: mapped.roles || mapped.role || '',
+                    store: mapped.store || mapped.storeaccess || ''
+                };
+            });
+        }
+        
+        if (data.rooms) {
+            DB.rooms = data.rooms.map(function(r) {
+                var mapped = mapData(r);
+                return {
+                    id: mapped.id || ('rm'+Math.random()),
+                    num: mapped.num || mapped.roomno || mapped.roomnumber || mapped.number || '',
+                    name: mapped.name || mapped.roomname || '',
+                    type: mapped.type || mapped.roomtype || 'Treatment',
+                    cap: mapped.cap || mapped.capacity || 1,
+                    status: mapped.status || 'Active',
+                    notes: mapped.notes || ''
+                };
+            });
+        } else { DB.rooms = []; }
 
-    if (data.items) {
-        DB.items = data.items.map(i => {
-            const mapped = mapData(i);
-            return {
-                code: mapped.code || mapped.itemcode || '',
-                name: mapped.name || mapped.itemname || '',
-                cat: mapped.cat || mapped.category || '',
-                unit: mapped.unit || '',
-                mainStock: Number(mapped.mainstock || mapped.main || 0),
-                subStock: Number(mapped.substock || mapped.sub || 0),
-                reorder: Number(mapped.reorder || mapped.reorderlevel || 0),
-                critical: Number(mapped.critical || mapped.criticallevel || 0)
-            };
-        });
-    }
+        if (data.items) {
+            DB.items = data.items.map(function(i) {
+                var mapped = mapData(i);
+                return {
+                    code: mapped.code || mapped.itemcode || '',
+                    name: mapped.name || mapped.itemname || '',
+                    cat: mapped.cat || mapped.category || '',
+                    unit: mapped.unit || '',
+                    mainStock: Number(mapped.mainstock || mapped.main || 0),
+                    subStock: Number(mapped.substock || mapped.sub || 0),
+                    reorder: Number(mapped.reorder || mapped.reorderlevel || 0),
+                    critical: Number(mapped.critical || mapped.criticallevel || 0)
+                };
+            });
+        }
 
-    if (data.linen) DB.linen = data.linen.map(l => ({...l, total: Number(l.total)||0, available: Number(l.available)||0, inUse: Number(l.inUse)||0, inWash: Number(l.inWash)||0}));
-    if (data.movements) DB.movements = data.movements;
-    if (data.requests) DB.requests = data.requests;
-    
-    if (showMsg) toast('✓ Synced from Google Sheet','tok');
-    rebuildLogin();
-    refreshPage(currentPage);
-  } else {
-    if (showMsg) toast('Sync failed — check Web App URL','terr');
-  }
+        if (data.linen) {
+            DB.linen = data.linen.map(function(l) {
+                return {
+                    id: l.id, name: l.name,
+                    total: Number(l.total)||0, available: Number(l.available)||0, inUse: Number(l.inUse)||0, inWash: Number(l.inWash)||0
+                };
+            });
+        }
+        if (data.movements) DB.movements = data.movements;
+        if (data.requests) DB.requests = data.requests;
+        
+        if (showMsg) toast('✓ Synced from Google Sheet','tok');
+        rebuildLogin();
+        refreshPage(currentPage);
+      } else {
+        if (showMsg) toast('Sync failed — check Web App URL','terr');
+      }
+  });
 }
 
 // ============================================================
 // INIT WITH SAFEFALLBACK
 // ============================================================
-window.addEventListener('load', async () => {
-  try {
-      await syncAll(false);
-  } catch(e) {
+window.addEventListener('load', function() {
+  syncAll(false).catch(function(e) {
       console.error(e);
       toast('Error loading data. Check console.', 'terr');
-  } finally {
+  }).finally(function() {
       document.getElementById('loading-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
-  }
+  });
 });
 
 // ============================================================
 // SESSION / LOGIN
 // ============================================================
 function rebuildLogin() {
-  const g = document.getElementById('staff-list');
-  g.innerHTML = DB.staff.map(s => {
-    const roles = typeof s.roles === 'string' ? s.roles.split('|') : (s.roles||[]);
-    const initial = (s.name && s.name.length > 0) ? s.name.charAt(0).toUpperCase() : '?';
-    return `<div class="si2" onclick="login('${s.id}')">
-      <div class="sa">${initial}</div>
-      <div class="sii"><div class="sn2">${s.name || 'Unnamed Staff'}</div><div class="sr2">${roles.join(' · ')}</div></div>
-      <div class="sav" style="color:var(--lt);font-weight:700;">→</div>
-    </div>`;
-  }).join('') || '<div style="text-align:center;color:var(--mid);padding:20px;font-size:14px;font-weight:600;">No staff loaded.</div>';
+  var g = document.getElementById('staff-list');
+  var htmlStr = '';
+  for(var i=0; i<DB.staff.length; i++) {
+      var s = DB.staff[i];
+      var roles = typeof s.roles === 'string' ? s.roles.split('|') : (s.roles||[]);
+      var initial = (s.name && s.name.length > 0) ? s.name.charAt(0).toUpperCase() : '?';
+      htmlStr += '<div class="si2" onclick="login(\'' + s.id + '\')">' +
+        '<div class="sa">' + initial + '</div>' +
+        '<div class="sii"><div class="sn2">' + (s.name || 'Unnamed Staff') + '</div><div class="sr2">' + roles.join(' · ') + '</div></div>' +
+        '<div class="sav" style="color:var(--lt);font-weight:700;">→</div>' +
+      '</div>';
+  }
+  g.innerHTML = htmlStr || '<div style="text-align:center;color:var(--mid);padding:20px;font-size:14px;font-weight:600;">No staff loaded.</div>';
 }
 
 function login(id) {
-  const s = DB.staff.find(x => String(x.id) === String(id));
+  var s = DB.staff.find(function(x) { return String(x.id) === String(id); });
   if (!s) return;
-  const rolesArr = typeof s.roles==='string' ? s.roles.split('|') : (s.roles||[]);
+  var rolesArr = typeof s.roles==='string' ? s.roles.split('|') : (s.roles||[]);
   
-  if (rolesArr.includes('Admin') || rolesArr.includes('Store Supervisor')) {
-    const pin = prompt("Enter Admin/Supervisor PIN:");
+  if (rolesArr.indexOf('Admin') !== -1 || rolesArr.indexOf('Store Supervisor') !== -1) {
+    var pin = prompt("Enter Admin/Supervisor PIN:");
     if (pin !== "1111") {
       toast("Incorrect PIN", "terr");
       return;
     }
   }
 
-  SESSION = { ...s, rolesArr };
+  s.rolesArr = rolesArr;
+  SESSION = s;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   applySession();
 }
 
 function applySession() {
-  const s = SESSION;
+  var s = SESSION;
   document.getElementById('sb-uname').textContent = s.name;
   document.getElementById('sb-urole').textContent = s.rolesArr.join(' · ');
   document.getElementById('sb-ustore').textContent = s.store==='both'?'Main + Sub Store':'Sub Store Only';
 
-  const isAdmin = s.rolesArr.includes('Admin');
-  const isSup   = s.rolesArr.includes('Store Supervisor');
-  const isTher  = s.rolesArr.includes('Therapist') && !isAdmin && !isSup;
+  var isAdmin = s.rolesArr.indexOf('Admin') !== -1;
+  var isSup   = s.rolesArr.indexOf('Store Supervisor') !== -1;
+  var isTher  = s.rolesArr.indexOf('Therapist') !== -1 && !isAdmin && !isSup;
 
-  const pill = document.getElementById('store-pill');
+  var pill = document.getElementById('store-pill');
   if (s.store==='both') { pill.className='sbadge sbg'; pill.textContent='🏪 Main + Sub'; }
   else { pill.className='sbadge sbo'; pill.textContent='🧴 Sub Store'; }
 
   // THERAPIST RESTRICTION (HARD LOCK)
-  const bnav = document.getElementById('bottom-nav');
+  var bnav = document.getElementById('bottom-nav');
   if (isTher) {
       document.getElementById('sidebar').style.display = 'none';
       document.getElementById('main-topbar').style.display = 'none';
@@ -986,7 +1000,7 @@ function applySession() {
   show('nav-items',    isAdmin);
   show('nav-rooms',    isAdmin);
 
-  const cStore = document.getElementById('c-store');
+  var cStore = document.getElementById('c-store');
   if (isTher) { cStore.value='sub'; cStore.disabled=true; } else cStore.disabled=false;
   document.getElementById('c-staff').value = s.name;
   document.getElementById('t-staff').value = s.name;
@@ -1005,27 +1019,32 @@ function logout() {
 // ============================================================
 // NAVIGATION
 // ============================================================
-const TITLES = {
+var TITLES = {
   dashboard:'Dashboard', mainstore:'Main Store', substore:'Sub Store',
   linen:'Linen & Towels', consume:'Issue Stock', transfer:'Transfer',
   grn:'Stock IN (GRN)', requests:'Stock Requests', movements:'Movement Log',
   reports:'Summary Reports', alerts:'Stock Alerts', roomsmgmt:'Room Master',
   staffmgmt:'Staff Master', itemsmgmt:'Items Master', therapist: 'Sub Store Area'
 };
-let currentPage = 'dashboard';
+var currentPage = 'dashboard';
 
 function nav(id) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
-  document.querySelectorAll('.bb').forEach(n=>n.classList.remove('on'));
+  var pages = document.querySelectorAll('.page');
+  for(var i=0; i<pages.length; i++) pages[i].classList.remove('on');
   
-  const pg = document.getElementById('page-'+id);
+  var navItems = document.querySelectorAll('.ni');
+  for(var j=0; j<navItems.length; j++) navItems[j].classList.remove('on');
+  
+  var botNavs = document.querySelectorAll('.bb');
+  for(var k=0; k<botNavs.length; k++) botNavs[k].classList.remove('on');
+  
+  var pg = document.getElementById('page-'+id);
   if (pg) pg.classList.add('on');
   
-  const ni = document.querySelector(`.ni[onclick="nav('${id}')"]`);
+  var ni = document.querySelector('.ni[onclick="nav(\''+id+'\')"]');
   if (ni) ni.classList.add('on');
   
-  const bb = document.querySelector(`.bb[onclick="nav('${id}')"]`);
+  var bb = document.querySelector('.bb[onclick="nav(\''+id+'\')"]');
   if (bb) bb.classList.add('on');
 
   document.getElementById('page-title').textContent = TITLES[id]||id;
@@ -1038,8 +1057,8 @@ function nav(id) {
 }
 
 function refreshPage(id) {
-  const dt = fmtDT(new Date());
-  ['c-dt','t-dt','g-dt'].forEach(x=>{const e=document.getElementById(x);if(e)e.value=dt;});
+  var dt = fmtDT(new Date());
+  ['c-dt','t-dt','g-dt'].forEach(function(x){var e=document.getElementById(x);if(e)e.value=dt;});
   if(id==='dashboard')   renderDash();
   if(id==='therapist')   renderTherapistGrid();
   if(id==='mainstore')   renderStore('main');
@@ -1066,128 +1085,125 @@ function toggleSB(){
 // THERAPIST GRID LOGIC & MODAL (WITH SEARCH & FILTERS)
 // ============================================================
 function clearTSearch() {
-    const el = document.getElementById('t-search');
+    var el = document.getElementById('t-search');
     if(el) el.value = '';
     renderTherapistGrid();
 }
 
 function setTFilter(f) {
     T_FILT = f;
-    ['tf-all','tf-med','tf-con','tf-lin'].forEach(id => {
-        const el = document.getElementById(id);
+    ['tf-all','tf-med','tf-con','tf-lin'].forEach(function(id) {
+        var el = document.getElementById(id);
         if(el) el.classList.remove('on');
     });
-    const map = {'all':'tf-all', 'Medicines & Oils':'tf-med', 'Consumables':'tf-con', 'Linen':'tf-lin'};
-    const activeEl = document.getElementById(map[f]);
+    var map = {'all':'tf-all', 'Medicines & Oils':'tf-med', 'Consumables':'tf-con', 'Linen':'tf-lin'};
+    var activeEl = document.getElementById(map[f]);
     if(activeEl) activeEl.classList.add('on');
     renderTherapistGrid();
 }
 
 function renderTherapistGrid() {
-  const el = document.getElementById('t-search');
-  const q = el ? el.value.toLowerCase() : '';
+  var el = document.getElementById('t-search');
+  var q = el ? el.value.toLowerCase() : '';
   
-  const clearBtn = document.getElementById('t-search-clear');
+  var clearBtn = document.getElementById('t-search-clear');
   if(clearBtn) clearBtn.style.display = q ? 'block' : 'none';
 
-  const grid = document.getElementById('therapist-grid');
+  var grid = document.getElementById('therapist-grid');
   
-  let items = DB.items;
-  let linen = DB.linen;
+  var items = DB.items;
+  var linen = DB.linen;
 
-  // Apply Filter Chips
   if (T_FILT !== 'all') {
       if (T_FILT === 'Linen') {
           items = [];
       } else {
-          items = items.filter(i => i.cat === T_FILT);
+          items = items.filter(function(i) { return i.cat === T_FILT; });
           linen = [];
       }
   }
 
-  // Apply Search
   if (q) {
-      items = items.filter(i => i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q));
-      linen = linen.filter(l => l.name.toLowerCase().includes(q));
+      items = items.filter(function(i) { return i.name.toLowerCase().indexOf(q) !== -1 || i.code.toLowerCase().indexOf(q) !== -1; });
+      linen = linen.filter(function(l) { return l.name.toLowerCase().indexOf(q) !== -1; });
   }
 
-  let html = items.map(i => {
-    const stock = Number(i.subStock);
-    const icon = getIcon(i.name, i.cat);
-    return `
-      <div class="qb g1" onclick="therapistConsume('${i.code}', 'item')">
-        <span class="qb-em">${icon}</span>
-        <div class="qb-nm">${i.name}</div>
-        <div class="qb-st" style="color:${stock <= Number(i.reorder) ? 'var(--orange)' : 'var(--g)'}">Stock: ${stock} ${i.unit}</div>
-      </div>
-    `;
-  }).join('');
+  var html = '';
+  for(var a=0; a<items.length; a++) {
+    var i = items[a];
+    var stock = Number(i.subStock);
+    var icon = getIcon(i.name, i.cat);
+    html += '<div class="qb g1" onclick="therapistConsume(\''+i.code+'\', \'item\')">' +
+        '<span class="qb-em">'+icon+'</span>' +
+        '<div class="qb-nm">'+i.name+'</div>' +
+        '<div class="qb-st" style="color:'+(stock <= Number(i.reorder) ? 'var(--orange)' : 'var(--g)')+'">Stock: '+stock+' '+i.unit+'</div>' +
+      '</div>';
+  }
 
-  html += linen.map(l => {
-    return `
-      <div class="qb g1" style="border-color:rgba(100,130,200,0.3)" onclick="therapistConsume('${l.id}', 'linen')">
-        <span class="qb-em">🧺</span>
-        <div class="qb-nm">${l.name}</div>
-        <div class="qb-st" style="color:#4A6FA5">Clean: ${l.available}</div>
-      </div>
-    `;
-  }).join('');
+  for(var b=0; b<linen.length; b++) {
+    var l = linen[b];
+    html += '<div class="qb g1" style="border-color:rgba(100,130,200,0.3)" onclick="therapistConsume(\''+l.id+'\', \'linen\')">' +
+        '<span class="qb-em">🧺</span>' +
+        '<div class="qb-nm">'+l.name+'</div>' +
+        '<div class="qb-st" style="color:#4A6FA5">Clean: '+l.available+'</div>' +
+      '</div>';
+  }
   
   grid.innerHTML = html || '<div class="empty" style="grid-column:1/-1"><div class="ei">⌕</div>No matching items found</div>';
 }
 
 function therapistConsume(id, type) {
-  const isItem = type === 'item';
-  const target = isItem ? DB.items.find(i => i.code === id) : DB.linen.find(l => String(l.id) === String(id));
+  var isItem = type === 'item';
+  var target = isItem ? DB.items.find(function(i) { return i.code === id; }) : DB.linen.find(function(l) { return String(l.id) === String(id); });
   if (!target) return;
 
-  const unit = isItem ? target.unit : 'items';
+  var unit = isItem ? target.unit : 'items';
   
-  document.getElementById('tc-title').textContent = `Issue ${target.name}`;
+  document.getElementById('tc-title').textContent = 'Issue ' + target.name;
   document.getElementById('tc-id').value = id;
   document.getElementById('tc-type').value = type;
   document.getElementById('tc-qty').value = '1';
-  document.getElementById('tc-unit').textContent = `(${unit})`;
+  document.getElementById('tc-unit').textContent = '(' + unit + ')';
   document.getElementById('tc-overlay').classList.add('on');
 }
 
 function closeTc() { document.getElementById('tc-overlay').classList.remove('on'); }
 
-async function submitTc() {
-  const id = document.getElementById('tc-id').value;
-  const type = document.getElementById('tc-type').value;
-  const qty = parseInt(document.getElementById('tc-qty').value);
-  const room = document.getElementById('tc-room').value;
+function submitTc() {
+  var id = document.getElementById('tc-id').value;
+  var type = document.getElementById('tc-type').value;
+  var qty = parseInt(document.getElementById('tc-qty').value);
+  var room = document.getElementById('tc-room').value;
 
   if (!qty || qty <= 0) { toast('Invalid quantity', 'terr'); return; }
   if (!room) { toast('Please select a room', 'terr'); return; }
 
-  const isItem = type === 'item';
-  const target = isItem ? DB.items.find(i => i.code === id) : DB.linen.find(l => String(l.id) === String(id));
+  var isItem = type === 'item';
+  var target = isItem ? DB.items.find(function(i){ return i.code === id; }) : DB.linen.find(function(l){ return String(l.id) === String(id); });
   if (!target) return;
 
-  const unit = isItem ? target.unit : 'items';
-  const avail = isItem ? Number(target.subStock) : Number(target.available);
+  var unit = isItem ? target.unit : 'items';
+  var avail = isItem ? Number(target.subStock) : Number(target.available);
 
-  if (qty > avail) { toast(`Only ${avail} ${unit} available!`, 'terr'); return; }
+  if (qty > avail) { toast('Only ' + avail + ' ' + unit + ' available!', 'terr'); return; }
 
-  const dt = fmtDT(new Date());
+  var dt = fmtDT(new Date());
 
   if (isItem) {
     target.subStock = avail - qty;
-    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub', staff: SESSION.name, purpose: `${room}`, remarks: '' };
-    DB.movements.push({...mov});
-    await apiPost(mov);
-    await apiPost({action: 'updateStock', code: target.code, mainDelta: 0, subDelta: -qty});
+    var mov1 = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty: qty, store: 'Sub', staff: SESSION.name, purpose: room, remarks: '' };
+    DB.movements.push(JSON.parse(JSON.stringify(mov1)));
+    apiPost(mov1);
+    apiPost({action: 'updateStock', code: target.code, mainDelta: 0, subDelta: -qty});
   } else {
     target.available = avail - qty; target.inUse = Number(target.inUse) + qty;
-    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: `${room}`, remarks: '' };
-    DB.movements.push({...mov});
-    await apiPost(mov);
-    await apiPost({action: 'updateLinen', id: target.id, total: target.total, available: target.available, inUse: target.inUse, inWash: target.inWash});
+    var mov2 = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty: qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: room, remarks: '' };
+    DB.movements.push(JSON.parse(JSON.stringify(mov2)));
+    apiPost(mov2);
+    apiPost({action: 'updateLinen', id: target.id, total: target.total, available: target.available, inUse: target.inUse, inWash: target.inWash});
   }
 
-  toast(`✓ Recorded ${qty} ${unit} of ${target.name}`, 'tok');
+  toast('✓ Recorded ' + qty + ' ' + unit + ' of ' + target.name, 'tok');
   closeTc();
   renderTherapistGrid();
 }
@@ -1197,11 +1213,11 @@ async function submitTc() {
 // DASHBOARD
 // ============================================================
 function renderDash() {
-  const today = todayStr();
-  const low = DB.items.filter(i=>Number(i.subStock)<=Number(i.reorder)||Number(i.mainStock)<=Number(i.reorder));
-  const todayOut = DB.movements.filter(m=>m.type==='OUT'&&String(m.datetime||'').startsWith(today));
-  const linenInUse = DB.linen.reduce((a,l)=>a+Number(l.inUse||0),0);
-  const pendReq = DB.requests.filter(r=>r.status==='Pending').length;
+  var today = todayStr();
+  var low = DB.items.filter(function(i){ return Number(i.subStock)<=Number(i.reorder)||Number(i.mainStock)<=Number(i.reorder); });
+  var todayOut = DB.movements.filter(function(m){ return m.type==='OUT'&&String(m.datetime||'').indexOf(today) === 0; });
+  var linenInUse = DB.linen.reduce(function(a,l){ return a+Number(l.inUse||0); },0);
+  var pendReq = DB.requests.filter(function(r){ return r.status==='Pending'; }).length;
 
   setTxt('d-main', DB.items.length);
   setTxt('d-sub',  DB.items.length);
@@ -1210,33 +1226,36 @@ function renderDash() {
   setTxt('d-linen',linenInUse);
   setTxt('d-req',  pendReq);
 
-  const ab = document.getElementById('alert-badge');
+  var ab = document.getElementById('alert-badge');
   if(low.length){ab.textContent=low.length;ab.style.display='inline-block';}else ab.style.display='none';
 
-  const critical = DB.items.filter(i=>Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical));
-  const warns    = DB.items.filter(i=>!critical.includes(i)&&(Number(i.subStock)<=Number(i.reorder)||Number(i.mainStock)<=Number(i.reorder)));
-  const all = [...critical,...warns].slice(0,6);
-  document.getElementById('dash-alerts').innerHTML = all.length ? all.map(i=>{
-    const isCrit = Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical);
-    return `<div class="ar">
-      <div class="ad ${isCrit?'adr':'ado'}">${isCrit?'⊘':'⚠'}</div>
-      <div class="ab">
-        <div class="an">${i.name}</div>
-        <div class="at">Main: ${i.mainStock} ${i.unit} · Sub: ${i.subStock} ${i.unit}</div>
-      </div>
-      <span class="bdg ${isCrit?'bal':'bwn'}">${isCrit?'Critical':'Low'}</span>
-    </div>`;
+  var critical = DB.items.filter(function(i){ return Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical); });
+  var warns    = DB.items.filter(function(i){ return critical.indexOf(i) === -1 && (Number(i.subStock)<=Number(i.reorder)||Number(i.mainStock)<=Number(i.reorder)); });
+  var all = critical.concat(warns).slice(0,6);
+  
+  document.getElementById('dash-alerts').innerHTML = all.length ? all.map(function(i) {
+    var isCrit = Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical);
+    return '<div class="ar">' +
+      '<div class="ad '+(isCrit?'adr':'ado')+'">'+(isCrit?'⊘':'⚠')+'</div>' +
+      '<div class="ab">' +
+        '<div class="an">'+i.name+'</div>' +
+        '<div class="at">Main: '+i.mainStock+' '+i.unit+' · Sub: '+i.subStock+' '+i.unit+'</div>' +
+      '</div>' +
+      '<span class="bdg '+(isCrit?'bal':'bwn')+'">'+(isCrit?'Critical':'Low')+'</span>' +
+    '</div>';
   }).join('') : '<div class="empty"><div class="ei">✅</div>All stock levels OK</div>';
 
-  const recent = [...DB.movements].reverse().slice(0,8);
-  document.getElementById('dash-mov').innerHTML = recent.length ? recent.map(m=>`<tr>
-    <td class="tc">${displayDT(m.datetime)}</td>
-    <td class="tn"><span class="sa hide-m" style="width:24px;height:24px;font-size:10px;">${(m.staff||'-').charAt(0)}</span> ${m.staff||'—'}</td>
-    <td class="tn">${m.itemName||'—'}</td>
-    <td><span class="bdg ${m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':m.type==='WASH'?'bws':'bot'}">${m.type}</span></td>
-    <td class="sn">${m.qty}</td>
-    <td class="tc">${m.store||'—'}</td>
-  </tr>`).join('') : '<tr><td colspan="6"><div class="empty">No movements yet</div></td></tr>';
+  var recent = DB.movements.slice().reverse().slice(0,8);
+  document.getElementById('dash-mov').innerHTML = recent.length ? recent.map(function(m) {
+    return '<tr>' +
+    '<td class="tc">'+displayDT(m.datetime)+'</td>' +
+    '<td class="tn"><span class="sa hide-m" style="width:24px;height:24px;font-size:10px;">'+(m.staff||'-').charAt(0)+'</span> '+(m.staff||'—')+'</td>' +
+    '<td class="tn">'+(m.itemName||'—')+'</td>' +
+    '<td><span class="bdg '+(m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':m.type==='WASH'?'bws':'bot')+'">'+m.type+'</span></td>' +
+    '<td class="sn">'+m.qty+'</td>' +
+    '<td class="tc">'+(m.store||'—')+'</td>' +
+  '</tr>';
+  }).join('') : '<tr><td colspan="6"><div class="empty">No movements yet</div></td></tr>';
 }
 
 // ============================================================
@@ -1244,90 +1263,91 @@ function renderDash() {
 // ============================================================
 function setF(store,f,el){
   if(store==='main') F.ms=f; else F.ss=f;
-  el.closest('.sr').querySelectorAll('.fc').forEach(c=>c.classList.remove('on'));
+  var fcs = el.closest('.sr').querySelectorAll('.fc');
+  for(var i=0; i<fcs.length; i++) fcs[i].classList.remove('on');
   el.classList.add('on');
   renderStore(store);
 }
 function renderStore(store) {
-  const isMain = store==='main';
-  const srchEl = document.getElementById(isMain?'ms-q':'ss-q');
-  const q = (srchEl ? srchEl.value : '').toLowerCase();
-  const filt = isMain ? F.ms : F.ss;
-  let items = DB.items.filter(i=>{
-    const mq = i.name.toLowerCase().includes(q)||i.code.toLowerCase().includes(q);
-    const stock = Number(isMain?i.mainStock:i.subStock);
+  var isMain = store==='main';
+  var srchEl = document.getElementById(isMain?'ms-q':'ss-q');
+  var q = (srchEl ? srchEl.value : '').toLowerCase();
+  var filt = isMain ? F.ms : F.ss;
+  var items = DB.items.filter(function(i){
+    var mq = i.name.toLowerCase().indexOf(q) !== -1 || i.code.toLowerCase().indexOf(q) !== -1;
+    var stock = Number(isMain?i.mainStock:i.subStock);
     if(filt==='low') return mq&&stock<=Number(i.reorder);
     if(filt!=='all') return mq&&i.cat===filt;
     return mq;
   });
-  const tbody = document.getElementById(isMain?'ms-tbody':'ss-tbody');
+  var tbody = document.getElementById(isMain?'ms-tbody':'ss-tbody');
   if(!tbody) return;
-  tbody.innerHTML = items.map(i=>{
-    const stock = Number(isMain?i.mainStock:i.subStock);
-    const isCrit = stock<=Number(i.critical);
-    const isLow  = !isCrit&&stock<=Number(i.reorder);
-    const pct = Number(i.reorder)>0?Math.min(100,Math.round((stock/Number(i.reorder))*100)):100;
-    const barColor = isCrit?'var(--red)':isLow?'var(--orange)':'var(--g)';
-    const status = isCrit?'<span class="bdg bal">⊘ Critical</span>':isLow?'<span class="bdg bwn">⚠ Low</span>':'<span class="bdg bok">OK</span>';
-    const catCls = i.cat==='Medicines & Oils' ? 'cat-med' : 'cat-con';
-    return `<tr>
-      <td><span class="tc">${i.code}</span></td>
-      <td class="${catCls}"><div class="tn"><span style="margin-right:6px">${getIcon(i.name,i.cat)}</span> ${i.name}</div></td>
-      <td><span class="tc">${i.cat==='Medicines & Oils'?'Med/Oil':'Consumable'}</span></td>
-      <td>${i.unit}</td>
-      <td><div class="sw"><div class="sb hide-m"><div class="sbf" style="width:${pct}%;background:${barColor}"></div></div><span class="sn" style="color:${barColor}">${stock}</span></div></td>
-      <td class="sn">${i.reorder}</td>
-      <td>${status}</td>
-      <td><button class="btn bw bxs" onclick="quickConsume('${i.code}','${store}')">↑ Issue</button>${isMain?`<button class="btn bxs" style="margin-left:4px;background:var(--gold2);border:none;cursor:pointer;border-radius:6px;color:var(--gold);font-weight:700;" onclick="quickTransfer('${i.code}')">⇄</button>`:''}</td>
-    </tr>`;
-  }).join('') || `<tr><td colspan="8"><div class="empty">No items found</div></td></tr>`;
+  tbody.innerHTML = items.map(function(i){
+    var stock = Number(isMain?i.mainStock:i.subStock);
+    var isCrit = stock<=Number(i.critical);
+    var isLow  = !isCrit&&stock<=Number(i.reorder);
+    var pct = Number(i.reorder)>0?Math.min(100,Math.round((stock/Number(i.reorder))*100)):100;
+    var barColor = isCrit?'var(--red)':isLow?'var(--orange)':'var(--g)';
+    var status = isCrit?'<span class="bdg bal">⊘ Critical</span>':isLow?'<span class="bdg bwn">⚠ Low</span>':'<span class="bdg bok">OK</span>';
+    var catCls = i.cat==='Medicines & Oils' ? 'cat-med' : 'cat-con';
+    return '<tr>' +
+      '<td><span class="tc">'+i.code+'</span></td>' +
+      '<td class="'+catCls+'"><div class="tn"><span style="margin-right:6px">'+getIcon(i.name,i.cat)+'</span> '+i.name+'</div></td>' +
+      '<td><span class="tc">'+(i.cat==='Medicines & Oils'?'Med/Oil':'Consumable')+'</span></td>' +
+      '<td>'+i.unit+'</td>' +
+      '<td><div class="sw"><div class="sb hide-m"><div class="sbf" style="width:'+pct+'%;background:'+barColor+'"></div></div><span class="sn" style="color:'+barColor+'">'+stock+'</span></div></td>' +
+      '<td class="sn">'+i.reorder+'</td>' +
+      '<td>'+status+'</td>' +
+      '<td><button class="btn bw bxs" onclick="quickConsume(\''+i.code+'\',\''+store+'\')">↑ Issue</button>'+(isMain?'<button class="btn bxs" style="margin-left:4px;background:var(--gold2);border:none;cursor:pointer;border-radius:6px;color:var(--gold);font-weight:700;" onclick="quickTransfer(\''+i.code+'\')">⇄</button>':'')+'</td>' +
+    '</tr>';
+  }).join('') || '<tr><td colspan="8"><div class="empty">No items found</div></td></tr>';
 }
 
 // ============================================================
 // LINEN
 // ============================================================
 function renderLinen() {
-  document.getElementById('linen-list').innerHTML = DB.linen.map(l=>`
-    <div class="lc">
-      <div class="lh">
-        <div class="li">🧺</div>
-        <div>
-          <div class="ln">${l.name}</div>
-          <div class="ls">Total Inventory: <strong>${l.total}</strong></div>
-        </div>
-      </div>
-      <div class="lcg">
-        <div class="lci la"><div class="lcn">${l.available}</div><div class="lcl">Available</div></div>
-        <div class="lci lu"><div class="lcn">${l.inUse}</div><div class="lcl">In Use</div></div>
-        <div class="lci lw"><div class="lcn">${l.inWash}</div><div class="lcl">In Wash</div></div>
-      </div>
-      <div class="lbg">
-        <button class="btn bp" onclick="openLinen('${l.id}','issue')">Issue</button>
-        <button class="btn bw" onclick="openLinen('${l.id}','wash')">→ Wash</button>
-        <button class="btn bw" onclick="openLinen('${l.id}','return')">← Clean</button>
-      </div>
-    </div>`).join('') || '<div class="empty">No linen data loaded</div>';
+  document.getElementById('linen-list').innerHTML = DB.linen.map(function(l) { return '' +
+    '<div class="lc">' +
+      '<div class="lh">' +
+        '<div class="li">🧺</div>' +
+        '<div>' +
+          '<div class="ln">'+l.name+'</div>' +
+          '<div class="ls">Total Inventory: <strong>'+l.total+'</strong></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="lcg">' +
+        '<div class="lci la"><div class="lcn">'+l.available+'</div><div class="lcl">Available</div></div>' +
+        '<div class="lci lu"><div class="lcn">'+l.inUse+'</div><div class="lcl">In Use</div></div>' +
+        '<div class="lci lw"><div class="lcn">'+l.inWash+'</div><div class="lcl">In Wash</div></div>' +
+      '</div>' +
+      '<div class="lbg">' +
+        '<button class="btn bp" onclick="openLinen(\''+l.id+'\',\'issue\')">Issue</button>' +
+        '<button class="btn bw" onclick="openLinen(\''+l.id+'\',\'wash\')">→ Wash</button>' +
+        '<button class="btn bw" onclick="openLinen(\''+l.id+'\',\'return\')">← Clean</button>' +
+      '</div>' +
+    '</div>'; }).join('') || '<div class="empty">No linen data loaded</div>';
 
-  const rows = [...DB.washlog].reverse().slice(0,20);
-  document.getElementById('wash-tbody').innerHTML = rows.length ? rows.map(w=>`<tr>
-    <td class="tc">${displayDT(w.datetime||w.id)}</td>
-    <td class="tn">${w.item}</td>
-    <td class="sn">${w.sent||0}</td>
-    <td class="sn">${w.returned||0}</td>
-    <td class="tn">${w.staff}</td>
-  </tr>`).join('') : '<tr><td colspan="5"><div class="empty">No wash cycles yet</div></td></tr>';
+  var rows = DB.washlog ? DB.washlog.slice().reverse().slice(0,20) : [];
+  document.getElementById('wash-tbody').innerHTML = rows.length ? rows.map(function(w){ return '<tr>' +
+    '<td class="tc">'+displayDT(w.datetime||w.id)+'</td>' +
+    '<td class="tn">'+w.item+'</td>' +
+    '<td class="sn">'+(w.sent||0)+'</td>' +
+    '<td class="sn">'+(w.returned||0)+'</td>' +
+    '<td class="tn">'+w.staff+'</td>' +
+  '</tr>'; }).join('') : '<tr><td colspan="5"><div class="empty">No wash cycles yet</div></td></tr>';
 }
 
 function toggleLinenRoom() {
-    const isIssue = document.getElementById('la-type').value === 'issue';
+    var isIssue = document.getElementById('la-type').value === 'issue';
     document.getElementById('la-room-fg').style.display = isIssue ? 'flex' : 'none';
 }
 
 function openLinen(id, type) {
-  linenTarget = DB.linen.find(l=>String(l.id)===String(id));
+  linenTarget = DB.linen.find(function(l){ return String(l.id)===String(id); });
   if(!linenTarget) return;
-  const labels = {issue:'Issue to Room',wash:'Send to Wash',return:'Return from Wash'};
-  document.getElementById('linen-modal-title').textContent = `${linenTarget.name} — ${labels[type]||type}`;
+  var labels = {issue:'Issue to Room',wash:'Send to Wash',return:'Return from Wash'};
+  document.getElementById('linen-modal-title').textContent = linenTarget.name + ' — ' + (labels[type]||type);
   document.getElementById('la-type').value = type;
   document.getElementById('la-qty').value = '';
   toggleLinenRoom();
@@ -1335,35 +1355,35 @@ function openLinen(id, type) {
 }
 function closeLinen(){document.getElementById('linen-overlay').classList.remove('on');}
 
-async function submitLinen() {
-  const l = linenTarget;
-  const t = document.getElementById('la-type').value;
-  const qty = parseInt(document.getElementById('la-qty').value)||0;
+function submitLinen() {
+  var l = linenTarget;
+  var t = document.getElementById('la-type').value;
+  var qty = parseInt(document.getElementById('la-qty').value)||0;
   if(!qty||qty<=0){toast('Enter valid quantity','terr');return;}
-  const dt = fmtDT(new Date());
-  const staff = SESSION.name;
+  var dt = fmtDT(new Date());
+  var staff = SESSION.name;
 
   if(t==='issue'){
     if(qty>l.available){toast('Not enough available','terr');return;}
-    const room = document.getElementById('la-room').value;
+    var room = document.getElementById('la-room').value;
     if(!room) { toast('Please select a room', 'terr'); return; }
 
     l.available=Number(l.available)-qty; l.inUse=Number(l.inUse)+qty;
     
-    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: l.name, qty, store: 'Sub (Linen)', staff, purpose: `${room}`, remarks: '' };
-    DB.movements.push({...mov});
+    var mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: l.name, qty: qty, store: 'Sub (Linen)', staff: staff, purpose: room, remarks: '' };
+    DB.movements.push(JSON.parse(JSON.stringify(mov)));
     apiPost(mov); 
   } else if(t==='wash'){
     if(qty>l.inUse){toast('Cannot exceed in-use count','terr');return;}
     l.inUse=Number(l.inUse)-qty; l.inWash=Number(l.inWash)+qty;
-    await apiPost({action:'logWash',datetime:dt,item:l.name,sent:qty,returned:0,staff});
+    apiPost({action:'logWash',datetime:dt,item:l.name,sent:qty,returned:0,staff:staff});
   } else if(t==='return'){
     if(qty>l.inWash){toast('Cannot exceed in-wash count','terr');return;}
     l.inWash=Number(l.inWash)-qty; l.available=Number(l.available)+qty;
-    await apiPost({action:'logWash',datetime:dt,item:l.name,sent:0,returned:qty,staff});
+    apiPost({action:'logWash',datetime:dt,item:l.name,sent:0,returned:qty,staff:staff});
   }
 
-  await apiPost({action:'updateLinen',id:l.id,total:l.total,available:l.available,inUse:l.inUse,inWash:l.inWash});
+  apiPost({action:'updateLinen',id:l.id,total:l.total,available:l.available,inUse:l.inUse,inWash:l.inWash});
   closeLinen();
   renderLinen();
   toast('✓ Linen updated','tok');
@@ -1373,58 +1393,57 @@ async function submitLinen() {
 // CONSUME
 // ============================================================
 function updateCI(){
-  const cs = document.getElementById('c-store');
+  var cs = document.getElementById('c-store');
   populateSel('c-item', cs ? cs.value : 'sub');
 }
 function updateCS(){
-  const code=document.getElementById('c-item').value;
-  const store=document.getElementById('c-store').value;
-  const item=DB.items.find(i=>i.code===code);
-  const el=document.getElementById('c-avail');
-  const un=document.getElementById('c-qty-unit');
+  var code=document.getElementById('c-item').value;
+  var store=document.getElementById('c-store').value;
+  var item=DB.items.find(function(i){ return i.code===code; });
+  var el=document.getElementById('c-avail');
+  var un=document.getElementById('c-qty-unit');
   if(item){
-    const limit = store==='main'?item.mainStock:item.subStock;
-    el.value=`${limit} ${item.unit}`;
-    un.textContent=`(${item.unit})`;
+    var limit = store==='main'?item.mainStock:item.subStock;
+    el.value = limit + ' ' + item.unit;
+    un.textContent = '(' + item.unit + ')';
   }else{
     el.value=''; un.textContent='';
   }
 }
 
-async function submitConsume() {
-  const store=document.getElementById('c-store').value;
-  const code=document.getElementById('c-item').value;
-  const qty=parseInt(document.getElementById('c-qty').value)||0;
-  const purpose=document.getElementById('c-purpose').value;
-  const room=document.getElementById('c-room').value;
-  const remarks=document.getElementById('c-remarks').value;
+function submitConsume() {
+  var store=document.getElementById('c-store').value;
+  var code=document.getElementById('c-item').value;
+  var qty=parseInt(document.getElementById('c-qty').value)||0;
+  var purpose=document.getElementById('c-purpose').value;
+  var room=document.getElementById('c-room').value;
+  var remarks=document.getElementById('c-remarks').value;
 
   if(!code||qty<=0){toast('Select item and quantity','terr');return;}
   if(!room){toast('Select a room','terr');return;}
   
-  const item=DB.items.find(i=>i.code===code);
+  var item=DB.items.find(function(i){ return i.code===code; });
   if(!item) return;
-  const avail=Number(store==='main'?item.mainStock:item.subStock);
-  if(avail<qty){toast(`Insufficient stock. Available: ${avail} ${item.unit}`,'terr');return;}
+  var avail=Number(store==='main'?item.mainStock:item.subStock);
+  if(avail<qty){toast('Insufficient stock. Available: ' + avail + ' ' + item.unit,'terr');return;}
 
   if(store==='main') item.mainStock=avail-qty; else item.subStock=avail-qty;
-  const dt=fmtDT(new Date());
+  var dt=fmtDT(new Date());
   
-  // Combine purpose and room
-  let finalPurpose = room;
-  if(purpose && purpose !== 'Other') finalPurpose = `${purpose} — ${room}`;
+  var finalPurpose = room;
+  if(purpose && purpose !== 'Other') finalPurpose = purpose + ' — ' + room;
 
-  const mov={
-    action:'logMovement', datetime:dt, type:'OUT', itemName:item.name, qty, 
-    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:finalPurpose, remarks
+  var mov={
+    action:'logMovement', datetime:dt, type:'OUT', itemName:item.name, qty:qty, 
+    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:finalPurpose, remarks:remarks
   };
   
-  DB.movements.push({...mov});
+  DB.movements.push(JSON.parse(JSON.stringify(mov)));
 
-  await apiPost(mov);
-  await apiPost({action:'updateStock',code:item.code,mainDelta:store==='main'?-qty:0,subDelta:store==='sub'?-qty:0});
+  apiPost(mov);
+  apiPost({action:'updateStock',code:item.code,mainDelta:store==='main'?-qty:0,subDelta:store==='sub'?-qty:0});
   checkCritical(item);
-  toast(`✓ Issued: -${qty} ${item.unit} of ${item.name}`,'tok');
+  toast('✓ Issued: -' + qty + ' ' + item.unit + ' of ' + item.name,'tok');
   updateCS();
   document.getElementById('c-qty').value='';
   document.getElementById('c-remarks').value='';
@@ -1432,117 +1451,117 @@ async function submitConsume() {
 }
 
 function renderMyIssues() {
-  const today=todayStr();
-  const rows=DB.movements.filter(m=>m.type==='OUT'&&m.staff===SESSION.name&&String(m.datetime||'').startsWith(today)).reverse();
-  const tbody=document.getElementById('my-issues');
+  var today=todayStr();
+  var rows=DB.movements.filter(function(m){ return m.type==='OUT'&&m.staff===SESSION.name&&String(m.datetime||'').indexOf(today)===0; }).reverse();
+  var tbody=document.getElementById('my-issues');
   if(!tbody) return;
-  tbody.innerHTML=rows.length?rows.map(m=>`<tr>
-    <td class="tc">${displayDT(m.datetime)}</td>
-    <td class="tn">${m.itemName}</td>
-    <td class="sn" style="color:var(--red)">-${m.qty}</td>
-    <td class="tn">${m.purpose}</td>
-    <td class="tc">${m.store}</td>
-  </tr>`).join(''):'<tr><td colspan="5"><div class="empty">No issues today</div></td></tr>';
+  tbody.innerHTML=rows.length?rows.map(function(m){ return '<tr>' +
+    '<td class="tc">'+displayDT(m.datetime)+'</td>' +
+    '<td class="tn">'+m.itemName+'</td>' +
+    '<td class="sn" style="color:var(--red)">-'+m.qty+'</td>' +
+    '<td class="tn">'+m.purpose+'</td>' +
+    '<td class="tc">'+m.store+'</td>' +
+  '</tr>'; }).join('') : '<tr><td colspan="5"><div class="empty">No issues today</div></td></tr>';
 }
 function clearForm(f){
-  if(f==='consume'){['c-item','c-qty','c-avail','c-remarks'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
-  if(f==='transfer'){['t-item','t-qty','t-avail'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
-  if(f==='grn'){['g-item','g-qty','g-ref','g-remarks'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
+  if(f==='consume'){['c-item','c-qty','c-avail','c-remarks'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});}
+  if(f==='transfer'){['t-item','t-qty','t-avail'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});}
+  if(f==='grn'){['g-item','g-qty','g-ref','g-remarks'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});}
 }
 
 // ============================================================
 // TRANSFER
 // ============================================================
 function updateTS(){
-    const code=document.getElementById('t-item').value;
-    const item=DB.items.find(i=>i.code===code);
-    const el=document.getElementById('t-avail');
-    const un=document.getElementById('t-qty-unit');
+    var code=document.getElementById('t-item').value;
+    var item=DB.items.find(function(i){ return i.code===code; });
+    var el=document.getElementById('t-avail');
+    var un=document.getElementById('t-qty-unit');
     if(item){
-        el.value=`${item.mainStock} ${item.unit}`;
-        un.textContent=`(${item.unit})`;
+        el.value=item.mainStock + ' ' + item.unit;
+        un.textContent='(' + item.unit + ')';
     }else{
         el.value=''; un.textContent='';
     }
 }
-async function submitTransfer() {
-  const code=document.getElementById('t-item').value;
-  const qty=parseInt(document.getElementById('t-qty').value)||0;
-  const reason=document.getElementById('t-reason').value;
+function submitTransfer() {
+  var code=document.getElementById('t-item').value;
+  var qty=parseInt(document.getElementById('t-qty').value)||0;
+  var reason=document.getElementById('t-reason').value;
   if(!code||qty<=0){toast('Select item and quantity','terr');return;}
-  const item=DB.items.find(i=>i.code===code);
-  if(Number(item.mainStock)<qty){toast(`Insufficient main stock. Available: ${item.mainStock} ${item.unit}`,'terr');return;}
+  var item=DB.items.find(function(i){ return i.code===code; });
+  if(Number(item.mainStock)<qty){toast('Insufficient main stock. Available: ' + item.mainStock + ' ' + item.unit,'terr');return;}
   item.mainStock=Number(item.mainStock)-qty;
   item.subStock=Number(item.subStock)+qty;
-  const dt=fmtDT(new Date());
-  const mov={action:'logMovement',datetime:dt,type:'TRANSFER',itemName:item.name,qty,store:'Main→Sub',staff:SESSION.name,purpose:reason,remarks:''};
-  DB.movements.push({...mov});
-  await apiPost(mov);
-  await apiPost({action:'updateStock',code:item.code,mainDelta:-qty,subDelta:qty});
+  var dt=fmtDT(new Date());
+  var mov={action:'logMovement',datetime:dt,type:'TRANSFER',itemName:item.name,qty:qty,store:'Main→Sub',staff:SESSION.name,purpose:reason,remarks:''};
+  DB.movements.push(JSON.parse(JSON.stringify(mov)));
+  apiPost(mov);
+  apiPost({action:'updateStock',code:item.code,mainDelta:-qty,subDelta:qty});
   checkCritical(item);
-  toast(`✓ Transferred ${qty} ${item.unit} to Sub Store`,'tok');
+  toast('✓ Transferred ' + qty + ' ' + item.unit + ' to Sub Store','tok');
   clearForm('transfer');
   renderTransfers();
 }
 function renderTransfers(){
-  const rows=DB.movements.filter(m=>m.type==='TRANSFER').reverse().slice(0,15);
-  const tbody=document.getElementById('tr-tbody');
+  var rows=DB.movements.filter(function(m){ return m.type==='TRANSFER'; }).reverse().slice(0,15);
+  var tbody=document.getElementById('tr-tbody');
   if(!tbody) return;
-  tbody.innerHTML=rows.length?rows.map(m=>`<tr>
-    <td class="tc">${displayDT(m.datetime)}</td><td class="tn">${m.itemName}</td>
-    <td class="sn">${m.qty}</td><td class="tn">${m.staff}</td><td class="tc">${m.purpose}</td>
-  </tr>`).join(''):'<tr><td colspan="5"><div class="empty">No transfers yet</div></td></tr>';
+  tbody.innerHTML=rows.length?rows.map(function(m){ return '<tr>' +
+    '<td class="tc">'+displayDT(m.datetime)+'</td><td class="tn">'+m.itemName+'</td>' +
+    '<td class="sn">'+m.qty+'</td><td class="tn">'+m.staff+'</td><td class="tc">'+m.purpose+'</td>' +
+  '</tr>'; }).join(''):'<tr><td colspan="5"><div class="empty">No transfers yet</div></td></tr>';
 }
 
 // ============================================================
 // GRN
 // ============================================================
-async function submitGRN() {
-  const code=document.getElementById('g-item').value;
-  const store=document.getElementById('g-store').value;
-  const qty=parseInt(document.getElementById('g-qty').value)||0;
-  const ref=document.getElementById('g-ref').value||autoRef('GRN');
-  const remarks=document.getElementById('g-remarks').value;
+function submitGRN() {
+  var code=document.getElementById('g-item').value;
+  var store=document.getElementById('g-store').value;
+  var qty=parseInt(document.getElementById('g-qty').value)||0;
+  var ref=document.getElementById('g-ref').value||autoRef('GRN');
+  var remarks=document.getElementById('g-remarks').value;
   if(!code||qty<=0){toast('Select item and quantity','terr');return;}
-  const item=DB.items.find(i=>i.code===code);
+  var item=DB.items.find(function(i){ return i.code===code; });
   if(store==='main') item.mainStock=Number(item.mainStock)+qty;
   else item.subStock=Number(item.subStock)+qty;
-  const dt=fmtDT(new Date());
-  const mov={action:'logMovement',datetime:dt,type:'IN',itemName:item.name,qty,store:store==='main'?'Main':'Sub',staff:SESSION.name,purpose:'GRN',remarks};
-  DB.movements.push({...mov});
-  await apiPost(mov);
-  await apiPost({action:'updateStock',code:item.code,mainDelta:store==='main'?qty:0,subDelta:store==='sub'?qty:0});
-  toast(`✓ Stock IN: +${qty} ${item.unit} of ${item.name}`,'tok');
+  var dt=fmtDT(new Date());
+  var mov={action:'logMovement',datetime:dt,type:'IN',itemName:item.name,qty:qty,store:store==='main'?'Main':'Sub',staff:SESSION.name,purpose:'GRN',remarks:remarks};
+  DB.movements.push(JSON.parse(JSON.stringify(mov)));
+  apiPost(mov);
+  apiPost({action:'updateStock',code:item.code,mainDelta:store==='main'?qty:0,subDelta:store==='sub'?qty:0});
+  toast('✓ Stock IN: +' + qty + ' ' + item.unit + ' of ' + item.name,'tok');
   clearForm('grn');
 }
 
 // ============================================================
 // MOVEMENTS
 // ============================================================
-function setMF(f,el){F.mov=f;document.querySelectorAll('#page-movements .fc').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderMovements();}
+function setMF(f,el){F.mov=f;var fcs=document.querySelectorAll('#page-movements .fc');for(var i=0;i<fcs.length;i++)fcs[i].classList.remove('on');el.classList.add('on');renderMovements();}
 function renderMovements() {
-  const srchEl = document.getElementById('mov-q');
-  const q = (srchEl ? srchEl.value : '').toLowerCase();
-  let rows=[...DB.movements].reverse();
-  if(F.mov!=='all') rows=rows.filter(m=>m.type===F.mov);
-  if(q) rows=rows.filter(m=>String(m.itemName||'').toLowerCase().includes(q)||String(m.staff||'').toLowerCase().includes(q));
-  document.getElementById('mov-tbody').innerHTML=rows.length?rows.map(m=>`<tr>
-    <td class="tc">${displayDT(m.datetime)}</td>
-    <td><span class="bdg ${m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':m.type==='WASH'?'bws':'bot'}">${m.type}</span></td>
-    <td class="tn">${m.itemName||'—'}</td>
-    <td class="sn">${m.qty}</td>
-    <td><span class="bdg bmd">${m.store||'—'}</span></td>
-    <td class="tn">${m.staff||'—'}</td>
-    <td class="tc">${m.purpose||'—'}</td>
-  </tr>`).join(''):'<tr><td colspan="7"><div class="empty">No movements</div></td></tr>';
+  var srchEl = document.getElementById('mov-q');
+  var q = (srchEl ? srchEl.value : '').toLowerCase();
+  var rows=DB.movements.slice().reverse();
+  if(F.mov!=='all') rows=rows.filter(function(m){ return m.type===F.mov; });
+  if(q) rows=rows.filter(function(m){ return String(m.itemName||'').toLowerCase().indexOf(q)!==-1||String(m.staff||'').toLowerCase().indexOf(q)!==-1; });
+  document.getElementById('mov-tbody').innerHTML=rows.length?rows.map(function(m){ return '<tr>' +
+    '<td class="tc">'+displayDT(m.datetime)+'</td>' +
+    '<td><span class="bdg '+(m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':m.type==='WASH'?'bws':'bot')+'">'+m.type+'</span></td>' +
+    '<td class="tn">'+(m.itemName||'—')+'</td>' +
+    '<td class="sn">'+m.qty+'</td>' +
+    '<td><span class="bdg bmd">'+(m.store||'—')+'</span></td>' +
+    '<td class="tn">'+(m.staff||'—')+'</td>' +
+    '<td class="tc">'+(m.purpose||'—')+'</td>' +
+  '</tr>'; }).join(''):'<tr><td colspan="7"><div class="empty">No movements</div></td></tr>';
 }
 
 // ============================================================
 // REPORTS (Advanced)
 // ============================================================
 function showRepTab(period,el){
-  document.querySelectorAll('#page-reports .tb').forEach(t=>t.classList.remove('on'));
-  document.querySelectorAll('#page-reports .tp').forEach(t=>t.classList.remove('on'));
+  var tbs=document.querySelectorAll('#page-reports .tb'); for(var i=0;i<tbs.length;i++)tbs[i].classList.remove('on');
+  var tps=document.querySelectorAll('#page-reports .tp'); for(var j=0;j<tps.length;j++)tps[j].classList.remove('on');
   el.classList.add('on');
   document.getElementById('rep-'+period).classList.add('on');
   currentRepPeriod = period;
@@ -1550,63 +1569,67 @@ function showRepTab(period,el){
 }
 
 function renderReports(period) {
-  const now=new Date(); const today=todayStr();
-  let start;
+  var now=new Date(); var today=todayStr();
+  var start;
   if(period==='daily') start=today;
-  else if(period==='weekly'){const d=new Date(now);d.setDate(d.getDate()-6);start=fmtDT(d).slice(0,10);}
-  else{const d=new Date(now);d.setDate(1);start=fmtDT(d).slice(0,10);}
+  else if(period==='weekly'){var d=new Date(now);d.setDate(d.getDate()-6);start=fmtDT(d).slice(0,10);}
+  else{var d2=new Date(now);d2.setDate(1);start=fmtDT(d2).slice(0,10);}
   
-  let rows=DB.movements.filter(m=>String(m.datetime||'')>=start);
+  var rows=DB.movements.filter(function(m){ return String(m.datetime||'')>=start; });
   
-  // Apply Staff/Room Filters
-  const sFilter = document.getElementById('rep-staff').value;
-  const rFilter = document.getElementById('rep-room').value;
+  var sFilter = document.getElementById('rep-staff').value;
+  var rFilter = document.getElementById('rep-room').value;
   
-  if(sFilter !== 'all') rows = rows.filter(m => m.staff === sFilter);
-  if(rFilter !== 'all') rows = rows.filter(m => (m.purpose||'').includes(rFilter));
+  if(sFilter !== 'all') rows = rows.filter(function(m) { return m.staff === sFilter; });
+  if(rFilter !== 'all') rows = rows.filter(function(m) { return String(m.purpose||'').indexOf(rFilter) !== -1; });
 
-  const out=rows.filter(m=>m.type==='OUT');
-  const inR=rows.filter(m=>m.type==='IN');
-  const tr=rows.filter(m=>m.type==='TRANSFER');
+  var out=rows.filter(function(m){ return m.type==='OUT'; });
+  var inR=rows.filter(function(m){ return m.type==='IN'; });
+  var tr=rows.filter(function(m){ return m.type==='TRANSFER'; });
+  
+  var staffSet = {};
+  for(var i=0; i<out.length; i++) staffSet[out[i].staff] = true;
+  var activeStaffCount = Object.keys(staffSet).length;
 
-  document.getElementById('rg-'+period).innerHTML=`
-    <div class="rs"><div class="rsl">Total Issues</div><div class="rsv">${out.length}</div></div>
-    <div class="rs"><div class="rsl">Stock Received</div><div class="rsv">${inR.length}</div></div>
-    <div class="rs"><div class="rsl">Transfers</div><div class="rsv">${tr.length}</div></div>
-    <div class="rs"><div class="rsl">Active Staff</div><div class="rsv">${new Set(out.map(r=>r.staff)).size}</div></div>`;
+  document.getElementById('rg-'+period).innerHTML=
+    '<div class="rs"><div class="rsl">Total Issues</div><div class="rsv">'+out.length+'</div></div>' +
+    '<div class="rs"><div class="rsl">Stock Received</div><div class="rsv">'+inR.length+'</div></div>' +
+    '<div class="rs"><div class="rsl">Transfers</div><div class="rsv">'+tr.length+'</div></div>' +
+    '<div class="rs"><div class="rsl">Active Staff</div><div class="rsv">'+activeStaffCount+'</div></div>';
     
-  document.getElementById('rt-'+period).innerHTML=[...rows].reverse().map(m=>`<tr>
-    <td class="tc">${displayDT(m.datetime)}</td>
-    <td class="tn">${m.itemName||'—'}</td>
-    <td><span class="bdg ${m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':'bot'}">${m.type}</span></td>
-    <td class="sn">${m.qty}</td>
-    <td class="tn">${m.staff||'—'}</td>
-    <td class="tc">${m.purpose||'—'}</td>
-  </tr>`).join('')||`<tr><td colspan="6"><div class="empty">No data</div></td></tr>`;
+  document.getElementById('rt-'+period).innerHTML=rows.slice().reverse().map(function(m){ return '<tr>' +
+    '<td class="tc">'+displayDT(m.datetime)+'</td>' +
+    '<td class="tn">'+(m.itemName||'—')+'</td>' +
+    '<td><span class="bdg '+(m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':'bot')+'">'+m.type+'</span></td>' +
+    '<td class="sn">'+m.qty+'</td>' +
+    '<td class="tn">'+(m.staff||'—')+'</td>' +
+    '<td class="tc">'+(m.purpose||'—')+'</td>' +
+  '</tr>'; }).join('')||'<tr><td colspan="6"><div class="empty">No data</div></td></tr>';
 }
 
 // ============================================================
 // ALERTS
 // ============================================================
 function renderAlertsFull() {
-  const critical=DB.items.filter(i=>Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical));
-  const warns=DB.items.filter(i=>!critical.includes(i)&&(Number(i.subStock)<=Number(i.reorder)||Number(i.mainStock)<=Number(i.reorder)));
+  var critical=DB.items.filter(function(i){ return Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical); });
+  var warns=DB.items.filter(function(i){ return critical.indexOf(i)===-1 && (Number(i.subStock)<=Number(i.reorder)||Number(i.mainStock)<=Number(i.reorder)); });
   
-  const canAlert = SESSION && SESSION.rolesArr && (SESSION.rolesArr.includes('Admin') || SESSION.rolesArr.includes('Store Supervisor'));
+  var canAlert = SESSION && SESSION.rolesArr && (SESSION.rolesArr.indexOf('Admin')!==-1 || SESSION.rolesArr.indexOf('Store Supervisor')!==-1);
 
-  document.getElementById('alerts-list').innerHTML=[...critical,...warns].map(i=>{
-    const isCrit=Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical);
-    return `<div class="ar">
-      <div class="ad ${isCrit?'adr':'ado'}">${isCrit?'⊘':'⚠'}</div>
-      <div class="ab">
-        <div class="an">${getIcon(i.name,i.cat)} ${i.name} <span class="tc">${i.code}</span></div>
-        <div class="at">Main: <strong style="color:var(--ch)">${i.mainStock}</strong> ${i.unit} · Sub: <strong style="color:var(--ch)">${i.subStock}</strong> ${i.unit} · Reorder: ${i.reorder} · Critical: ${i.critical}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <span class="bdg ${isCrit?'bal':'bwn'}">${isCrit?'⊘ Critical':'⚠ Low'}</span>
-        ${canAlert ? `<button class="btn bp bxs" onclick="sendWA('${i.name}','${i.mainStock} ${i.unit}','${i.subStock} ${i.unit}')">📲 Alert</button>` : ''}
-      </div>
-    </div>`;
+  var all = critical.concat(warns);
+  document.getElementById('alerts-list').innerHTML=all.map(function(i){
+    var isCrit=Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical);
+    return '<div class="ar">' +
+      '<div class="ad '+(isCrit?'adr':'ado')+'">'+(isCrit?'⊘':'⚠')+'</div>' +
+      '<div class="ab">' +
+        '<div class="an">'+getIcon(i.name,i.cat)+' '+i.name+' <span class="tc">'+i.code+'</span></div>' +
+        '<div class="at">Main: <strong style="color:var(--ch)">'+i.mainStock+'</strong> '+i.unit+' · Sub: <strong style="color:var(--ch)">'+i.subStock+'</strong> '+i.unit+' · Reorder: '+i.reorder+' · Critical: '+i.critical+'</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+        '<span class="bdg '+(isCrit?'bal':'bwn')+'">'+(isCrit?'⊘ Critical':'⚠ Low')+'</span>' +
+        (canAlert ? '<button class="btn bp bxs" onclick="sendWA(\''+i.name+'\',\''+i.mainStock+' '+i.unit+'\',\''+i.subStock+' '+i.unit+'\')">📲 Alert</button>' : '') +
+      '</div>' +
+    '</div>';
   }).join('')||'<div class="empty"><div class="ei">✅</div>All stock levels OK</div>';
 }
 
@@ -1617,47 +1640,47 @@ function openRequest(){populateSel('req-item','all');document.getElementById('re
 function closeReq(){document.getElementById('req-overlay').classList.remove('on');}
 
 function updateReqUnit() {
-    const code=document.getElementById('req-item').value;
-    const item=DB.items.find(i=>i.code===code);
-    document.getElementById('req-qty-unit').textContent = item ? `(${item.unit})` : '';
+    var code=document.getElementById('req-item').value;
+    var item=DB.items.find(function(i){ return i.code===code; });
+    document.getElementById('req-qty-unit').textContent = item ? '('+item.unit+')' : '';
 }
 
-async function submitRequest() {
-  const code=document.getElementById('req-item').value;
-  const qty=parseInt(document.getElementById('req-qty').value)||0;
-  const urgency=document.getElementById('req-urgency').value;
-  const msg=document.getElementById('req-msg').value;
+function submitRequest() {
+  var code=document.getElementById('req-item').value;
+  var qty=parseInt(document.getElementById('req-qty').value)||0;
+  var urgency=document.getElementById('req-urgency').value;
+  var msg=document.getElementById('req-msg').value;
   if(!code||qty<=0){toast('Select item and quantity','terr');return;}
-  const item=DB.items.find(i=>i.code===code);
-  const dt=fmtDT(new Date());
-  const req={id:Date.now(),datetime:dt,staff:SESSION.name,item:item.name,qty,urgency,msg,status:'Pending'};
+  var item=DB.items.find(function(i){ return i.code===code; });
+  var dt=fmtDT(new Date());
+  var req={id:Date.now(),datetime:dt,staff:SESSION.name,item:item.name,qty:qty,urgency:urgency,msg:msg,status:'Pending'};
   DB.requests.push(req);
-  await apiPost({action:'addRequest',...req});
+  apiPost(Object.assign({action:'addRequest'}, req));
   closeReq();
-  const waMsg=`🌿 *Herbal Park — Stock Request*\n\n*Staff:* ${SESSION.name}\n*Item:* ${item.name} (${item.code})\n*Quantity:* ${qty} ${item.unit}\n*Urgency:* ${urgency}\n*Sub Stock Now:* ${item.subStock} ${item.unit}\n*Message:* ${msg||'—'}\n*Time:* ${dt}`;
-  window.open(`https://wa.me/${WA_NUM}?text=${encodeURIComponent(waMsg)}`,'_blank');
+  var waMsg='🌿 *Herbal Park — Stock Request*\n\n*Staff:* '+SESSION.name+'\n*Item:* '+item.name+' ('+item.code+')\n*Quantity:* '+qty+' '+item.unit+'\n*Urgency:* '+urgency+'\n*Sub Stock Now:* '+item.subStock+' '+item.unit+'\n*Message:* '+(msg||'—')+'\n*Time:* '+dt;
+  window.open('https://wa.me/'+WA_NUM+'?text='+encodeURIComponent(waMsg),'_blank');
   toast('✓ Request logged & WhatsApp opened','tok');
 }
 
 function renderRequests(){
-  const el=document.getElementById('req-list');
-  const rows=[...DB.requests].reverse();
-  el.innerHTML=rows.length?rows.map(r=>`<div class="rr">
-    <div class="rd" style="background:${r.status==='Pending'?'var(--orange)':'var(--g)'}"></div>
-    <div class="ri">
-      <div class="rn">${r.item}</div>
-      <div class="rm">${displayDT(r.datetime)} · <strong style="color:var(--ch)">${r.staff}</strong> · Qty: <strong>${r.qty}</strong> · <strong style="color:var(--red)">${r.urgency}</strong></div>
-      ${r.msg?`<div class="rtx">${r.msg}</div>`:''}
-    </div>
-    <span class="bdg ${r.status==='Pending'?'bwn':'bok'}">${r.status}</span>
-    ${r.status==='Pending'?`<button class="btn bp bxs" onclick="markDone(${r.id})">✓</button>`:''}
-  </div>`).join(''):'<div class="empty"><div class="ei">📨</div>No requests yet</div>';
+  var el=document.getElementById('req-list');
+  var rows=DB.requests.slice().reverse();
+  el.innerHTML=rows.length?rows.map(function(r){ return '<div class="rr">' +
+    '<div class="rd" style="background:'+(r.status==='Pending'?'var(--orange)':'var(--g)')+'"></div>' +
+    '<div class="ri">' +
+      '<div class="rn">'+r.item+'</div>' +
+      '<div class="rm">'+displayDT(r.datetime)+' · <strong style="color:var(--ch)">'+r.staff+'</strong> · Qty: <strong>'+r.qty+'</strong> · <strong style="color:var(--red)">'+r.urgency+'</strong></div>' +
+      (r.msg?'<div class="rtx">'+r.msg+'</div>':'') +
+    '</div>' +
+    '<span class="bdg '+(r.status==='Pending'?'bwn':'bok')+'">'+r.status+'</span>' +
+    (r.status==='Pending'?'<button class="btn bp bxs" onclick="markDone('+r.id+')">✓</button>':'') +
+  '</div>'; }).join('') : '<div class="empty"><div class="ei">📨</div>No requests yet</div>';
 }
 
-async function markDone(id){
-  const r=DB.requests.find(x=>Number(x.id)===Number(id));
+function markDone(id){
+  var r=DB.requests.find(function(x){ return Number(x.id)===Number(id); });
   if(r) r.status='Fulfilled';
-  await apiPost({action:'updateRequestStatus',id,status:'Fulfilled'});
+  apiPost({action:'updateRequestStatus',id:id,status:'Fulfilled'});
   renderRequests();
 }
 
@@ -1667,19 +1690,19 @@ async function markDone(id){
 
 // --- STAFF ---
 function renderStaff(){
-  const tbody=document.getElementById('staff-tbody');
+  var tbody=document.getElementById('staff-tbody');
   if(!tbody) return;
-  tbody.innerHTML=DB.staff.map(s=>{
-    const roles=typeof s.roles==='string'?s.roles.split('|'):(s.roles||[]);
-    return `<tr>
-      <td class="tn">${s.name}</td>
-      <td>${roles.map(r=>`<span class="bdg bmd" style="margin-right:4px">${r}</span>`).join('')}</td>
-      <td><span class="bdg ${s.store==='both'?'bgd':'bok'}">${s.store==='both'?'Main + Sub':'Sub Only'}</span></td>
-      <td>
-        <button class="btn bw bxs" onclick="editStaff('${s.id}')">✎ Edit</button>
-        <button class="btn bd bxs" onclick="deleteStaff('${s.id}')" style="margin-left:4px">✕</button>
-      </td>
-    </tr>`;
+  tbody.innerHTML=DB.staff.map(function(s){
+    var roles=typeof s.roles==='string'?s.roles.split('|'):(s.roles||[]);
+    return '<tr>' +
+      '<td class="tn">'+s.name+'</td>' +
+      '<td>'+roles.map(function(r){ return '<span class="bdg bmd" style="margin-right:4px">'+r+'</span>'; }).join('')+'</td>' +
+      '<td><span class="bdg '+(s.store==='both'?'bgd':'bok')+'">'+(s.store==='both'?'Main + Sub':'Sub Only')+'</span></td>' +
+      '<td>' +
+        '<button class="btn bw bxs" onclick="editStaff(\''+s.id+'\')">✎ Edit</button>' +
+        '<button class="btn bd bxs" onclick="deleteStaff(\''+s.id+'\')" style="margin-left:4px">✕</button>' +
+      '</td>' +
+    '</tr>';
   }).join('');
 }
 
@@ -1690,79 +1713,80 @@ function resetStaffForm() {
 }
 
 function editStaff(id) {
-    const s = DB.staff.find(x=>x.id===id);
+    var s = DB.staff.find(function(x){ return x.id===id; });
     if(!s) return;
     document.getElementById('ns-id').value = s.id;
     document.getElementById('ns-name').value = s.name;
     document.getElementById('ns-store').value = s.store;
-    const rArr = typeof s.roles==='string'?s.roles.split('|'):s.roles;
-    const select = document.getElementById('ns-roles');
-    for (let i=0; i<select.options.length; i++) {
-        select.options[i].selected = rArr.includes(select.options[i].value);
+    var rArr = typeof s.roles==='string'?s.roles.split('|'):s.roles;
+    var select = document.getElementById('ns-roles');
+    for (var i=0; i<select.options.length; i++) {
+        select.options[i].selected = rArr.indexOf(select.options[i].value) !== -1;
     }
     document.getElementById('ns-btn').textContent = '✓ Update Staff';
     showAdminTab('sa','staffmgmt', document.querySelectorAll('#page-staffmgmt .tb')[1]);
 }
 
-async function addStaff(){
-  const editId = document.getElementById('ns-id').value;
-  const name=document.getElementById('ns-name').value.trim();
-  const rolesEl=document.getElementById('ns-roles');
-  const roles=Array.from(rolesEl.selectedOptions).map(o=>o.value);
-  const store=document.getElementById('ns-store').value;
+function addStaff(){
+  var editId = document.getElementById('ns-id').value;
+  var name=document.getElementById('ns-name').value.trim();
+  var rolesEl=document.getElementById('ns-roles');
+  var roles = [];
+  for(var i=0; i<rolesEl.options.length; i++) { if(rolesEl.options[i].selected) roles.push(rolesEl.options[i].value); }
+  var store=document.getElementById('ns-store').value;
   if(!name||!roles.length){toast('Name and role required','terr');return;}
   
-  const rolesStr=roles.join('|');
+  var rolesStr=roles.join('|');
   
   if (editId) {
-      const s = DB.staff.find(x=>x.id===editId);
+      var s = DB.staff.find(function(x){ return x.id===editId; });
       if(s) { s.name=name; s.roles=rolesStr; s.store=store; }
   } else {
-      const id='s'+Date.now();
-      DB.staff.push({id,name,roles:rolesStr,store});
+      var id='s'+Date.now();
+      DB.staff.push({id:id,name:name,roles:rolesStr,store:store});
   }
   
-  await apiPost({action:'saveStaff', staff: DB.staff});
+  apiPost({action:'saveStaff', staff: DB.staff});
   renderStaff(); rebuildLogin(); resetStaffForm();
   toast(editId ? '✓ Staff Updated' : '✓ Staff added to Sheet','tok');
   showAdminTab('sl','staffmgmt', document.querySelectorAll('#page-staffmgmt .tb')[0]);
 }
 
-async function deleteStaff(id){
+function deleteStaff(id){
   if(!confirm('Remove this staff member?')) return;
-  DB.staff=DB.staff.filter(s=>String(s.id)!==String(id));
-  await apiPost({action:'saveStaff', staff: DB.staff});
+  DB.staff=DB.staff.filter(function(s){ return String(s.id)!==String(id); });
+  apiPost({action:'saveStaff', staff: DB.staff});
   renderStaff(); rebuildLogin();
   toast('Staff removed','tok');
 }
 
 // --- ITEMS ---
 function renderItemsMaster(){
-  const tbody=document.getElementById('items-tbody');
+  var tbody=document.getElementById('items-tbody');
   if(!tbody) return;
-  tbody.innerHTML=DB.items.map(i=>`<tr>
-    <td><span class="tc">${i.code}</span></td>
-    <td class="tn"><span style="margin-right:6px">${getIcon(i.name,i.cat)}</span> ${i.name}</td>
-    <td><span class="bdg ${i.cat==='Medicines & Oils'?'bgd':'bmd'}">${i.cat}</span></td>
-    <td>${i.unit}</td>
-    <td class="sn">${i.reorder}</td>
-    <td class="sn" style="color:var(--red)">${i.critical}</td>
-    <td>
-      <button class="btn bw bxs" onclick="editItemM('${i.code}')">✎</button>
-      <button class="btn bd bxs" onclick="deleteItemM('${i.code}')" style="margin-left:4px">✕</button>
-    </td>
-  </tr>`).join('');
+  tbody.innerHTML=DB.items.map(function(i){ return '<tr>' +
+    '<td><span class="tc">'+i.code+'</span></td>' +
+    '<td class="tn"><span style="margin-right:6px">'+getIcon(i.name,i.cat)+'</span> '+i.name+'</td>' +
+    '<td><span class="bdg '+(i.cat==='Medicines & Oils'?'bgd':'bmd')+'">'+i.cat+'</span></td>' +
+    '<td>'+i.unit+'</td>' +
+    '<td class="sn">'+i.reorder+'</td>' +
+    '<td class="sn" style="color:var(--red)">'+i.critical+'</td>' +
+    '<td>' +
+      '<button class="btn bw bxs" onclick="editItemM(\''+i.code+'\')">✎</button>' +
+      '<button class="btn bd bxs" onclick="deleteItemM(\''+i.code+'\')" style="margin-left:4px">✕</button>' +
+    '</td>' +
+  '</tr>'; }).join('');
 }
 
 function resetItemForm() {
     document.getElementById('ni-edit-mode').value = '';
-    ['ni-code','ni-name','ni-main','ni-sub','ni-reorder','ni-critical'].forEach(id=>document.getElementById(id).value='');
+    ['ni-code','ni-name','ni-main','ni-sub','ni-reorder','ni-critical'].forEach(function(id){ document.getElementById(id).value=''; });
     document.getElementById('ni-code').readOnly = false;
     document.getElementById('ni-btn').textContent = '+ Save Item';
 }
 
 function editItemM(code) {
-    const i = DB.items.find(x=>x.code===code);
+    var i = DB.items.find(function(x){ return x.code===code; });
     if(!i) return;
     document.getElementById('ni-edit-mode').value = '1';
     document.getElementById('ni-code').value = i.code;
@@ -1778,56 +1802,56 @@ function editItemM(code) {
     showAdminTab('ia','itemsmgmt', document.querySelectorAll('#page-itemsmgmt .tb')[1]);
 }
 
-async function addItem(){
-  const editMode=document.getElementById('ni-edit-mode').value;
-  const code=document.getElementById('ni-code').value.trim();
-  const name=document.getElementById('ni-name').value.trim();
-  const cat=document.getElementById('ni-cat').value;
-  const unit=document.getElementById('ni-unit').value;
-  const mainStock=parseInt(document.getElementById('ni-main').value)||0;
-  const subStock=parseInt(document.getElementById('ni-sub').value)||0;
-  const reorder=parseInt(document.getElementById('ni-reorder').value)||0;
-  const critical=parseInt(document.getElementById('ni-critical').value)||0;
+function addItem(){
+  var editMode=document.getElementById('ni-edit-mode').value;
+  var code=document.getElementById('ni-code').value.trim();
+  var name=document.getElementById('ni-name').value.trim();
+  var cat=document.getElementById('ni-cat').value;
+  var unit=document.getElementById('ni-unit').value;
+  var mainStock=parseInt(document.getElementById('ni-main').value)||0;
+  var subStock=parseInt(document.getElementById('ni-sub').value)||0;
+  var reorder=parseInt(document.getElementById('ni-reorder').value)||0;
+  var critical=parseInt(document.getElementById('ni-critical').value)||0;
   if(!code||!name){toast('Code and Name required','terr');return;}
   
   if (editMode) {
-      const i = DB.items.find(x=>x.code===code);
+      var i = DB.items.find(function(x){ return x.code===code; });
       if(i) {
           i.name=name; i.cat=cat; i.unit=unit; i.mainStock=mainStock; i.subStock=subStock; i.reorder=reorder; i.critical=critical;
       }
   } else {
-      if(DB.items.find(i=>i.code===code)){toast('Code already exists','terr');return;}
-      DB.items.push({code,name,cat,unit,mainStock,subStock,reorder,critical});
+      if(DB.items.find(function(i){ return i.code===code; })){toast('Code already exists','terr');return;}
+      DB.items.push({code:code,name:name,cat:cat,unit:unit,mainStock:mainStock,subStock:subStock,reorder:reorder,critical:critical});
   }
 
-  await apiPost({action:'saveItems', items: DB.items});
+  apiPost({action:'saveItems', items: DB.items});
   renderItemsMaster(); populateAll(); resetItemForm();
   toast(editMode ? '✓ Item Updated' : '✓ Item added to Sheet','tok');
   showAdminTab('il','itemsmgmt', document.querySelectorAll('#page-itemsmgmt .tb')[0]);
 }
 
-async function deleteItemM(code){
-  if(!confirm(`Delete ${code}?`)) return;
-  DB.items=DB.items.filter(i=>i.code!==code);
-  await apiPost({action:'saveItems', items: DB.items});
+function deleteItemM(code){
+  if(!confirm('Delete ' + code + '?')) return;
+  DB.items=DB.items.filter(function(i){ return i.code!==code; });
+  apiPost({action:'saveItems', items: DB.items});
   renderItemsMaster(); populateAll();
   toast('Item deleted','tok');
 }
 
 // --- ROOMS ---
 function renderRoomsMaster(){
-  const tbody=document.getElementById('rooms-tbody');
+  var tbody=document.getElementById('rooms-tbody');
   if(!tbody) return;
-  tbody.innerHTML=DB.rooms.map(r=>`<tr>
-    <td><span class="tc">${r.num||'—'}</span></td>
-    <td class="tn">${r.name||'—'}</td>
-    <td><span class="bdg bmd">${r.type||'—'}</span></td>
-    <td><span class="bdg ${r.status==='Active'?'bok':r.status==='Maintenance'?'bwn':'bal'}">${r.status||'Active'}</span></td>
-    <td>
-      <button class="btn bw bxs" onclick="editRoom('${r.id}')">✎ Edit</button>
-      <button class="btn bd bxs" onclick="deleteRoom('${r.id}')" style="margin-left:4px">✕</button>
-    </td>
-  </tr>`).join('');
+  tbody.innerHTML=DB.rooms.map(function(r){ return '<tr>' +
+    '<td><span class="tc">'+(r.num||'—')+'</span></td>' +
+    '<td class="tn">'+(r.name||'—')+'</td>' +
+    '<td><span class="bdg bmd">'+(r.type||'—')+'</span></td>' +
+    '<td><span class="bdg '+(r.status==='Active'?'bok':r.status==='Maintenance'?'bwn':'bal')+'">'+(r.status||'Active')+'</span></td>' +
+    '<td>' +
+      '<button class="btn bw bxs" onclick="editRoom(\''+r.id+'\')">✎ Edit</button>' +
+      '<button class="btn bd bxs" onclick="deleteRoom(\''+r.id+'\')" style="margin-left:4px">✕</button>' +
+    '</td>' +
+  '</tr>'; }).join('');
 }
 
 function resetRoomForm() {
@@ -1842,7 +1866,7 @@ function resetRoomForm() {
 }
 
 function editRoom(id) {
-    const r = DB.rooms.find(x=>x.id===id);
+    var r = DB.rooms.find(function(x){ return x.id===id; });
     if(!r) return;
     document.getElementById('nr-id').value = r.id;
     document.getElementById('nr-num').value = r.num || '';
@@ -1855,36 +1879,36 @@ function editRoom(id) {
     showAdminTab('ra','roomsmgmt', document.querySelectorAll('#page-roomsmgmt .tb')[1]);
 }
 
-async function addRoom(){
-  const editId = document.getElementById('nr-id').value;
-  const num=document.getElementById('nr-num').value.trim();
-  const name=document.getElementById('nr-name').value.trim();
-  const type=document.getElementById('nr-type').value;
-  const cap=document.getElementById('nr-cap').value;
-  const status=document.getElementById('nr-status').value;
-  const notes=document.getElementById('nr-notes').value;
+function addRoom(){
+  var editId = document.getElementById('nr-id').value;
+  var num=document.getElementById('nr-num').value.trim();
+  var name=document.getElementById('nr-name').value.trim();
+  var type=document.getElementById('nr-type').value;
+  var cap=document.getElementById('nr-cap').value;
+  var status=document.getElementById('nr-status').value;
+  var notes=document.getElementById('nr-notes').value;
   
   if(!num || !name){toast('Room Number and Name required','terr');return;}
   
   if (editId) {
-      const r = DB.rooms.find(x=>x.id===editId);
+      var r = DB.rooms.find(function(x){ return x.id===editId; });
       if(r) { r.num=num; r.name=name; r.type=type; r.cap=cap; r.status=status; r.notes=notes; }
   } else {
-      if(DB.rooms.find(r=>r.num.toLowerCase()===num.toLowerCase())){ toast(`⚠ Room "${num}" already exists`,'terr'); return; }
-      const id='rm'+Date.now();
-      DB.rooms.push({id,num,name,type,cap,status,notes});
+      if(DB.rooms.find(function(r){ return r.num.toLowerCase()===num.toLowerCase(); })){ toast('⚠ Room "'+num+'" already exists','terr'); return; }
+      var id='rm'+Date.now();
+      DB.rooms.push({id:id,num:num,name:name,type:type,cap:cap,status:status,notes:notes});
   }
   
-  await apiPost({action:'saveRooms', rooms: DB.rooms});
+  apiPost({action:'saveRooms', rooms: DB.rooms});
   renderRoomsMaster(); populateAll(); resetRoomForm();
   toast(editId ? '✓ Room Updated' : '✓ Room added','tok');
   showAdminTab('rl','roomsmgmt', document.querySelectorAll('#page-roomsmgmt .tb')[0]);
 }
 
-async function deleteRoom(id){
+function deleteRoom(id){
   if(!confirm('Remove this room?')) return;
-  DB.rooms=DB.rooms.filter(r=>r.id!==id);
-  await apiPost({action:'saveRooms', rooms: DB.rooms});
+  DB.rooms=DB.rooms.filter(function(r){ return r.id!==id; });
+  apiPost({action:'saveRooms', rooms: DB.rooms});
   renderRoomsMaster(); populateAll();
   toast('Room removed','tok');
 }
@@ -1898,12 +1922,12 @@ function showConfig(){
   document.getElementById('cfg-overlay').classList.add('on');
 }
 function hideConfig(){document.getElementById('cfg-overlay').classList.remove('on');}
-async function saveConfig(){
+function saveConfig(){
   WEBAPP_URL=document.getElementById('cfg-url').value.trim();
   localStorage.setItem('hp-webapp-url',WEBAPP_URL);
   hideConfig();
   toast('Config saved — syncing...','tinf');
-  await syncAll(true);
+  syncAll(true);
 }
 
 // ============================================================
@@ -1911,66 +1935,72 @@ async function saveConfig(){
 // ============================================================
 function checkCritical(item){
   if(Number(item.subStock)<=Number(item.critical)||Number(item.mainStock)<=Number(item.critical)){
-    sendWA(item.name,`${item.mainStock} ${item.unit}`,`${item.subStock} ${item.unit}`);
+    sendWA(item.name, item.mainStock + ' ' + item.unit, item.subStock + ' ' + item.unit);
   }
 }
 function sendWA(name,main,sub){
-  const msg=`🚨 *CRITICAL STOCK ALERT — Herbal Park*\n\n*Item:* ${name}\n*Main Store:* ${main}\n*Sub Store:* ${sub}\n\nImmediate reorder required.\n_${fmtDT(new Date())}_`;
-  window.open(`https://wa.me/${WA_NUM}?text=${encodeURIComponent(msg)}`,'_blank');
+  var msg='🚨 *CRITICAL STOCK ALERT — Herbal Park*\n\n*Item:* '+name+'\n*Main Store:* '+main+'\n*Sub Store:* '+sub+'\n\nImmediate reorder required.\n_'+fmtDT(new Date())+'_';
+  window.open('https://wa.me/'+WA_NUM+'?text='+encodeURIComponent(msg),'_blank');
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
 function populateSel(id,store){
-  const sel=document.getElementById(id);if(!sel) return;
-  sel.innerHTML='<option value="">— Select —</option>'+DB.items.map(i=>`<option value="${i.code}">[${i.code}] ${i.name}</option>`).join('');
+  var sel=document.getElementById(id);if(!sel) return;
+  sel.innerHTML='<option value="">— Select —</option>'+DB.items.map(function(i){ return '<option value="'+i.code+'">['+i.code+'] '+i.name+'</option>'; }).join('');
 }
 function populateAll(){
-  const cs = document.getElementById('c-store');
+  var cs = document.getElementById('c-store');
   populateSel('c-item', cs ? cs.value : 'sub');
   populateSel('t-item','main');
   populateSel('g-item','all');
   populateSel('req-item','all');
   
-  // Populate Rooms (format: 101 - Treatment Room A)
-  const rOpts = '<option value="">— Select Room —</option>' + DB.rooms.filter(r=>r.status!=='Inactive').map(r=>`<option value="${r.num} - ${r.name}">${r.num} - ${r.name}</option>`).join('');
-  document.querySelectorAll('.room-select').forEach(el=>{ if(el) el.innerHTML = rOpts; });
+  var activeRooms = DB.rooms.filter(function(r){ return r.status!=='Inactive'; });
+  var rOpts = '<option value="">— Select Room —</option>' + activeRooms.map(function(r){ return '<option value="'+r.num+' - '+r.name+'">'+r.num+' - '+r.name+'</option>'; }).join('');
+  var rSelects = document.querySelectorAll('.room-select');
+  for(var i=0; i<rSelects.length; i++) rSelects[i].innerHTML = rOpts;
   
-  // Populate Staff filter in reports
-  const sOpts = '<option value="all">All Staff</option>' + DB.staff.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');
-  const rFilterOpts = '<option value="all">All Rooms/Purposes</option>' + DB.rooms.map(r=>`<option value="${r.num} - ${r.name}">${r.num} - ${r.name}</option>`).join('');
-  const sRep = document.getElementById('rep-staff'); if(sRep) sRep.innerHTML = sOpts;
-  const rRep = document.getElementById('rep-room'); if(rRep) rRep.innerHTML = rFilterOpts;
+  var sOpts = '<option value="all">All Staff</option>' + DB.staff.map(function(s){ return '<option value="'+s.name+'">'+s.name+'</option>'; }).join('');
+  var rFilterOpts = '<option value="all">All Rooms/Purposes</option>' + DB.rooms.map(function(r){ return '<option value="'+r.num+' - '+r.name+'">'+r.num+' - '+r.name+'</option>'; }).join('');
+  var sRep = document.getElementById('rep-staff'); if(sRep) sRep.innerHTML = sOpts;
+  var rRep = document.getElementById('rep-room'); if(rRep) rRep.innerHTML = rFilterOpts;
 }
-function quickConsume(code,store){nav('consume');setTimeout(()=>{document.getElementById('c-store').value=store;document.getElementById('c-item').value=code;updateCS();},100);}
-function quickTransfer(code){nav('transfer');setTimeout(()=>{document.getElementById('t-item').value=code;updateTS();},100);}
+function quickConsume(code,store){nav('consume');setTimeout(function(){document.getElementById('c-store').value=store;document.getElementById('c-item').value=code;updateCS();},100);}
+function quickTransfer(code){nav('transfer');setTimeout(function(){document.getElementById('t-item').value=code;updateTS();},100);}
 function showAdminTab(id,page,el){
-  const pg=document.getElementById('page-'+page);
+  var pg=document.getElementById('page-'+page);
   if(!pg) return;
-  pg.querySelectorAll('.tp').forEach(t=>t.classList.remove('on'));
-  pg.querySelectorAll('.tb').forEach(t=>t.classList.remove('on'));
+  var tps = pg.querySelectorAll('.tp'); for(var i=0;i<tps.length;i++) tps[i].classList.remove('on');
+  var tbs = pg.querySelectorAll('.tb'); for(var j=0;j<tbs.length;j++) tbs[j].classList.remove('on');
   document.getElementById('tc-'+id).classList.add('on');
   el.classList.add('on');
 }
 function exportCSV(type){
-  let rows,headers;
-  if(type==='main'){headers=['Code','Name','Category','Unit','Main Stock','Sub Stock','Reorder','Critical'];rows=DB.items.map(i=>[i.code,i.name,i.cat,i.unit,i.mainStock,i.subStock,i.reorder,i.critical]);}
-  else{headers=['DateTime','Type','Item','Qty','Store','Staff','Purpose'];rows=[...DB.movements].reverse().map(m=>[m.datetime,m.type,m.itemName,m.qty,m.store||'',m.staff||'',m.purpose||'']);}
-  const csv=[headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`HP_${type}_${todayStr()}.csv`;a.click();
+  var rows,headers;
+  if(type==='main'){
+    headers=['Code','Name','Category','Unit','Main Stock','Sub Stock','Reorder','Critical'];
+    rows=DB.items.map(function(i){ return [i.code,i.name,i.cat,i.unit,i.mainStock,i.subStock,i.reorder,i.critical]; });
+  } else {
+    headers=['DateTime','Type','Item','Qty','Store','Staff','Purpose','Revenue'];
+    rows=DB.movements.slice().reverse().map(function(m){ return [m.datetime,m.type,m.itemName,m.qty,m.store||'',m.staff||'',m.purpose||'',m.revenue||0]; });
+  }
+  var csv=[headers].concat(rows).map(function(r){ return r.map(function(c){ return '"'+c+'"'; }).join(','); }).join('\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='HP_'+type+'_'+todayStr()+'.csv';a.click();
   toast('✓ CSV exported','tok');
 }
-function setTxt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
-function show(id,visible){const e=document.getElementById(id);if(e)e.style.display=visible?'flex':'none';}
-let _tt;
-function toast(msg,type='tinf'){
-    const el=document.getElementById('toast');
+function setTxt(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+function show(id,visible){var e=document.getElementById(id);if(e)e.style.display=visible?'flex':'none';}
+var _tt;
+function toast(msg,type){
+    type = type || 'tinf';
+    var el=document.getElementById('toast');
     if(!el) return;
     el.textContent=msg;
-    el.className=`toast on ${type}`;
+    el.className='toast on ' + type;
     clearTimeout(_tt);
-    _tt=setTimeout(()=>{el.classList.remove('on');el.className='toast';},3200);
+    _tt=setTimeout(function(){el.classList.remove('on');el.className='toast';},3200);
 }
 </script>
 </body>

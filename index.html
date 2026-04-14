@@ -135,7 +135,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 
 /* SEARCH ROW */
 .sr{padding:12px 20px;border-bottom:1px solid rgba(61,107,79,0.06);display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:rgba(255,255,255,0.4)}
-.sw2{position:relative;flex:1;min-width:160px;}
+.sw2{position:relative;flex:1;min-width:160px;max-width:280px}
 .sw2 input{padding-left:36px;border-radius:var(--rf); padding-right: 40px;}
 .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--lt);font-size:14px;pointer-events:none}
 .si-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--mid);font-size:16px;cursor:pointer;display:none; font-weight:700;}
@@ -225,20 +225,20 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .bsb{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
 .bsf{padding:16px 24px;border-top:1px solid rgba(61,107,79,0.07);display:flex;justify-content:flex-end;gap:12px;background:rgba(61,107,79,0.02)}
 
-/* LOGIN */
+/* LOGIN SCREEN REDESIGN (FLEXBOX OVERFLOW BUG FIX) */
 .lw{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(145deg,#C8E0D2 0%,#E8DFCF 55%,#C8D8E8 100%)}
-.lb{width:100%;max-width:420px;border-radius:26px;overflow:hidden;box-shadow:var(--BL);animation:popIn .35s ease-out;background:#fff}
-.lbh{padding:28px 26px 16px;text-align:center;background:#fff;position:relative}
+.lb{width:100%;max-width:420px;border-radius:26px;overflow:hidden;box-shadow:var(--BL);animation:popIn .35s ease-out;background:#fff; display:flex; flex-direction:column; max-height:85vh;}
+.lbh{padding:28px 26px 16px;text-align:center;background:#fff;position:relative; flex-shrink:0;}
 .lbr{font-size:28px;font-weight:700;color:var(--ch);position:relative;letter-spacing:0.5px}
 .lbs{font-size:11px;color:var(--mid);letter-spacing:2.5px;text-transform:uppercase;margin-top:6px;position:relative}
-.lbb{padding:16px 22px 26px;background:#fff}
-.lbl{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;display:block}
-.sl{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto}
+.lbb{padding:0 22px 26px;background:#fff; display:flex; flex-direction:column; flex:1; min-height:0;}
+.lbl{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;display:block; flex-shrink:0; margin-bottom:0;}
+.sl{display:flex;flex-direction:column;gap:10px;overflow-y:auto; flex:1; padding:4px 0;}
 .si2{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--rs);background:rgba(255,255,255,.78);border:1.5px solid rgba(61,107,79,.09);cursor:pointer;transition:all .17s;font-family:'Outfit',sans-serif;text-align:left}
 .si2:hover{background:#fff;border-color:var(--g);transform:translateX(3px);box-shadow:var(--BS)}
 .sa{width:40px;height:40px;border-radius:50%;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--g);flex-shrink:0}
 .sii{flex:1;min-width:0}
-.sn2{font-size:14px;font-weight:600;color:var(--ch)}
+.sn2{font-size:14px;font-weight:600;color:var(--ch); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .sr2{font-size:11px;color:var(--mid);margin-top:3px}
 
 /* BOTTOM NAV (MOBILE) */
@@ -274,7 +274,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .empty{text-align:center;padding:44px 20px;color:var(--lt)}
 .ei{font-size:42px;margin-bottom:12px;opacity:.4}
 
-/* MOBILE */
+/* MOBILE RESPONSIVE TWEAKS */
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:299;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .sb-overlay.on{display:block}
 
@@ -305,8 +305,13 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   .bs{border-radius:22px; margin:20px;}
   .bnav{padding:0 8px}.bb{min-width:54px;padding:8px}.bb-ic{font-size:24px}.bb-lb{font-size:10px}
   .bfab{width:56px;height:56px;font-size:26px;margin-top:-16px}
-  .lb{border-radius:22px;margin:16px}.lbh{padding:26px 22px 16px}.lbb{padding:16px 20px 24px}
+  
+  /* LOGIN MOBILE OVERRIDES */
+  .lb{border-radius:22px;margin:16px; max-height:90vh;}
+  .lbh{padding:26px 22px 16px;}
+  .lbb{padding:0 20px 24px;}
   .si2{padding:12px 14px}.sn2{font-size:14px}.sr2{font-size:11px}
+  
   .ar{padding:12px 16px;gap:12px}.ad{width:34px;height:34px}.an{font-size:13px}.at{font-size:11px}
   .rsg{grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}.rs{padding:14px}.rsv{font-size:26px}
   .rr{padding:14px 16px;gap:12px}.rn{font-size:13px}.rm{font-size:11px}
@@ -327,7 +332,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   <img src="logo.png" class="login-logo-img" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
   <div style="font-size:50px; margin-bottom: 14px; display:none;">🌿</div>
   <div style="font-size:16px;font-weight:600;color:var(--g)">Loading from Google Sheet...</div>
-  <div onclick="document.getElementById('loading-screen').style.display='none'; document.getElementById('login-screen').style.display='flex';" style="margin-top:24px; font-size:12px; color:var(--mid); text-decoration:underline; cursor:pointer;">Skip / Continue Offline</div>
+  <button onclick="document.getElementById('loading-screen').style.display='none'; document.getElementById('login-screen').style.display='flex';" style="margin-top:24px; padding:10px 20px; font-size:13px; color:var(--mid); background:var(--g3); border:none; border-radius:var(--rf); cursor:pointer;">Skip / Continue Offline</button>
 </div>
 
 <div class="lw" id="login-screen" style="display:none">
@@ -339,7 +344,10 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <div class="lbs">Inventory Management</div>
     </div>
     <div class="lbb">
-      <span class="lbl">Select Your Name</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span class="lbl">Select Your Name</span>
+          <button onclick="syncAll(true)" style="background:none; border:none; color:var(--g); font-size:12px; font-weight:700; cursor:pointer;">↻ Refresh</button>
+      </div>
       <div class="sl" id="staff-list"></div>
     </div>
   </div>
@@ -424,6 +432,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
         </div>
 
         <div class="qg" id="therapist-grid"></div>
+        <br><br><br>
         <button class="btn bg" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); padding:18px 36px; border-radius:50px; font-size:16px; font-weight:700; z-index:100; box-shadow:0 8px 24px rgba(155,120,64,0.4);" onclick="openRequest()">📨 Request Material</button>
     </div>
 
@@ -791,7 +800,7 @@ function mapData(obj) {
 }
 
 // ============================================================
-// API CALLS
+// API CALLS (SAFELY WRAPPED)
 // ============================================================
 function apiFetch(params) {
   if (!WEBAPP_URL) return Promise.resolve(null);
@@ -799,14 +808,15 @@ function apiFetch(params) {
     document.getElementById('syncbar').classList.add('on');
     const cbName = 'hp_cb_' + Date.now();
     const timeout = setTimeout(() => {
-      delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null);
+      try { delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null); } catch(e){}
     }, 12000);
     window[cbName] = function(data) {
-      clearTimeout(timeout); delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(data);
+      clearTimeout(timeout); 
+      try { delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(data); } catch(e){}
     };
     const p = new URLSearchParams({...params, callback: cbName});
     const script = document.createElement('script'); script.src = WEBAPP_URL + '?' + p.toString();
-    script.onerror = () => { clearTimeout(timeout); delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null); };
+    script.onerror = () => { clearTimeout(timeout); try{ delete window[cbName]; document.getElementById('syncbar').classList.remove('on'); resolve(null); }catch(e){} };
     document.head.appendChild(script);
   });
 }
@@ -910,10 +920,11 @@ function rebuildLogin() {
   const g = document.getElementById('staff-list');
   g.innerHTML = DB.staff.map(s => {
     const roles = typeof s.roles === 'string' ? s.roles.split('|') : (s.roles||[]);
+    const initial = (s.name && s.name.length > 0) ? s.name.charAt(0).toUpperCase() : '?';
     return `<div class="si2" onclick="login('${s.id}')">
-      <div class="sa">${(s.name || '?').charAt(0)}</div>
+      <div class="sa">${initial}</div>
       <div class="sii"><div class="sn2">${s.name || 'Unnamed Staff'}</div><div class="sr2">${roles.join(' · ')}</div></div>
-      <div class="sav">→</div>
+      <div class="sav" style="color:var(--lt);font-weight:700;">→</div>
     </div>`;
   }).join('') || '<div style="text-align:center;color:var(--mid);padding:20px;font-size:14px;font-weight:600;">No staff loaded.</div>';
 }
@@ -1261,7 +1272,7 @@ function renderStore(store) {
     const catCls = i.cat==='Medicines & Oils' ? 'cat-med' : 'cat-con';
     return `<tr>
       <td><span class="tc">${i.code}</span></td>
-      <td class="${catCls}"><div class="tn">${getIcon(i.name,i.cat)} ${i.name}</div></td>
+      <td class="${catCls}"><div class="tn"><span style="margin-right:6px">${getIcon(i.name,i.cat)}</span> ${i.name}</div></td>
       <td><span class="tc">${i.cat==='Medicines & Oils'?'Med/Oil':'Consumable'}</span></td>
       <td>${i.unit}</td>
       <td><div class="sw"><div class="sb hide-m"><div class="sbf" style="width:${pct}%;background:${barColor}"></div></div><span class="sn" style="color:${barColor}">${stock}</span></div></td>
@@ -1803,7 +1814,7 @@ async function deleteItemM(code){
   toast('Item deleted','tok');
 }
 
-// --- ROOMS (Updated Schema) ---
+// --- ROOMS ---
 function renderRoomsMaster(){
   const tbody=document.getElementById('rooms-tbody');
   if(!tbody) return;

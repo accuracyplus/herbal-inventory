@@ -135,7 +135,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 
 /* SEARCH ROW */
 .sr{padding:12px 20px;border-bottom:1px solid rgba(61,107,79,0.06);display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:rgba(255,255,255,0.4)}
-.sw2{position:relative;flex:1;min-width:160px;max-width:280px}
+.sw2{position:relative;flex:1;min-width:160px;}
 .sw2 input{padding-left:36px;border-radius:var(--rf); padding-right: 40px;}
 .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--lt);font-size:14px;pointer-events:none}
 .si-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--mid);font-size:16px;cursor:pointer;display:none; font-weight:700;}
@@ -327,6 +327,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   <img src="logo.png" class="login-logo-img" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
   <div style="font-size:50px; margin-bottom: 14px; display:none;">🌿</div>
   <div style="font-size:16px;font-weight:600;color:var(--g)">Loading from Google Sheet...</div>
+  <div onclick="document.getElementById('loading-screen').style.display='none'; document.getElementById('login-screen').style.display='flex';" style="margin-top:24px; font-size:12px; color:var(--mid); text-decoration:underline; cursor:pointer;">Skip / Continue Offline</div>
 </div>
 
 <div class="lw" id="login-screen" style="display:none">
@@ -781,7 +782,6 @@ function getIcon(name, cat) {
   return cat === 'Medicines & Oils' ? '🌿' : '📦';
 }
 
-// Advanced Data Mapper to catch mismatched Excel Headers
 function mapData(obj) {
     const norm = {};
     for (let key in obj) {
@@ -833,7 +833,6 @@ async function syncAll(showMsg) {
   document.getElementById('cfg-banner').style.display = 'none';
   const data = await apiFetch({ action: 'getAll' });
   if (data) {
-    // Smart Mapping to protect against User modifying Excel headers
     if (data.staff) {
         DB.staff = data.staff.map(s => {
             const mapped = mapData(s);
@@ -890,12 +889,18 @@ async function syncAll(showMsg) {
 }
 
 // ============================================================
-// INIT
+// INIT WITH SAFEFALLBACK
 // ============================================================
 window.addEventListener('load', async () => {
-  await syncAll(false);
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
+  try {
+      await syncAll(false);
+  } catch(e) {
+      console.error(e);
+      toast('Error loading data. Check console.', 'terr');
+  } finally {
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+  }
 });
 
 // ============================================================
@@ -947,17 +952,18 @@ function applySession() {
   else { pill.className='sbadge sbo'; pill.textContent='🧴 Sub Store'; }
 
   // THERAPIST RESTRICTION (HARD LOCK)
+  const bnav = document.getElementById('bottom-nav');
   if (isTher) {
       document.getElementById('sidebar').style.display = 'none';
       document.getElementById('main-topbar').style.display = 'none';
-      if(document.getElementById('bottom-nav')) document.getElementById('bottom-nav').style.display = 'none';
+      if(bnav) bnav.style.display = 'none';
       document.querySelector('.main').style.marginLeft = '0';
       nav('therapist');
       return; 
   } else {
       document.getElementById('sidebar').style.display = 'flex';
       document.getElementById('main-topbar').style.display = 'flex';
-      if(document.getElementById('bottom-nav')) document.getElementById('bottom-nav').style.display = 'flex';
+      if(bnav) bnav.style.display = 'flex';
       document.querySelector('.main').style.marginLeft = window.innerWidth <= 768 ? '0' : '260px';
   }
 
@@ -1068,7 +1074,7 @@ function setTFilter(f) {
 
 function renderTherapistGrid() {
   const el = document.getElementById('t-search');
-  const q = (el?.value || '').toLowerCase();
+  const q = el ? el.value.toLowerCase() : '';
   
   const clearBtn = document.getElementById('t-search-clear');
   if(clearBtn) clearBtn.style.display = q ? 'block' : 'none';
@@ -1214,7 +1220,7 @@ function renderDash() {
   const recent = [...DB.movements].reverse().slice(0,8);
   document.getElementById('dash-mov').innerHTML = recent.length ? recent.map(m=>`<tr>
     <td class="tc">${displayDT(m.datetime)}</td>
-    <td class="tn">${m.staff||'—'}</td>
+    <td class="tn"><span class="sa hide-m" style="width:24px;height:24px;font-size:10px;">${(m.staff||'-').charAt(0)}</span> ${m.staff||'—'}</td>
     <td class="tn">${m.itemName||'—'}</td>
     <td><span class="bdg ${m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':m.type==='WASH'?'bws':'bot'}">${m.type}</span></td>
     <td class="sn">${m.qty}</td>
@@ -1233,7 +1239,8 @@ function setF(store,f,el){
 }
 function renderStore(store) {
   const isMain = store==='main';
-  const q = ((document.getElementById(isMain?'ms-q':'ss-q')||{}).value||'').toLowerCase();
+  const srchEl = document.getElementById(isMain?'ms-q':'ss-q');
+  const q = (srchEl ? srchEl.value : '').toLowerCase();
   const filt = isMain ? F.ms : F.ss;
   let items = DB.items.filter(i=>{
     const mq = i.name.toLowerCase().includes(q)||i.code.toLowerCase().includes(q);
@@ -1254,7 +1261,7 @@ function renderStore(store) {
     const catCls = i.cat==='Medicines & Oils' ? 'cat-med' : 'cat-con';
     return `<tr>
       <td><span class="tc">${i.code}</span></td>
-      <td class="${catCls}"><div class="tn"><span style="margin-right:6px">${getIcon(i.name,i.cat)}</span> ${i.name}</div></td>
+      <td class="${catCls}"><div class="tn">${getIcon(i.name,i.cat)} ${i.name}</div></td>
       <td><span class="tc">${i.cat==='Medicines & Oils'?'Med/Oil':'Consumable'}</span></td>
       <td>${i.unit}</td>
       <td><div class="sw"><div class="sb hide-m"><div class="sbf" style="width:${pct}%;background:${barColor}"></div></div><span class="sn" style="color:${barColor}">${stock}</span></div></td>
@@ -1354,7 +1361,10 @@ async function submitLinen() {
 // ============================================================
 // CONSUME
 // ============================================================
-function updateCI(){populateSel('c-item',document.getElementById('c-store').value);}
+function updateCI(){
+  const cs = document.getElementById('c-store');
+  populateSel('c-item', cs ? cs.value : 'sub');
+}
 function updateCS(){
   const code=document.getElementById('c-item').value;
   const store=document.getElementById('c-store').value;
@@ -1388,10 +1398,14 @@ async function submitConsume() {
 
   if(store==='main') item.mainStock=avail-qty; else item.subStock=avail-qty;
   const dt=fmtDT(new Date());
+  
+  // Combine purpose and room
+  let finalPurpose = room;
+  if(purpose && purpose !== 'Other') finalPurpose = `${purpose} — ${room}`;
 
   const mov={
     action:'logMovement', datetime:dt, type:'OUT', itemName:item.name, qty, 
-    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:`${room}`, remarks
+    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:finalPurpose, remarks
   };
   
   DB.movements.push({...mov});
@@ -1496,7 +1510,8 @@ async function submitGRN() {
 // ============================================================
 function setMF(f,el){F.mov=f;document.querySelectorAll('#page-movements .fc').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderMovements();}
 function renderMovements() {
-  const q=((document.getElementById('mov-q')||{}).value||'').toLowerCase();
+  const srchEl = document.getElementById('mov-q');
+  const q = (srchEl ? srchEl.value : '').toLowerCase();
   let rows=[...DB.movements].reverse();
   if(F.mov!=='all') rows=rows.filter(m=>m.type===F.mov);
   if(q) rows=rows.filter(m=>String(m.itemName||'').toLowerCase().includes(q)||String(m.staff||'').toLowerCase().includes(q));
@@ -1901,7 +1916,8 @@ function populateSel(id,store){
   sel.innerHTML='<option value="">— Select —</option>'+DB.items.map(i=>`<option value="${i.code}">[${i.code}] ${i.name}</option>`).join('');
 }
 function populateAll(){
-  populateSel('c-item',document.getElementById('c-store')?.value||'sub');
+  const cs = document.getElementById('c-store');
+  populateSel('c-item', cs ? cs.value : 'sub');
   populateSel('t-item','main');
   populateSel('g-item','all');
   populateSel('req-item','all');
@@ -1939,7 +1955,12 @@ function show(id,visible){const e=document.getElementById(id);if(e)e.style.displ
 let _tt;
 function toast(msg,type='tinf'){
     const el=document.getElementById('toast');
+    if(!el) return;
     el.textContent=msg;
     el.className=`toast on ${type}`;
     clearTimeout(_tt);
-    _tt
+    _tt=setTimeout(()=>{el.classList.remove('on');el.className='toast';},3200);
+}
+</script>
+</body>
+</html>

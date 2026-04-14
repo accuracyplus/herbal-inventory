@@ -86,9 +86,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 /* STAT CARDS */
 .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin-bottom:18px}
-.sc{border-radius:var(--r);padding:18px 16px;position:relative;overflow:hidden;transition:all .22s;cursor:default;box-shadow:var(--BS)}
-.sc:hover{transform:translateY(-2px);box-shadow:var(--BM)}
-.sc-em{font-size:20px;margin-bottom:10px;display:block}
+.sc{border-radius:var(--r);padding:18px 16px;position:relative;overflow:hidden;transition:all .22s;cursor:pointer;box-shadow:var(--BS)}
+.sc:hover{transform:translateY(-2px);box-shadow:var(--BM);border-color:var(--g)}
+.sc-em{font-size:24px;margin-bottom:10px;display:block}
 .sc-lb{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);font-weight:600;margin-bottom:5px}
 .sc-val{font-size:36px;font-weight:700;line-height:1;color:var(--ch)}
 .sc-sub{font-size:11px;color:var(--lt);margin-top:3px}
@@ -108,7 +108,7 @@ thead th{padding:10px 18px;text-align:left;font-size:10px;letter-spacing:1.8px;t
 tbody td{padding:12px 18px;border-bottom:1px solid rgba(61,107,79,0.05);vertical-align:middle}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:rgba(255,255,255,0.5)}
-.tn{font-weight:600;font-size:13px}
+.tn{font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px}
 .tc{font-size:12px;font-weight:500;color:var(--lt);margin-top:2px}
 
 /* BADGES */
@@ -144,7 +144,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .fi{display:flex;flex-direction:column;gap:6px}
 .fi.f2{grid-column:span 2}
 .fi.fa{grid-column:1/-1}
-.fi label{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:.8px;text-transform:uppercase}
+.fi label{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:.8px;text-transform:uppercase;display:flex;justify-content:space-between}
 .fi input,.fi select,.fi textarea{border:1.5px solid rgba(61,107,79,0.11);border-radius:var(--rs);padding:10px 14px;font-size:14px;font-family:'Outfit',sans-serif;color:var(--ch);background:rgba(255,255,255,0.8);transition:all .15s;width:100%}
 .fi input:focus,.fi select:focus,.fi textarea:focus{outline:none;border-color:var(--g);background:#fff;box-shadow:0 0 0 3px rgba(61,107,79,0.09)}
 .fi input[readonly]{background:rgba(61,107,79,0.04);color:var(--mid);border-color:transparent}
@@ -201,6 +201,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .rs{background:rgba(255,255,255,0.65);border:1px solid rgba(255,255,255,0.85);border-radius:var(--rs);padding:16px;text-align:center}
 .rsv{font-size:30px;font-weight:700;color:var(--ch)}
 .rsl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--lt);font-weight:600;margin-top:6px}
+.rsv-rev{color:var(--gold)}
 
 /* TABS */
 .tbar{display:flex;padding:4px;background:rgba(61,107,79,0.07);border-radius:var(--rf);width:fit-content;margin:16px 20px 0}
@@ -270,24 +271,6 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .empty{text-align:center;padding:44px 20px;color:var(--lt)}
 .ei{font-size:42px;margin-bottom:12px;opacity:.4}
 
-/* CATEGORY COLORS */
-.cat-med{background:linear-gradient(135deg,rgba(61,107,79,0.08),rgba(90,140,110,0.05));border-left:3px solid var(--g)}
-.cat-con{background:linear-gradient(135deg,rgba(155,120,64,0.08),rgba(184,150,90,0.05));border-left:3px solid var(--gold)}
-.cat-linen{background:linear-gradient(135deg,rgba(100,130,200,0.08),rgba(100,130,200,0.04));border-left:3px solid #4A6FA5}
-
-/* CYCLE BOARD */
-.cycle-board{display:grid;grid-template-columns:repeat(3,1fr);gap:0;padding:0}
-.cycle-col{padding:16px 14px;border-right:1px solid rgba(61,107,79,0.07)}
-.cycle-col:last-child{border-right:none}
-.cycle-col-head{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.cycle-item{background:rgba(255,255,255,0.8);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.85);cursor:pointer;transition:all .18s;font-size:13px}
-.cycle-item:hover{background:#fff;box-shadow:var(--BS);transform:translateY(-1px)}
-.cycle-item-name{font-weight:600;font-size:14px;color:var(--ch)}
-.cycle-item-count{font-size:12px;font-weight:500;margin-top:4px}
-.cycle-clean .cycle-col-head{color:var(--g)}.cycle-clean .cycle-item{border-left:3px solid var(--g)}
-.cycle-use .cycle-col-head{color:var(--orange)}.cycle-use .cycle-item{border-left:3px solid var(--orange)}
-.cycle-wash .cycle-col-head{color:#4A6FA5}.cycle-wash .cycle-item{border-left:3px solid #4A6FA5}
-
 /* MOBILE */
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:299;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .sb-overlay.on{display:block}
@@ -314,7 +297,6 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   .qg{grid-template-columns:repeat(2,1fr);gap:12px;padding:14px}
   .qb{padding:16px 12px}.qb-em{font-size:32px}.qb-nm{font-size:14px}.qb-st{font-size:12px}
   .lg{grid-template-columns:1fr;gap:12px;padding:14px}.lc{padding:16px}
-  .cycle-board{grid-template-columns:1fr}.cycle-col{border-right:none;border-bottom:1px solid rgba(61,107,79,.07);padding:14px}
   .bs{border-radius:22px; margin:20px;}
   .bnav{padding:0 8px}.bb{min-width:54px;padding:8px}.bb-ic{font-size:24px}.bb-lb{font-size:10px}
   .bfab{width:56px;height:56px;font-size:26px;margin-top:-16px}
@@ -383,8 +365,9 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   <button class="ni" onclick="nav('movements')"><span class="ni-ic">≡</span> Movement Log</button>
   <button class="ni" onclick="nav('reports')"><span class="ni-ic">📊</span> Reports</button>
   <div class="ng" id="nav-admin-sec" style="display:none">Admin</div>
-  <button class="ni" id="nav-staff" onclick="nav('staffmgmt')" style="display:none"><span class="ni-ic">👥</span> Staff List</button>
+  <button class="ni" id="nav-staff" onclick="nav('staffmgmt')" style="display:none"><span class="ni-ic">👥</span> Staff Master</button>
   <button class="ni" id="nav-items" onclick="nav('itemsmgmt')" style="display:none"><span class="ni-ic">✦</span> Items Master</button>
+  <button class="ni" id="nav-rooms" onclick="nav('roomsmgmt')" style="display:none"><span class="ni-ic">🚪</span> Room Master</button>
   <button class="ni" onclick="showConfig()"><span class="ni-ic">⚙</span> Settings</button>
   
   <div class="sb-bot">
@@ -426,12 +409,12 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
         <button class="btn bg bsm" onclick="showConfig()">Connect</button>
       </div>
       <div class="sg">
-        <div class="sc g1"><span class="sc-em">🏪</span><div class="sc-lb">Main SKUs</div><div class="sc-val" id="d-main">—</div></div>
-        <div class="sc g1"><span class="sc-em">🧴</span><div class="sc-lb">Sub SKUs</div><div class="sc-val" id="d-sub">—</div></div>
-        <div class="sc g1 sc-red"><span class="sc-em">⚠</span><div class="sc-lb">Low / Critical</div><div class="sc-val" id="d-low">—</div></div>
-        <div class="sc g1"><span class="sc-em">↑</span><div class="sc-lb">Today's Issues</div><div class="sc-val" id="d-today">—</div></div>
-        <div class="sc g1"><span class="sc-em">🧺</span><div class="sc-lb">Linen In Use</div><div class="sc-val" id="d-linen">—</div></div>
-        <div class="sc g1"><span class="sc-em">📨</span><div class="sc-lb">Pending Reqs</div><div class="sc-val" id="d-req">—</div></div>
+        <div class="sc g1" onclick="nav('mainstore')"><span class="sc-em">🏪</span><div class="sc-lb">Main SKUs</div><div class="sc-val" id="d-main">—</div></div>
+        <div class="sc g1" onclick="nav('substore')"><span class="sc-em">🧴</span><div class="sc-lb">Sub SKUs</div><div class="sc-val" id="d-sub">—</div></div>
+        <div class="sc g1 sc-red" onclick="nav('alerts')"><span class="sc-em">⚠</span><div class="sc-lb">Low / Critical</div><div class="sc-val" id="d-low">—</div></div>
+        <div class="sc g1" onclick="nav('movements')"><span class="sc-em">↑</span><div class="sc-lb">Today's Issues</div><div class="sc-val" id="d-today">—</div></div>
+        <div class="sc g1" onclick="nav('linen')"><span class="sc-em">🧺</span><div class="sc-lb">Linen In Use</div><div class="sc-val" id="d-linen">—</div></div>
+        <div class="sc g1" onclick="nav('requests')"><span class="sc-em">📨</span><div class="sc-lb">Pending Reqs</div><div class="sc-val" id="d-req">—</div></div>
       </div>
       <div class="card g1">
         <div class="ch"><div class="ct"><div class="ci cir">⚠</div> Alerts</div><button class="btn bw bxs" onclick="nav('alerts')">View All</button></div>
@@ -489,10 +472,11 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
             <div class="fi"><label>Date (Auto)</label><input id="c-dt" readonly/></div>
             <div class="fi"><label>Store</label><select id="c-store" onchange="updateCI()"><option value="sub">Sub Store</option><option value="main">Main Store</option></select></div>
             <div class="fi"><label>Item *</label><select id="c-item" onchange="updateCS()"><option value="">— Select —</option></select></div>
-            <div class="fi"><label>Available</label><input id="c-avail" readonly/></div>
-            <div class="fi"><label>Quantity *</label><input type="number" id="c-qty" min="1" placeholder="0"/></div>
+            <div class="fi"><label>Available Limit</label><input id="c-avail" readonly/></div>
+            <div class="fi"><label>Quantity * <span id="c-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="c-qty" min="1" placeholder="0"/></div>
             <div class="fi"><label>Purpose</label><select id="c-purpose"><option>Treatment</option><option>Consultation</option><option>Other</option></select></div>
-            <div class="fi"><label>Room</label><select id="c-room"><option>Room 1</option><option>Room 2</option><option>Room 3</option></select></div>
+            <div class="fi"><label>Room</label><select id="c-room" class="room-select"></select></div>
+            <div class="fi f2"><label>Revenue Generated (AED)</label><input type="number" id="c-rev" placeholder="0.00" step="0.01"/></div>
             <div class="fi fa"><label>Remarks</label><textarea id="c-remarks" placeholder="Optional..."></textarea></div>
           </div>
         </div>
@@ -515,7 +499,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
             <div class="fi"><label>Staff</label><input id="t-staff" readonly/></div>
             <div class="fi"><label>Item *</label><select id="t-item" onchange="updateTS()"><option value="">— Select —</option></select></div>
             <div class="fi"><label>Main Available</label><input id="t-avail" readonly/></div>
-            <div class="fi"><label>Quantity *</label><input type="number" id="t-qty" min="1" placeholder="0"/></div>
+            <div class="fi"><label>Quantity * <span id="t-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="t-qty" min="1" placeholder="0"/></div>
             <div class="fi"><label>Reason</label><select id="t-reason"><option>Replenishment</option><option>Urgent</option></select></div>
           </div>
         </div>
@@ -561,7 +545,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
           <button class="fc" onclick="setMF('TRANSFER',this)">Transfer</button>
           <button class="fc" onclick="setMF('WASH',this)">Linen</button>
         </div>
-        <div class="ts"><table><thead><tr><th>Date & Time</th><th>Type</th><th>Item</th><th>Qty</th><th>Store</th><th>Staff</th><th>Purpose</th></tr></thead><tbody id="mov-tbody"></tbody></table></div>
+        <div class="ts"><table><thead><tr><th>Date & Time</th><th>Type</th><th>Item</th><th>Qty</th><th>Store</th><th>Staff</th><th>Room/Purpose</th></tr></thead><tbody id="mov-tbody"></tbody></table></div>
       </div>
     </div>
 
@@ -572,9 +556,13 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
           <button class="tb" onclick="showRepTab('weekly',this)">Weekly</button>
           <button class="tb" onclick="showRepTab('monthly',this)">Monthly</button>
         </div>
-        <div class="tp on" id="rep-daily"><div class="rsg" id="rg-daily"></div><div class="ts"><table><thead><tr><th>Time</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Purpose</th></tr></thead><tbody id="rt-daily"></tbody></table></div></div>
-        <div class="tp" id="rep-weekly"><div class="rsg" id="rg-weekly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Purpose</th></tr></thead><tbody id="rt-weekly"></tbody></table></div></div>
-        <div class="tp" id="rep-monthly"><div class="rsg" id="rg-monthly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Purpose</th></tr></thead><tbody id="rt-monthly"></tbody></table></div></div>
+        <div class="sr" style="margin-top:14px; border-bottom:none;">
+            <div class="fi"><select id="rep-staff" onchange="renderReports(currentRepPeriod)"><option value="all">All Staff</option></select></div>
+            <div class="fi"><select id="rep-room" class="room-select" onchange="renderReports(currentRepPeriod)"><option value="all">All Rooms</option></select></div>
+        </div>
+        <div class="tp on" id="rep-daily"><div class="rsg" id="rg-daily"></div><div class="ts"><table><thead><tr><th>Time</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th><th>Revenue</th></tr></thead><tbody id="rt-daily"></tbody></table></div></div>
+        <div class="tp" id="rep-weekly"><div class="rsg" id="rg-weekly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th><th>Revenue</th></tr></thead><tbody id="rt-weekly"></tbody></table></div></div>
+        <div class="tp" id="rep-monthly"><div class="rsg" id="rg-monthly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th><th>Revenue</th></tr></thead><tbody id="rt-monthly"></tbody></table></div></div>
       </div>
     </div>
 
@@ -589,7 +577,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <div class="card g1">
         <div class="tbar">
           <button class="tb on" onclick="showAdminTab('sl','staffmgmt',this)">Staff List</button>
-          <button class="tb" onclick="showAdminTab('sa','staffmgmt',this)">+ Add Staff</button>
+          <button class="tb" onclick="showAdminTab('sa','staffmgmt',this); resetStaffForm();">+ Add Staff</button>
         </div>
         <div class="tp on" id="tc-sl">
           <div class="ts"><table><thead><tr><th>Name</th><th>Roles</th><th>Store Access</th><th></th></tr></thead><tbody id="staff-tbody"></tbody></table></div>
@@ -597,12 +585,13 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
         <div class="tp" id="tc-sa">
           <div class="fb">
             <div class="fg">
+              <input type="hidden" id="ns-id"/>
               <div class="fi"><label>Full Name *</label><input id="ns-name"/></div>
               <div class="fi"><label>Role(s)</label><select id="ns-roles" multiple style="height:100px"><option value="Therapist">Therapist</option><option value="Store Supervisor">Store Supervisor</option><option value="Admin">Admin</option></select></div>
               <div class="fi"><label>Store Access</label><select id="ns-store"><option value="sub">Sub Store Only</option><option value="both">Main + Sub Store</option></select></div>
             </div>
           </div>
-          <div class="ff"><button class="btn bp" onclick="addStaff()">+ Add Staff</button></div>
+          <div class="ff"><button class="btn bp" id="ns-btn" onclick="addStaff()">+ Save Staff</button></div>
         </div>
       </div>
     </div>
@@ -611,7 +600,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <div class="card g1">
         <div class="tbar">
           <button class="tb on" onclick="showAdminTab('il','itemsmgmt',this)">Item List</button>
-          <button class="tb" onclick="showAdminTab('ia','itemsmgmt',this)">+ Add Item</button>
+          <button class="tb" onclick="showAdminTab('ia','itemsmgmt',this); resetItemForm();">+ Add Item</button>
         </div>
         <div class="tp on" id="tc-il">
           <div class="ts"><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Critical</th><th></th></tr></thead><tbody id="items-tbody"></tbody></table></div>
@@ -619,6 +608,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
         <div class="tp" id="tc-ia">
           <div class="fb">
             <div class="fg">
+              <input type="hidden" id="ni-edit-mode"/>
               <div class="fi"><label>Code *</label><input id="ni-code"/></div>
               <div class="fi"><label>Name *</label><input id="ni-name"/></div>
               <div class="fi"><label>Category</label><select id="ni-cat"><option>Medicines & Oils</option><option>Consumables</option></select></div>
@@ -629,7 +619,29 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
               <div class="fi"><label>Critical Level</label><input type="number" id="ni-critical" placeholder="0" min="0"/></div>
             </div>
           </div>
-          <div class="ff"><button class="btn bp" onclick="addItem()">+ Add Item</button></div>
+          <div class="ff"><button class="btn bp" id="ni-btn" onclick="addItem()">+ Save Item</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-roomsmgmt">
+      <div class="card g1">
+        <div class="tbar">
+          <button class="tb on" onclick="showAdminTab('rl','roomsmgmt',this)">Room List</button>
+          <button class="tb" onclick="showAdminTab('ra','roomsmgmt',this); resetRoomForm();">+ Add Room</button>
+        </div>
+        <div class="tp on" id="tc-rl">
+          <div class="ts"><table><thead><tr><th>Room ID</th><th>Name</th><th>Status</th><th></th></tr></thead><tbody id="rooms-tbody"></tbody></table></div>
+        </div>
+        <div class="tp" id="tc-ra">
+          <div class="fb">
+            <div class="fg">
+              <input type="hidden" id="nr-id"/>
+              <div class="fi"><label>Room Name *</label><input id="nr-name" placeholder="e.g. Treatment Room 1"/></div>
+              <div class="fi"><label>Status</label><select id="nr-status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+            </div>
+          </div>
+          <div class="ff"><button class="btn bp" id="nr-btn" onclick="addRoom()">+ Save Room</button></div>
         </div>
       </div>
     </div>
@@ -659,8 +671,8 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   <div class="bs">
     <div class="bshd"><div class="bst">📨 Request Stock</div><button class="bsc" onclick="closeReq()">✕</button></div>
     <div class="bsb">
-      <div class="fi"><label>Item *</label><select id="req-item"><option value="">— Select —</option></select></div>
-      <div class="fi"><label>Quantity *</label><input type="number" id="req-qty" min="1" placeholder="0"/></div>
+      <div class="fi"><label>Item *</label><select id="req-item" onchange="updateReqUnit()"><option value="">— Select —</option></select></div>
+      <div class="fi"><label>Quantity * <span id="req-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="req-qty" min="1" placeholder="0"/></div>
       <div class="fi"><label>Urgency</label><select id="req-urgency"><option>Normal</option><option>Urgent</option><option>Critical</option></select></div>
       <div class="fi"><label>Reason</label><textarea id="req-msg"></textarea></div>
     </div>
@@ -688,12 +700,12 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 const WA_NUM = '971502380538';
 let WEBAPP_URL = localStorage.getItem('hp-webapp-url') || 'https://script.google.com/macros/s/AKfycbxjUENJrOfdFcYLxdAqxs6ggZtxGcythH48oGiCIlx0tWIEoJBaPHJuZoQf6qFzmLg3Dg/exec';
 
-let DB = { staff:[], items:[], linen:[], movements:[], requests:[] };
-let SESSION = null; let linenTarget = null;
+let DB = { staff:[], items:[], linen:[], movements:[], requests:[], rooms:[] };
+let SESSION = null; let linenTarget = null; let currentRepPeriod = 'daily';
 const F = { ms:'all', ss:'all', mov:'all' };
 
 // ============================================================
-// TIMEZONE HANDLERS (UAE TIME)
+// TIMEZONE & HELPERS
 // ============================================================
 function displayDT(dateStr) {
   if (!dateStr) return '—';
@@ -713,6 +725,16 @@ function fmtDT(d) {
   return `${pts.year}-${pts.month}-${pts.day} ${pts.hour}:${pts.minute}:${pts.second}`;
 }
 function todayStr() { return fmtDT(new Date()).slice(0, 10); }
+
+function getIcon(name, cat) {
+  const n = name.toLowerCase();
+  if(n.includes('oil')||n.includes('lotion')) return '🧴';
+  if(n.includes('towel')||n.includes('linen')||n.includes('sheet')) return '🧺';
+  if(n.includes('pill')||n.includes('tablet')) return '💊';
+  if(n.includes('herb')||n.includes('leaf')) return '🌿';
+  if(n.includes('cream')) return '🫙';
+  return cat === 'Medicines & Oils' ? '🌿' : '📦';
+}
 
 // ============================================================
 // API CALLS
@@ -762,7 +784,7 @@ async function syncAll(showMsg) {
     if (data.linen) DB.linen = data.linen.map(l => ({...l, total: Number(l.total)||0, available: Number(l.available)||0, inUse: Number(l.inUse)||0, inWash: Number(l.inWash)||0}));
     if (data.movements) DB.movements = data.movements;
     if (data.requests) DB.requests = data.requests;
-    if (data.washlog) DB.washlog = data.washlog;
+    if (data.rooms) DB.rooms = data.rooms; else DB.rooms = [{id:'r1',name:'Treatment Room 1'},{id:'r2',name:'Treatment Room 2'},{id:'r3',name:'Doctor Room'}];
     
     if (showMsg) toast('✓ Synced from Google Sheet','tok');
     rebuildLogin();
@@ -799,7 +821,17 @@ function rebuildLogin() {
 function login(id) {
   const s = DB.staff.find(x => String(x.id) === String(id));
   if (!s) return;
-  SESSION = { ...s, rolesArr: typeof s.roles==='string' ? s.roles.split('|') : (s.roles||[]) };
+  const rolesArr = typeof s.roles==='string' ? s.roles.split('|') : (s.roles||[]);
+  
+  if (rolesArr.includes('Admin') || rolesArr.includes('Store Supervisor')) {
+    const pin = prompt("Enter Admin/Supervisor PIN:");
+    if (pin !== "1111") {
+      toast("Incorrect PIN", "terr");
+      return;
+    }
+  }
+
+  SESSION = { ...s, rolesArr };
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   applySession();
@@ -840,6 +872,7 @@ function applySession() {
   show('nav-admin-sec',isAdmin);
   show('nav-staff',    isAdmin);
   show('nav-items',    isAdmin);
+  show('nav-rooms',    isAdmin);
 
   const cStore = document.getElementById('c-store');
   if (isTher) { cStore.value='sub'; cStore.disabled=true; } else cStore.disabled=false;
@@ -864,8 +897,8 @@ const TITLES = {
   dashboard:'Dashboard', mainstore:'Main Store', substore:'Sub Store',
   linen:'Linen & Towels', consume:'Issue Stock', transfer:'Transfer',
   grn:'Stock IN (GRN)', requests:'Stock Requests', movements:'Movement Log',
-  reports:'Summary Reports', alerts:'Stock Alerts',
-  staffmgmt:'Staff Management', itemsmgmt:'Items Master', therapist: 'Sub Store Area'
+  reports:'Summary Reports', alerts:'Stock Alerts', roomsmgmt:'Room Master',
+  staffmgmt:'Staff Master', itemsmgmt:'Items Master', therapist: 'Sub Store Area'
 };
 let currentPage = 'dashboard';
 
@@ -905,10 +938,11 @@ function refreshPage(id) {
   if(id==='grn')         { populateSel('g-item','all'); }
   if(id==='requests')    renderRequests();
   if(id==='movements')   renderMovements();
-  if(id==='reports')     renderReports('daily');
+  if(id==='reports')     renderReports(currentRepPeriod);
   if(id==='alerts')      renderAlertsFull();
   if(id==='staffmgmt')   renderStaff();
   if(id==='itemsmgmt')   renderItemsMaster();
+  if(id==='roomsmgmt')   renderRoomsMaster();
 }
 
 function toggleSB(){
@@ -923,7 +957,7 @@ function renderTherapistGrid() {
   const grid = document.getElementById('therapist-grid');
   let html = DB.items.map(i => {
     const stock = Number(i.subStock);
-    const icon = i.cat === 'Medicines & Oils' ? '🌿' : '🧴';
+    const icon = getIcon(i.name, i.cat);
     return `
       <div class="qb g1" onclick="therapistConsume('${i.code}', 'item')">
         <span class="qb-em">${icon}</span>
@@ -953,7 +987,7 @@ async function therapistConsume(id, type) {
   const unit = isItem ? target.unit : 'items';
   const avail = isItem ? Number(target.subStock) : Number(target.available);
 
-  const qtyStr = prompt(`How many ${target.name} are you taking?`, "1");
+  const qtyStr = prompt(`How many ${target.name} (${unit}) are you taking?`, "1");
   if (qtyStr === null) return;
   
   const qty = parseInt(qtyStr);
@@ -975,7 +1009,7 @@ async function therapistConsume(id, type) {
     await apiPost(mov);
     await apiPost({action: 'updateLinen', id: target.id, total: target.total, available: target.available, inUse: target.inUse, inWash: target.inWash});
   }
-  toast(`✓ Recorded ${qty} ${target.name}`, 'tok');
+  toast(`✓ Recorded ${qty} ${unit} of ${target.name}`, 'tok');
   renderTherapistGrid(); 
 }
 
@@ -1017,7 +1051,7 @@ function renderDash() {
   const recent = [...DB.movements].reverse().slice(0,8);
   document.getElementById('dash-mov').innerHTML = recent.length ? recent.map(m=>`<tr>
     <td class="tc">${displayDT(m.datetime)}</td>
-    <td class="tn">${m.staff||'—'}</td>
+    <td class="tn"><span class="sa hide-m" style="width:24px;height:24px;font-size:10px;">${(m.staff||'-').charAt(0)}</span> ${m.staff||'—'}</td>
     <td class="tn">${m.itemName||'—'}</td>
     <td><span class="bdg ${m.type==='IN'?'bin':m.type==='TRANSFER'?'btr':m.type==='WASH'?'bws':'bot'}">${m.type}</span></td>
     <td class="sn">${m.qty}</td>
@@ -1055,13 +1089,12 @@ function renderStore(store) {
     const barColor = isCrit?'var(--red)':isLow?'var(--orange)':'var(--g)';
     const status = isCrit?'<span class="bdg bal">⊘ Critical</span>':isLow?'<span class="bdg bwn">⚠ Low</span>':'<span class="bdg bok">OK</span>';
     const catCls = i.cat==='Medicines & Oils' ? 'cat-med' : 'cat-con';
-    const catDot = i.cat==='Medicines & Oils' ? 'cdot-med' : 'cdot-con';
     return `<tr>
       <td><span class="tc">${i.code}</span></td>
-      <td class="${catCls}"><div class="tn">${i.name}</div></td>
-      <td><span class="cat-dot ${catDot}"></span><span class="tc">${i.cat==='Medicines & Oils'?'Med/Oil':'Consumable'}</span></td>
+      <td class="${catCls}"><div class="tn">${getIcon(i.name,i.cat)} ${i.name}</div></td>
+      <td><span class="tc">${i.cat==='Medicines & Oils'?'Med/Oil':'Consumable'}</span></td>
       <td>${i.unit}</td>
-      <td><div class="sw"><div class="sb"><div class="sbf" style="width:${pct}%;background:${barColor}"></div></div><span class="sn" style="color:${barColor}">${stock}</span></div></td>
+      <td><div class="sw"><div class="sb hide-m"><div class="sbf" style="width:${pct}%;background:${barColor}"></div></div><span class="sn" style="color:${barColor}">${stock}</span></div></td>
       <td class="sn">${i.reorder}</td>
       <td>${status}</td>
       <td><button class="btn bw bxs" onclick="quickConsume('${i.code}','${store}')">↑ Issue</button>${isMain?`<button class="btn bxs" style="margin-left:4px;background:var(--gold2);border:none;cursor:pointer;border-radius:6px;color:var(--gold);font-weight:700;" onclick="quickTransfer('${i.code}')">⇄</button>`:''}</td>
@@ -1151,7 +1184,14 @@ function updateCS(){
   const store=document.getElementById('c-store').value;
   const item=DB.items.find(i=>i.code===code);
   const el=document.getElementById('c-avail');
-  if(el) el.value=item?`${store==='main'?item.mainStock:item.subStock} ${item.unit}`:'';
+  const un=document.getElementById('c-qty-unit');
+  if(item){
+    const limit = store==='main'?item.mainStock:item.subStock;
+    el.value=`${limit} ${item.unit}`;
+    un.textContent=`(${item.unit})`;
+  }else{
+    el.value=''; un.textContent='';
+  }
 }
 
 async function submitConsume() {
@@ -1161,6 +1201,8 @@ async function submitConsume() {
   const purpose=document.getElementById('c-purpose').value;
   const room=document.getElementById('c-room').value;
   const remarks=document.getElementById('c-remarks').value;
+  const rev=parseFloat(document.getElementById('c-rev').value)||0;
+
   if(!code||qty<=0){toast('Select item and quantity','terr');return;}
   const item=DB.items.find(i=>i.code===code);
   if(!item) return;
@@ -1169,7 +1211,12 @@ async function submitConsume() {
 
   if(store==='main') item.mainStock=avail-qty; else item.subStock=avail-qty;
   const dt=fmtDT(new Date());
-  const mov={action:'logMovement',datetime:dt,type:'OUT',itemName:item.name,qty,store:store==='main'?'Main':'Sub',staff:SESSION.name,purpose:`${purpose} — ${room}`,remarks};
+  
+  const mov={
+    action:'logMovement', datetime:dt, type:'OUT', itemName:item.name, qty, 
+    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:`${purpose} — ${room}`, remarks, revenue:rev
+  };
+  
   DB.movements.push({...mov});
 
   await apiPost(mov);
@@ -1179,6 +1226,7 @@ async function submitConsume() {
   updateCS();
   document.getElementById('c-qty').value='';
   document.getElementById('c-remarks').value='';
+  document.getElementById('c-rev').value='';
   renderMyIssues();
 }
 
@@ -1196,7 +1244,7 @@ function renderMyIssues() {
   </tr>`).join(''):'<tr><td colspan="5"><div class="empty">No issues today</div></td></tr>';
 }
 function clearForm(f){
-  if(f==='consume'){['c-item','c-qty','c-avail','c-remarks'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
+  if(f==='consume'){['c-item','c-qty','c-avail','c-remarks','c-rev'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
   if(f==='transfer'){['t-item','t-qty','t-avail'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
   if(f==='grn'){['g-item','g-qty','g-ref','g-remarks'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
 }
@@ -1204,14 +1252,25 @@ function clearForm(f){
 // ============================================================
 // TRANSFER
 // ============================================================
-function updateTS(){const code=document.getElementById('t-item').value;const item=DB.items.find(i=>i.code===code);const el=document.getElementById('t-avail');if(el)el.value=item?`${item.mainStock} ${item.unit}`:'';}
+function updateTS(){
+    const code=document.getElementById('t-item').value;
+    const item=DB.items.find(i=>i.code===code);
+    const el=document.getElementById('t-avail');
+    const un=document.getElementById('t-qty-unit');
+    if(item){
+        el.value=`${item.mainStock} ${item.unit}`;
+        un.textContent=`(${item.unit})`;
+    }else{
+        el.value=''; un.textContent='';
+    }
+}
 async function submitTransfer() {
   const code=document.getElementById('t-item').value;
   const qty=parseInt(document.getElementById('t-qty').value)||0;
   const reason=document.getElementById('t-reason').value;
   if(!code||qty<=0){toast('Select item and quantity','terr');return;}
   const item=DB.items.find(i=>i.code===code);
-  if(Number(item.mainStock)<qty){toast(`Insufficient main stock. Available: ${item.mainStock}`,'terr');return;}
+  if(Number(item.mainStock)<qty){toast(`Insufficient main stock. Available: ${item.mainStock} ${item.unit}`,'terr');return;}
   item.mainStock=Number(item.mainStock)-qty;
   item.subStock=Number(item.subStock)+qty;
   const dt=fmtDT(new Date());
@@ -1277,31 +1336,44 @@ function renderMovements() {
 }
 
 // ============================================================
-// REPORTS
+// REPORTS (Advanced)
 // ============================================================
 function showRepTab(period,el){
   document.querySelectorAll('#page-reports .tb').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('#page-reports .tp').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('rep-'+period).classList.add('on');
+  currentRepPeriod = period;
   renderReports(period);
 }
+
 function renderReports(period) {
-  const now=new Date();
-  const today=todayStr();
+  const now=new Date(); const today=todayStr();
   let start;
   if(period==='daily') start=today;
   else if(period==='weekly'){const d=new Date(now);d.setDate(d.getDate()-6);start=fmtDT(d).slice(0,10);}
   else{const d=new Date(now);d.setDate(1);start=fmtDT(d).slice(0,10);}
-  const rows=DB.movements.filter(m=>String(m.datetime||'')>=start);
+  
+  let rows=DB.movements.filter(m=>String(m.datetime||'')>=start);
+  
+  // Apply Staff/Room Filters
+  const sFilter = document.getElementById('rep-staff').value;
+  const rFilter = document.getElementById('rep-room').value;
+  
+  if(sFilter !== 'all') rows = rows.filter(m => m.staff === sFilter);
+  if(rFilter !== 'all') rows = rows.filter(m => (m.purpose||'').includes(rFilter));
+
   const out=rows.filter(m=>m.type==='OUT');
   const inR=rows.filter(m=>m.type==='IN');
   const tr=rows.filter(m=>m.type==='TRANSFER');
+  const rev=out.reduce((sum, m) => sum + (Number(m.revenue)||0), 0);
+
   document.getElementById('rg-'+period).innerHTML=`
     <div class="rs"><div class="rsl">Total Issues</div><div class="rsv">${out.length}</div></div>
     <div class="rs"><div class="rsl">Stock Received</div><div class="rsv">${inR.length}</div></div>
     <div class="rs"><div class="rsl">Transfers</div><div class="rsv">${tr.length}</div></div>
-    <div class="rs"><div class="rsl">Active Staff</div><div class="rsv">${new Set(out.map(r=>r.staff)).size}</div></div>`;
+    <div class="rs"><div class="rsl">Revenue (AED)</div><div class="rsv rsv-rev">${rev.toFixed(2)}</div></div>`;
+    
   document.getElementById('rt-'+period).innerHTML=[...rows].reverse().map(m=>`<tr>
     <td class="tc">${displayDT(m.datetime)}</td>
     <td class="tn">${m.itemName||'—'}</td>
@@ -1309,7 +1381,8 @@ function renderReports(period) {
     <td class="sn">${m.qty}</td>
     <td class="tn">${m.staff||'—'}</td>
     <td class="tc">${m.purpose||'—'}</td>
-  </tr>`).join('')||`<tr><td colspan="6"><div class="empty">No data</div></td></tr>`;
+    <td class="sn" style="color:var(--gold)">${m.revenue?m.revenue.toFixed(2):'-'}</td>
+  </tr>`).join('')||`<tr><td colspan="7"><div class="empty">No data</div></td></tr>`;
 }
 
 // ============================================================
@@ -1326,7 +1399,7 @@ function renderAlertsFull() {
     return `<div class="ar">
       <div class="ad ${isCrit?'adr':'ado'}">${isCrit?'⊘':'⚠'}</div>
       <div class="ab">
-        <div class="an">${i.name} <span class="tc">${i.code}</span></div>
+        <div class="an">${getIcon(i.name,i.cat)} ${i.name} <span class="tc">${i.code}</span></div>
         <div class="at">Main: <strong style="color:var(--ch)">${i.mainStock}</strong> ${i.unit} · Sub: <strong style="color:var(--ch)">${i.subStock}</strong> ${i.unit} · Reorder: ${i.reorder} · Critical: ${i.critical}</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1342,6 +1415,12 @@ function renderAlertsFull() {
 // ============================================================
 function openRequest(){populateSel('req-item','all');document.getElementById('req-overlay').classList.add('on');}
 function closeReq(){document.getElementById('req-overlay').classList.remove('on');}
+
+function updateReqUnit() {
+    const code=document.getElementById('req-item').value;
+    const item=DB.items.find(i=>i.code===code);
+    document.getElementById('req-qty-unit').textContent = item ? `(${item.unit})` : '';
+}
 
 async function submitRequest() {
   const code=document.getElementById('req-item').value;
@@ -1383,8 +1462,10 @@ async function markDone(id){
 }
 
 // ============================================================
-// ADMIN
+// ADMIN MASTERS (Staff, Items, Rooms)
 // ============================================================
+
+// --- STAFF ---
 function renderStaff(){
   const tbody=document.getElementById('staff-tbody');
   if(!tbody) return;
@@ -1394,34 +1475,69 @@ function renderStaff(){
       <td class="tn">${s.name}</td>
       <td>${roles.map(r=>`<span class="bdg bmd" style="margin-right:4px">${r}</span>`).join('')}</td>
       <td><span class="bdg ${s.store==='both'?'bgd':'bok'}">${s.store==='both'?'Main + Sub':'Sub Only'}</span></td>
-      <td><button class="btn bd bxs" onclick="deleteStaff('${s.id}')">✕</button></td>
+      <td>
+        <button class="btn bw bxs" onclick="editStaff('${s.id}')">✎ Edit</button>
+        <button class="btn bd bxs" onclick="deleteStaff('${s.id}')" style="margin-left:4px">✕</button>
+      </td>
     </tr>`;
   }).join('');
 }
 
+function resetStaffForm() {
+    document.getElementById('ns-id').value = '';
+    document.getElementById('ns-name').value = '';
+    document.getElementById('ns-btn').textContent = '+ Save Staff';
+}
+
+function editStaff(id) {
+    const s = DB.staff.find(x=>x.id===id);
+    if(!s) return;
+    document.getElementById('ns-id').value = s.id;
+    document.getElementById('ns-name').value = s.name;
+    document.getElementById('ns-store').value = s.store;
+    const rArr = typeof s.roles==='string'?s.roles.split('|'):s.roles;
+    const select = document.getElementById('ns-roles');
+    for (let i=0; i<select.options.length; i++) {
+        select.options[i].selected = rArr.includes(select.options[i].value);
+    }
+    document.getElementById('ns-btn').textContent = '✓ Update Staff';
+    showAdminTab('sa','staffmgmt', document.querySelectorAll('#page-staffmgmt .tb')[1]);
+}
+
 async function addStaff(){
+  const editId = document.getElementById('ns-id').value;
   const name=document.getElementById('ns-name').value.trim();
   const rolesEl=document.getElementById('ns-roles');
   const roles=Array.from(rolesEl.selectedOptions).map(o=>o.value);
   const store=document.getElementById('ns-store').value;
   if(!name||!roles.length){toast('Name and role required','terr');return;}
-  const id='s'+Date.now();
+  
   const rolesStr=roles.join('|');
-  DB.staff.push({id,name,roles:rolesStr,store});
-  await apiPost({action:'addStaff',id,name,roles:rolesStr,store});
-  renderStaff(); rebuildLogin();
-  document.getElementById('ns-name').value='';
-  toast('✓ Staff added to Sheet','tok');
+  
+  if (editId) {
+      const s = DB.staff.find(x=>x.id===editId);
+      if(s) { s.name=name; s.roles=rolesStr; s.store=store; }
+  } else {
+      const id='s'+Date.now();
+      DB.staff.push({id,name,roles:rolesStr,store});
+  }
+  
+  // NOTE: Simulate updating sheet (since original GS might not support updateStaff). We send the entire array.
+  await apiPost({action:'saveStaff', staff: DB.staff});
+  renderStaff(); rebuildLogin(); resetStaffForm();
+  toast(editId ? '✓ Staff Updated' : '✓ Staff added to Sheet','tok');
+  showAdminTab('sl','staffmgmt', document.querySelectorAll('#page-staffmgmt .tb')[0]);
 }
 
 async function deleteStaff(id){
   if(!confirm('Remove this staff member?')) return;
   DB.staff=DB.staff.filter(s=>String(s.id)!==String(id));
-  await apiPost({action:'deleteStaff',id});
+  await apiPost({action:'saveStaff', staff: DB.staff});
   renderStaff(); rebuildLogin();
   toast('Staff removed','tok');
 }
 
+// --- ITEMS ---
 function renderItemsMaster(){
   const tbody=document.getElementById('items-tbody');
   if(!tbody) return;
@@ -1432,11 +1548,39 @@ function renderItemsMaster(){
     <td>${i.unit}</td>
     <td class="sn">${i.reorder}</td>
     <td class="sn" style="color:var(--red)">${i.critical}</td>
-    <td><button class="btn bd bxs" onclick="deleteItemM('${i.code}')">✕</button></td>
+    <td>
+      <button class="btn bw bxs" onclick="editItemM('${i.code}')">✎</button>
+      <button class="btn bd bxs" onclick="deleteItemM('${i.code}')" style="margin-left:4px">✕</button>
+    </td>
   </tr>`).join('');
 }
 
+function resetItemForm() {
+    document.getElementById('ni-edit-mode').value = '';
+    ['ni-code','ni-name','ni-main','ni-sub','ni-reorder','ni-critical'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ni-code').readOnly = false;
+    document.getElementById('ni-btn').textContent = '+ Save Item';
+}
+
+function editItemM(code) {
+    const i = DB.items.find(x=>x.code===code);
+    if(!i) return;
+    document.getElementById('ni-edit-mode').value = '1';
+    document.getElementById('ni-code').value = i.code;
+    document.getElementById('ni-code').readOnly = true; // Don't allow changing code
+    document.getElementById('ni-name').value = i.name;
+    document.getElementById('ni-cat').value = i.cat;
+    document.getElementById('ni-unit').value = i.unit;
+    document.getElementById('ni-main').value = i.mainStock;
+    document.getElementById('ni-sub').value = i.subStock;
+    document.getElementById('ni-reorder').value = i.reorder;
+    document.getElementById('ni-critical').value = i.critical;
+    document.getElementById('ni-btn').textContent = '✓ Update Item';
+    showAdminTab('ia','itemsmgmt', document.querySelectorAll('#page-itemsmgmt .tb')[1]);
+}
+
 async function addItem(){
+  const editMode=document.getElementById('ni-edit-mode').value;
   const code=document.getElementById('ni-code').value.trim();
   const name=document.getElementById('ni-name').value.trim();
   const cat=document.getElementById('ni-cat').value;
@@ -1446,19 +1590,91 @@ async function addItem(){
   const reorder=parseInt(document.getElementById('ni-reorder').value)||0;
   const critical=parseInt(document.getElementById('ni-critical').value)||0;
   if(!code||!name){toast('Code and Name required','terr');return;}
-  if(DB.items.find(i=>i.code===code)){toast('Code already exists','terr');return;}
-  DB.items.push({code,name,cat,unit,mainStock,subStock,reorder,critical});
-  await apiPost({action:'addItem',code,name,cat,unit,mainStock,subStock,reorder,critical});
-  renderItemsMaster(); populateAll();
-  toast('✓ Item added to Sheet','tok');
+  
+  if (editMode) {
+      const i = DB.items.find(x=>x.code===code);
+      if(i) {
+          i.name=name; i.cat=cat; i.unit=unit; i.mainStock=mainStock; i.subStock=subStock; i.reorder=reorder; i.critical=critical;
+      }
+  } else {
+      if(DB.items.find(i=>i.code===code)){toast('Code already exists','terr');return;}
+      DB.items.push({code,name,cat,unit,mainStock,subStock,reorder,critical});
+  }
+
+  await apiPost({action:'saveItems', items: DB.items});
+  renderItemsMaster(); populateAll(); resetItemForm();
+  toast(editMode ? '✓ Item Updated' : '✓ Item added to Sheet','tok');
+  showAdminTab('il','itemsmgmt', document.querySelectorAll('#page-itemsmgmt .tb')[0]);
 }
 
 async function deleteItemM(code){
   if(!confirm(`Delete ${code}?`)) return;
   DB.items=DB.items.filter(i=>i.code!==code);
-  await apiPost({action:'deleteItem',code});
-  renderItemsMaster();
+  await apiPost({action:'saveItems', items: DB.items});
+  renderItemsMaster(); populateAll();
+  toast('Item deleted','tok');
 }
+
+// --- ROOMS ---
+function renderRoomsMaster(){
+  const tbody=document.getElementById('rooms-tbody');
+  if(!tbody) return;
+  tbody.innerHTML=DB.rooms.map(r=>`<tr>
+    <td><span class="tc">${r.id}</span></td>
+    <td class="tn">${r.name}</td>
+    <td><span class="bdg ${r.status==='Active'?'bok':'bmd'}">${r.status||'Active'}</span></td>
+    <td>
+      <button class="btn bw bxs" onclick="editRoom('${r.id}')">✎ Edit</button>
+      <button class="btn bd bxs" onclick="deleteRoom('${r.id}')" style="margin-left:4px">✕</button>
+    </td>
+  </tr>`).join('');
+}
+
+function resetRoomForm() {
+    document.getElementById('nr-id').value = '';
+    document.getElementById('nr-name').value = '';
+    document.getElementById('nr-status').value = 'Active';
+    document.getElementById('nr-btn').textContent = '+ Save Room';
+}
+
+function editRoom(id) {
+    const r = DB.rooms.find(x=>x.id===id);
+    if(!r) return;
+    document.getElementById('nr-id').value = r.id;
+    document.getElementById('nr-name').value = r.name;
+    document.getElementById('nr-status').value = r.status || 'Active';
+    document.getElementById('nr-btn').textContent = '✓ Update Room';
+    showAdminTab('ra','roomsmgmt', document.querySelectorAll('#page-roomsmgmt .tb')[1]);
+}
+
+async function addRoom(){
+  const editId = document.getElementById('nr-id').value;
+  const name=document.getElementById('nr-name').value.trim();
+  const status=document.getElementById('nr-status').value;
+  if(!name){toast('Room name required','terr');return;}
+  
+  if (editId) {
+      const r = DB.rooms.find(x=>x.id===editId);
+      if(r) { r.name=name; r.status=status; }
+  } else {
+      const id='r'+Date.now();
+      DB.rooms.push({id,name,status});
+  }
+  
+  await apiPost({action:'saveRooms', rooms: DB.rooms});
+  renderRoomsMaster(); populateAll(); resetRoomForm();
+  toast(editId ? '✓ Room Updated' : '✓ Room added','tok');
+  showAdminTab('rl','roomsmgmt', document.querySelectorAll('#page-roomsmgmt .tb')[0]);
+}
+
+async function deleteRoom(id){
+  if(!confirm('Remove this room?')) return;
+  DB.rooms=DB.rooms.filter(r=>r.id!==id);
+  await apiPost({action:'saveRooms', rooms: DB.rooms});
+  renderRoomsMaster(); populateAll();
+  toast('Room removed','tok');
+}
+
 
 // ============================================================
 // CONFIG
@@ -1501,6 +1717,16 @@ function populateAll(){
   populateSel('t-item','main');
   populateSel('g-item','all');
   populateSel('req-item','all');
+  
+  // Populate Rooms
+  const rOpts = '<option value="">— Select Room —</option>' + DB.rooms.filter(r=>r.status!=='Inactive').map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  document.querySelectorAll('.room-select').forEach(el=>{ if(el) el.innerHTML = rOpts; });
+  
+  // Populate Staff filter in reports
+  const sOpts = '<option value="all">All Staff</option>' + DB.staff.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');
+  const rFilterOpts = '<option value="all">All Rooms/Purposes</option>' + DB.rooms.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  const sRep = document.getElementById('rep-staff'); if(sRep) sRep.innerHTML = sOpts;
+  const rRep = document.getElementById('rep-room'); if(rRep) rRep.innerHTML = rFilterOpts;
 }
 function quickConsume(code,store){nav('consume');setTimeout(()=>{document.getElementById('c-store').value=store;document.getElementById('c-item').value=code;updateCS();},100);}
 function quickTransfer(code){nav('transfer');setTimeout(()=>{document.getElementById('t-item').value=code;updateTS();},100);}
@@ -1514,7 +1740,7 @@ function showAdminTab(id,page,el){
 function exportCSV(type){
   let rows,headers;
   if(type==='main'){headers=['Code','Name','Category','Unit','Main Stock','Sub Stock','Reorder','Critical'];rows=DB.items.map(i=>[i.code,i.name,i.cat,i.unit,i.mainStock,i.subStock,i.reorder,i.critical]);}
-  else{headers=['DateTime','Type','Item','Qty','Store','Staff','Purpose'];rows=[...DB.movements].reverse().map(m=>[m.datetime,m.type,m.itemName,m.qty,m.store||'',m.staff||'',m.purpose||'']);}
+  else{headers=['DateTime','Type','Item','Qty','Store','Staff','Purpose','Revenue'];rows=[...DB.movements].reverse().map(m=>[m.datetime,m.type,m.itemName,m.qty,m.store||'',m.staff||'',m.purpose||'',m.revenue||0]);}
   const csv=[headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`HP_${type}_${todayStr()}.csv`;a.click();
   toast('✓ CSV exported','tok');

@@ -34,7 +34,7 @@ body::after{width:500px;height:500px;background:radial-gradient(circle,#B8965A,t
 .glass2{background:var(--glass2);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid rgba(255,255,255,0.5)}
 .app{position:relative;z-index:1;display:flex;min-height:100vh}
 .sidebar{width:256px;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;z-index:100;background:rgba(31,43,36,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,0.1);transition:transform 0.3s}
-.main{margin-left:256px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.main{margin-left:256px;flex:1;display:flex;flex-direction:column;min-height:100vh; transition: margin-left 0.3s;}
 .topbar{background:rgba(255,255,255,0.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
 .content{padding:24px 28px;flex:1}
 .sb-logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.1)}
@@ -150,6 +150,21 @@ textarea{resize:vertical;min-height:72px}
 .fchip{padding:5px 12px;border-radius:16px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid rgba(255,255,255,0.5);background:rgba(255,255,255,0.3);color:var(--mid);transition:all 0.15s}
 .fchip.active{background:var(--sage);color:#fff;border-color:var(--sage)}
 
+/* THERAPIST SPECIFIC STYLES */
+.t-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.t-header-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; color: var(--sage); }
+.t-header-sub { font-size: 13px; color: var(--mid); margin-top: 4px; }
+.t-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; padding-bottom: 80px; }
+.t-card { background: var(--glass); border: 2px solid var(--glass-border); border-radius: var(--r); padding: 20px 15px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.t-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(61,107,79,0.15); border-color: var(--sage); }
+.t-card.linen-t { border-color: rgba(100,130,180,0.3); }
+.t-card.linen-t:hover { border-color: #4A6FA5; }
+.t-icon { font-size: 38px; margin-bottom: 12px; }
+.t-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; color: var(--charcoal); }
+.t-stock { font-size: 12px; color: var(--mid); font-weight: 500; }
+.t-fab { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); border-radius: 50px; padding: 14px 28px; box-shadow: 0 6px 16px rgba(184,150,90,0.4); font-weight: 600; font-size: 15px; z-index: 100; transition: transform 0.2s; }
+.t-fab:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 8px 20px rgba(184,150,90,0.5); }
+
 /* LOADING STATES */
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(61,107,79,0.3);border-top-color:var(--sage);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px}
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.7);backdrop-filter:blur(4px);z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
@@ -170,7 +185,7 @@ textarea{resize:vertical;min-height:72px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .empty{text-align:center;padding:40px;color:var(--light)}
 .empty-ico{font-size:36px;margin-bottom:10px;opacity:0.5}
-.toast{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:500;z-index:600;transform:translateY(60px);opacity:0;transition:all 0.3s;max-width:300px;backdrop-filter:blur(12px)}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:500;z-index:1000;transform:translateY(60px);opacity:0;transition:all 0.3s;max-width:300px;backdrop-filter:blur(12px)}
 .toast.show{transform:translateY(0);opacity:1}
 .t-ok{background:rgba(61,107,79,0.9);color:#fff;border:1px solid rgba(90,140,110,0.5)}
 .t-err{background:rgba(192,57,43,0.9);color:#fff}
@@ -187,13 +202,11 @@ textarea{resize:vertical;min-height:72px}
 
 <div class="sync-bar" id="sync-bar"></div>
 
-<!-- LOADING -->
 <div class="loading-overlay" id="loading-overlay">
   <div style="font-size:36px">🌿</div>
   <div class="loading-text"><span class="spinner"></span> Loading from Google Sheet...</div>
 </div>
 
-<!-- LOGIN -->
 <div class="login-screen" id="login-screen" style="display:none">
   <div class="login-box glass">
     <div class="login-head">
@@ -208,7 +221,6 @@ textarea{resize:vertical;min-height:72px}
   </div>
 </div>
 
-<!-- APP -->
 <div class="app" id="app" style="display:none">
 <aside class="sidebar" id="sidebar">
   <div class="sb-logo">
@@ -248,7 +260,7 @@ textarea{resize:vertical;min-height:72px}
 </aside>
 
 <div class="main">
-  <header class="topbar">
+  <header class="topbar" id="main-topbar">
     <div style="display:flex;align-items:center;gap:14px">
       <button class="hamburger" onclick="toggleSB()">☰</button>
       <div class="page-title" id="page-title">Dashboard</div>
@@ -262,7 +274,21 @@ textarea{resize:vertical;min-height:72px}
 
   <div class="content">
 
-    <!-- DASHBOARD -->
+    <div class="page" id="page-therapist">
+        <div class="t-header">
+            <div>
+                <div class="t-header-title">Sub Store Materials</div>
+                <div class="t-header-sub">Tap an item or towel to record usage</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="logout()">⏻ Logout</button>
+        </div>
+        
+        <div class="t-grid" id="therapist-grid">
+            </div>
+
+        <button class="btn btn-gold t-fab" onclick="openRequest()">📨 Request Material</button>
+    </div>
+
     <div class="page active" id="page-dashboard">
       <div id="cfg-banner" class="config-banner" style="display:none">
         <div><div class="config-banner-text">⚙ Google Sheet not connected</div><div class="config-banner-sub">Running in offline mode. Data changes will not sync across devices.</div></div>
@@ -286,7 +312,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- MAIN STORE -->
     <div class="page" id="page-mainstore">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">🏪 Main Store</div><button class="btn btn-primary btn-sm" onclick="exportCSV('main')">↓ CSV</button></div>
@@ -301,7 +326,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- SUB STORE -->
     <div class="page" id="page-substore">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">🧴 Sub Store</div></div>
@@ -314,7 +338,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- LINEN -->
     <div class="page" id="page-linen">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">🧺 Linen & Towel Tracker</div></div>
@@ -326,7 +349,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- CONSUME -->
     <div class="page" id="page-consume">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">↑ Record Consumption</div></div>
@@ -359,7 +381,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- TRANSFER -->
     <div class="page" id="page-transfer">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">⇄ Transfer: Main → Sub Store</div></div>
@@ -383,7 +404,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- GRN -->
     <div class="page" id="page-grn">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">↓ Goods Received Note (GRN)</div></div>
@@ -406,7 +426,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- REQUESTS -->
     <div class="page" id="page-requests">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">📨 Stock Requests</div><button class="btn btn-glass btn-sm" onclick="syncAll(true)">↻ Refresh</button></div>
@@ -414,7 +433,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- MOVEMENTS -->
     <div class="page" id="page-movements">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">≡ Movement Log</div><button class="btn btn-primary btn-sm" onclick="exportCSV('movements')">↓ CSV</button></div>
@@ -430,7 +448,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- REPORTS -->
     <div class="page" id="page-reports">
       <div class="section glass">
         <div class="tabs">
@@ -444,7 +461,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- ALERTS PAGE -->
     <div class="page" id="page-alerts">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">⚠ All Stock Alerts</div></div>
@@ -452,7 +468,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- STAFF MGMT -->
     <div class="page" id="page-staffmgmt">
       <div class="section glass">
         <div class="tabs">
@@ -476,7 +491,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- ITEMS MGMT -->
     <div class="page" id="page-itemsmgmt">
       <div class="section glass">
         <div class="tabs">
@@ -505,7 +519,6 @@ textarea{resize:vertical;min-height:72px}
       </div>
     </div>
 
-    <!-- SUPPLIERS -->
     <div class="page" id="page-suppliers">
       <div class="section glass">
         <div class="sec-head"><div class="sec-title">◉ Suppliers</div></div>
@@ -517,7 +530,6 @@ textarea{resize:vertical;min-height:72px}
 </div>
 </div>
 
-<!-- CONFIG MODAL -->
 <div class="overlay" id="cfg-overlay">
   <div class="modal glass">
     <div class="modal-head"><div class="modal-title">⚙ Google Sheet Configuration</div><button class="modal-close" onclick="hideConfig()">✕</button></div>
@@ -544,7 +556,6 @@ textarea{resize:vertical;min-height:72px}
   </div>
 </div>
 
-<!-- REQUEST MODAL -->
 <div class="overlay" id="req-overlay">
   <div class="modal glass">
     <div class="modal-head"><div class="modal-title">📨 Request Stock</div><button class="modal-close" onclick="closeReq()">✕</button></div>
@@ -561,7 +572,6 @@ textarea{resize:vertical;min-height:72px}
   </div>
 </div>
 
-<!-- LINEN MODAL -->
 <div class="overlay" id="linen-overlay">
   <div class="modal glass">
     <div class="modal-head"><div class="modal-title" id="linen-modal-title">Linen Action</div><button class="modal-close" onclick="closeLinen()">✕</button></div>
@@ -741,7 +751,6 @@ function login(id) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   applySession();
-  nav('dashboard');
 }
 
 function applySession() {
@@ -758,6 +767,20 @@ function applySession() {
   if (s.store==='both') { pill.className='store-pill store-main'; pill.textContent='🏪 Main + Sub'; }
   else { pill.className='store-pill store-sub'; pill.textContent='🧴 Sub Store'; }
 
+  // THERAPIST UI ROUTING OVERRIDE
+  if (isTher) {
+      document.getElementById('sidebar').style.display = 'none';
+      document.getElementById('main-topbar').style.display = 'none';
+      document.querySelector('.main').style.marginLeft = '0';
+      nav('therapist');
+      return; // Stop normal setup to keep them locked in Therapist view
+  } else {
+      // Restore Admin View UI elements just in case we are switching from a therapist
+      document.getElementById('sidebar').style.display = 'flex';
+      document.getElementById('main-topbar').style.display = 'flex';
+      document.querySelector('.main').style.marginLeft = window.innerWidth <= 768 ? '0' : '256px';
+  }
+
   show('nav-main',     s.store==='both');
   show('nav-transfer', isAdmin||isSup);
   show('nav-grn',      isAdmin||isSup);
@@ -773,6 +796,7 @@ function applySession() {
   document.getElementById('t-staff').value = s.name;
 
   populateAll();
+  nav('dashboard');
 }
 
 function logout() {
@@ -790,7 +814,8 @@ const TITLES = {
   linen:'Linen & Towels', consume:'Record Consumption', transfer:'Transfer to Sub Store',
   grn:'Stock IN (GRN)', requests:'Stock Requests', movements:'Movement Log',
   reports:'Summary Reports', alerts:'Stock Alerts',
-  staffmgmt:'Staff Management', itemsmgmt:'Items Master', suppliers:'Suppliers'
+  staffmgmt:'Staff Management', itemsmgmt:'Items Master', suppliers:'Suppliers',
+  therapist:'Sub Store Area'
 };
 let currentPage = 'dashboard';
 
@@ -811,6 +836,7 @@ function refreshPage(id) {
   const dt = fmtDT(new Date());
   ['c-dt','t-dt','g-dt'].forEach(x=>{const e=document.getElementById(x);if(e)e.value=dt;});
   if(id==='dashboard')   renderDash();
+  if(id==='therapist')   renderTherapistGrid();
   if(id==='mainstore')   renderStore('main');
   if(id==='substore')    renderStore('sub');
   if(id==='linen')       renderLinen();
@@ -827,6 +853,109 @@ function refreshPage(id) {
 }
 
 function toggleSB(){document.getElementById('sidebar').classList.toggle('open');}
+
+// ============================================================
+// THERAPIST GRID LOGIC
+// ============================================================
+function renderTherapistGrid() {
+  const grid = document.getElementById('therapist-grid');
+  
+  // 1. Render all sub-store items
+  let html = DB.items.map(i => {
+    const stock = Number(i.subStock);
+    const icon = i.cat === 'Medicines & Oils' ? '🌿' : '🧴';
+    return `
+      <div class="t-card" onclick="therapistConsume('${i.code}', 'item')">
+        <div class="t-icon">${icon}</div>
+        <div class="t-name">${i.name}</div>
+        <div class="t-stock">Available: <strong style="color:${stock <= Number(i.reorder) ? 'var(--warn)' : 'var(--sage)'}">${stock} ${i.unit}</strong></div>
+      </div>
+    `;
+  }).join('');
+
+  // 2. Render all Linen/Towels
+  html += DB.linen.map(l => {
+    return `
+      <div class="t-card linen-t" onclick="therapistConsume('${l.id}', 'linen')">
+        <div class="t-icon">🧺</div>
+        <div class="t-name">${l.name}</div>
+        <div class="t-stock">Clean: <strong style="color:#4A6FA5">${l.available} items</strong></div>
+      </div>
+    `;
+  }).join('');
+
+  grid.innerHTML = html || '<div class="empty" style="grid-column:1/-1">No items available in Sub Store</div>';
+}
+
+async function therapistConsume(id, type) {
+  const isItem = type === 'item';
+  const target = isItem ? DB.items.find(i => i.code === id) : DB.linen.find(l => String(l.id) === String(id));
+  
+  if (!target) return;
+
+  const unit = isItem ? target.unit : 'items';
+  const avail = isItem ? Number(target.subStock) : Number(target.available);
+
+  // Simple native browser prompt for speed
+  const qtyStr = prompt(`How many ${target.name} are you taking?`, "1");
+  
+  // If user hits cancel
+  if (qtyStr === null) return;
+  
+  const qty = parseInt(qtyStr);
+
+  if (isNaN(qty) || qty <= 0) {
+    toast('Please enter a valid number', 'err');
+    return;
+  }
+  
+  if (qty > avail) {
+    toast(`Only ${avail} ${unit} available in Sub Store!`, 'err');
+    return;
+  }
+
+  const dt = fmtDT(new Date());
+
+  if (isItem) {
+    // Process Item Consumption
+    target.subStock = avail - qty;
+    const mov = {
+      action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name,
+      qty, store: 'Sub', staff: SESSION.name, purpose: 'Therapist Issue', remarks: ''
+    };
+    DB.movements.push({...mov});
+    
+    await apiPost(mov);
+    await apiPost({action: 'updateStock', code: target.code, mainDelta: 0, subDelta: -qty});
+    checkCritical(target);
+    
+  } else {
+    // Process Linen Consumption
+    target.available = avail - qty;
+    target.inUse = Number(target.inUse) + qty;
+    
+    // Log movement specifically for towels to track staff usage
+    const mov = {
+      action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name,
+      qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: 'Therapist Issue', remarks: ''
+    };
+    DB.movements.push({...mov});
+
+    await apiPost(mov);
+    await apiPost({
+      action: 'updateLinen', 
+      id: target.id, 
+      total: target.total, 
+      available: target.available, 
+      inUse: target.inUse, 
+      inWash: target.inWash
+    });
+  }
+
+  toast(`✓ Recorded ${qty} ${target.name}`, 'ok');
+  renderTherapistGrid(); // Refresh the numbers on the cards instantly
+}
+
 
 // ============================================================
 // DASHBOARD
@@ -992,7 +1121,7 @@ async function submitLinen() {
 }
 
 // ============================================================
-// CONSUME
+// CONSUME (ADMIN)
 // ============================================================
 function updateCI(){populateSel('c-item',document.getElementById('c-store').value);}
 function updateCS(){
@@ -1327,69 +1456,4 @@ function showConfig(){
 }
 function hideConfig(){document.getElementById('cfg-overlay').classList.remove('show');}
 async function saveConfig(){
-  WEBAPP_URL=document.getElementById('cfg-url').value.trim();
-  localStorage.setItem('hp-webapp-url',WEBAPP_URL);
-  hideConfig();
-  toast('Config saved — syncing...','info');
-  await syncAll(true);
-}
-
-// ============================================================
-// WHATSAPP
-// ============================================================
-function checkCritical(item){
-  if(Number(item.subStock)<=Number(item.critical)||Number(item.mainStock)<=Number(item.critical)){
-    sendWA(item.name,`${item.mainStock} ${item.unit}`,`${item.subStock} ${item.unit}`);
-  }
-}
-function sendWA(name,main,sub){
-  const msg=`🚨 *CRITICAL STOCK ALERT — Herbal Park*\n\n*Item:* ${name}\n*Main Store:* ${main}\n*Sub Store:* ${sub}\n\nImmediate reorder required.\n_${fmtDT(new Date())}_`;
-  window.open(`https://wa.me/${WA_NUM}?text=${encodeURIComponent(msg)}`,'_blank');
-}
-
-// ============================================================
-// HELPERS
-// ============================================================
-function populateSel(id,store){
-  const sel=document.getElementById(id);if(!sel) return;
-  sel.innerHTML='<option value="">— Select —</option>'+DB.items.map(i=>`<option value="${i.code}">[${i.code}] ${i.name}</option>`).join('');
-}
-function populateSupSel(){
-  const sel=document.getElementById('g-sup');if(!sel) return;
-  sel.innerHTML='<option value="">— Select —</option>'+DB.suppliers.map(s=>`<option value="${s.code}">${s.name}</option>`).join('');
-}
-function populateAll(){
-  populateSel('c-item',document.getElementById('c-store')?.value||'sub');
-  populateSel('t-item','main');
-  populateSel('g-item','all');
-  populateSel('req-item','all');
-  populateSupSel();
-}
-function quickConsume(code,store){nav('consume');setTimeout(()=>{document.getElementById('c-store').value=store;document.getElementById('c-item').value=code;updateCS();},100);}
-function quickTransfer(code){nav('transfer');setTimeout(()=>{document.getElementById('t-item').value=code;updateTS();},100);}
-function showAdminTab(id,page,el){
-  const pg=document.getElementById('page-'+page);
-  pg.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
-  pg.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tc-'+id).classList.add('active');
-  el.classList.add('active');
-}
-function exportCSV(type){
-  let rows,headers;
-  if(type==='main'){headers=['Code','Name','Category','Unit','Main Stock','Sub Stock','Reorder','Critical'];rows=DB.items.map(i=>[i.code,i.name,i.cat,i.unit,i.mainStock,i.subStock,i.reorder,i.critical]);}
-  else{headers=['DateTime','Type','Item','Qty','Store','Staff','Purpose'];rows=[...DB.movements].reverse().map(m=>[m.datetime,m.type,m.itemName,m.qty,m.store||'',m.staff||'',m.purpose||'']);}
-  const csv=[headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`HP_${type}_${todayStr()}.csv`;a.click();
-  toast('✓ CSV exported','ok');
-}
-function fmtDT(d){return d.toISOString().slice(0,16).replace('T',' ');}
-function todayStr(){return new Date().toISOString().slice(0,10);}
-function autoRef(p){return `${p}-${new Date().getFullYear()}-${String(DB.movements.length+1).padStart(3,'0')}`;}
-function setTxt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
-function show(id,visible){const e=document.getElementById(id);if(e)e.style.display=visible?'flex':'none';}
-function showSyncBar(on){document.getElementById('sync-bar').classList[on?'add':'remove']('show');}
-let _tt;
-function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast show t-${type}`;clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3200);}
-</script>
-</body>
-</html>
+  WEBAPP_URL=document.getElementById('

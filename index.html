@@ -201,7 +201,6 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .rs{background:rgba(255,255,255,0.65);border:1px solid rgba(255,255,255,0.85);border-radius:var(--rs);padding:16px;text-align:center}
 .rsv{font-size:30px;font-weight:700;color:var(--ch)}
 .rsl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--lt);font-weight:600;margin-top:6px}
-.rsv-rev{color:var(--gold)}
 
 /* TABS */
 .tbar{display:flex;padding:4px;background:rgba(61,107,79,0.07);border-radius:var(--rf);width:fit-content;margin:16px 20px 0}
@@ -367,7 +366,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   <div class="ng" id="nav-admin-sec" style="display:none">Admin</div>
   <button class="ni" id="nav-staff" onclick="nav('staffmgmt')" style="display:none"><span class="ni-ic">👥</span> Staff Master</button>
   <button class="ni" id="nav-items" onclick="nav('itemsmgmt')" style="display:none"><span class="ni-ic">✦</span> Items Master</button>
-  <button class="ni" id="nav-rooms" onclick="nav('roomsmgmt')" style="display:none"><span class="ni-ic">🚪</span> Room Master</button>
+  <button class="ni" id="nav-rooms" onclick="nav('roomsmgmt')" style="display:none"><span class="ni-ic">🚪</span> Rooms Master</button>
   <button class="ni" onclick="showConfig()"><span class="ni-ic">⚙</span> Settings</button>
   
   <div class="sb-bot">
@@ -481,7 +480,6 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
             <div class="fi"><label>Quantity * <span id="c-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="c-qty" min="1" placeholder="0"/></div>
             <div class="fi"><label>Purpose</label><select id="c-purpose"><option>Treatment</option><option>Consultation</option><option>Other</option></select></div>
             <div class="fi"><label>Room *</label><select id="c-room" class="room-select"></select></div>
-            <div class="fi f2"><label>Revenue Generated (AED)</label><input type="number" id="c-rev" placeholder="0.00" step="0.01"/></div>
             <div class="fi fa"><label>Remarks</label><textarea id="c-remarks" placeholder="Optional..."></textarea></div>
           </div>
         </div>
@@ -565,9 +563,9 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
             <div class="fi"><select id="rep-staff" onchange="renderReports(currentRepPeriod)"><option value="all">All Staff</option></select></div>
             <div class="fi"><select id="rep-room" class="room-select" onchange="renderReports(currentRepPeriod)"><option value="all">All Rooms</option></select></div>
         </div>
-        <div class="tp on" id="rep-daily"><div class="rsg" id="rg-daily"></div><div class="ts"><table><thead><tr><th>Time</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th><th>Revenue</th></tr></thead><tbody id="rt-daily"></tbody></table></div></div>
-        <div class="tp" id="rep-weekly"><div class="rsg" id="rg-weekly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th><th>Revenue</th></tr></thead><tbody id="rt-weekly"></tbody></table></div></div>
-        <div class="tp" id="rep-monthly"><div class="rsg" id="rg-monthly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th><th>Revenue</th></tr></thead><tbody id="rt-monthly"></tbody></table></div></div>
+        <div class="tp on" id="rep-daily"><div class="rsg" id="rg-daily"></div><div class="ts"><table><thead><tr><th>Time</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th></tr></thead><tbody id="rt-daily"></tbody></table></div></div>
+        <div class="tp" id="rep-weekly"><div class="rsg" id="rg-weekly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th></tr></thead><tbody id="rt-weekly"></tbody></table></div></div>
+        <div class="tp" id="rep-monthly"><div class="rsg" id="rg-monthly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Purpose</th></tr></thead><tbody id="rt-monthly"></tbody></table></div></div>
       </div>
     </div>
 
@@ -632,18 +630,22 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
     <div class="page" id="page-roomsmgmt">
       <div class="card g1">
         <div class="tbar">
-          <button class="tb on" onclick="showAdminTab('rl','roomsmgmt',this)">Room List</button>
+          <button class="tb on" onclick="showAdminTab('rl','roomsmgmt',this)">Rooms List</button>
           <button class="tb" onclick="showAdminTab('ra','roomsmgmt',this); resetRoomForm();">+ Add Room</button>
         </div>
         <div class="tp on" id="tc-rl">
-          <div class="ts"><table><thead><tr><th>Room ID</th><th>Name</th><th>Status</th><th></th></tr></thead><tbody id="rooms-tbody"></tbody></table></div>
+          <div class="ts"><table><thead><tr><th>Room No</th><th>Name</th><th>Type</th><th>Status</th><th></th></tr></thead><tbody id="rooms-tbody"></tbody></table></div>
         </div>
         <div class="tp" id="tc-ra">
           <div class="fb">
             <div class="fg">
               <input type="hidden" id="nr-id"/>
-              <div class="fi"><label>Room Name *</label><input id="nr-name" placeholder="e.g. Treatment Room 1"/></div>
-              <div class="fi"><label>Status</label><select id="nr-status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+              <div class="fi"><label>Room Number *</label><input id="nr-num" placeholder="e.g. 101"/></div>
+              <div class="fi"><label>Room Name *</label><input id="nr-name" placeholder="e.g. Treatment Room A"/></div>
+              <div class="fi"><label>Type</label><select id="nr-type"><option>Treatment</option><option>Consultation</option><option>Doctor</option><option>Other</option></select></div>
+              <div class="fi"><label>Capacity</label><input type="number" id="nr-cap" placeholder="1"/></div>
+              <div class="fi"><label>Status</label><select id="nr-status"><option value="Active">Active</option><option value="Maintenance">Maintenance</option><option value="Inactive">Inactive</option></select></div>
+              <div class="fi fa"><label>Notes</label><textarea id="nr-notes"></textarea></div>
             </div>
           </div>
           <div class="ff"><button class="btn bp" id="nr-btn" onclick="addRoom()">+ Save Room</button></div>
@@ -667,7 +669,6 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <input type="hidden" id="tc-type"/>
       <div class="fi"><label>Quantity * <span id="tc-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="tc-qty" min="1" value="1"/></div>
       <div class="fi"><label>Room *</label><select id="tc-room" class="room-select"></select></div>
-      <div class="fi"><label>Revenue Generated (AED)</label><input type="number" id="tc-rev" placeholder="0.00" step="0.01"/></div>
     </div>
     <div class="bsf"><button class="btn bw" onclick="closeTc()">Cancel</button><button class="btn bp" onclick="submitTc()">Confirm</button></div>
   </div>
@@ -706,7 +707,6 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <div class="fi"><label>Action</label><select id="la-type" onchange="toggleLinenRoom()"><option value="issue">Issue to Room</option><option value="wash">To Wash</option><option value="return">Return Clean</option></select></div>
       <div class="fi"><label>Quantity *</label><input type="number" id="la-qty" min="1" placeholder="0"/></div>
       <div class="fi" id="la-room-fg"><label>Room *</label><select id="la-room" class="room-select"></select></div>
-      <div class="fi" id="la-rev-fg"><label>Revenue (AED)</label><input type="number" id="la-rev" placeholder="0.00" step="0.01"/></div>
     </div>
     <div class="bsf"><button class="btn bw" onclick="closeLinen()">Cancel</button><button class="btn bp" onclick="submitLinen()">Confirm</button></div>
   </div>
@@ -805,7 +805,7 @@ async function syncAll(showMsg) {
     if (data.linen) DB.linen = data.linen.map(l => ({...l, total: Number(l.total)||0, available: Number(l.available)||0, inUse: Number(l.inUse)||0, inWash: Number(l.inWash)||0}));
     if (data.movements) DB.movements = data.movements;
     if (data.requests) DB.requests = data.requests;
-    if (data.rooms && data.rooms.length) DB.rooms = data.rooms; else DB.rooms = [{id:'r1',name:'Treatment Room 1',status:'Active'},{id:'r2',name:'Treatment Room 2',status:'Active'},{id:'r3',name:'Doctor Room',status:'Active'}];
+    if (data.rooms && data.rooms.length) DB.rooms = data.rooms; else DB.rooms = [{id:'rm1',num:'101',name:'Treatment Room 1',type:'Treatment',cap:1,status:'Active',notes:''}];
     
     if (showMsg) toast('✓ Synced from Google Sheet','tok');
     rebuildLogin();
@@ -918,7 +918,7 @@ const TITLES = {
   dashboard:'Dashboard', mainstore:'Main Store', substore:'Sub Store',
   linen:'Linen & Towels', consume:'Issue Stock', transfer:'Transfer',
   grn:'Stock IN (GRN)', requests:'Stock Requests', movements:'Movement Log',
-  reports:'Summary Reports', alerts:'Stock Alerts', roomsmgmt:'Room Master',
+  reports:'Summary Reports', alerts:'Stock Alerts', roomsmgmt:'Rooms Master',
   staffmgmt:'Staff Master', itemsmgmt:'Items Master', therapist: 'Sub Store Area'
 };
 let currentPage = 'dashboard';
@@ -1022,7 +1022,6 @@ function therapistConsume(id, type) {
   document.getElementById('tc-type').value = type;
   document.getElementById('tc-qty').value = '1';
   document.getElementById('tc-unit').textContent = `(${unit})`;
-  document.getElementById('tc-rev').value = '';
   document.getElementById('tc-overlay').classList.add('on');
 }
 
@@ -1033,7 +1032,6 @@ async function submitTc() {
   const type = document.getElementById('tc-type').value;
   const qty = parseInt(document.getElementById('tc-qty').value);
   const room = document.getElementById('tc-room').value;
-  const rev = parseFloat(document.getElementById('tc-rev').value) || 0;
 
   if (!qty || qty <= 0) { toast('Invalid quantity', 'terr'); return; }
   if (!room) { toast('Please select a room', 'terr'); return; }
@@ -1051,13 +1049,13 @@ async function submitTc() {
 
   if (isItem) {
     target.subStock = avail - qty;
-    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub', staff: SESSION.name, purpose: `Therapist Issue — ${room}`, remarks: '', revenue: rev };
+    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub', staff: SESSION.name, purpose: `Therapist Issue — ${room}`, remarks: '' };
     DB.movements.push({...mov});
     await apiPost(mov);
     await apiPost({action: 'updateStock', code: target.code, mainDelta: 0, subDelta: -qty});
   } else {
     target.available = avail - qty; target.inUse = Number(target.inUse) + qty;
-    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: `Therapist Issue — ${room}`, remarks: '', revenue: rev };
+    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: `Therapist Issue — ${room}`, remarks: '' };
     DB.movements.push({...mov});
     await apiPost(mov);
     await apiPost({action: 'updateLinen', id: target.id, total: target.total, available: target.available, inUse: target.inUse, inWash: target.inWash});
@@ -1196,7 +1194,6 @@ function renderLinen() {
 function toggleLinenRoom() {
     const isIssue = document.getElementById('la-type').value === 'issue';
     document.getElementById('la-room-fg').style.display = isIssue ? 'flex' : 'none';
-    document.getElementById('la-rev-fg').style.display = isIssue ? 'flex' : 'none';
 }
 
 function openLinen(id, type) {
@@ -1206,7 +1203,6 @@ function openLinen(id, type) {
   document.getElementById('linen-modal-title').textContent = `${linenTarget.name} — ${labels[type]||type}`;
   document.getElementById('la-type').value = type;
   document.getElementById('la-qty').value = '';
-  document.getElementById('la-rev').value = '';
   toggleLinenRoom();
   document.getElementById('linen-overlay').classList.add('on');
 }
@@ -1223,12 +1219,11 @@ async function submitLinen() {
   if(t==='issue'){
     if(qty>l.available){toast('Not enough available','terr');return;}
     const room = document.getElementById('la-room').value;
-    const rev = parseFloat(document.getElementById('la-rev').value) || 0;
     if(!room) { toast('Please select a room', 'terr'); return; }
 
     l.available=Number(l.available)-qty; l.inUse=Number(l.inUse)+qty;
     
-    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: l.name, qty, store: 'Sub (Linen)', staff, purpose: `Issue — ${room}`, remarks: '', revenue: rev };
+    const mov = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: l.name, qty, store: 'Sub (Linen)', staff, purpose: `Issue — ${room}`, remarks: '' };
     DB.movements.push({...mov});
     apiPost(mov); 
   } else if(t==='wash'){
@@ -1273,7 +1268,6 @@ async function submitConsume() {
   const purpose=document.getElementById('c-purpose').value;
   const room=document.getElementById('c-room').value;
   const remarks=document.getElementById('c-remarks').value;
-  const rev=parseFloat(document.getElementById('c-rev').value)||0;
 
   if(!code||qty<=0){toast('Select item and quantity','terr');return;}
   if(!room){toast('Select a room','terr');return;}
@@ -1288,7 +1282,7 @@ async function submitConsume() {
   
   const mov={
     action:'logMovement', datetime:dt, type:'OUT', itemName:item.name, qty, 
-    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:`${purpose} — ${room}`, remarks, revenue:rev
+    store:store==='main'?'Main':'Sub', staff:SESSION.name, purpose:`${purpose} — ${room}`, remarks
   };
   
   DB.movements.push({...mov});
@@ -1300,7 +1294,6 @@ async function submitConsume() {
   updateCS();
   document.getElementById('c-qty').value='';
   document.getElementById('c-remarks').value='';
-  document.getElementById('c-rev').value='';
   renderMyIssues();
 }
 
@@ -1318,7 +1311,7 @@ function renderMyIssues() {
   </tr>`).join(''):'<tr><td colspan="5"><div class="empty">No issues today</div></td></tr>';
 }
 function clearForm(f){
-  if(f==='consume'){['c-item','c-qty','c-avail','c-remarks','c-rev'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
+  if(f==='consume'){['c-item','c-qty','c-avail','c-remarks'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
   if(f==='transfer'){['t-item','t-qty','t-avail'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
   if(f==='grn'){['g-item','g-qty','g-ref','g-remarks'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';})}
 }
@@ -1440,13 +1433,12 @@ function renderReports(period) {
   const out=rows.filter(m=>m.type==='OUT');
   const inR=rows.filter(m=>m.type==='IN');
   const tr=rows.filter(m=>m.type==='TRANSFER');
-  const rev=out.reduce((sum, m) => sum + (Number(m.revenue)||0), 0);
 
   document.getElementById('rg-'+period).innerHTML=`
     <div class="rs"><div class="rsl">Total Issues</div><div class="rsv">${out.length}</div></div>
     <div class="rs"><div class="rsl">Stock Received</div><div class="rsv">${inR.length}</div></div>
     <div class="rs"><div class="rsl">Transfers</div><div class="rsv">${tr.length}</div></div>
-    <div class="rs"><div class="rsl">Revenue (AED)</div><div class="rsv rsv-rev">${rev.toFixed(2)}</div></div>`;
+    <div class="rs"><div class="rsl">Active Staff</div><div class="rsv">${new Set(out.map(r=>r.staff)).size}</div></div>`;
     
   document.getElementById('rt-'+period).innerHTML=[...rows].reverse().map(m=>`<tr>
     <td class="tc">${displayDT(m.datetime)}</td>
@@ -1455,8 +1447,7 @@ function renderReports(period) {
     <td class="sn">${m.qty}</td>
     <td class="tn">${m.staff||'—'}</td>
     <td class="tc">${m.purpose||'—'}</td>
-    <td class="sn" style="color:var(--gold)">${m.revenue?m.revenue.toFixed(2):'-'}</td>
-  </tr>`).join('')||`<tr><td colspan="7"><div class="empty">No data</div></td></tr>`;
+  </tr>`).join('')||`<tr><td colspan="6"><div class="empty">No data</div></td></tr>`;
 }
 
 // ============================================================
@@ -1688,14 +1679,15 @@ async function deleteItemM(code){
   toast('Item deleted','tok');
 }
 
-// --- ROOMS ---
+// --- ROOMS (Updated Schema) ---
 function renderRoomsMaster(){
   const tbody=document.getElementById('rooms-tbody');
   if(!tbody) return;
   tbody.innerHTML=DB.rooms.map(r=>`<tr>
-    <td><span class="tc">${r.id}</span></td>
-    <td class="tn">${r.name}</td>
-    <td><span class="bdg ${r.status==='Active'?'bok':'bmd'}">${r.status||'Active'}</span></td>
+    <td><span class="tc">${r.num||'—'}</span></td>
+    <td class="tn">${r.name||'—'}</td>
+    <td><span class="bdg bmd">${r.type||'—'}</span></td>
+    <td><span class="bdg ${r.status==='Active'?'bok':r.status==='Maintenance'?'bwn':'bal'}">${r.status||'Active'}</span></td>
     <td>
       <button class="btn bw bxs" onclick="editRoom('${r.id}')">✎ Edit</button>
       <button class="btn bd bxs" onclick="deleteRoom('${r.id}')" style="margin-left:4px">✕</button>
@@ -1705,8 +1697,12 @@ function renderRoomsMaster(){
 
 function resetRoomForm() {
     document.getElementById('nr-id').value = '';
+    document.getElementById('nr-num').value = '';
     document.getElementById('nr-name').value = '';
+    document.getElementById('nr-type').value = 'Treatment';
+    document.getElementById('nr-cap').value = '';
     document.getElementById('nr-status').value = 'Active';
+    document.getElementById('nr-notes').value = '';
     document.getElementById('nr-btn').textContent = '+ Save Room';
 }
 
@@ -1714,24 +1710,34 @@ function editRoom(id) {
     const r = DB.rooms.find(x=>x.id===id);
     if(!r) return;
     document.getElementById('nr-id').value = r.id;
-    document.getElementById('nr-name').value = r.name;
+    document.getElementById('nr-num').value = r.num || '';
+    document.getElementById('nr-name').value = r.name || '';
+    document.getElementById('nr-type').value = r.type || 'Treatment';
+    document.getElementById('nr-cap').value = r.cap || '';
     document.getElementById('nr-status').value = r.status || 'Active';
+    document.getElementById('nr-notes').value = r.notes || '';
     document.getElementById('nr-btn').textContent = '✓ Update Room';
     showAdminTab('ra','roomsmgmt', document.querySelectorAll('#page-roomsmgmt .tb')[1]);
 }
 
 async function addRoom(){
   const editId = document.getElementById('nr-id').value;
+  const num=document.getElementById('nr-num').value.trim();
   const name=document.getElementById('nr-name').value.trim();
+  const type=document.getElementById('nr-type').value;
+  const cap=document.getElementById('nr-cap').value;
   const status=document.getElementById('nr-status').value;
-  if(!name){toast('Room name required','terr');return;}
+  const notes=document.getElementById('nr-notes').value;
+  
+  if(!num || !name){toast('Room Number and Name required','terr');return;}
   
   if (editId) {
       const r = DB.rooms.find(x=>x.id===editId);
-      if(r) { r.name=name; r.status=status; }
+      if(r) { r.num=num; r.name=name; r.type=type; r.cap=cap; r.status=status; r.notes=notes; }
   } else {
-      const id='r'+Date.now();
-      DB.rooms.push({id,name,status});
+      if(DB.rooms.find(r=>r.num.toLowerCase()===num.toLowerCase())){ toast(`⚠ Room "${num}" already exists`,'terr'); return; }
+      const id='rm'+Date.now();
+      DB.rooms.push({id,num,name,type,cap,status,notes});
   }
   
   await apiPost({action:'saveRooms', rooms: DB.rooms});
@@ -1791,13 +1797,13 @@ function populateAll(){
   populateSel('g-item','all');
   populateSel('req-item','all');
   
-  // Populate Rooms
-  const rOpts = '<option value="">— Select Room —</option>' + DB.rooms.filter(r=>r.status!=='Inactive').map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  // Populate Rooms (format: 101 - Treatment Room A)
+  const rOpts = '<option value="">— Select Room —</option>' + DB.rooms.filter(r=>r.status!=='Inactive').map(r=>`<option value="${r.num} - ${r.name}">${r.num} - ${r.name}</option>`).join('');
   document.querySelectorAll('.room-select').forEach(el=>{ if(el) el.innerHTML = rOpts; });
   
   // Populate Staff filter in reports
   const sOpts = '<option value="all">All Staff</option>' + DB.staff.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');
-  const rFilterOpts = '<option value="all">All Rooms/Purposes</option>' + DB.rooms.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  const rFilterOpts = '<option value="all">All Rooms/Purposes</option>' + DB.rooms.map(r=>`<option value="${r.num} - ${r.name}">${r.num} - ${r.name}</option>`).join('');
   const sRep = document.getElementById('rep-staff'); if(sRep) sRep.innerHTML = sOpts;
   const rRep = document.getElementById('rep-room'); if(rRep) rRep.innerHTML = rFilterOpts;
 }
@@ -1813,7 +1819,7 @@ function showAdminTab(id,page,el){
 function exportCSV(type){
   let rows,headers;
   if(type==='main'){headers=['Code','Name','Category','Unit','Main Stock','Sub Stock','Reorder','Critical'];rows=DB.items.map(i=>[i.code,i.name,i.cat,i.unit,i.mainStock,i.subStock,i.reorder,i.critical]);}
-  else{headers=['DateTime','Type','Item','Qty','Store','Staff','Purpose','Revenue'];rows=[...DB.movements].reverse().map(m=>[m.datetime,m.type,m.itemName,m.qty,m.store||'',m.staff||'',m.purpose||'',m.revenue||0]);}
+  else{headers=['DateTime','Type','Item','Qty','Store','Staff','Purpose'];rows=[...DB.movements].reverse().map(m=>[m.datetime,m.type,m.itemName,m.qty,m.store||'',m.staff||'',m.purpose||'']);}
   const csv=[headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`HP_${type}_${todayStr()}.csv`;a.click();
   toast('✓ CSV exported','tok');

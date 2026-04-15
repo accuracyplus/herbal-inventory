@@ -222,7 +222,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .bsb{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
 .bsf{padding:16px 24px;border-top:1px solid rgba(61,107,79,0.07);display:flex;justify-content:flex-end;gap:12px;background:rgba(61,107,79,0.02)}
 
-/* LOGIN SCREEN - UNBREAKABLE TABLE FIX FOR MOBILE */
+/* LOGIN SCREEN - UNBREAKABLE BLOCK FIX FOR MOBILE */
 .lw{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(145deg,#C8E0D2 0%,#E8DFCF 55%,#C8D8E8 100%);overflow-y:auto;}
 .lb{width:100%;max-width:420px;border-radius:26px;box-shadow:var(--BL);animation:popIn .35s ease-out;background:#fff;display:block;margin:auto;}
 .lbh{padding:28px 26px 16px;text-align:center;background:#fff;border-radius:26px 26px 0 0;}
@@ -232,24 +232,23 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 .lbl{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:0;}
 .sl{display:block;max-height:400px;overflow-y:auto;padding:4px 0;}
 
-/* The Table Fix for Safari */
-.si2 { display: table; width: 100%; padding: 14px 16px; border-radius: var(--rs); background: rgba(255,255,255,.78); border: 1.5px solid rgba(61,107,79,.09); cursor: pointer; margin-bottom: 10px; table-layout: fixed; box-sizing: border-box; }
-.si2:hover { background: #fff; border-color: var(--g); box-shadow: var(--BS); }
-.sa-wrap { display: table-cell; width: 54px; vertical-align: middle; }
-.sa { width: 40px; height: 40px; border-radius: 50%; background: var(--g3); display: block; text-align: center; line-height: 40px; font-size: 16px; font-weight: 700; color: var(--g); margin: 0 auto; }
-.sii { display: table-cell; vertical-align: middle; text-align: left; padding: 0 10px; }
+/* Strict block styling so Safari cannot crush the elements */
+.si2 { display: block; padding: 14px 16px; border-radius: var(--rs); background: rgba(255,255,255,.78); border: 1.5px solid rgba(61,107,79,.09); cursor: pointer; margin-bottom: 10px; width: 100%; box-sizing: border-box; text-align: left; }
+.si2:hover { background: #fff; border-color: var(--g); transform: translateX(3px); box-shadow: var(--BS); }
+.sa { width: 40px; height: 40px; border-radius: 50%; background: var(--g3); display: inline-block; text-align: center; line-height: 40px; font-size: 16px; font-weight: 700; color: var(--g); vertical-align: middle; margin-right: 14px; }
+.sii { display: inline-block; vertical-align: middle; width: calc(100% - 90px); }
 .sn2 { font-size: 15px; font-weight: 600; color: var(--ch); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-bottom: 3px; }
 .sr2 { font-size: 11px; color: var(--mid); display: block; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sav { display: table-cell; width: 30px; vertical-align: middle; color: var(--lt); font-weight: 700; font-size: 16px; text-align: right; }
+.sav { display: inline-block; vertical-align: middle; color: var(--lt); font-weight: 700; font-size: 16px; text-align: right; width: 20px; float: right; margin-top: 10px; }
 
 /* BOTTOM NAV (MOBILE) */
 .bnav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--nb);background:rgba(255,255,255,.95);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-top:1px solid rgba(61,107,79,.1);z-index:250;align-items:center;justify-content:space-around;padding:0 12px;box-shadow:0 -4px 20px rgba(61,107,79,.08)}
-.bb{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:var(--rs);cursor:pointer;color:var(--lt);transition:all .18s;border:none;background:none;font-family:'Outfit',sans-serif;min-width:60px}
+.bb{display:inline-block;text-align:center;padding:8px 12px;border-radius:var(--rs);cursor:pointer;color:var(--lt);transition:all .18s;border:none;background:none;font-family:'Outfit',sans-serif;min-width:60px}
 .bb.on{color:var(--g)}
-.bb-ic{font-size:24px;transition:transform .2s}
+.bb-ic{font-size:24px;display:block;margin-bottom:4px;transition:transform .2s}
 .bb.on .bb-ic{transform:scale(1.12)}
-.bb-lb{font-size:11px;font-weight:600}
-.bfab{width:56px;height:56px;border-radius:50%;background:var(--g);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(61,107,79,.38);border:none;cursor:pointer;transition:all .18s;margin-top:-18px}
+.bb-lb{font-size:11px;font-weight:600;display:block;}
+.bfab{width:56px;height:56px;border-radius:50%;background:var(--g);color:#fff;font-size:26px;display:inline-block;line-height:56px;text-align:center;box-shadow:0 4px 18px rgba(61,107,79,.38);border:none;cursor:pointer;transition:all .18s;margin-top:-18px;vertical-align:top;}
 .bfab:active{transform:scale(.92)}
 
 /* SYNC BAR */
@@ -282,7 +281,8 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
 @media(max-width:768px){
   .sidebar{transform:translateX(-260px)}.sidebar.open{transform:translateX(0)}
   .main{margin-left:0}.hbg{display:flex}
-  .bnav{display:flex}.topbar .sbadge{display:none}
+  .bnav{display:block; text-align:center; white-space:nowrap;}
+  .topbar .sbadge{display:none}
   .topbar{height:54px;padding:0 14px}
   .ptitle{font-size:18px}
   .body{padding:14px;padding-bottom:calc(var(--nb) + 20px)}
@@ -304,7 +304,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
   .qb{padding:16px 12px}.qb-em{font-size:32px}.qb-nm{font-size:14px}.qb-st{font-size:12px}
   .lg{grid-template-columns:1fr;gap:12px;padding:14px}.lc{padding:16px}
   .bs{border-radius:22px; margin:20px;}
-  .bnav{padding:0 8px}.bb{min-width:54px;padding:8px}.bb-ic{font-size:24px}.bb-lb{font-size:10px}
+  .bb{min-width:54px;padding:8px}.bb-ic{font-size:24px}.bb-lb{font-size:10px}
   .bfab{width:56px;height:56px;font-size:26px;margin-top:-16px}
   
   .lb{border-radius:22px;margin:16px; max-height:90vh;}
@@ -340,7 +340,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <img src="logo.png" class="login-logo-img" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
       <div class="lll" style="display:none;">🌿</div>
       <div class="lbr">Herbal Park</div>
-      <div class="lbs">Inventory Management</div>
+      <div class="lbs">Inventory Management <span style="color:var(--g);font-weight:700;">v6.5</span></div>
     </div>
     <div class="lbb">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -422,7 +422,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
         <div class="sr g1" style="margin-bottom: 20px; border-radius: var(--r);">
             <div class="sw2" style="width:100%;">
                 <span class="si">⌕</span>
-                <input id="t-search" type="text" placeholder="Search by name or code..." oninput="renderTherapistGrid()" style="padding-top:14px; padding-bottom:14px; font-size:15px;"/>
+                <input id="t-search" type="text" placeholder="Search by name or code..." onkeyup="renderTherapistGrid()" style="padding-top:14px; padding-bottom:14px; font-size:15px;"/>
                 <span class="si-clear" id="t-search-clear" onclick="clearTSearch()">✕</span>
             </div>
             <div style="display:flex; gap:8px; overflow-x:auto; width:100%; margin-top:8px; padding-bottom:4px;">
@@ -465,7 +465,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <div class="card g1">
         <div class="ch"><div class="ct">🏪 Main Store</div><button class="btn bp bsm" onclick="exportCSV('main')">↓ CSV</button></div>
         <div class="sr">
-          <div class="sw2"><span class="si">⌕</span><input id="ms-q" type="text" placeholder="Search..." oninput="renderStore('main')"/></div>
+          <div class="sw2"><span class="si">⌕</span><input id="ms-q" type="text" placeholder="Search..." onkeyup="renderStore('main')"/></div>
           <div style="display:flex; gap:8px; overflow-x:auto;">
               <button class="fc on" onclick="setF('main','all',this)">All</button>
               <button class="fc" onclick="setF('main','Medicines & Oils',this)">🌿 Med/Oils</button>
@@ -481,7 +481,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <div class="card g1">
         <div class="ch"><div class="ct">🧴 Sub Store</div></div>
         <div class="sr">
-          <div class="sw2"><span class="si">⌕</span><input id="ss-q" type="text" placeholder="Search..." oninput="renderStore('sub')"/></div>
+          <div class="sw2"><span class="si">⌕</span><input id="ss-q" type="text" placeholder="Search..." onkeyup="renderStore('sub')"/></div>
           <div style="display:flex; gap:8px; overflow-x:auto;">
               <button class="fc on" onclick="setF('sub','all',this)">All</button>
               <button class="fc" onclick="setF('sub','low',this)">⚠ Low</button>
@@ -575,7 +575,7 @@ tbody tr:hover{background:rgba(255,255,255,0.5)}
       <div class="card g1">
         <div class="ch"><div class="ct">≡ Movement Log</div><button class="btn bp bsm" onclick="exportCSV('movements')">↓ CSV</button></div>
         <div class="sr">
-          <div class="sw2"><span class="si">⌕</span><input id="mov-q" type="text" placeholder="Search..." oninput="renderMovements()"/></div>
+          <div class="sw2"><span class="si">⌕</span><input id="mov-q" type="text" placeholder="Search..." onkeyup="renderMovements()"/></div>
           <div style="display:flex; gap:8px; overflow-x:auto;">
               <button class="fc on" onclick="setMF('all',this)">All</button>
               <button class="fc" onclick="setMF('IN',this)">IN</button>
@@ -806,13 +806,12 @@ function mapData(obj) {
 }
 
 // ============================================================
-// API CALLS
+// API CALLS (BULLETPROOF NO-CORS)
 // ============================================================
 function apiFetch(params, callback) {
   if (!WEBAPP_URL) { if(callback) callback(null); return; }
   
   document.getElementById('syncbar').classList.add('on');
-  // Cache Buster added to force fresh data download every time
   var cbName = 'hp_cb_' + Math.floor(Math.random() * 10000000);
   
   var timeout = setTimeout(function() {
@@ -843,37 +842,37 @@ function apiFetch(params, callback) {
   document.head.appendChild(script);
 }
 
-// Fixed POST to completely bypass Mobile Browser CORS Blocks
+// XMLHttpRequest bypasses all modern fetch/CORS bugs on mobile Safari
 function apiPost(body) {
-  if (!WEBAPP_URL) return Promise.resolve({ ok: true, offline: true });
+  if (!WEBAPP_URL) return;
   document.getElementById('syncbar').classList.add('on');
-  return fetch(WEBAPP_URL, { 
-      method: 'POST', 
-      body: JSON.stringify(body), 
-      mode: 'no-cors',
-      cache: 'no-cache',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-  }).then(function() {
+  
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", WEBAPP_URL, true);
+  xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+  xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+          document.getElementById('syncbar').classList.remove('on');
+      }
+  };
+  try {
+      xhr.send(JSON.stringify(body));
+  } catch(e) {
       document.getElementById('syncbar').classList.remove('on');
-      return { ok: true };
-  }).catch(function() {
-      document.getElementById('syncbar').classList.remove('on');
-      return { ok: false };
-  });
+  }
 }
 
-function syncAll(showMsg, onComplete) {
+function syncAll(showMsg) {
   if (!WEBAPP_URL) {
     document.getElementById('cfg-banner').style.display = 'flex';
     if (showMsg) toast('Connect Google Sheet first','tinf'); 
-    if(onComplete) onComplete();
     return;
   }
   document.getElementById('cfg-banner').style.display = 'none';
   
   apiFetch({ action: 'getAll' }, function(data) {
       if (data) {
-        // IGNORE BLANK ROWS FROM EXCEL WITH FILTER
+        // FILTER BLANK ROWS FROM EXCEL
         if (data.staff) {
             var rawStaff = data.staff.map(function(s) {
                 var mapped = mapData(s);
@@ -941,7 +940,8 @@ function syncAll(showMsg, onComplete) {
       } else {
         if (showMsg) toast('Sync failed — check connection','terr');
       }
-      if(onComplete) onComplete();
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
   });
 }
 
@@ -949,10 +949,7 @@ function syncAll(showMsg, onComplete) {
 // INIT 
 // ============================================================
 window.addEventListener('load', function() {
-  syncAll(false, function() {
-      document.getElementById('loading-screen').style.display = 'none';
-      document.getElementById('login-screen').style.display = 'flex';
-  });
+    syncAll(false);
 });
 
 // ============================================================
@@ -967,7 +964,6 @@ function rebuildLogin() {
       var safeName = String(s.name || 'Unnamed');
       var initial = safeName.charAt(0).toUpperCase();
       
-      // Strict Table Display to beat Safari bugs
       htmlStr += '<div class="si2" onclick="login(\'' + s.id + '\')">' +
         '<div class="sa-wrap"><div class="sa">' + initial + '</div></div>' +
         '<div class="sii"><div class="sn2">' + safeName + '</div><div class="sr2">' + roles.join(' · ') + '</div></div>' +

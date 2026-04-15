@@ -6,6 +6,17 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Inventory Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script>
+  // Global fail-safe: Force hide loading screen if any critical mobile error occurs
+  window.onerror = function() {
+      setTimeout(function(){
+          var l = document.getElementById('loading-screen');
+          var s = document.getElementById('login-screen');
+          if(l) l.style.display = 'none';
+          if(s) s.style.display = 'flex';
+      }, 1000);
+  };
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -70,7 +81,7 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:60vw;height:6
 .sbo{background:linear-gradient(135deg, var(--gold2), #fff);color:var(--gold);border:1px solid #E8D9BE}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:var(--rf);font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:'Outfit',sans-serif;transition:all .3s;white-space:nowrap; position: relative; overflow: hidden;}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:var(--rf);font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:'Outfit',sans-serif;transition:all .3s;white-space:nowrap;}
 .bp{background:linear-gradient(135deg, var(--g), var(--g2));color:#fff;box-shadow:0 4px 15px rgba(61,107,79,0.3)}
 .bw{background:rgba(255,255,255,0.9);color:var(--ch);border:1px solid var(--BD);box-shadow:var(--BS)}
 .bg{background:linear-gradient(135deg, var(--gold), #b8904d);color:#fff;box-shadow:0 4px 15px rgba(155,120,64,0.3)}
@@ -88,7 +99,7 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:60vw;height:6
 /* CARDS */
 .card{border-radius:var(--r);margin-bottom:24px;overflow:hidden;}
 .ch{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap; background: rgba(255,255,255,0.3);}
-.ct{font-size:18px;font-weight:700;color:var(--ch);display:flex;align-items:center; letter-spacing: -0.5px;}
+.ct{font-size:18px;font-weight:700;color:var(--ch);display:flex;align-items:center; gap:12px; letter-spacing: -0.5px;}
 .ci{width:32px;height:32px;border-radius:var(--rx);display:inline-block;text-align:center;line-height:32px;font-size:16px; margin-right: 12px; background:var(--W); color: var(--g);}
 
 /* TABLE */
@@ -168,14 +179,14 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
 /* QUICK ISSUE GRID (THERAPIST) */
 .qg{padding:0 24px 20px;}
 .qb{padding:24px 16px;border-radius:var(--r);background:rgba(255,255,255,0.85);border:1px solid var(--BD);cursor:pointer;text-align:center;font-family:'Outfit',sans-serif; display:inline-block; width: 30%; margin-right: 1.5%; margin-bottom: 16px; box-sizing: border-box; vertical-align: top;}
-.qb-em{font-size:42px;margin-bottom:16px;display:block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));}
+.qb-em{font-size:42px;margin-bottom:16px;display:block;}
 .qb-nm{font-size:16px;font-weight:700;color:var(--ch);line-height:1.3; display:block; margin-bottom: 8px;}
 .qb-st{font-size:13px;color:var(--mid);font-weight:700; padding: 4px 12px; background: rgba(0,0,0,0.03); border-radius: var(--rf); display: inline-block;}
 
 /* REPORT STATS */
 .rsg{padding:20px 24px}
 .rs{background:rgba(255,255,255,0.8);border:1px solid var(--BD);border-radius:var(--r);padding:20px;text-align:center; display:inline-block; width: 23%; margin-right: 1%; box-sizing: border-box;}
-.rsv{font-size:36px;font-weight:700;color:var(--ch); letter-spacing: -1px;}
+.rsv{font-size:36px;font-weight:700;color:var(--ch);}
 .rsl{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);font-weight:700;margin-top:8px}
 
 /* TABS */
@@ -201,15 +212,15 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
 .lw::before { content: ''; display: inline-block; height: 100%; vertical-align: middle; }
 .lb{width:90%;max-width:440px;border-radius:32px;box-shadow:0 24px 60px rgba(31,38,135,0.2);background:rgba(255,255,255,0.95); border: 1px solid rgba(255,255,255,0.6); display:inline-block; vertical-align: middle; text-align: left; margin: 20px 0;}
 .lbh{padding:40px 32px 20px;text-align:center;border-bottom: 1px solid rgba(0,0,0,0.05);}
-.lbr{font-size:32px;font-weight:700;color:var(--ch);letter-spacing:-0.5px; line-height: 1.2;}
+.lbr{font-size:32px;font-weight:700;color:var(--ch);position:relative;letter-spacing:-0.5px; line-height: 1.2;}
 .lbb{padding:24px 32px 40px;}
 .lbl{font-size:12px;font-weight:700;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;display:inline-block;margin-bottom:16px;}
 .sl{display:block;max-height:45vh;overflow-y:auto;padding:4px 0;}
 
 /* Unbreakable Table Layout for Safari Mobile */
-.si2 { display: table; width: 100%; padding: 16px; border-radius: var(--rs); background: rgba(255,255,255,1); border: 1.5px solid rgba(61,107,79,.1); cursor: pointer; margin-bottom: 12px; table-layout: fixed; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.2s;}
+.si2 { display: table; width: 100%; padding: 16px; border-radius: var(--rs); background: rgba(255,255,255,1); border: 1.5px solid rgba(61,107,79,.1); cursor: pointer; margin-bottom: 12px; table-layout: fixed; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
 .sa-wrap { display: table-cell; width: 56px; vertical-align: middle; }
-.sa { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--g3), #fff); border: 1px solid var(--g4); display: block; text-align: center; line-height: 42px; font-size: 18px; font-weight: 700; color: var(--g); margin: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.sa { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--g3), #fff); border: 1px solid var(--g4); display: block; text-align: center; line-height: 42px; font-size: 18px; font-weight: 700; color: var(--g); margin: 0;}
 .sii { display: table-cell; vertical-align: middle; text-align: left; padding: 0 12px; }
 .sn2 { font-size: 16px; font-weight: 700; color: var(--ch); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-bottom: 4px; }
 .sr2 { font-size: 12px; color: var(--mid); display: block; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
@@ -237,6 +248,17 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
 .terr{background:rgba(180,40,30,.95);color:#fff}
 .tinf{background:rgba(50,80,60,.9);color:#fff}
 
+/* CONFIG BANNER */
+.cbanner{background:rgba(155,120,64,.09);border:1px solid rgba(155,120,64,.2);border-radius:var(--rs);padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.cbt{font-size:14px;color:var(--gold);font-weight:600}
+.cbs{font-size:12px;color:var(--lt);margin-top:4px}
+
+/* PAGES */
+.page{display:none}.page.on{display:block;animation:pgIn .22s ease-out}
+@keyframes pgIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.empty{text-align:center;padding:44px 20px;color:var(--lt)}
+.ei{font-size:42px;margin-bottom:12px;opacity:.4}
+
 /* MOBILE RESPONSIVE TWEAKS */
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:299;}
 .sb-overlay.on{display:block}
@@ -244,14 +266,15 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
 @media(max-width:768px){
   .sidebar{transform:translateX(-260px)}.sidebar.open{transform:translateX(0)}
   .main{margin-left:0}.hbg{display:flex}
-  .bnav{display:block}
-  .topbar{height:60px;padding:0 16px}
+  .bnav{display:block; text-align:center; white-space:nowrap;}
   .topbar .sbadge{display:none}
-  .ptitle{font-size:20px}
-  .body{padding:16px;padding-bottom:calc(var(--nb) + 24px)}
-  .sc{width: 47%; margin-right: 2%; margin-bottom: 12px;}
+  .topbar{height:54px;padding:0 14px}
+  .ptitle{font-size:18px}
+  .body{padding:14px;padding-bottom:calc(var(--nb) + 20px)}
+  .sg{display:block;}
+  .sc{width: 47%; margin-right: 2%; margin-bottom: 12px; display:inline-block; padding:16px; border-radius: 16px;}
   .sc-val{font-size:32px}.sc-em{font-size:24px;margin-bottom:10px}.sc-lb{font-size:10px}
-  .card{border-radius:20px;margin-bottom:16px}.ch{padding:16px 20px}.ct{font-size:16px}
+  .card{border-radius:16px;margin-bottom:14px}.ch{padding:14px 16px}.ct{font-size:14px}
   .ts{padding: 0 4px 4px;}
   table{font-size:13px; border-spacing: 0 6px;}
   thead th{padding:12px 16px;font-size:10px}
@@ -268,7 +291,7 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
   .qg{padding:0 16px 16px}
   .qb{width: 47%; margin-right: 2%; padding:20px 12px; border-radius: 16px;}.qb-em{font-size:36px}.qb-nm{font-size:14px}.qb-st{font-size:12px}
   .lc{width: 100%; margin-right: 0;}
-  .bs{border-radius:28px; margin:20px; width: calc(100% - 40px);}
+  .bs{border-radius:22px; margin:20px; width: calc(100% - 40px);}
   
   .ar{padding:16px;}.ad{width:40px;height:40px; font-size: 18px;}.an{font-size:15px}.at{font-size:12px}
   .rs{width: 47%; margin-right: 2%; margin-bottom: 12px; padding:16px; border-radius: 16px;}.rsv{font-size:28px}
@@ -276,6 +299,10 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
   .sb-top{padding:24px 20px 20px}.sb-me{margin:12px;padding:14px}
   .ng{padding:16px 16px 8px;font-size:11px}.ni{padding:12px 16px;margin:4px 10px;font-size:15px}
   .hide-m{display:none!important}
+}
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .bnav{height:calc(var(--nb) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
+  .body{padding-bottom:calc(var(--nb) + env(safe-area-inset-bottom) + 16px)!important}
 }
 </style>
 </head>
@@ -286,6 +313,7 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
   <img src="logo.png" class="login-logo-img" alt="Logo" onerror="this.style.display='none';">
   <div style="font-size:18px;font-weight:700;color:var(--ch); letter-spacing: 0.5px;">Loading System...</div>
   <div style="margin-top: 10px; font-size: 13px; color: var(--mid);">Please wait while data syncs.</div>
+  <button onclick="forceSkipLoading()" style="margin-top:30px; padding:12px 24px; font-size:14px; font-weight:700; color:var(--mid); background:var(--W); border:1px solid var(--BD); border-radius:var(--rf); cursor:pointer; box-shadow:var(--BS);">Skip / Enter Offline Mode</button>
 </div>
 
 <div class="lw" id="login-screen" style="display:none">
@@ -295,7 +323,7 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
       <div class="lbr">Inventory Management</div>
     </div>
     <div class="lbb">
-      <div style="margin-bottom:16px;">
+      <div style="margin-bottom:16px; text-align: left;">
           <span class="lbl">Select Your Name</span>
       </div>
       <div class="sl" id="staff-list"></div>
@@ -385,6 +413,10 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
     </div>
 
     <div class="page on" id="page-dashboard">
+      <div id="cfg-banner" class="cbanner" style="display:none">
+        <div><div class="cbt">⚙ Google Sheet not connected</div><div class="cbs">Running in offline mode. Changes will not sync.</div></div>
+        <button class="btn bg bsm" onclick="showConfig()">Connect</button>
+      </div>
       <div class="sg">
         <div class="sc g1" onclick="nav('mainstore')"><span class="sc-em">🏪</span><div class="sc-lb">Main SKUs</div><div class="sc-val" id="d-main">—</div></div>
         <div class="sc g1" onclick="nav('substore')"><span class="sc-em">🧴</span><div class="sc-lb">Sub SKUs</div><div class="sc-val" id="d-sub">—</div></div>
@@ -652,6 +684,19 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
   </div>
 </div>
 
+<div class="ov" id="cfg-overlay">
+  <div class="bs">
+    <div class="bshd"><div class="bst">⚙ Google Sheet Config</div><button class="bsc" onclick="hideConfig()">✕</button></div>
+    <div class="bsb">
+      <div class="fi">
+        <label>Web App URL *</label>
+        <input id="cfg-url" placeholder="https://script.google.com/..."/>
+      </div>
+    </div>
+    <div class="bsf"><button class="btn bw" onclick="hideConfig()">Cancel</button><button class="btn bp" onclick="saveConfig()">Save & Connect</button></div>
+  </div>
+</div>
+
 <div class="ov" id="req-overlay">
   <div class="bs">
     <div class="bshd"><div class="bst">📨 Request Stock</div><button class="bsc" onclick="closeReq()">✕</button></div>
@@ -684,7 +729,10 @@ tbody td:last-child { border-radius: 0 var(--rs) var(--rs) 0; border-right: 1px 
 // CONFIG & STATE
 // ============================================================
 var WA_NUM = '971502380538';
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxjUENJrOfdFcYLxdAqxs6ggZtxGcythH48oGiCIlx0tWIEoJBaPHJuZoQf6qFzmLg3Dg/exec';
+// If memory is empty, force the default Google Script so it works instantly.
+var FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxjUENJrOfdFcYLxdAqxs6ggZtxGcythH48oGiCIlx0tWIEoJBaPHJuZoQf6qFzmLg3Dg/exec';
+var savedUrl = localStorage.getItem('hp-webapp-url');
+var WEBAPP_URL = savedUrl && savedUrl !== '' ? savedUrl : FALLBACK_URL;
 
 var DB = { staff:[], items:[], linen:[], movements:[], requests:[], rooms:[] };
 var SESSION = null; var linenTarget = null; var currentRepPeriod = 'daily'; var T_FILT = 'all';
@@ -750,10 +798,6 @@ function getRoomById(id) {
     for(var i=0; i<DB.rooms.length; i++) { if(String(DB.rooms[i].id) === String(id)) return DB.rooms[i]; }
     return null;
 }
-function getRequestById(id) {
-    for(var i=0; i<DB.requests.length; i++) { if(String(DB.requests[i].id) === String(id)) return DB.requests[i]; }
-    return null;
-}
 
 // ============================================================
 // API CALLS (BULLETPROOF NO-CORS)
@@ -768,7 +812,7 @@ function apiFetch(params, callback) {
     try { delete window[cbName]; } catch(e){}
     document.getElementById('syncbar').classList.remove('on'); 
     if(callback) callback(null);
-  }, 15000);
+  }, 10000);
   
   window[cbName] = function(data) {
     clearTimeout(timeout); 
@@ -811,11 +855,19 @@ function apiPost(body) {
   }
 }
 
+// Forcefully skips the loading screen
+function forceSkipLoading() {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+}
+
 function syncAll(showMsg) {
   if (!WEBAPP_URL) {
     if (showMsg) toast('No Google Sheet URL connected.','terr'); 
+    forceSkipLoading();
     return;
   }
+  document.getElementById('cfg-banner').style.display = 'none';
   
   apiFetch({ action: 'getAll' }, function(data) {
       if (data) {
@@ -904,8 +956,7 @@ function syncAll(showMsg) {
       } else {
         if (showMsg) toast('Sync failed — check connection','terr');
       }
-      document.getElementById('loading-screen').style.display = 'none';
-      document.getElementById('login-screen').style.display = 'flex';
+      forceSkipLoading();
   });
 }
 
@@ -1337,7 +1388,7 @@ function renderLinen() {
 
 function toggleLinenRoom() {
     var isIssue = document.getElementById('la-type').value === 'issue';
-    document.getElementById('la-room-fg').style.display = isIssue ? 'block' : 'none';
+    document.getElementById('la-room-fg').style.display = isIssue ? 'flex' : 'none';
 }
 
 function openLinen(id, type) {
@@ -1910,11 +1961,12 @@ function addRoom(){
 
 function deleteRoom(id){
   if(!confirm('Remove this room?')) return;
-  DB.rooms=DB.rooms.filter(function(r){ return String(r.id)!==String(id); });
+  DB.rooms=DB.rooms.filter(function(r){ return r.id!==id; });
   apiPost({action:'saveRooms', rooms: DB.rooms});
   renderRoomsMaster(); populateAll();
   toast('Room removed','tok');
 }
+
 
 // ============================================================
 // CONFIG & MISC

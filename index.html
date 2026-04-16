@@ -16,7 +16,77 @@
       }, 1000);
   };
 </script>
-<style>
+/* ========================================================
+   MOBILE CARD OPTIMIZATION (Screens under 768px)
+   ======================================================== */
+@media (max-width: 768px) {
+    
+    /* 1. Hide the desktop table headers */
+    thead { display: none; }
+
+    /* 2. Turn the table and rows into a vertical stack */
+    table, tbody, tr, td { display: block; width: 100%; }
+
+    /* 3. Style each row as a Glassmorphism Card */
+    tbody tr {
+        background: var(--WM); /* Using your white-medium glass variable */
+        backdrop-filter: var(--blur); 
+        -webkit-backdrop-filter: var(--blur);
+        border: 1px solid var(--WL);
+        border-radius: var(--r); /* Using your 24px radius variable */
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: var(--BM);
+    }
+
+    /* 4. Column Styling */
+    tbody td {
+        border: none !important;
+        position: relative;
+        padding: 10px 0 10px 40% !important; /* Data on right, Label on left */
+        text-align: right;
+        min-height: 40px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    /* 5. The "Item Name" Header (Column 2) */
+    tbody td:nth-of-type(2) {
+        display: block;
+        padding: 0 0 10px 0 !important;
+        text-align: left;
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: var(--ch);
+        border-bottom: 1px solid var(--WL) !important;
+        margin-bottom: 10px;
+    }
+    tbody td:nth-of-type(2)::before { content: ""; } /* Hide label for title */
+
+    /* 6. Recreate labels for the other columns */
+    tbody td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 35%;
+        text-align: left;
+        font-weight: 700;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: var(--mid);
+        letter-spacing: 1px;
+    }
+
+    /* 7. Action buttons at the bottom of the card */
+    tbody td:last-child {
+        justify-content: center;
+        padding-left: 0 !important;
+        margin-top: 10px;
+    }
+    tbody td:last-child::before { content: ""; }
+}
+  <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --g:#2b7a78; --g2:#3aafa9; 
@@ -1480,16 +1550,16 @@ function renderStore(store) {
       var status = isCrit?'<span class="bdg bal">⊘ Critical</span>':isLow?'<span class="bdg bwn">⚠ Low</span>':'<span class="bdg bok">OK</span>';
       var catCls = iObj.cat==='Medicines & Oils' ? 'cat-med' : 'cat-con';
       
-      html += '<tr>' +
-        '<td><span class="tc">'+iObj.code+'</span></td>' +
-        '<td class="'+catCls+'"><div class="tn"><span style="margin-right:6px">'+getIcon(iObj.name,iObj.cat)+'</span> '+iObj.name+'</div></td>' +
-        '<td><span class="tc">'+(iObj.cat==='Medicines & Oils'?'Med/Oil':'Consumable')+'</span></td>' +
-        '<td>'+iObj.unit+'</td>' +
-        '<td><div class="sw"><div class="sb hide-m"><div class="sbf" style="width:'+pct+'%;background:'+barColor+'"></div></div><span class="sn" style="color:'+barColor+'">'+stockVal+'</span></div></td>' +
-        '<td class="sn">'+iObj.reorder+'</td>' +
-        '<td>'+status+'</td>' +
-        '<td><button class="btn bw bxs" onclick="quickConsume(\''+iObj.code+'\',\''+store+'\')">↑ Issue</button>'+(isMain?'<button class="btn bxs" style="margin-left:4px;background:var(--gold2);border:none;cursor:pointer;border-radius:6px;color:var(--gold);font-weight:700;" onclick="quickTransfer(\''+iObj.code+'\')">⇄</button>':'')+'</td>' +
-      '</tr>';
+     html += '<tr>' +
+    '<td data-label="Code"><span class="tc">' + iObj.code + '</span></td>' +
+    '<td data-label="Item" class="' + catCls + '"><div class="tn"><span style="margin-right:6px">' + getIcon(iObj.name, iObj.cat) + '</span>' + iObj.name + '</div></td>' +
+    '<td data-label="Category"><span class="tc">' + (iObj.cat === 'Medicines & Oils' ? 'Med/Oil' : 'Consumable') + '</span></td>' +
+    '<td data-label="Unit">' + iObj.unit + '</td>' +
+    '<td data-label="Stock"><div class="sw"><div class="sb hide-m"><div class="sbf" style="width:' + pct + '%;background:' + barColor + '"></div></div><span class="sn" style="color:' + barColor + '">' + stockVal + '</span></div></td>' +
+    '<td data-label="Reorder">' + iObj.reorder + '</td>' +
+    '<td data-label="Status">' + status + '</td>' +
+    '<td><button class="btn bw bxs" onclick="quickConsume(\'' + iObj.code + '\',\'' + store + '\')">↑ Issue</button>' + (isMain ? '<button class="btn bxs" style="margin-left:4px;background:var(--gold2);border:none;cursor:pointer;border-radius:6px;color:var(--gold);font-weight:700;" onclick="quickTrans(...)">Transfer</button>' : '') + '</td>' +
+'</tr>';
   }
   
   tbody.innerHTML = html || '<tr><td colspan="8"><div class="empty">No items found</div></td></tr>';

@@ -1876,7 +1876,7 @@ function renderAlertsFull() {
   var html = '';
   for(var a=0; a<all.length; a++) {
       var i = all[a];
-      var isCrit = Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical);
+      var isCrit = Number(i.mainStock) <= Number(i.critical);
       html += '<div class="ar">' +
         '<div class="ad '+(isCrit?'adr':'ado')+'">'+(isCrit?'⊘':'⚠')+'</div>' +
         '<div class="ab">' +

@@ -308,286 +308,74 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:299;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
 .sb-overlay.on{display:block}
 
-@media (max-width: 768px) {
-  .sidebar { transform: translateX(-260px); }
-  .sidebar.open { transform: translateX(0); }
-  .main { margin-left: 0; min-width: 0; }
-  .hbg { display: flex; }
-  .bnav { display: block; text-align: center; white-space: nowrap; }
-  .topbar .sbadge, .hide-m { display: none !important; }
-  .topbar { height: 60px; padding: 0 14px; }
-  .ptitle { font-size: 18px; line-height: 1.2; }
-  .body { padding: 12px; padding-bottom: calc(var(--nb) + 28px); overflow-x: hidden; }
-
-  .shell, .page, .card, .ch, .sr, .fb, .ff, .lg, .qg, .rsg, .tbar, .ts { min-width: 0; }
-
-  /* Dashboard cards */
-  .sg { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
-  .sc { width: auto; min-width: 0; margin: 0; padding: 16px; border-radius: 20px; }
-  .sc-em { font-size: 24px; margin-bottom: 10px; }
-  .sc-lb { font-size: 11px; letter-spacing: 1px; }
-  .sc-val { font-size: 34px; line-height: 1; }
-
-  .card { border-radius: 22px; margin-bottom: 16px; }
-  .ch { padding: 18px; }
-  .ct { font-size: 17px; }
-
-  /* Search / filter rows */
-  .sr {
-    padding: 16px;
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 10px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    text-align: left;
-    align-items: center;
-  }
-  .sw2 { flex: 0 0 220px; min-width: 220px; width: 220px; margin: 0; }
-  .sw2 input { padding: 13px 14px 13px 40px; font-size: 16px; }
-  .fc {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 42px;
-    padding: 10px 14px;
-    margin: 0;
-    font-size: 13px;
-    white-space: nowrap;
-  }
-
-  /* Forms */
-  .fb { padding: 18px; }
-  .fg { display: flex; flex-wrap: wrap; gap: 14px; }
-  .fi, .fi.fa { width: 100%; min-width: 0; margin: 0; }
-  .fi label { font-size: 11px; }
-  .fi input, .fi select, .fi textarea { padding: 14px; font-size: 16px; }
-  .ff { padding: 18px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
-  .ff .btn { width: 100%; margin: 0; }
-
-  /* Grids / lists */
-  .qg, .lg, .rsg { padding: 0 12px 12px; grid-template-columns: 1fr; gap: 14px; }
-  .qb, .lc, .rs, .rr, .ar { width: 100%; min-width: 0; margin: 0; }
-  .qb, .lc, .rs { padding: 18px; border-radius: 18px; }
-  .rr, .ar { padding: 18px; border-radius: 18px; margin: 10px 12px; }
-  .rd { display: none; }
-  .ri, .ab { min-width: 0; }
-  .an, .rn { font-size: 16px; }
-  .at, .rm { font-size: 13px; }
-
-  /* Tabs */
-  .tbar {
-    width: calc(100% - 24px);
-    margin: 16px 12px 0;
-    overflow-x: auto;
-    white-space: nowrap;
-    display: flex;
-  }
-  .tb { flex: 0 0 auto; padding: 10px 18px; font-size: 14px; }
-
-  /* Login / modals */
-  .bs { border-radius: 24px; margin: 16px; width: calc(100% - 32px); }
-  .lb { border-radius: 24px; margin: 16px; width: calc(100% - 32px); max-height: 85vh; }
-  .lbh { padding: 28px 20px 18px; }
-  .lbb { padding: 0 20px 24px; }
-
-  /* Sidebar */
-  .sb-top { padding: 24px 20px 18px; }
-  .sb-me { margin: 14px; padding: 14px; }
-  .ng { padding: 18px 18px 8px; font-size: 11px; }
-  .ni { padding: 13px 18px; margin: 4px 10px; font-size: 15px; }
-  .btn, .ni, .bb { min-height: 44px; }
-  .bfab { width: 60px; height: 60px; line-height: 56px; font-size: 28px; margin-top: -20px; }
-
-  /* Mobile table-to-card system */
-  .ts {
-    padding: 0 12px 12px;
-    overflow-x: visible;
-  }
-  .ts table,
-  .ts thead,
-  .ts tbody,
-  .ts tr,
-  .ts th,
-  .ts td {
-    display: block;
-    width: 100%;
-  }
-  .ts table {
-    min-width: 0;
-    border-spacing: 0;
-    font-size: 13px;
-  }
-  .ts thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    white-space: nowrap;
-    border: 0;
-  }
-  .ts tbody tr {
-    background: rgba(255,255,255,0.85);
-    border: 1px solid rgba(255,255,255,0.9);
-    border-radius: 18px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.04);
-    padding: 8px 0;
-    margin-bottom: 12px;
-    overflow: hidden;
-  }
-  .ts tbody td {
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    padding: 10px 14px;
-    margin: 0;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    white-space: normal;
-    word-break: break-word;
-  }
-  .ts tbody td::before {
-    content: '';
-    flex: 0 0 96px;
-    max-width: 96px;
-    font-size: 10px;
-    line-height: 1.3;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--mid);
-    font-weight: 700;
-  }
-  .ts tbody td > * { min-width: 0; }
-  .tn, .tc, .bdg, .sw, .sn { max-width: 100%; }
-  .tn { font-size: 14px; word-break: break-word; }
-  .tc { font-size: 13px; }
-
-  /* Labels per table */
-  #dash-mov td:nth-child(1)::before { content: 'Time'; }
-  #dash-mov td:nth-child(2)::before { content: 'Staff'; }
-  #dash-mov td:nth-child(3)::before { content: 'Item'; }
-  #dash-mov td:nth-child(4)::before { content: 'Type'; }
-  #dash-mov td:nth-child(5)::before { content: 'Qty'; }
-  #dash-mov td:nth-child(6)::before { content: 'Store'; }
-
-  #ms-tbody td:nth-child(1)::before { content: 'Code'; }
-  #ms-tbody td:nth-child(2)::before { content: 'Item'; }
-  #ms-tbody td:nth-child(3)::before { content: 'Category'; }
-  #ms-tbody td:nth-child(4)::before { content: 'Unit'; }
-  #ms-tbody td:nth-child(5)::before { content: 'Main Stock'; }
-  #ms-tbody td:nth-child(6)::before { content: 'Reorder'; }
-  #ms-tbody td:nth-child(7)::before { content: 'Status'; }
-  #ms-tbody td:nth-child(8)::before { content: 'Action'; }
-
-  #ss-tbody td:nth-child(1)::before { content: 'Code'; }
-  #ss-tbody td:nth-child(2)::before { content: 'Item'; }
-  #ss-tbody td:nth-child(3)::before { content: 'Category'; }
-  #ss-tbody td:nth-child(4)::before { content: 'Unit'; }
-  #ss-tbody td:nth-child(5)::before { content: 'Sub Stock'; }
-  #ss-tbody td:nth-child(6)::before { content: 'Reorder'; }
-  #ss-tbody td:nth-child(7)::before { content: 'Status'; }
-  #ss-tbody td:nth-child(8)::before { content: 'Action'; }
-
-  #wash-tbody td:nth-child(1)::before { content: 'Date & Time'; }
-  #wash-tbody td:nth-child(2)::before { content: 'Item'; }
-  #wash-tbody td:nth-child(3)::before { content: 'Sent to Wash'; }
-  #wash-tbody td:nth-child(4)::before { content: 'Returned Clean'; }
-  #wash-tbody td:nth-child(5)::before { content: 'Staff'; }
-
-  #my-issues td:nth-child(1)::before { content: 'Time'; }
-  #my-issues td:nth-child(2)::before { content: 'Item'; }
-  #my-issues td:nth-child(3)::before { content: 'Qty'; }
-  #my-issues td:nth-child(4)::before { content: 'Room'; }
-  #my-issues td:nth-child(5)::before { content: 'Store'; }
-
-  #tr-tbody td:nth-child(1)::before { content: 'Date & Time'; }
-  #tr-tbody td:nth-child(2)::before { content: 'Item'; }
-  #tr-tbody td:nth-child(3)::before { content: 'Qty'; }
-  #tr-tbody td:nth-child(4)::before { content: 'By'; }
-  #tr-tbody td:nth-child(5)::before { content: 'Reason'; }
-
-  #mov-tbody td:nth-child(1)::before { content: 'Date & Time'; }
-  #mov-tbody td:nth-child(2)::before { content: 'Type'; }
-  #mov-tbody td:nth-child(3)::before { content: 'Item'; }
-  #mov-tbody td:nth-child(4)::before { content: 'Qty'; }
-  #mov-tbody td:nth-child(5)::before { content: 'Store'; }
-  #mov-tbody td:nth-child(6)::before { content: 'Staff'; }
-  #mov-tbody td:nth-child(7)::before { content: 'Room / Notes'; }
-
-  #rt-daily td:nth-child(1)::before { content: 'Time'; }
-  #rt-daily td:nth-child(2)::before { content: 'Item'; }
-  #rt-daily td:nth-child(3)::before { content: 'Type'; }
-  #rt-daily td:nth-child(4)::before { content: 'Qty'; }
-  #rt-daily td:nth-child(5)::before { content: 'Staff'; }
-  #rt-daily td:nth-child(6)::before { content: 'Room / Notes'; }
-
-  #rt-weekly td:nth-child(1)::before { content: 'Date'; }
-  #rt-weekly td:nth-child(2)::before { content: 'Item'; }
-  #rt-weekly td:nth-child(3)::before { content: 'Type'; }
-  #rt-weekly td:nth-child(4)::before { content: 'Qty'; }
-  #rt-weekly td:nth-child(5)::before { content: 'Staff'; }
-  #rt-weekly td:nth-child(6)::before { content: 'Room / Notes'; }
-
-  #rt-monthly td:nth-child(1)::before { content: 'Date'; }
-  #rt-monthly td:nth-child(2)::before { content: 'Item'; }
-  #rt-monthly td:nth-child(3)::before { content: 'Type'; }
-  #rt-monthly td:nth-child(4)::before { content: 'Qty'; }
-  #rt-monthly td:nth-child(5)::before { content: 'Staff'; }
-  #rt-monthly td:nth-child(6)::before { content: 'Room / Notes'; }
-
-  #staff-tbody td:nth-child(1)::before { content: 'Name'; }
-  #staff-tbody td:nth-child(2)::before { content: 'Roles'; }
-  #staff-tbody td:nth-child(3)::before { content: 'Store Access'; }
-  #staff-tbody td:nth-child(4)::before { content: 'Action'; }
-
-  #items-tbody td:nth-child(1)::before { content: 'Code'; }
-  #items-tbody td:nth-child(2)::before { content: 'Name'; }
-  #items-tbody td:nth-child(3)::before { content: 'Category'; }
-  #items-tbody td:nth-child(4)::before { content: 'Unit'; }
-  #items-tbody td:nth-child(5)::before { content: 'Reorder'; }
-  #items-tbody td:nth-child(6)::before { content: 'Critical'; }
-  #items-tbody td:nth-child(7)::before { content: 'Action'; }
-
-  #rooms-tbody td:nth-child(1)::before { content: 'Room No'; }
-  #rooms-tbody td:nth-child(2)::before { content: 'Name'; }
-  #rooms-tbody td:nth-child(3)::before { content: 'Type'; }
-  #rooms-tbody td:nth-child(4)::before { content: 'Status'; }
-  #rooms-tbody td:nth-child(5)::before { content: 'Action'; }
-
-  /* Better action alignment in admin / store tables */
-  #staff-tbody td:last-child,
-  #items-tbody td:last-child,
-  #rooms-tbody td:last-child,
-  #ms-tbody td:last-child,
-  #ss-tbody td:last-child {
-    align-items: center;
-  }
-
-  /* Therapist screen */
-  #page-therapist > div:first-child {
-    margin-bottom: 20px !important;
-  }
-  #page-therapist > div:first-child > div:first-child,
-  #page-therapist > div:first-child > button {
-    float: none !important;
-    display: block;
-  }
-  #page-therapist > div:first-child > button {
-    width: 100%;
-    margin-top: 12px;
-  }
+@media(max-width:768px){
+  .sidebar{transform:translateX(-260px)}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.hbg{display:flex}
+  .bnav{display:block; text-align:center; white-space:nowrap;}
+  .topbar .sbadge{display:none}
+  .topbar{height:64px;padding:0 16px}
+  .ptitle{font-size:22px}
+  .body{padding:16px;padding-bottom:calc(var(--nb) + 24px)}
+  
+  /* FORCE 100% WIDTH BLOCKS FOR MOBILE SAFETY */
+  .sc{width: 100%; margin-right: 0; margin-bottom: 16px; display:block; padding:20px;}
+  .sc-val{font-size:40px}.sc-em{font-size:28px;margin-bottom:12px}.sc-lb{font-size:12px}
+  .card{border-radius:24px;margin-bottom:20px}.ch{padding:20px 24px}.ct{font-size:18px}
+  .ts{padding: 0 8px 8px;}
+  table{font-size:14px; border-spacing: 0 8px;}
+  thead th{padding:14px 18px;font-size:11px}
+  tbody td{padding:16px 18px}
+  
+  .sr{padding:20px; text-align:center;}
+  .sw2{width:100%; display:block; margin-right:0; margin-bottom:12px;}
+  .sw2 input{padding:14px 16px 14px 44px;font-size:16px;}
+  .fc{display:inline-block; padding:10px 16px;font-size:13px; margin:4px;}
+  
+  .fb{padding:20px}
+  .fi{width: 100%; display:block; margin-right:0; margin-bottom:16px;}
+  .fi label{font-size:12px}
+  .fi input,.fi select,.fi textarea{padding:14px;font-size:16px}
+  
+  .ff{padding:20px; text-align:center;}
+  .ff .btn{width: 100%; margin-bottom: 12px; margin-left:0; display:block;}
+  
+  .qg{padding:0 16px 16px; text-align:center;}
+  .qb{width: 100%; margin-right: 0; padding:24px; border-radius: 20px; display:block; margin-bottom:16px;}
+  .qb-em{font-size:48px}.qb-nm{font-size:18px}.qb-st{font-size:14px}
+  
+  .lg{padding:16px}
+  .lc{width: 100%; margin-right: 0; display:block; margin-bottom:20px; padding:20px;}
+  
+  .bs{border-radius:28px; margin:20px; width: calc(100% - 40px);}
+  .lb{border-radius:32px;margin:20px; width: calc(100% - 40px); max-height:85vh;}
+  .lbh{padding:32px 24px 20px;}
+  .lbb{padding:0 24px 32px;}
+  
+  .ar{padding:20px; display:block; text-align:center;}.ad{width:56px;height:56px; font-size: 24px; display:block; margin: 0 auto 16px;}.ab{width:100%; display:block; margin-bottom:16px;}.an{font-size:18px}.at{font-size:14px}
+  .rs{width: 100%; margin-right: 0; margin-bottom: 16px; display:block; padding:20px; border-radius: 20px;}.rsv{font-size:36px}
+  .rr{padding:20px; border-radius: 20px; display:block;}.rd{display:none;}.ri{width:100%; display:block; margin-bottom:12px;}.rn{font-size:18px}.rm{font-size:14px;}
+  
+  .sb-top{padding:28px 24px 24px}.sb-me{margin:16px;padding:16px}
+  .ng{padding:20px 20px 8px;font-size:12px}.ni{padding:14px 20px;margin:4px 12px;font-size:16px}
+  .hide-m{display:none!important}
 }
 @supports(padding-bottom:env(safe-area-inset-bottom)){
   .bnav{height:calc(var(--nb) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
   .body{padding-bottom:calc(var(--nb) + env(safe-area-inset-bottom) + 24px)!important}
 }
+
+/* UX and admin action improvements */
+.ng{font-size:12px;letter-spacing:2.2px;color:rgba(93,109,126,.9)}
+.ni{justify-content:flex-start;align-items:center}
+.ni-ic{display:flex;align-items:center;justify-content:center}
+.ff{justify-content:center}
+.ff .btn{min-width:120px}
+.bsf{justify-content:center}
+input[list]{background-image:none}
+@media(min-width:769px){
+  .ff{padding:20px 40px}
+}
+
 </style>
 </head>
 <body>
@@ -626,22 +414,22 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
       <div class="sb-pill" id="sb-ustore">—</div>
     </div>
   </div>
-  <div class="ng">Overview</div>
+  <div class="ng">Dashboard & Alerts</div>
   <button class="ni on" onclick="nav('dashboard')"><span class="ni-ic">◈</span> Dashboard</button>
   <button class="ni" onclick="nav('alerts')"><span class="ni-ic">⚠</span> Alerts <span id="alert-badge" class="ni-bd" style="display:none"></span></button>
-  <div class="ng">Store</div>
+  <div class="ng">Inventory Locations</div>
   <button class="ni" id="nav-main" onclick="nav('mainstore')" style="display:none"><span class="ni-ic">🏪</span> Main Store</button>
   <button class="ni" onclick="nav('substore')"><span class="ni-ic">🧴</span> Sub Store</button>
   <button class="ni" onclick="nav('linen')"><span class="ni-ic">🧺</span> Linen & Towels</button>
-  <div class="ng">Transactions</div>
+  <div class="ng">Stock Actions</div>
   <button class="ni" onclick="nav('consume')"><span class="ni-ic">↑</span> Issue Stock</button>
   <button class="ni" id="nav-transfer" onclick="nav('transfer')" style="display:none"><span class="ni-ic">⇄</span> Transfer</button>
   <button class="ni" id="nav-grn" onclick="nav('grn')" style="display:none"><span class="ni-ic">↓</span> GRN (In)</button>
   <button class="ni" onclick="nav('requests')"><span class="ni-ic">📨</span> Requests</button>
-  <div class="ng">Reports</div>
+  <div class="ng">Logs & Reports</div>
   <button class="ni" onclick="nav('movements')"><span class="ni-ic">≡</span> Movement Log</button>
   <button class="ni" onclick="nav('reports')"><span class="ni-ic">📊</span> Reports</button>
-  <div class="ng" id="nav-admin-sec" style="display:none">Admin</div>
+  <div class="ng" id="nav-admin-sec" style="display:none">System Setup</div>
   <button class="ni" id="nav-staff" onclick="nav('staffmgmt')" style="display:none"><span class="ni-ic">👥</span> Staff Master</button>
   <button class="ni" id="nav-items" onclick="nav('itemsmgmt')" style="display:none"><span class="ni-ic">✦</span> Items Master</button>
   <button class="ni" id="nav-rooms" onclick="nav('roomsmgmt')" style="display:none"><span class="ni-ic">🚪</span> Rooms Master</button>
@@ -771,7 +559,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
             <div class="fi"><label>Staff</label><input id="c-staff" readonly/></div>
             <div class="fi"><label>Date (Auto)</label><input id="c-dt" readonly/></div>
             <div class="fi"><label>Store</label><select id="c-store" onchange="updateCI()"><option value="sub">Sub Store</option><option value="main">Main Store</option></select></div>
-            <div class="fi"><label>Item *</label><select id="c-item" onchange="updateCS()"><option value="">— Select —</option></select></div>
+            <div class="fi"><label>Item *</label><input id="c-item-search" list="item-list-c" placeholder="Search item by name..." oninput="syncItemField('c')" autocomplete="off"/><input type="hidden" id="c-item"/><datalist id="item-list-c"></datalist></div>
             <div class="fi"><label>Available Limit</label><input id="c-avail" readonly/></div>
             <div class="fi"><label>Quantity * <span id="c-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="c-qty" min="1" placeholder="0"/></div>
             <div class="fi"><label>Room *</label><select id="c-room" class="room-select"></select></div>
@@ -795,8 +583,8 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
         <div class="fb">
           <div class="fg">
             <div class="fi"><label>Staff</label><input id="t-staff" readonly/></div>
-            <div class="fi"><label>Item *</label><select id="t-item" onchange="updateTS()"><option value="">— Select —</option></select></div>
-            <div class="fi"><label>Main Available</label><input id="t-avail" readonly/></div>
+            <div class="fi"><label>Item *</label><input id="t-item-search" list="item-list-t" placeholder="Search item by name..." oninput="syncItemField('t')" autocomplete="off"/><input type="hidden" id="t-item"/><datalist id="item-list-t"></datalist></div>
+            <div class="fi"><label>Current Balance</label><input id="t-avail" readonly/></div>
             <div class="fi"><label>Quantity * <span id="t-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="t-qty" min="1" placeholder="0"/></div>
             <div class="fi fa"><label>Reason</label><select id="t-reason"><option>Replenishment</option><option>Urgent</option></select></div>
           </div>
@@ -805,7 +593,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
       </div>
       <div class="card g1">
         <div class="ch"><div class="ct">Recent Transfers</div></div>
-        <div class="ts"><table><thead><tr><th>Date & Time</th><th>Item</th><th>Qty</th><th>By</th><th>Reason</th></tr></thead><tbody id="tr-tbody"></tbody></table></div>
+        <div class="ts"><table><thead><tr><th>Date & Time</th><th>Item</th><th>Qty</th><th>By</th><th>Reason</th><th>Balance After</th></tr></thead><tbody id="tr-tbody"></tbody></table></div>
       </div>
     </div>
 
@@ -815,9 +603,9 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
         <div class="fb">
           <div class="fg">
             <div class="fi"><label>GRN Ref</label><input id="g-ref" placeholder="Auto if blank"/></div>
-            <div class="fi"><label>Item *</label><select id="g-item"><option value="">— Select —</option></select></div>
+            <div class="fi"><label>Item *</label><input id="g-item-search" list="item-list-g" placeholder="Search item by name..." oninput="syncItemField('g')" autocomplete="off"/><input type="hidden" id="g-item"/><datalist id="item-list-g"></datalist></div>
             <div class="fi"><label>Receive Into</label><select id="g-store"><option value="main">Main Store</option><option value="sub">Sub Store</option></select></div>
-            <div class="fi"><label>Quantity *</label><input type="number" id="g-qty" min="1" placeholder="0"/></div>
+            <div class="fi"><label>Quantity * <span id="g-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="g-qty" min="1" placeholder="0"/></div>
             <div class="fi fa"><label>Remarks</label><textarea id="g-remarks"></textarea></div>
           </div>
         </div>
@@ -964,7 +752,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
     <div class="bsb">
       <input type="hidden" id="tc-id"/>
       <input type="hidden" id="tc-type"/>
-      <div class="fi fa"><label>Quantity * <span id="tc-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="tc-qty" min="1" value="1"/></div>
+      <div class="fi fa" id="tc-store-fg" style="display:none"><label>Issue From</label><select id="tc-store" onchange="updateTcAvail()"><option value="sub">Sub Store</option><option value="main">Main Store</option></select></div><div class="fi fa"><label>Available Balance</label><input id="tc-avail" readonly/></div><div class="fi fa"><label>Quantity * <span id="tc-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="tc-qty" min="1" value="1"/></div>
       <div class="fi fa"><label>Room *</label><select id="tc-room" class="room-select"></select></div>
     </div>
     <div class="bsf"><button class="btn bw" onclick="closeTc()">Cancel</button><button class="btn bp" onclick="submitTc()">Confirm</button></div>
@@ -988,7 +776,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   <div class="bs">
     <div class="bshd"><div class="bst">📨 Request Stock</div><button class="bsc" onclick="closeReq()">✕</button></div>
     <div class="bsb">
-      <div class="fi fa"><label>Item *</label><select id="req-item" onchange="updateReqUnit()"><option value="">— Select —</option></select></div>
+      <div class="fi fa"><label>Item *</label><input id="req-item-search" list="item-list-req" placeholder="Search item by name..." oninput="syncItemField('req')" autocomplete="off"/><input type="hidden" id="req-item"/><datalist id="item-list-req"></datalist></div>
       <div class="fi fa"><label>Quantity * <span id="req-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="req-qty" min="1" placeholder="0"/></div>
       <div class="fi fa"><label>Urgency</label><select id="req-urgency"><option>Normal</option><option>Urgent</option><option>Critical</option></select></div>
       <div class="fi fa"><label>Reason</label><textarea id="req-msg"></textarea></div>
@@ -1338,7 +1126,7 @@ function applySession() {
   show('nav-rooms',    isAdmin);
 
   var cStore = document.getElementById('c-store');
-  if (isTher) { cStore.value='sub'; cStore.disabled=true; } else cStore.disabled=false;
+  if (isTher) { cStore.value='sub'; cStore.disabled=false; } else cStore.disabled=false;
   document.getElementById('c-staff').value = s.name;
   document.getElementById('t-staff').value = s.name;
   
@@ -1361,7 +1149,7 @@ var TITLES = {
   linen:'Linen & Towels', consume:'Issue Stock', transfer:'Transfer',
   grn:'Stock IN (GRN)', requests:'Stock Requests', movements:'Movement Log',
   reports:'Summary Reports', alerts:'Stock Alerts', roomsmgmt:'Room Master',
-  staffmgmt:'Staff Master', itemsmgmt:'Items Master', therapist: 'Sub Store Area'
+  staffmgmt:'Staff Master', itemsmgmt:'Items Master', therapist: 'Therapist Consumption'
 };
 var currentPage = 'dashboard';
 
@@ -1421,7 +1209,7 @@ function refreshPage(id) {
   if(id==='linen')       renderLinen();
   if(id==='consume')     updateCI();
   if(id==='transfer')    { populateSel('t-item','main'); renderTransfers(); }
-  if(id==='grn')         { populateSel('g-item','all'); }
+  if(id==='grn')         { populateSel('g-item','all'); updateGRNUnit(); }
   if(id==='requests')    renderRequests();
   if(id==='movements')   renderMovements();
   if(id==='reports')     renderReports(currentRepPeriod);
@@ -1458,6 +1246,56 @@ function setTFilter(f) {
     var activeEl = document.getElementById(map[f]);
     if(activeEl) activeEl.classList.add('on');
     renderTherapistGrid();
+}
+
+function syncItemField(prefix) {
+  var search = document.getElementById(prefix + '-item-search');
+  var hidden = document.getElementById(prefix + '-item');
+  var list = document.getElementById('item-list-' + prefix);
+  if(!search || !hidden || !list) return;
+  var val = String(search.value || '').trim().toLowerCase();
+  hidden.value = '';
+  var opts = list.querySelectorAll('option');
+  for (var i=0; i<opts.length; i++) {
+    var optVal = String(opts[i].value || '').trim().toLowerCase();
+    if (optVal === val) {
+      hidden.value = opts[i].getAttribute('data-code') || '';
+      break;
+    }
+  }
+  if(prefix==='c') updateCS();
+  if(prefix==='t') updateTS();
+  if(prefix==='g') updateGRNUnit();
+  if(prefix==='req') updateReqUnit();
+}
+
+function setItemPickerValue(prefix, code) {
+  var hidden = document.getElementById(prefix + '-item');
+  var search = document.getElementById(prefix + '-item-search');
+  var item = getItemByCode(code);
+  if(hidden) hidden.value = code || '';
+  if(search) search.value = item ? item.name : '';
+  if(prefix==='c') updateCS();
+  if(prefix==='t') updateTS();
+  if(prefix==='g') updateGRNUnit();
+  if(prefix==='req') updateReqUnit();
+}
+
+function updateTcAvail(){
+  var typeEl = document.getElementById('tc-type');
+  if(!typeEl || typeEl.value !== 'item') return;
+  var item = getItemByCode(document.getElementById('tc-id').value);
+  var store = document.getElementById('tc-store').value;
+  var availEl = document.getElementById('tc-avail');
+  var unitEl = document.getElementById('tc-unit');
+  if(item){
+    var bal = store==='main' ? Number(item.mainStock) : Number(item.subStock);
+    if(availEl) availEl.value = bal + ' ' + item.unit;
+    if(unitEl) unitEl.textContent = '(' + item.unit + ')';
+  } else {
+    if(availEl) availEl.value = '';
+    if(unitEl) unitEl.textContent = '';
+  }
 }
 
 function renderTherapistGrid() {
@@ -1506,7 +1344,7 @@ function renderTherapistGrid() {
     html += '<div class="qb g1" onclick="therapistConsume(\''+i.code+'\', \'item\')">' +
         '<span class="qb-em">'+icon+'</span>' +
         '<div class="qb-nm">'+i.name+'</div>' +
-        '<div class="qb-st" style="color:'+(stock <= Number(i.reorder) ? 'var(--orange)' : 'var(--g)')+'">Stock: '+stock+' '+i.unit+'</div>' +
+        '<div class="qb-st" style="color:'+(Number(i.subStock) <= Number(i.reorder) ? 'var(--orange)' : 'var(--g)')+'">Main: '+Number(i.mainStock)+' '+i.unit+' · Sub: '+Number(i.subStock)+' '+i.unit+'</div>' +
       '</div>';
   }
 
@@ -1528,12 +1366,24 @@ function therapistConsume(id, type) {
   if (!target) return;
 
   var unit = isItem ? target.unit : 'items';
-  
+  var storeFg = document.getElementById('tc-store-fg');
+  var availEl = document.getElementById('tc-avail');
+
   document.getElementById('tc-title').textContent = 'Issue ' + target.name;
   document.getElementById('tc-id').value = id;
   document.getElementById('tc-type').value = type;
   document.getElementById('tc-qty').value = '1';
   document.getElementById('tc-unit').textContent = '(' + unit + ')';
+
+  if (isItem) {
+    if(storeFg) storeFg.style.display = 'block';
+    document.getElementById('tc-store').value = 'sub';
+    updateTcAvail();
+  } else {
+    if(storeFg) storeFg.style.display = 'none';
+    if(availEl) availEl.value = Number(target.available) + ' items';
+  }
+
   document.getElementById('tc-overlay').classList.add('on');
 }
 
@@ -1553,18 +1403,19 @@ function submitTc() {
   if (!target) return;
 
   var unit = isItem ? target.unit : 'items';
-  var avail = isItem ? Number(target.subStock) : Number(target.available);
+  var selectedStore = isItem ? document.getElementById('tc-store').value : 'sub';
+  var avail = isItem ? Number(selectedStore === 'main' ? target.mainStock : target.subStock) : Number(target.available);
 
   if (qty > avail) { toast('Only ' + avail + ' ' + unit + ' available!', 'terr'); return; }
 
   var dt = fmtDT(new Date());
 
   if (isItem) {
-    target.subStock = avail - qty;
-    var mov1 = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty: qty, store: 'Sub', staff: SESSION.name, purpose: room, remarks: '' };
+    if (selectedStore === 'main') target.mainStock = avail - qty; else target.subStock = avail - qty;
+    var mov1 = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty: qty, store: selectedStore==='main' ? 'Main' : 'Sub', staff: SESSION.name, purpose: room, remarks: '' };
     DB.movements.push(JSON.parse(JSON.stringify(mov1)));
     apiPost(mov1);
-    apiPost({action: 'updateStock', code: target.code, mainDelta: 0, subDelta: -qty});
+    apiPost({action: 'updateStock', code: target.code, mainDelta: selectedStore==='main' ? -qty : 0, subDelta: selectedStore==='sub' ? -qty : 0});
   } else {
     target.available = avail - qty; target.inUse = Number(target.inUse) + qty;
     var mov2 = { action: 'logMovement', datetime: dt, type: 'OUT', itemName: target.name, qty: qty, store: 'Sub (Linen)', staff: SESSION.name, purpose: room, remarks: '' };
@@ -1841,7 +1692,8 @@ function submitConsume() {
   var store=document.getElementById('c-store').value;
   var code=document.getElementById('c-item').value;
   var qty=parseInt(document.getElementById('c-qty').value)||0;
-  var purpose=document.getElementById('c-purpose').value;
+  var purposeEl=document.getElementById('c-purpose');
+  var purpose=purposeEl ? purposeEl.value : '';
   var room=document.getElementById('c-room').value;
   var remarks=document.getElementById('c-remarks').value;
 
@@ -1903,9 +1755,9 @@ function renderMyIssues() {
 }
 
 function clearForm(f){
-  if(f==='consume'){ var cArr=['c-item','c-qty','c-avail','c-remarks']; for(var i=0; i<cArr.length; i++) { var e1=document.getElementById(cArr[i]); if(e1)e1.value=''; } }
-  if(f==='transfer'){ var tArr=['t-item','t-qty','t-avail']; for(var j=0; j<tArr.length; j++) { var e2=document.getElementById(tArr[j]); if(e2)e2.value=''; } }
-  if(f==='grn'){ var gArr=['g-item','g-qty','g-ref','g-remarks']; for(var k=0; k<gArr.length; k++) { var e3=document.getElementById(gArr[k]); if(e3)e3.value=''; } }
+  if(f==='consume'){ var cArr=['c-item','c-item-search','c-qty','c-avail','c-remarks']; for(var i=0; i<cArr.length; i++) { var e1=document.getElementById(cArr[i]); if(e1)e1.value=''; } document.getElementById('c-qty-unit').textContent=''; }
+  if(f==='transfer'){ var tArr=['t-item','t-item-search','t-qty','t-avail']; for(var j=0; j<tArr.length; j++) { var e2=document.getElementById(tArr[j]); if(e2)e2.value=''; } document.getElementById('t-qty-unit').textContent=''; }
+  if(f==='grn'){ var gArr=['g-item','g-item-search','g-qty','g-ref','g-remarks']; for(var k=0; k<gArr.length; k++) { var e3=document.getElementById(gArr[k]); if(e3)e3.value=''; } document.getElementById('g-qty-unit').textContent=''; }
 }
 
 // ============================================================
@@ -1917,7 +1769,7 @@ function updateTS(){
     var el=document.getElementById('t-avail');
     var un=document.getElementById('t-qty-unit');
     if(item){
-        el.value=item.mainStock + ' ' + item.unit;
+        el.value='Main: ' + item.mainStock + ' ' + item.unit + ' | Sub: ' + item.subStock + ' ' + item.unit;
         un.textContent='(' + item.unit + ')';
     }else{
         el.value=''; un.textContent='';
@@ -1938,7 +1790,7 @@ function submitTransfer() {
   apiPost(mov);
   apiPost({action:'updateStock',code:item.code,mainDelta:-qty,subDelta:qty});
   checkCritical(item);
-  toast('✓ Transferred ' + qty + ' ' + item.unit + ' to Sub Store','tok');
+  toast('✓ Transferred ' + qty + ' ' + item.unit + ' to Sub Store. Balance: Main ' + item.mainStock + ' ' + item.unit + ' | Sub ' + item.subStock + ' ' + item.unit,'tok');
   clearForm('transfer');
   renderTransfers();
 }
@@ -1954,10 +1806,10 @@ function renderTransfers(){
       var m = rows[j];
       html += '<tr>' +
         '<td class="tc">'+displayDT(m.datetime)+'</td><td class="tn">'+m.itemName+'</td>' +
-        '<td class="sn">'+m.qty+'</td><td class="tn">'+m.staff+'</td><td class="tc">'+m.purpose+'</td>' +
+        '<td class="sn">'+m.qty+'</td><td class="tn">'+m.staff+'</td><td class="tc">'+m.purpose+'</td><td class="tc">'+(function(){ var it=getItemByName(m.itemName); return it ? ('Main: ' + it.mainStock + ' ' + it.unit + ' | Sub: ' + it.subStock + ' ' + it.unit) : '—'; })()+'</td>' +
       '</tr>';
   }
-  tbody.innerHTML = html || '<tr><td colspan="5"><div class="empty">No transfers yet</div></td></tr>';
+  tbody.innerHTML = html || '<tr><td colspan="6"><div class="empty">No transfers yet</div></td></tr>';
 }
 
 // ============================================================
@@ -2133,6 +1985,12 @@ function updateReqUnit() {
     var code=document.getElementById('req-item').value;
     var item=getItemByCode(code);
     document.getElementById('req-qty-unit').textContent = item ? '('+item.unit+')' : '';
+}
+
+function updateGRNUnit() {
+    var code=document.getElementById('g-item').value;
+    var item=getItemByCode(code);
+    document.getElementById('g-qty-unit').textContent = item ? '('+item.unit+')' : '';
 }
 
 function submitRequest() {
@@ -2470,12 +2328,22 @@ function sendWA(name,main,sub){
 }
 
 function populateSel(id,store){
-  var sel=document.getElementById(id);if(!sel) return;
-  var html = '<option value="">— Select —</option>';
+  var hidden=document.getElementById(id);if(!hidden) return;
+  var prefixMap={'c-item':'c','t-item':'t','g-item':'g','req-item':'req'};
+  var prefix=prefixMap[id];
+  var search=document.getElementById(prefix + '-item-search');
+  var list=document.getElementById('item-list-' + prefix);
+  if(!search || !list) return;
+  var opts='';
   for(var i=0; i<DB.items.length; i++) {
-      html += '<option value="'+DB.items[i].code+'">['+DB.items[i].code+'] '+DB.items[i].name+'</option>';
+      var item=DB.items[i];
+      if(store==='main' && Number(item.mainStock) <= 0) continue;
+      if(store==='sub' && Number(item.subStock) <= 0) continue;
+      opts += '<option value="'+item.name.replace(/"/g,'&quot;')+'" data-code="'+item.code+'"></option>';
   }
-  sel.innerHTML = html;
+  list.innerHTML = opts;
+  hidden.value='';
+  search.value='';
 }
 function populateAll(){
   var cs = document.getElementById('c-store');
@@ -2502,8 +2370,8 @@ function populateAll(){
   var sRep = document.getElementById('rep-staff'); if(sRep) sRep.innerHTML = sOpts;
   var rRep = document.getElementById('rep-room'); if(rRep) rRep.innerHTML = rFilterOpts;
 }
-function quickConsume(code,store){nav('consume');setTimeout(function(){document.getElementById('c-store').value=store;document.getElementById('c-item').value=code;updateCS();},100);}
-function quickTransfer(code){nav('transfer');setTimeout(function(){document.getElementById('t-item').value=code;updateTS();},100);}
+function quickConsume(code,store){nav('consume');setTimeout(function(){document.getElementById('c-store').value=store;setItemPickerValue('c',code);},100);}
+function quickTransfer(code){nav('transfer');setTimeout(function(){setItemPickerValue('t',code);},100);}
 function showAdminTab(id,page,el){
   var pg=document.getElementById('page-'+page);
   if(!pg) return;

@@ -2329,6 +2329,74 @@ function toast(msg,type){
     clearTimeout(_tt);
     _tt=setTimeout(function(){el.classList.remove('on');el.className='toast';},3200);
 }
+/* ========================================================
+   MOBILE CARD LAYOUT (Applies only to screens under 768px)
+   ======================================================== */
+@media (max-width: 768px) {
+    
+    /* 1. Force the table elements to act like standard blocks */
+    table, thead, tbody, th, td, tr {
+        display: block;
+        width: 100%;
+    }
+
+    /* 2. Hide the top header row (Code | Item | Category | Unit) */
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    /* 3. Style each row to look like a floating card */
+    tbody tr {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;         /* Rounded corners */
+        padding: 16px;
+        margin-bottom: 16px;         /* Space between cards */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Soft shadow */
+    }
+
+    /* 4. Style the individual cells inside the card */
+    tbody td {
+        border: none;
+        position: relative;
+        padding: 8px 0;              /* Vertical spacing between text */
+        padding-left: 40%;           /* Push the actual data to the right */
+        text-align: right;           /* Align data to the right */
+        font-size: 14px;
+    }
+
+    /* 5. Make the "Item Name" stand out as the title of the card */
+    tbody td:nth-of-type(2) {        /* Assuming 'Item' is the 2nd column */
+        font-weight: bold;
+        font-size: 18px;
+        color: #333;
+        text-align: left;            
+        padding-left: 0;             /* Remove the left indent */
+        margin-bottom: 8px;
+        border-bottom: 1px solid #eee; /* Divider line under the title */
+    }
+
+    /* 6. Magically recreate the labels using CSS ::before */
+    tbody td::before {
+        position: absolute;
+        left: 0;
+        width: 35%;
+        text-align: left;
+        font-weight: bold;
+        color: #888;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+
+    /* 7. Inject the specific labels for each column */
+    /* Note: If your Item Name is col 2, we don't put a label on it */
+    tbody td:nth-of-type(1)::before { content: "Code"; }
+    tbody td:nth-of-type(3)::before { content: "Category"; }
+    tbody td:nth-of-type(4)::before { content: "Unit"; }
+    tbody td:nth-of-type(5)::before { content: "Stock"; }
+}
 </script>
 </body>
 </html>

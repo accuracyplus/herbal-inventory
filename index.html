@@ -1386,10 +1386,13 @@ function renderDash() {
   var ab = document.getElementById('alert-badge');
   if(low.length){ab.textContent=low.length;ab.style.display='inline-block';}else ab.style.display='none';
 
-  var critical = [];
-  for(var cr=0; cr<DB.items.length; cr++) {
-      if(Number(DB.items[cr].subStock)<=Number(DB.items[cr].critical)||Number(DB.items[cr].mainStock)<=Number(DB.items[cr].critical)) critical.push(DB.items[cr]);
-  }
+ var critical = [];
+for (var cr = 0; cr < DB.items.length; cr++) {
+    // We removed the subStock check and the || (OR) operator
+    if (Number(DB.items[cr].mainStock) <= Number(DB.items[cr].critical)) {
+        critical.push(DB.items[cr]);
+    }
+}
   
   var warns = [];
   for(var w=0; w<DB.items.length; w++) {

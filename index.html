@@ -363,6 +363,41 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   .bnav{height:calc(var(--nb) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
   .body{padding-bottom:calc(var(--nb) + env(safe-area-inset-bottom) + 24px)!important}
 }
+  @media (max-width: 768px) {
+  :root {
+    --blur: blur(12px);
+    --r: 18px;
+    --rs: 12px;
+  }
+
+  .sg {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .sc {
+    padding: 16px;
+    min-height: 130px;
+  }
+
+  .sc-val {
+    font-size: 30px;
+  }
+
+  .topbar {
+    height: 58px;
+    padding: 0 12px;
+  }
+
+  .body {
+    padding: 12px;
+    padding-bottom: calc(var(--nb) + 20px);
+  }
+
+  .btn, .fc, .ni, .bb {
+    min-height: 44px;
+  }
+}
 </style>
 </head>
 <body>

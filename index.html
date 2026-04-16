@@ -1467,7 +1467,7 @@ function renderStore(store) {
   for(var z=0; z<items.length; z++) {
       var iObj = items[z];
       var stockVal = Number(isMain?iObj.mainStock:iObj.subStock);
-      var isCrit = stockVal<=Number(iObj.critical);
+      var isCrit = Number(iObj.mainStock) <= Number(iObj.critical);
       var isLow  = !isCrit&&stockVal<=Number(iObj.reorder);
       var pct = Number(iObj.reorder)>0?Math.min(100,Math.round((stockVal/Number(iObj.reorder))*100)):100;
       var barColor = isCrit?'var(--red)':isLow?'var(--orange)':'var(--g)';

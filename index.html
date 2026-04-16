@@ -1404,7 +1404,7 @@ for (var cr = 0; cr < DB.items.length; cr++) {
   var alertsHtml = '';
   for(var al=0; al<all.length; al++) {
       var i = all[al];
-      var isCrit = Number(i.subStock)<=Number(i.critical)||Number(i.mainStock)<=Number(i.critical);
+      var isCrit = Number(i.mainStock) <= Number(i.critical);
       alertsHtml += '<div class="ar">' +
         '<div class="ad '+(isCrit?'adr':'ado')+'">'+(isCrit?'⊘':'⚠')+'</div>' +
         '<div class="ab">' +

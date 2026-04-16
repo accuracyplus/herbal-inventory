@@ -1396,7 +1396,7 @@ for (var cr = 0; cr < DB.items.length; cr++) {
   
   var warns = [];
   for(var w=0; w<DB.items.length; w++) {
-      if(critical.indexOf(DB.items[w]) === -1 && (Number(DB.items[w].subStock)<=Number(DB.items[w].reorder)||Number(DB.items[w].mainStock)<=Number(DB.items[w].reorder))) warns.push(DB.items[w]);
+      if(critical.indexOf(DB.items[w]) === -1 && Number(DB.items[w].mainStock)<=Number(DB.items[w].reorder)) warns.push(DB.items[w]);
   }
   
   var all = critical.concat(warns).slice(0,6);
@@ -1863,9 +1863,9 @@ function renderAlertsFull() {
   var critical = []; var warns = [];
   for(var c=0; c<DB.items.length; c++) {
       var itm = DB.items[c];
-      if(Number(itm.subStock)<=Number(itm.critical)||Number(itm.mainStock)<=Number(itm.critical)) {
+      if(Number(itm.mainStock)<=Number(itm.critical)) {
           critical.push(itm);
-      } else if (Number(itm.subStock)<=Number(itm.reorder)||Number(itm.mainStock)<=Number(itm.reorder)) {
+      } else if (Number(itm.mainStock)<=Number(itm.reorder)) {
           warns.push(itm);
       }
   }
@@ -2229,7 +2229,7 @@ function saveConfig(){
 }
 
 function checkCritical(item){
-  if(Number(item.subStock)<=Number(item.critical)||Number(item.mainStock)<=Number(item.critical)){
+  if(Number(item.mainStock)<=Number(item.critical)){
     sendWA(item.name, item.mainStock + ' ' + item.unit, item.subStock + ' ' + item.unit);
   }
 }

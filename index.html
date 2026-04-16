@@ -15,6 +15,139 @@
           if(s) s.style.display = 'flex';
       }, 1000);
   };
+
+
+var AC_STATE = {};
+
+function getItemsForPrefix(prefix){
+  var store = 'all';
+  if(prefix==='c'){
+    var cs = document.getElementById('c-store');
+    store = cs ? cs.value : 'sub';
+  } else if(prefix==='t') {
+    store = 'main';
+  } else {
+    store = 'all';
+  }
+  var out = [];
+  for(var i=0;i<DB.items.length;i++){
+    var item = DB.items[i];
+    if(store==='main' && Number(item.mainStock)<=0) continue;
+    if(store==='sub' && Number(item.subStock)<=0) continue;
+    out.push(item);
+  }
+  return out;
+}
+
+function ensureAutocomplete(prefix){
+  var input = document.getElementById(prefix + '-item-search');
+  if(!input) return null;
+  if(AC_STATE[prefix] && AC_STATE[prefix].menu) return AC_STATE[prefix];
+  var menu = document.createElement('div');
+  menu.className = 'autocomplete-menu';
+  menu.id = 'ac-menu-' + prefix;
+  input.parentNode.appendChild(menu);
+  AC_STATE[prefix] = {menu:menu,index:-1,items:[]};
+
+  input.addEventListener('focus', function(){ renderAutocomplete(prefix); });
+  input.addEventListener('keydown', function(e){
+    var state = AC_STATE[prefix];
+    if(!state || !state.items.length) return;
+    if(e.key==='ArrowDown'){ e.preventDefault(); state.index = Math.min(state.index + 1, state.items.length - 1); paintAutocomplete(prefix); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); state.index = Math.max(state.index - 1, 0); paintAutocomplete(prefix); }
+    else if(e.key==='Enter' && state.index >= 0){ e.preventDefault(); chooseAutocomplete(prefix, state.items[state.index].code); }
+    else if(e.key==='Escape'){ hideAutocomplete(prefix); }
+  });
+
+  menu.addEventListener('mousedown', function(e){
+    var row = e.target.closest('.autocomplete-option');
+    if(!row) return;
+    chooseAutocomplete(prefix, row.getAttribute('data-code'));
+  });
+  return AC_STATE[prefix];
+}
+
+function positionAutocomplete(prefix){
+  var state = AC_STATE[prefix];
+  var input = document.getElementById(prefix + '-item-search');
+  if(!state || !state.menu || !input) return;
+  if(window.innerWidth <= 768){
+    var rect = input.getBoundingClientRect();
+    state.menu.style.top = (rect.bottom + 8) + 'px';
+  } else {
+    state.menu.style.top = 'calc(100% + 8px)';
+    state.menu.style.left = '0';
+    state.menu.style.right = '0';
+  }
+}
+
+function paintAutocomplete(prefix){
+  var state = AC_STATE[prefix];
+  if(!state || !state.menu) return;
+  var rows = state.menu.querySelectorAll('.autocomplete-option');
+  for(var i=0;i<rows.length;i++) rows[i].classList.toggle('active', i===state.index);
+}
+
+function renderAutocomplete(prefix){
+  var state = ensureAutocomplete(prefix);
+  var input = document.getElementById(prefix + '-item-search');
+  if(!state || !input) return;
+  var q = String(input.value || '').trim().toLowerCase();
+  var items = getItemsForPrefix(prefix);
+  if(q){
+    items = items.filter(function(item){
+      return String(item.name || '').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  items = items.slice(0, 8);
+  state.items = items;
+  state.index = items.length ? 0 : -1;
+  if(!items.length){
+    state.menu.innerHTML = q ? '<div class="autocomplete-empty">No matching item found</div>' : '<div class="autocomplete-empty">Start typing an item name</div>';
+    positionAutocomplete(prefix);
+    state.menu.classList.add('on');
+    return;
+  }
+  var html = '';
+  for(var i=0;i<items.length;i++){
+    var item = items[i];
+    var bal = 'Main ' + item.mainStock + ' ' + item.unit + ' · Sub ' + item.subStock + ' ' + item.unit;
+    html += '<div class="autocomplete-option' + (i===state.index ? ' active' : '') + '" data-code="' + item.code + '"><span>' + item.name + '</span><span class="autocomplete-meta">' + bal + '</span></div>';
+  }
+  state.menu.innerHTML = html;
+  positionAutocomplete(prefix);
+  state.menu.classList.add('on');
+}
+
+function hideAutocomplete(prefix){
+  var state = AC_STATE[prefix];
+  if(state && state.menu) state.menu.classList.remove('on');
+}
+
+function chooseAutocomplete(prefix, code){
+  setItemPickerValue(prefix, code);
+  hideAutocomplete(prefix);
+}
+
+function initAutocomplete(){
+  var prefixes = ['c','t','g','req'];
+  for(var i=0;i<prefixes.length;i++) ensureAutocomplete(prefixes[i]);
+  document.addEventListener('click', function(e){
+    var prefixes = ['c','t','g','req'];
+    for(var j=0;j<prefixes.length;j++){
+      var p = prefixes[j];
+      var input = document.getElementById(p + '-item-search');
+      var state = AC_STATE[p];
+      if(!input || !state || !state.menu) continue;
+      if(e.target===input || state.menu.contains(e.target)) continue;
+      hideAutocomplete(p);
+    }
+  });
+  window.addEventListener('resize', function(){ var prefixes = ['c','t','g','req']; for(var k=0;k<prefixes.length;k++) positionAutocomplete(prefixes[k]); });
+  window.addEventListener('scroll', function(){ var prefixes = ['c','t','g','req']; for(var k=0;k<prefixes.length;k++) positionAutocomplete(prefixes[k]); }, true);
+}
+
+initAutocomplete();
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -376,6 +509,67 @@ input[list]{background-image:none}
   .ff{padding:20px 40px}
 }
 
+
+/* Alignment, autocomplete, and enhanced mobile behavior */
+.fi{position:relative}
+.fg{align-items:flex-start}
+.ff{justify-content:flex-start;gap:12px;padding:18px 28px}
+.ff .btn{min-width:140px}
+.ni{min-height:48px;gap:14px}
+.ni-ic{width:24px;display:flex;align-items:center;justify-content:center}
+.sr{align-items:center}
+.sw2{min-width:220px}
+#page-therapist .sr{position:sticky;top:0;z-index:8}
+#page-therapist .qg{padding-bottom:110px}
+.autocomplete-menu{position:absolute;left:0;right:0;top:calc(100% + 8px);background:rgba(255,255,255,.98);border:1px solid rgba(255,255,255,.95);border-radius:16px;box-shadow:0 16px 40px rgba(31,38,135,.14);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);max-height:260px;overflow:auto;z-index:60;display:none}
+.autocomplete-menu.on{display:block}
+.autocomplete-option{padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;color:var(--ch);border-bottom:1px solid rgba(0,0,0,.04)}
+.autocomplete-option:last-child{border-bottom:none}
+.autocomplete-option:hover,.autocomplete-option.active{background:rgba(43,122,120,.08);color:var(--g)}
+.autocomplete-meta{font-size:12px;color:var(--mid);font-weight:600;white-space:nowrap}
+.autocomplete-empty{padding:12px 16px;font-size:14px;color:var(--mid)}
+@media(max-width:768px){
+  html,body{overflow-x:hidden;overscroll-behavior-y:contain}
+  body{position:relative}
+  .main{min-width:0}
+  .body{padding:12px 12px calc(var(--nb) + 84px);overflow-x:hidden;-webkit-overflow-scrolling:touch}
+  .topbar{height:60px;padding:0 14px}
+  .ptitle{font-size:18px;line-height:1.2}
+  .sg{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .sc{width:auto;min-width:0;margin:0;padding:16px;border-radius:20px}
+  .sc-em{font-size:24px;margin-bottom:10px}
+  .sc-lb{font-size:11px;letter-spacing:1px}
+  .sc-val{font-size:34px}
+  .card{border-radius:22px;margin-bottom:16px}
+  .ch{padding:16px 18px}
+  .ct{font-size:17px}
+  .sr{padding:14px;display:flex;flex-wrap:nowrap;gap:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;text-align:left}
+  .sr::-webkit-scrollbar{display:none}
+  .sw2{flex:0 0 230px;width:230px;min-width:230px;margin:0}
+  .fc{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 14px;margin:0;white-space:nowrap}
+  .fb{padding:16px}
+  .fg{gap:14px}
+  .fi,.fi.fa{width:100%;min-width:0;margin:0}
+  .fi input,.fi select,.fi textarea{padding:14px;font-size:16px}
+  .ff{padding:16px;position:sticky;bottom:calc(var(--nb) + env(safe-area-inset-bottom));background:rgba(255,255,255,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.7);z-index:15;flex-direction:column;align-items:stretch}
+  .ff .btn{width:100%;min-width:0;margin:0}
+  .ts{padding:0 10px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  table{min-width:720px}
+  thead th{font-size:10px;padding:12px 14px;white-space:nowrap}
+  tbody td{padding:14px;word-break:break-word}
+  .qg,.lg,.rsg{padding:0 12px 12px;gap:14px}
+  .qb,.lc,.rs,.rr,.ar{min-width:0}
+  .tbar{width:calc(100% - 24px);margin:16px 12px 0;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+  .tbar::-webkit-scrollbar{display:none}
+  .tb{flex:0 0 auto;padding:10px 18px}
+  .autocomplete-menu{position:fixed;left:12px !important;right:12px !important;top:auto;max-height:40vh;z-index:500}
+  .bfab{margin-top:-18px}
+  #page-therapist .sr{position:relative;top:auto}
+  #page-therapist > div:first-child{margin-bottom:20px !important}
+  #page-therapist > div:first-child > div:first-child{float:none !important}
+  #page-therapist > div:first-child .btn{float:none !important;width:100%;margin-top:12px}
+}
+
 </style>
 </head>
 <body>
@@ -458,7 +652,7 @@ input[list]{background-image:none}
     <div class="page" id="page-therapist">
         <div style="display:block; margin-bottom:32px;">
             <div style="float:left;">
-                <div style="font-size:36px; font-weight:700; color:var(--ch); letter-spacing:-1px;">Sub Store Materials</div>
+                <div style="font-size:36px; font-weight:700; color:var(--ch); letter-spacing:-1px;">Herbal Park Inventory</div>
                 <div style="font-size:16px; color:var(--mid); margin-top:8px; font-weight:600;">Tap an item to record usage</div>
             </div>
             <button class="btn bw" onclick="logout()" style="float:right; color:var(--red); border-color:rgba(192,57,43,0.3); font-size:15px;">⏻ Switch User</button>
@@ -559,7 +753,7 @@ input[list]{background-image:none}
             <div class="fi"><label>Staff</label><input id="c-staff" readonly/></div>
             <div class="fi"><label>Date (Auto)</label><input id="c-dt" readonly/></div>
             <div class="fi"><label>Store</label><select id="c-store" onchange="updateCI()"><option value="sub">Sub Store</option><option value="main">Main Store</option></select></div>
-            <div class="fi"><label>Item *</label><input id="c-item-search" list="item-list-c" placeholder="Search item by name..." oninput="syncItemField('c')" autocomplete="off"/><input type="hidden" id="c-item"/><datalist id="item-list-c"></datalist></div>
+            <div class="fi"><label>Item *</label><input id="c-item-search" data-ac-prefix="c" placeholder="Search item by name..." oninput="syncItemField('c')" autocomplete="off"/><input type="hidden" id="c-item"/><datalist id="item-list-c"></datalist></div>
             <div class="fi"><label>Available Limit</label><input id="c-avail" readonly/></div>
             <div class="fi"><label>Quantity * <span id="c-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="c-qty" min="1" placeholder="0"/></div>
             <div class="fi"><label>Room *</label><select id="c-room" class="room-select"></select></div>
@@ -583,7 +777,7 @@ input[list]{background-image:none}
         <div class="fb">
           <div class="fg">
             <div class="fi"><label>Staff</label><input id="t-staff" readonly/></div>
-            <div class="fi"><label>Item *</label><input id="t-item-search" list="item-list-t" placeholder="Search item by name..." oninput="syncItemField('t')" autocomplete="off"/><input type="hidden" id="t-item"/><datalist id="item-list-t"></datalist></div>
+            <div class="fi"><label>Item *</label><input id="t-item-search" data-ac-prefix="t" placeholder="Search item by name..." oninput="syncItemField('t')" autocomplete="off"/><input type="hidden" id="t-item"/><datalist id="item-list-t"></datalist></div>
             <div class="fi"><label>Current Balance</label><input id="t-avail" readonly/></div>
             <div class="fi"><label>Quantity * <span id="t-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="t-qty" min="1" placeholder="0"/></div>
             <div class="fi fa"><label>Reason</label><select id="t-reason"><option>Replenishment</option><option>Urgent</option></select></div>
@@ -603,7 +797,7 @@ input[list]{background-image:none}
         <div class="fb">
           <div class="fg">
             <div class="fi"><label>GRN Ref</label><input id="g-ref" placeholder="Auto if blank"/></div>
-            <div class="fi"><label>Item *</label><input id="g-item-search" list="item-list-g" placeholder="Search item by name..." oninput="syncItemField('g')" autocomplete="off"/><input type="hidden" id="g-item"/><datalist id="item-list-g"></datalist></div>
+            <div class="fi"><label>Item *</label><input id="g-item-search" data-ac-prefix="g" placeholder="Search item by name..." oninput="syncItemField('g')" autocomplete="off"/><input type="hidden" id="g-item"/><datalist id="item-list-g"></datalist></div>
             <div class="fi"><label>Receive Into</label><select id="g-store"><option value="main">Main Store</option><option value="sub">Sub Store</option></select></div>
             <div class="fi"><label>Quantity * <span id="g-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="g-qty" min="1" placeholder="0"/></div>
             <div class="fi fa"><label>Remarks</label><textarea id="g-remarks"></textarea></div>
@@ -776,7 +970,7 @@ input[list]{background-image:none}
   <div class="bs">
     <div class="bshd"><div class="bst">📨 Request Stock</div><button class="bsc" onclick="closeReq()">✕</button></div>
     <div class="bsb">
-      <div class="fi fa"><label>Item *</label><input id="req-item-search" list="item-list-req" placeholder="Search item by name..." oninput="syncItemField('req')" autocomplete="off"/><input type="hidden" id="req-item"/><datalist id="item-list-req"></datalist></div>
+      <div class="fi fa"><label>Item *</label><input id="req-item-search" data-ac-prefix="req" placeholder="Search item by name..." oninput="syncItemField('req')" autocomplete="off"/><input type="hidden" id="req-item"/><datalist id="item-list-req"></datalist></div>
       <div class="fi fa"><label>Quantity * <span id="req-qty-unit" style="color:var(--g);font-weight:700;"></span></label><input type="number" id="req-qty" min="1" placeholder="0"/></div>
       <div class="fi fa"><label>Urgency</label><select id="req-urgency"><option>Normal</option><option>Urgent</option><option>Critical</option></select></div>
       <div class="fi fa"><label>Reason</label><textarea id="req-msg"></textarea></div>
@@ -1149,7 +1343,7 @@ var TITLES = {
   linen:'Linen & Towels', consume:'Issue Stock', transfer:'Transfer',
   grn:'Stock IN (GRN)', requests:'Stock Requests', movements:'Movement Log',
   reports:'Summary Reports', alerts:'Stock Alerts', roomsmgmt:'Room Master',
-  staffmgmt:'Staff Master', itemsmgmt:'Items Master', therapist: 'Therapist Consumption'
+  staffmgmt:'Staff Master', itemsmgmt:'Items Master', therapist: 'Herbal Park Inventory'
 };
 var currentPage = 'dashboard';
 
@@ -1267,6 +1461,9 @@ function syncItemField(prefix) {
   if(prefix==='t') updateTS();
   if(prefix==='g') updateGRNUnit();
   if(prefix==='req') updateReqUnit();
+  hideAutocomplete(prefix);
+  renderAutocomplete(prefix);
+  renderAutocomplete(prefix);
 }
 
 function setItemPickerValue(prefix, code) {
@@ -1279,7 +1476,9 @@ function setItemPickerValue(prefix, code) {
   if(prefix==='t') updateTS();
   if(prefix==='g') updateGRNUnit();
   if(prefix==='req') updateReqUnit();
+  hideAutocomplete(prefix);
 }
+
 
 function updateTcAvail(){
   var typeEl = document.getElementById('tc-type');
@@ -2344,7 +2543,9 @@ function populateSel(id,store){
   list.innerHTML = opts;
   hidden.value='';
   search.value='';
+  if(typeof hideAutocomplete==='function') hideAutocomplete(prefix);
 }
+
 function populateAll(){
   var cs = document.getElementById('c-store');
   populateSel('c-item', cs ? cs.value : 'sub');
@@ -2422,6 +2623,139 @@ function toast(msg,type){
     clearTimeout(_tt);
     _tt=setTimeout(function(){el.classList.remove('on');el.className='toast';},3200);
 }
+
+
+var AC_STATE = {};
+
+function getItemsForPrefix(prefix){
+  var store = 'all';
+  if(prefix==='c'){
+    var cs = document.getElementById('c-store');
+    store = cs ? cs.value : 'sub';
+  } else if(prefix==='t') {
+    store = 'main';
+  } else {
+    store = 'all';
+  }
+  var out = [];
+  for(var i=0;i<DB.items.length;i++){
+    var item = DB.items[i];
+    if(store==='main' && Number(item.mainStock)<=0) continue;
+    if(store==='sub' && Number(item.subStock)<=0) continue;
+    out.push(item);
+  }
+  return out;
+}
+
+function ensureAutocomplete(prefix){
+  var input = document.getElementById(prefix + '-item-search');
+  if(!input) return null;
+  if(AC_STATE[prefix] && AC_STATE[prefix].menu) return AC_STATE[prefix];
+  var menu = document.createElement('div');
+  menu.className = 'autocomplete-menu';
+  menu.id = 'ac-menu-' + prefix;
+  input.parentNode.appendChild(menu);
+  AC_STATE[prefix] = {menu:menu,index:-1,items:[]};
+
+  input.addEventListener('focus', function(){ renderAutocomplete(prefix); });
+  input.addEventListener('keydown', function(e){
+    var state = AC_STATE[prefix];
+    if(!state || !state.items.length) return;
+    if(e.key==='ArrowDown'){ e.preventDefault(); state.index = Math.min(state.index + 1, state.items.length - 1); paintAutocomplete(prefix); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); state.index = Math.max(state.index - 1, 0); paintAutocomplete(prefix); }
+    else if(e.key==='Enter' && state.index >= 0){ e.preventDefault(); chooseAutocomplete(prefix, state.items[state.index].code); }
+    else if(e.key==='Escape'){ hideAutocomplete(prefix); }
+  });
+
+  menu.addEventListener('mousedown', function(e){
+    var row = e.target.closest('.autocomplete-option');
+    if(!row) return;
+    chooseAutocomplete(prefix, row.getAttribute('data-code'));
+  });
+  return AC_STATE[prefix];
+}
+
+function positionAutocomplete(prefix){
+  var state = AC_STATE[prefix];
+  var input = document.getElementById(prefix + '-item-search');
+  if(!state || !state.menu || !input) return;
+  if(window.innerWidth <= 768){
+    var rect = input.getBoundingClientRect();
+    state.menu.style.top = (rect.bottom + 8) + 'px';
+  } else {
+    state.menu.style.top = 'calc(100% + 8px)';
+    state.menu.style.left = '0';
+    state.menu.style.right = '0';
+  }
+}
+
+function paintAutocomplete(prefix){
+  var state = AC_STATE[prefix];
+  if(!state || !state.menu) return;
+  var rows = state.menu.querySelectorAll('.autocomplete-option');
+  for(var i=0;i<rows.length;i++) rows[i].classList.toggle('active', i===state.index);
+}
+
+function renderAutocomplete(prefix){
+  var state = ensureAutocomplete(prefix);
+  var input = document.getElementById(prefix + '-item-search');
+  if(!state || !input) return;
+  var q = String(input.value || '').trim().toLowerCase();
+  var items = getItemsForPrefix(prefix);
+  if(q){
+    items = items.filter(function(item){
+      return String(item.name || '').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  items = items.slice(0, 8);
+  state.items = items;
+  state.index = items.length ? 0 : -1;
+  if(!items.length){
+    state.menu.innerHTML = q ? '<div class="autocomplete-empty">No matching item found</div>' : '<div class="autocomplete-empty">Start typing an item name</div>';
+    positionAutocomplete(prefix);
+    state.menu.classList.add('on');
+    return;
+  }
+  var html = '';
+  for(var i=0;i<items.length;i++){
+    var item = items[i];
+    var bal = 'Main ' + item.mainStock + ' ' + item.unit + ' · Sub ' + item.subStock + ' ' + item.unit;
+    html += '<div class="autocomplete-option' + (i===state.index ? ' active' : '') + '" data-code="' + item.code + '"><span>' + item.name + '</span><span class="autocomplete-meta">' + bal + '</span></div>';
+  }
+  state.menu.innerHTML = html;
+  positionAutocomplete(prefix);
+  state.menu.classList.add('on');
+}
+
+function hideAutocomplete(prefix){
+  var state = AC_STATE[prefix];
+  if(state && state.menu) state.menu.classList.remove('on');
+}
+
+function chooseAutocomplete(prefix, code){
+  setItemPickerValue(prefix, code);
+  hideAutocomplete(prefix);
+}
+
+function initAutocomplete(){
+  var prefixes = ['c','t','g','req'];
+  for(var i=0;i<prefixes.length;i++) ensureAutocomplete(prefixes[i]);
+  document.addEventListener('click', function(e){
+    var prefixes = ['c','t','g','req'];
+    for(var j=0;j<prefixes.length;j++){
+      var p = prefixes[j];
+      var input = document.getElementById(p + '-item-search');
+      var state = AC_STATE[p];
+      if(!input || !state || !state.menu) continue;
+      if(e.target===input || state.menu.contains(e.target)) continue;
+      hideAutocomplete(p);
+    }
+  });
+  window.addEventListener('resize', function(){ var prefixes = ['c','t','g','req']; for(var k=0;k<prefixes.length;k++) positionAutocomplete(prefixes[k]); });
+  window.addEventListener('scroll', function(){ var prefixes = ['c','t','g','req']; for(var k=0;k<prefixes.length;k++) positionAutocomplete(prefixes[k]); }, true);
+}
+
+initAutocomplete();
 </script>
 </body>
 </html>

@@ -1375,7 +1375,13 @@ function renderDash() {
   
   var pendReqCount = 0;
   for(var r=0; r<DB.requests.length; r++) { if(DB.requests[r].status === 'Pending') pendReqCount++; }
-
+ var low = [];
+for(var i=0; i<DB.items.length; i++) {
+    // Checking only the main store!
+    if(Number(DB.items[i].mainStock) <= Number(DB.items[i].reorder)) {
+        low.push(DB.items[i]);
+    }
+}
   setTxt('d-main', DB.items.length);
   setTxt('d-sub',  DB.items.length);
   setTxt('d-low',  low.length);

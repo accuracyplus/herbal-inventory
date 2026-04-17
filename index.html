@@ -420,6 +420,17 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 .therapist-search-name{font-size:15px;font-weight:700;color:var(--ch)}
 .therapist-search-meta{font-size:12px;font-weight:600;color:var(--mid);text-align:right}
 .therapist-search-empty{padding:14px 16px;font-size:13px;font-weight:600;color:var(--mid)}
+
+body.therapist-page .bnav{display:none !important}
+body.therapist-page .body{padding-bottom:40px!important}
+.therapist-panel{position:relative;z-index:120;overflow:visible}
+#page-therapist{position:relative;z-index:2}
+#page-therapist .qg{position:relative;z-index:1}
+#page-therapist .therapist-search{position:relative;z-index:250}
+#page-therapist .therapist-search-menu{z-index:9999!important}
+#page-therapist .therapist-filters{position:relative;z-index:10}
+body.therapist-page .therapist-request{z-index:120}
+
 #page-linen .lg{align-items:stretch}
 #page-linen .lc{height:100%}
 
@@ -582,6 +593,13 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   body.keyboard-open #page-therapist .qg{padding-bottom:48px}
   body.keyboard-open .bnav{opacity:.35;pointer-events:none}
   body.keyboard-open #page-therapist .therapist-minihead{top:8px}
+
+  body.therapist-page .bnav{display:none!important}
+  #page-therapist .therapist-panel{z-index:200}
+  #page-therapist .therapist-search{z-index:400}
+  #page-therapist .therapist-search-menu{z-index:9999!important;box-shadow:0 18px 44px rgba(31,38,135,0.22)}
+  #page-therapist .qg{position:relative;z-index:1}
+
   #page-linen .card:first-child{margin-bottom:14px}
   #page-linen .lg{grid-template-columns:1fr;padding:12px}
   #page-linen .lc{padding:18px;border-radius:18px}

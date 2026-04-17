@@ -442,97 +442,10 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 .sb-overlay.on{display:block}
 
 @media(max-width:768px){
-  .sidebar{transform:translateX(-260px)}.sidebar.open{transform:translateX(0)}
-  .main{margin-left:0}.hbg{display:flex}
-  .bnav{display:block; text-align:center; white-space:nowrap;}
-  .topbar .sbadge{display:none}
-  .topbar{height:64px;padding:0 16px}
-  .ptitle{font-size:22px}
-  .body{padding:16px;padding-bottom:calc(var(--nb) + 24px)}
-  
-  /* FORCE 100% WIDTH BLOCKS FOR MOBILE SAFETY */
-  .sc{width: 100%; margin-right: 0; margin-bottom: 16px; display:block; padding:20px;}
-  .sc-val{font-size:40px}.sc-em{font-size:28px;margin-bottom:12px}.sc-lb{font-size:12px}
-  .card{border-radius:24px;margin-bottom:20px}.ch{padding:20px 24px}.ct{font-size:18px}
-  .ts{padding: 0 8px 8px;}
-  table{font-size:14px; border-spacing: 0 8px;}
-  thead th{padding:14px 18px;font-size:11px}
-  tbody td{padding:16px 18px}
-  
-  .sr{padding:20px; text-align:center;}
-  .sw2{width:100%; display:block; margin-right:0; margin-bottom:12px;}
-  .sw2 input{padding:14px 16px 14px 44px;font-size:16px;}
-  .fc{display:inline-block; padding:10px 16px;font-size:13px; margin:4px;}
-  
-  .fb{padding:20px}
-  .fi{width: 100%; display:block; margin-right:0; margin-bottom:16px;}
-  .fi label{font-size:12px}
-  .fi input,.fi select,.fi textarea{padding:14px;font-size:16px}
-  
-  .ff{padding:20px; text-align:center;}
-  .ff .btn{width: 100%; margin-bottom: 12px; margin-left:0; display:block;}
-  
-  .qg{padding:0 16px 16px; text-align:center;}
-  .qb{width: 100%; margin-right: 0; padding:24px; border-radius: 20px; display:block; margin-bottom:16px;}
-  .qb-em{font-size:48px}.qb-nm{font-size:18px}.qb-st{font-size:14px}
-  
-  .lg{padding:16px}
-  .lc{width: 100%; margin-right: 0; display:block; margin-bottom:20px; padding:20px;}
-  
-  .bs{border-radius:28px; margin:20px; width: calc(100% - 40px);}
-  .lb{border-radius:32px;margin:20px; width: calc(100% - 40px); max-height:85vh;}
-  .lbh{padding:32px 24px 20px;}
-  .lbb{padding:0 24px 32px;}
-  
-  .ar{padding:20px; display:block; text-align:center;}.ad{width:56px;height:56px; font-size: 24px; display:block; margin: 0 auto 16px;}.ab{width:100%; display:block; margin-bottom:16px;}.an{font-size:18px}.at{font-size:14px}
-  .rs{width: 100%; margin-right: 0; margin-bottom: 16px; display:block; padding:20px; border-radius: 20px;}.rsv{font-size:36px}
-  .rr{padding:20px; border-radius: 20px; display:block;}.rd{display:none;}.ri{width:100%; display:block; margin-bottom:12px;}.rn{font-size:18px}.rm{font-size:14px;}
-  
-  .sb-top{padding:28px 24px 24px}.sb-me{margin:16px;padding:16px}
-  .ng{padding:20px 20px 8px;font-size:12px}.ni{padding:14px 20px;margin:4px 12px;font-size:16px}
-  .hide-m{display:none!important}
-}
-@supports(padding-bottom:env(safe-area-inset-bottom)){
-  .bnav{height:calc(var(--nb) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
-  .body{padding-bottom:calc(var(--nb) + env(safe-area-inset-bottom) + 24px)!important}
-}
-
-/* UX and admin action improvements */
-.ng{font-size:12px;letter-spacing:2.2px;color:rgba(93,109,126,.9)}
-.ni{justify-content:flex-start;align-items:center}
-.ni-ic{display:flex;align-items:center;justify-content:center}
-.ff{justify-content:center}
-.ff .btn{min-width:120px}
-.bsf{justify-content:center}
-input[list]{background-image:none}
-@media(min-width:769px){
-  .ff{padding:20px 40px}
-}
-
-
-/* Alignment, autocomplete, and enhanced mobile behavior */
-.fi{position:relative}
-.fg{align-items:flex-start}
-.ff{justify-content:flex-start;gap:12px;padding:18px 28px}
-.ff .btn{min-width:140px}
-.ni{min-height:48px;gap:14px}
-.ni-ic{width:24px;display:flex;align-items:center;justify-content:center}
-.sr{align-items:center}
-.sw2{min-width:220px}
-#page-therapist .sr{position:sticky;top:0;z-index:8}
-#page-therapist .qg{padding-bottom:110px}
-.autocomplete-menu{position:absolute;left:0;right:0;top:calc(100% + 8px);background:rgba(255,255,255,.98);border:1px solid rgba(255,255,255,.95);border-radius:16px;box-shadow:0 16px 40px rgba(31,38,135,.14);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);max-height:260px;overflow:auto;z-index:60;display:none}
-.autocomplete-menu.on{display:block}
-.autocomplete-option{padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;color:var(--ch);border-bottom:1px solid rgba(0,0,0,.04)}
-.autocomplete-option:last-child{border-bottom:none}
-.autocomplete-option:hover,.autocomplete-option.active{background:rgba(43,122,120,.08);color:var(--g)}
-.autocomplete-meta{font-size:12px;color:var(--mid);font-weight:600;white-space:nowrap}
-.autocomplete-empty{padding:12px 16px;font-size:14px;color:var(--mid)}
-@media(max-width:768px){
   html,body{overflow-x:hidden;overscroll-behavior-y:contain}
   body{position:relative}
   .main{min-width:0}
-  .body{padding:12px 12px calc(var(--nb) + 84px);overflow-x:hidden;-webkit-overflow-scrolling:touch}
+  .body{padding:12px 12px calc(var(--nb) + 128px + env(safe-area-inset-bottom));overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-padding-bottom:140px}
   .topbar{height:60px;padding:0 14px}
   .ptitle{font-size:18px;line-height:1.2}
   .sg{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -551,25 +464,48 @@ input[list]{background-image:none}
   .fg{gap:14px}
   .fi,.fi.fa{width:100%;min-width:0;margin:0}
   .fi input,.fi select,.fi textarea{padding:14px;font-size:16px}
-  .ff{padding:16px;position:sticky;bottom:calc(var(--nb) + env(safe-area-inset-bottom));background:rgba(255,255,255,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.7);z-index:15;flex-direction:column;align-items:stretch}
+  .ff{padding:16px;position:sticky;bottom:calc(var(--nb) + env(safe-area-inset-bottom) + 18px);background:rgba(255,255,255,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.72);border-radius:20px;box-shadow:0 10px 28px rgba(31,38,135,.08);z-index:15;flex-direction:column;align-items:stretch;margin:0 4px 8px}
   .ff .btn{width:100%;min-width:0;margin:0}
   .ts{padding:0 10px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
   table{min-width:720px}
   thead th{font-size:10px;padding:12px 14px;white-space:nowrap}
   tbody td{padding:14px;word-break:break-word}
-  .qg,.lg,.rsg{padding:0 12px 12px;gap:14px}
+  .qg,.lg,.rsg{padding:0 12px 12px;gap:14px;grid-template-columns:1fr}
   .qb,.lc,.rs,.rr,.ar{min-width:0}
   .tbar{width:calc(100% - 24px);margin:16px 12px 0;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
   .tbar::-webkit-scrollbar{display:none}
   .tb{flex:0 0 auto;padding:10px 18px}
   .autocomplete-menu{position:fixed;left:12px !important;right:12px !important;top:auto;max-height:40vh;z-index:500}
-  .bfab{margin-top:-18px}
-  #page-therapist .sr{position:relative;top:auto}
-  #page-therapist > div:first-child{margin-bottom:20px !important}
-  #page-therapist > div:first-child > div:first-child{float:none !important}
-  #page-therapist > div:first-child .btn{float:none !important;width:100%;margin-top:12px}
+  .autocomplete-meta{white-space:normal;text-align:right}
+  .bnav{left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 8px);height:78px;padding:6px 6px calc(env(safe-area-inset-bottom) + 6px);border-radius:24px;display:flex !important;align-items:flex-end;justify-content:space-around;gap:2px;box-shadow:0 16px 40px rgba(0,0,0,.10)}
+  .bb{width:22%;padding:8px 2px 10px}
+  .bb-ic{font-size:24px;margin-bottom:2px}
+  .bb-lb{font-size:11px}
+  .bfab{width:64px;height:64px;line-height:58px;font-size:30px;margin-top:-24px;position:relative;top:-4px}
+  #page-therapist .therapist-header{display:block;margin-bottom:18px}
+  #page-therapist .therapist-title{font-size:28px;line-height:1.05}
+  #page-therapist .therapist-subtitle{font-size:14px;line-height:1.35}
+  #page-therapist .therapist-switch{width:100%;margin-top:14px}
+  #page-therapist .therapist-panel{padding:16px;display:block}
+  #page-therapist .therapist-search{width:100% !important;min-width:0 !important;margin-bottom:12px !important}
+  #page-therapist .therapist-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+  #page-therapist .therapist-filters .fc{width:100%;padding:12px 10px;font-size:14px}
+  #page-therapist .therapist-request{bottom:calc(var(--nb) + env(safe-area-inset-bottom) + 26px);width:calc(100% - 32px);padding:16px 20px;font-size:17px}
+  #page-therapist .qg{padding:0 12px 148px}
+  #page-therapist .qb{min-height:220px;padding:22px 18px}
+  #page-therapist .qb-em{font-size:46px;margin-bottom:16px}
+  #page-therapist .qb-nm{font-size:17px;margin-bottom:10px}
+  #page-linen .card:first-child{margin-bottom:14px}
+  #page-linen .lg{grid-template-columns:1fr;padding:12px}
+  #page-linen .lc{padding:18px;border-radius:18px}
+  #page-linen .lh{align-items:flex-start}
+  #page-linen .li{width:48px;height:48px;font-size:24px}
+  #page-linen .ln{font-size:18px}
+  #page-linen .lcg{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  #page-linen .lcn{font-size:22px}
+  #page-linen .lbg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  #page-linen .lbg .btn{width:100%;padding:11px 6px;font-size:13px}
 }
-
 </style>
 </head>
 <body>
@@ -1774,32 +1710,35 @@ function renderStore(store) {
 // LINEN
 // ============================================================
 function renderLinen() {
+  var listEl = document.getElementById('linen-list');
+  if(!listEl) return;
+  var items = Array.isArray(DB.linen) ? DB.linen : [];
   var html = '';
-  for(var i=0; i<DB.linen.length; i++) {
-      var l = DB.linen[i];
+  for(var i=0; i<items.length; i++) {
+      var l = items[i] || {};
       html += '<div class="lc">' +
         '<div class="lh">' +
           '<div class="li">🧺</div>' +
           '<div>' +
-            '<div class="ln">'+l.name+'</div>' +
-            '<div class="ls">Total Inventory: <strong>'+l.total+'</strong></div>' +
+            '<div class="ln">'+(l.name||'Linen Item')+'</div>' +
+            '<div class="ls">Total Inventory: <strong>'+(l.total||0)+'</strong></div>' +
           '</div>' +
         '</div>' +
         '<div class="lcg">' +
-          '<div class="lci la"><div class="lcn">'+l.available+'</div><div class="lcl">Available</div></div>' +
-          '<div class="lci lu"><div class="lcn">'+l.inUse+'</div><div class="lcl">In Use</div></div>' +
-          '<div class="lci lw"><div class="lcn">'+l.inWash+'</div><div class="lcl">In Wash</div></div>' +
+          '<div class="lci la"><div class="lcn">'+(l.available||0)+'</div><div class="lcl">Available</div></div>' +
+          '<div class="lci lu"><div class="lcn">'+(l.inUse||0)+'</div><div class="lcl">In Use</div></div>' +
+          '<div class="lci lw"><div class="lcn">'+(l.inWash||0)+'</div><div class="lcl">In Wash</div></div>' +
         '</div>' +
         '<div class="lbg">' +
-          '<button class="btn bp" onclick="openLinen(\''+l.id+'\',\'issue\')">Issue</button>' +
-          '<button class="btn bw" onclick="openLinen(\''+l.id+'\',\'wash\')">→ Wash</button>' +
-          '<button class="btn bw" onclick="openLinen(\''+l.id+'\',\'return\')">← Clean</button>' +
+          '<button class="btn bp" onclick="openLinen(\''+(l.id||'')+'\',\'issue\')">Issue</button>' +
+          '<button class="btn bw" onclick="openLinen(\''+(l.id||'')+'\',\'wash\')">→ Wash</button>' +
+          '<button class="btn bw" onclick="openLinen(\''+(l.id||'')+'\',\'return\')">← Clean</button>' +
         '</div>' +
       '</div>';
   }
-  document.getElementById('linen-list').innerHTML = html || '<div class="empty">No linen data loaded</div>';
+  listEl.innerHTML = html || '<div class="empty"><div class="ei">🧺</div>No linen data loaded</div>';
 
-  var rows = DB.washlog ? DB.washlog.slice().reverse().slice(0,20) : [];
+  var rows = Array.isArray(DB.washlog) ? DB.washlog.slice().reverse().slice(0,20) : [];
   var wHtml = '';
   for(var j=0; j<rows.length; j++) {
       var w = rows[j];

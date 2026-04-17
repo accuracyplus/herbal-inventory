@@ -142,9 +142,46 @@ function initAutocomplete(){
       if(e.target===input || state.menu.contains(e.target)) continue;
       hideAutocomplete(p);
     }
+    var tInput = document.getElementById('t-search');
+    var tMenu = document.getElementById('t-search-menu');
+    if(tInput && tMenu && e.target!==tInput && !tMenu.contains(e.target)) hideTherapistSearchMenu();
   });
-  window.addEventListener('resize', function(){ var prefixes = ['c','t','g','req']; for(var k=0;k<prefixes.length;k++) positionAutocomplete(prefixes[k]); });
+  var tInput = document.getElementById('t-search');
+  var tMenu = document.getElementById('t-search-menu');
+  if(tInput && tMenu){
+    tInput.addEventListener('focus', function(){
+      document.body.classList.add('keyboard-open');
+      renderTherapistSearchMenu();
+      setTimeout(function(){ try{ tInput.scrollIntoView({block:'center', behavior:'smooth'}); }catch(e){} }, 120);
+    });
+    tInput.addEventListener('blur', function(){
+      setTimeout(function(){
+        document.body.classList.remove('keyboard-open');
+        hideTherapistSearchMenu();
+      }, 180);
+    });
+    tInput.addEventListener('keydown', function(e){
+      if(e.key==='Enter'){
+        e.preventDefault();
+        var first=tMenu.querySelector('.therapist-search-option');
+        if(first) first.click();
+      }
+    });
+    tMenu.addEventListener('mousedown', function(e){
+      var row=e.target.closest('.therapist-search-option');
+      if(!row) return;
+      var nameEl = row.querySelector('.therapist-search-name');
+      selectTherapistSearchResult(row.getAttribute('data-type'), row.getAttribute('data-id'), nameEl ? nameEl.textContent : '');
+    });
+  }
+  window.addEventListener('resize', function(){
+    var prefixes = ['c','t','g','req'];
+    for(var k=0;k<prefixes.length;k++) positionAutocomplete(prefixes[k]);
+    if(window.innerWidth>768) document.body.classList.remove('keyboard-open');
+    hideTherapistSearchMenu();
+  });
   window.addEventListener('scroll', function(){ var prefixes = ['c','t','g','req']; for(var k=0;k<prefixes.length;k++) positionAutocomplete(prefixes[k]); }, true);
+  window.addEventListener('orientationchange', function(){ setTimeout(function(){ hideTherapistSearchMenu(); }, 120); });
 }
 
 initAutocomplete();
@@ -364,6 +401,14 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 .therapist-panel{margin-bottom:24px;border-radius:var(--r);padding:24px}
 .therapist-search{width:100%;display:block;margin-bottom:20px}
 .therapist-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
+.therapist-minihead{display:none}
+.therapist-search-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 10px);background:rgba(255,255,255,0.96);border:1px solid rgba(43,122,120,0.18);border-radius:18px;box-shadow:0 18px 44px rgba(31,38,135,0.14);padding:8px;z-index:120;max-height:280px;overflow:auto;-webkit-overflow-scrolling:touch}
+.therapist-search-menu.on{display:block}
+.therapist-search-option{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;transition:background .2s ease,color .2s ease}
+.therapist-search-option:hover,.therapist-search-option.active{background:rgba(43,122,120,0.12)}
+.therapist-search-name{font-size:15px;font-weight:700;color:var(--ch)}
+.therapist-search-meta{font-size:12px;font-weight:600;color:var(--mid);text-align:right}
+.therapist-search-empty{padding:14px 16px;font-size:13px;font-weight:600;color:var(--mid)}
 #page-linen .lg{align-items:stretch}
 #page-linen .lc{height:100%}
 
@@ -394,9 +439,9 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 .bsf{padding:24px 32px;border-top:1px solid rgba(0,0,0,0.05);display:flex;justify-content:flex-end;gap:16px;background:rgba(250,250,250,0.9);}
 
 /* LOGIN SCREEN - UNBREAKABLE BLOCK FIX FOR MOBILE */
-.lw{position:fixed;inset:0;z-index:900;background:linear-gradient(135deg, #e0f2f1 0%, #c4e0e5 100%);overflow-y:auto; text-align: center;}
+.lw{position:fixed;inset:0;z-index:900;background:linear-gradient(135deg, #e0f2f1 0%, #c4e0e5 100%);overflow-y:auto;overflow-x:hidden;text-align:center;}
 .lw::before { content: ''; display: inline-block; height: 100%; vertical-align: middle; }
-.lb{width:90%;max-width:460px;border-radius:32px;box-shadow:0 24px 60px rgba(31,38,135,0.15);background:rgba(255,255,255,0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.8); display:inline-block; vertical-align: middle; text-align: left; margin: 20px 0; animation: popIn 0.6s cubic-bezier(0.4,0,0.2,1);}
+.lb{width:90%;max-width:460px;border-radius:32px;box-shadow:0 24px 60px rgba(31,38,135,0.15);background:rgba(255,255,255,0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.8); display:inline-block; vertical-align: middle; text-align: left; margin: 20px 0; animation: popIn 0.6s cubic-bezier(0.4,0,0.2,1); box-sizing:border-box; overflow:hidden;}
 .lbh{padding:48px 36px 24px;text-align:center;border-bottom: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.4); border-radius: 32px 32px 0 0;}
 .lbr{font-size:36px;font-weight:700;color:var(--ch);position:relative;letter-spacing:-1px; line-height: 1.2;}
 .lbb{padding:32px 36px 48px;}
@@ -461,9 +506,9 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   .sb-overlay.on{display:block}
   .main{min-width:0;margin-left:0}
   .hbg{display:flex}
-  .body{padding:12px 12px calc(var(--nb) + 128px + env(safe-area-inset-bottom));overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-padding-bottom:140px}
-  .topbar{height:60px;padding:0 14px}
-  .ptitle{font-size:18px;line-height:1.2}
+  .body{padding:12px 12px calc(var(--nb) + 128px + env(safe-area-inset-bottom));overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-padding-top:84px;scroll-padding-bottom:140px}
+  .topbar{position:sticky;top:0;z-index:260;height:auto;min-height:64px;padding:calc(env(safe-area-inset-top) + 8px) 14px 8px;background:rgba(255,255,255,0.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  .ptitle{font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sg{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .sc{width:auto;min-width:0;margin:0;padding:16px;border-radius:20px}
   .sc-em{font-size:24px;margin-bottom:10px}
@@ -473,7 +518,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   .ch{padding:16px 18px}
   .ct{font-size:17px}
   .sr{padding:14px;display:grid;grid-template-columns:1fr;gap:12px;overflow:visible;text-align:left;align-items:stretch}
-  .sw2{flex:0 0 auto;width:100%;min-width:0;margin:0}
+  .sw2{flex:0 0 auto;width:100%;min-width:0;margin:0;position:relative}
   .sr-controls{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
   .sr-controls::-webkit-scrollbar{display:none}
   .fc{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 14px;margin:0;white-space:nowrap}
@@ -485,8 +530,12 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   .ff .btn{width:100%;min-width:0;margin:0}
   .ts{padding:0 10px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
   table{min-width:720px}
+  .ts table td .tn,.ts table td .tc,.ts table td .wrap,.ts table td .cell-wrap{white-space:normal;overflow-wrap:anywhere}
+  .topbar #store-pill,.sbadge{display:none !important}
+  .topbar .tr{gap:8px}
+  .topbar .btn.bsm{padding:10px 14px;font-size:13px}
   thead th{font-size:10px;padding:12px 14px;white-space:nowrap}
-  tbody td{padding:14px;word-break:break-word}
+  tbody td{padding:14px;white-space:nowrap;word-break:normal;overflow-wrap:normal}
   .qg,.lg,.rsg{padding:0 12px 12px;gap:14px;grid-template-columns:1fr}
   .qb,.lc,.rs,.rr,.ar{min-width:0}
   .tbar{width:calc(100% - 24px);margin:16px 12px 0;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
@@ -501,11 +550,12 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   .bfab{width:64px;height:64px;line-height:58px;font-size:30px;margin-top:-24px;position:relative;top:-4px}
   #page-therapist .therapist-header{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
   #page-therapist .therapist-header-main{float:none !important}
-  #page-therapist .therapist-title{font-size:28px;line-height:1.05}
+  #page-therapist .therapist-title{font-size:26px;line-height:1.08}
   #page-therapist .therapist-subtitle{font-size:14px;line-height:1.35}
   #page-therapist .therapist-switch{width:100%;margin-top:0}
-  #page-therapist .therapist-panel{padding:16px;display:grid;grid-template-columns:1fr;gap:12px}
-  #page-therapist .therapist-search{width:100% !important;min-width:0 !important;margin:0 !important}
+  #page-therapist .therapist-minihead{display:flex;align-items:center;justify-content:center;position:sticky;top:calc(env(safe-area-inset-top) + 8px);z-index:30;margin:0 0 12px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 28px rgba(31,38,135,.08);font-size:14px;font-weight:700;color:var(--ch)}
+  #page-therapist .therapist-panel{padding:16px;display:grid;grid-template-columns:1fr;gap:12px;overflow:visible}
+  #page-therapist .therapist-search{width:100% !important;min-width:0 !important;margin:0 !important;position:relative;z-index:40}
   #page-therapist .therapist-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
   #page-therapist .therapist-filters .fc{width:100%;padding:12px 10px;font-size:14px}
   #page-therapist .therapist-request{bottom:calc(var(--nb) + env(safe-area-inset-bottom) + 26px);width:calc(100% - 32px);padding:16px 20px;font-size:17px}
@@ -513,6 +563,14 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   #page-therapist .qb{min-height:220px;padding:22px 18px}
   #page-therapist .qb-em{font-size:46px;margin-bottom:16px}
   #page-therapist .qb-nm{font-size:17px;margin-bottom:10px}
+#page-therapist .therapist-search-menu{top:calc(100% + 8px);left:0;right:0;max-height:34vh;border-radius:16px;padding:6px;z-index:60}
+  #page-therapist .therapist-search-option{padding:12px}
+  #page-therapist .therapist-search-name{font-size:14px}
+  #page-therapist .therapist-search-meta{font-size:11px;max-width:42%;line-height:1.25}
+  body.keyboard-open #page-therapist .therapist-request{display:none}
+  body.keyboard-open #page-therapist .qg{padding-bottom:48px}
+  body.keyboard-open .bnav{opacity:.35;pointer-events:none}
+  body.keyboard-open #page-therapist .therapist-minihead{top:8px}
   #page-linen .card:first-child{margin-bottom:14px}
   #page-linen .lg{grid-template-columns:1fr;padding:12px}
   #page-linen .lc{padding:18px;border-radius:18px}
@@ -528,9 +586,9 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 
 
 @media(max-width:768px){
-  .lw{display:flex;align-items:flex-start;justify-content:center;padding:16px 0 calc(env(safe-area-inset-bottom) + 96px);overflow-y:auto;text-align:left}
+  .lw{display:flex;align-items:flex-start;justify-content:center;padding:16px 0 calc(env(safe-area-inset-bottom) + 96px);overflow-y:auto;overflow-x:hidden;text-align:left}
   .lw::before{display:none}
-  .lb{display:block;width:calc(100% - 24px);max-width:none;margin:0 auto;border-radius:28px}
+  .lb{display:block;width:calc(100% - 32px);max-width:420px;margin:0 auto;border-radius:28px}
   .lbh{padding:24px 20px 18px}
   .login-logo-img{max-width:220px;max-height:96px;margin-bottom:16px}
   .lbr{font-size:26px;line-height:1.15}
@@ -681,7 +739,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
         <div style="display:block; margin-bottom:32px;">
             <div style="float:left;">
                 <div style="font-size:36px; font-weight:700; color:var(--ch); letter-spacing:-1px;">Herbal Park Inventory</div>
-                <div style="font-size:16px; color:var(--mid); margin-top:8px; font-weight:600;">Tap an item to record usage</div>
+                <div style="font-size:16px; color:var(--mid); margin-top:8px; font-weight:600;">Tap an item to issue stock or request materials</div>
             </div>
             <button class="btn bw" onclick="logout()" style="float:right; color:var(--red); border-color:rgba(192,57,43,0.3); font-size:15px;">⏻ Switch User</button>
             <div style="clear:both;"></div>
@@ -690,8 +748,9 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
         <div class="sr g1" style="margin-bottom: 24px; border-radius: var(--r); padding: 24px;">
             <div class="sw2" style="width:100%; display:block; margin-bottom: 20px;">
                 <span class="si">⌕</span>
-                <input id="t-search" type="text" placeholder="Search by name or code..." onkeyup="renderTherapistGrid()"/>
+                <input id="t-search" type="text" placeholder="Search by item name..." oninput="handleTherapistSearchInput()" autocomplete="off"/>
                 <span class="si-clear" id="t-search-clear" onclick="clearTSearch()">✕</span>
+                <div id="t-search-menu" class="therapist-search-menu"></div>
             </div>
             <div class="sr-controls therapist-filters">
                 <button class="fc on" id="tf-all" onclick="setTFilter('all')">All</button>
@@ -1500,6 +1559,75 @@ function clearTSearch() {
     var el = document.getElementById('t-search');
     if(el) el.value = '';
     renderTherapistGrid();
+    hideTherapistSearchMenu();
+}
+
+function getTherapistSearchItems(){
+    var q = String((document.getElementById('t-search')||{}).value || '').trim().toLowerCase();
+    var out = [];
+    var filter = T_FILT || 'all';
+    if(Array.isArray(DB.items)) {
+        for(var i=0;i<DB.items.length;i++){
+            var item = DB.items[i];
+            var cat = String(item.cat || item.category || '');
+            if(filter!=='all' && filter!==cat) continue;
+            if(q && String(item.name||'').toLowerCase().indexOf(q)===-1) continue;
+            out.push({type:'item', id:item.code, name:item.name, meta:'Main ' + item.mainStock + ' ' + item.unit + ' · Sub ' + item.subStock + ' ' + item.unit});
+        }
+    }
+    if(filter==='all' || filter==='Linen') {
+        var linen = Array.isArray(DB.linen) ? DB.linen : [];
+        for(var j=0;j<linen.length;j++){
+            var l = linen[j];
+            if(q && String(l.name||'').toLowerCase().indexOf(q)===-1) continue;
+            out.push({type:'linen', id:l.id, name:l.name, meta:(Number(l.available)||0) + ' available · ' + (Number(l.inWash)||0) + ' in wash'});
+        }
+    }
+    out.sort(function(a,b){ return String(a.name).localeCompare(String(b.name)); });
+    return out.slice(0,6);
+}
+
+function renderTherapistSearchMenu(){
+    var input = document.getElementById('t-search');
+    var menu = document.getElementById('t-search-menu');
+    if(!input || !menu) return;
+    var q = String(input.value || '').trim();
+    var items = getTherapistSearchItems();
+    if(!q){
+        menu.innerHTML = '';
+        menu.classList.remove('on');
+        return;
+    }
+    if(!items.length){
+        menu.innerHTML = '<div class="therapist-search-empty">No matching item found</div>';
+        menu.classList.add('on');
+        return;
+    }
+    var out = '';
+    for(var i=0;i<items.length;i++){
+        var it = items[i];
+        out += '<div class="therapist-search-option" data-type="'+it.type+'" data-id="'+it.id+'"><span class="therapist-search-name">'+it.name+'</span><span class="therapist-search-meta">'+it.meta+'</span></div>';
+    }
+    menu.innerHTML = out;
+    menu.classList.add('on');
+}
+
+function hideTherapistSearchMenu(){
+    var menu = document.getElementById('t-search-menu');
+    if(menu) menu.classList.remove('on');
+}
+
+function handleTherapistSearchInput(){
+    renderTherapistGrid();
+    renderTherapistSearchMenu();
+}
+
+function selectTherapistSearchResult(type,id,name){
+    var input = document.getElementById('t-search');
+    if(input) input.value = name || '';
+    hideTherapistSearchMenu();
+    renderTherapistGrid();
+    setTimeout(function(){ therapistConsume(id, type); }, 30);
 }
 
 function setTFilter(f) {

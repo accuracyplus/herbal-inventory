@@ -524,6 +524,62 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   #page-linen .lbg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   #page-linen .lbg .btn{width:100%;padding:11px 6px;font-size:13px}
 }
+
+
+
+@media(max-width:768px){
+  .lw{display:flex;align-items:flex-start;justify-content:center;padding:16px 0 calc(env(safe-area-inset-bottom) + 96px);overflow-y:auto;text-align:left}
+  .lw::before{display:none}
+  .lb{display:block;width:calc(100% - 24px);max-width:none;margin:0 auto;border-radius:28px}
+  .lbh{padding:24px 20px 18px}
+  .login-logo-img{max-width:220px;max-height:96px;margin-bottom:16px}
+  .lbr{font-size:26px;line-height:1.15}
+  .lbb{padding:20px}
+  .sl{max-height:none;overflow:visible}
+  .si2{padding:16px 18px;margin-bottom:10px}
+  .sa-wrap{width:56px}
+  .sa{width:44px;height:44px;line-height:42px;font-size:18px}
+  .sn2{font-size:16px;white-space:normal;overflow:visible;text-overflow:clip}
+  .sr2{font-size:13px;white-space:normal;overflow:visible;text-overflow:clip}
+
+  .topbar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:10px}
+  .tl{min-width:0;gap:10px}
+  .tr{min-width:0;gap:8px;justify-content:flex-end}
+  #store-pill{display:none !important}
+  .tr .btn{padding:10px 14px;font-size:13px}
+
+  .ts{padding:0 10px 12px;overflow-x:auto;overflow-y:hidden}
+  table{min-width:820px}
+  thead th{white-space:nowrap}
+  tbody td{white-space:nowrap;word-break:normal;overflow-wrap:normal;vertical-align:middle}
+  tbody td .tn, tbody td .tc{white-space:normal;word-break:normal;overflow-wrap:break-word}
+  .sw,.sb,.sn,.bdg{white-space:nowrap}
+
+  .sr{padding:14px;display:grid;grid-template-columns:1fr;gap:10px}
+  .sr > div[style*="display:inline-block"], .sr > .sr-controls{width:100%;min-width:0}
+  .sr-controls{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+
+  .pin-card{border-radius:24px}
+  .pin-head{padding:20px 18px 12px}
+  .pin-title{font-size:22px}
+  .pin-body{padding:18px}
+  .pin-input{padding:15px 16px;font-size:22px;letter-spacing:8px}
+}
+
+/* PIN MODAL */
+.pin-ov{display:none;position:fixed;inset:0;background:rgba(26,37,47,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:1200;align-items:center;justify-content:center;padding:20px}
+.pin-ov.on{display:flex}
+.pin-card{width:min(420px,100%);background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.9);border-radius:28px;box-shadow:0 24px 60px rgba(0,0,0,.18);overflow:hidden}
+.pin-head{padding:24px 24px 14px;background:rgba(255,255,255,.55);border-bottom:1px solid rgba(255,255,255,.7)}
+.pin-title{font-size:24px;font-weight:700;color:var(--ch)}
+.pin-sub{font-size:14px;color:var(--mid);margin-top:6px}
+.pin-body{padding:22px 24px 24px}
+.pin-input{width:100%;padding:16px 18px;border-radius:18px;border:1px solid rgba(43,122,120,.22);background:linear-gradient(135deg, rgba(224,242,241,.9), rgba(255,255,255,.95));font-size:24px;letter-spacing:10px;text-align:center;font-family:'Outfit',sans-serif;color:var(--g);font-weight:700;outline:none;box-shadow:inset 0 2px 8px rgba(43,122,120,.06)}
+.pin-input:focus{border-color:var(--g);box-shadow:0 0 0 4px rgba(43,122,120,.12), inset 0 2px 8px rgba(43,122,120,.04)}
+.pin-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:18px}
+.pin-error{font-size:13px;color:var(--red);margin-top:10px;display:none}
+.pin-error.on{display:block}
+
 </style>
 </head>
 <body>
@@ -547,6 +603,24 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
           <span class="lbl">Select Your Name</span>
       </div>
       <div class="sl" id="staff-list"></div>
+    </div>
+  </div>
+</div>
+
+
+<div class="pin-ov" id="pin-ov" onclick="if(event.target===this) closePinModal()">
+  <div class="pin-card">
+    <div class="pin-head">
+      <div class="pin-title">Secure Access</div>
+      <div class="pin-sub">Enter the Admin / Supervisor PIN to continue.</div>
+    </div>
+    <div class="pin-body">
+      <input id="pin-input" class="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="one-time-code" />
+      <div id="pin-error" class="pin-error">Incorrect PIN</div>
+      <div class="pin-actions">
+        <button class="btn bw" type="button" onclick="closePinModal()">Cancel</button>
+        <button class="btn bp" type="button" onclick="submitPin()">Continue</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1215,25 +1289,70 @@ function rebuildLogin() {
   g.innerHTML = htmlStr || '<div style="text-align:center;color:var(--mid);padding:20px;font-size:14px;font-weight:600;">No staff loaded. Check Google Sheet.</div>';
 }
 
+var pendingLoginId = null;
 function login(id) {
   var s = getStaffById(id);
   if (!s) return;
   var rolesArr = typeof s.roles==='string' ? s.roles.split('|') : (s.roles||[]);
   
   if (rolesArr.indexOf('Admin') !== -1 || rolesArr.indexOf('Store Supervisor') !== -1) {
-    var pin = prompt("Enter Admin/Supervisor PIN:");
-    if (pin !== "1111") {
-      toast("Incorrect PIN", "terr");
-      return;
-    }
+    pendingLoginId = id;
+    openPinModal();
+    return;
   }
 
-  s.rolesArr = rolesArr;
+  completeLogin(id, rolesArr);
+}
+
+function completeLogin(id, rolesArr) {
+  var s = getStaffById(id);
+  if (!s) return;
+  s.rolesArr = rolesArr || (typeof s.roles==='string' ? s.roles.split('|') : (s.roles||[]));
   SESSION = s;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   applySession();
 }
+
+function openPinModal() {
+  var ov = document.getElementById('pin-ov');
+  var inp = document.getElementById('pin-input');
+  var err = document.getElementById('pin-error');
+  if(err) err.classList.remove('on');
+  if(inp) inp.value = '';
+  ov.classList.add('on');
+  setTimeout(function(){ if(inp) inp.focus(); }, 50);
+}
+
+function closePinModal() {
+  var ov = document.getElementById('pin-ov');
+  var err = document.getElementById('pin-error');
+  if(err) err.classList.remove('on');
+  ov.classList.remove('on');
+  pendingLoginId = null;
+}
+
+function submitPin() {
+  var inp = document.getElementById('pin-input');
+  var err = document.getElementById('pin-error');
+  if (!pendingLoginId) return closePinModal();
+  if (String(inp.value || '') !== '1111') {
+    if(err) err.classList.add('on');
+    if(inp) { inp.focus(); inp.select(); }
+    return;
+  }
+  var id = pendingLoginId;
+  pendingLoginId = null;
+  document.getElementById('pin-ov').classList.remove('on');
+  completeLogin(id);
+}
+
+document.addEventListener('keydown', function(e){
+  var ov = document.getElementById('pin-ov');
+  if(!ov || !ov.classList.contains('on')) return;
+  if(e.key === 'Enter') submitPin();
+  if(e.key === 'Escape') closePinModal();
+});
 
 function applySession() {
   var s = SESSION;
@@ -1246,8 +1365,8 @@ function applySession() {
   var isTher  = s.rolesArr.indexOf('Therapist') !== -1 && !isAdmin && !isSup;
 
   var pill = document.getElementById('store-pill');
-  if (s.store==='both') { pill.className='sbadge sbg'; pill.textContent='🏪 Main + Sub'; }
-  else { pill.className='sbadge sbo'; pill.textContent='🧴 Sub Store'; }
+  if (s.store==='both') { pill.className='sbadge sbg'; pill.textContent=''; pill.style.display='none'; }
+  else { pill.className='sbadge sbo'; pill.textContent='🧴 Sub Store'; pill.style.display='inline-flex'; }
 
   // THERAPIST RESTRICTION (HARD LOCK)
   var bnav = document.getElementById('bottom-nav');

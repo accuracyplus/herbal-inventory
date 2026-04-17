@@ -288,7 +288,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 .sn{font-size:15px;font-weight:700}
 
 /* SEARCH ROW OPTIMIZED */
-.sr{padding:24px 32px;border-bottom:1px solid rgba(255,255,255,0.5);display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:rgba(255,255,255,0.3);}
+.sr{padding:24px 32px;border-bottom:1px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(255,255,255,0.3);} .sr > div{min-width:0;} .sr-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;} .sr .fi{min-width:220px;}
 .sw2{position:relative;flex:1;min-width:240px;max-width:360px}
 .sw2 input{padding:14px 16px 14px 44px;border-radius:var(--rf); background: rgba(255,255,255,0.85); border: 1px solid var(--BD); font-size: 15px; width: 100%; transition: all 0.3s; box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);}
 .sw2 input:focus { background: #fff; box-shadow: 0 4px 16px rgba(61,107,79,0.15); border-color: var(--g); outline: none;}
@@ -332,7 +332,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 .lci{text-align:center;padding:16px 8px;border-radius:var(--rs);background:rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
 .lcn{font-size:28px;font-weight:700;line-height:1}
 .lcl{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-top:8px;font-weight:700}
-.la .lcn{color:var(--g)}.lu .lcn{color:var(--orange)}.lw .lcn{color:#4A6FA5}
+.la .lcn{color:var(--g)}.lu .lcn{color:var(--orange)}.lwi .lcn{color:#4A6FA5}
 .lbg{display:flex;gap:12px}
 .lbg .btn{flex:1;font-size:14px;padding:12px 8px; border-radius: var(--rs);}
 
@@ -354,6 +354,18 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 .qb:hover .qb-em { transform: scale(1.1); }
 .qb-nm{font-size:18px;font-weight:700;color:var(--ch);line-height:1.3; word-wrap:break-word; overflow-wrap:break-word; white-space:normal; width:100%; margin-bottom:12px;}
 .qb-st{font-size:14px;color:var(--mid);font-weight:700; padding: 6px 16px; background: rgba(0,0,0,0.03); border-radius: var(--rf); display: inline-block;}
+
+
+.therapist-header{display:block;margin-bottom:32px}
+.therapist-header-main{float:left}
+.therapist-title{font-size:36px;font-weight:700;color:var(--ch);letter-spacing:-1px}
+.therapist-subtitle{font-size:16px;color:var(--mid);margin-top:8px;font-weight:600}
+.therapist-switch{float:right;color:var(--red);border-color:rgba(192,57,43,0.3);font-size:15px}
+.therapist-panel{margin-bottom:24px;border-radius:var(--r);padding:24px}
+.therapist-search{width:100%;display:block;margin-bottom:20px}
+.therapist-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
+#page-linen .lg{align-items:stretch}
+#page-linen .lc{height:100%}
 
 /* REPORT STATS */
 .rsg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;padding:24px 32px}
@@ -444,7 +456,11 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
 @media(max-width:768px){
   html,body{overflow-x:hidden;overscroll-behavior-y:contain}
   body{position:relative}
-  .main{min-width:0}
+  .sidebar{transform:translateX(-100%);width:260px;max-width:86vw;pointer-events:none}
+  .sidebar.open{transform:translateX(0);pointer-events:auto}
+  .sb-overlay.on{display:block}
+  .main{min-width:0;margin-left:0}
+  .hbg{display:flex}
   .body{padding:12px 12px calc(var(--nb) + 128px + env(safe-area-inset-bottom));overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-padding-bottom:140px}
   .topbar{height:60px;padding:0 14px}
   .ptitle{font-size:18px;line-height:1.2}
@@ -456,9 +472,10 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   .card{border-radius:22px;margin-bottom:16px}
   .ch{padding:16px 18px}
   .ct{font-size:17px}
-  .sr{padding:14px;display:flex;flex-wrap:nowrap;gap:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;text-align:left}
-  .sr::-webkit-scrollbar{display:none}
-  .sw2{flex:0 0 230px;width:230px;min-width:230px;margin:0}
+  .sr{padding:14px;display:grid;grid-template-columns:1fr;gap:12px;overflow:visible;text-align:left;align-items:stretch}
+  .sw2{flex:0 0 auto;width:100%;min-width:0;margin:0}
+  .sr-controls{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .sr-controls::-webkit-scrollbar{display:none}
   .fc{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 14px;margin:0;white-space:nowrap}
   .fb{padding:16px}
   .fg{gap:14px}
@@ -482,12 +499,13 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
   .bb-ic{font-size:24px;margin-bottom:2px}
   .bb-lb{font-size:11px}
   .bfab{width:64px;height:64px;line-height:58px;font-size:30px;margin-top:-24px;position:relative;top:-4px}
-  #page-therapist .therapist-header{display:block;margin-bottom:18px}
+  #page-therapist .therapist-header{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+  #page-therapist .therapist-header-main{float:none !important}
   #page-therapist .therapist-title{font-size:28px;line-height:1.05}
   #page-therapist .therapist-subtitle{font-size:14px;line-height:1.35}
-  #page-therapist .therapist-switch{width:100%;margin-top:14px}
-  #page-therapist .therapist-panel{padding:16px;display:block}
-  #page-therapist .therapist-search{width:100% !important;min-width:0 !important;margin-bottom:12px !important}
+  #page-therapist .therapist-switch{width:100%;margin-top:0}
+  #page-therapist .therapist-panel{padding:16px;display:grid;grid-template-columns:1fr;gap:12px}
+  #page-therapist .therapist-search{width:100% !important;min-width:0 !important;margin:0 !important}
   #page-therapist .therapist-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
   #page-therapist .therapist-filters .fc{width:100%;padding:12px 10px;font-size:14px}
   #page-therapist .therapist-request{bottom:calc(var(--nb) + env(safe-area-inset-bottom) + 26px);width:calc(100% - 32px);padding:16px 20px;font-size:17px}
@@ -601,7 +619,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
                 <input id="t-search" type="text" placeholder="Search by name or code..." onkeyup="renderTherapistGrid()"/>
                 <span class="si-clear" id="t-search-clear" onclick="clearTSearch()">✕</span>
             </div>
-            <div style="display:block; width:100%;">
+            <div class="sr-controls therapist-filters">
                 <button class="fc on" id="tf-all" onclick="setTFilter('all')">All</button>
                 <button class="fc" id="tf-med" onclick="setTFilter('Medicines & Oils')">🌿 Med/Oils</button>
                 <button class="fc" id="tf-con" onclick="setTFilter('Consumables')">🧴 Consumables</button>
@@ -645,7 +663,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
         <div class="ch"><div class="ct">🏪 Main Store</div><button class="btn bp bsm" onclick="exportCSV('main')">↓ CSV</button></div>
         <div class="sr">
           <div class="sw2"><span class="si">⌕</span><input id="ms-q" type="text" placeholder="Search..." onkeyup="renderStore('main')"/></div>
-          <div style="display:inline-block;">
+          <div class="sr-controls">
               <button class="fc on" onclick="setF('main','all',this)">All</button>
               <button class="fc" onclick="setF('main','Medicines & Oils',this)">🌿 Med/Oils</button>
               <button class="fc" onclick="setF('main','Consumables',this)">🧴 Consumables</button>
@@ -661,7 +679,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
         <div class="ch"><div class="ct">🧴 Sub Store</div></div>
         <div class="sr">
           <div class="sw2"><span class="si">⌕</span><input id="ss-q" type="text" placeholder="Search..." onkeyup="renderStore('sub')"/></div>
-          <div style="display:inline-block;">
+          <div class="sr-controls">
               <button class="fc on" onclick="setF('sub','all',this)">All</button>
               <button class="fc" onclick="setF('sub','low',this)">⚠ Low</button>
           </div>
@@ -755,7 +773,7 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
         <div class="ch"><div class="ct">≡ Movement Log</div><button class="btn bp bsm" onclick="exportCSV('movements')">↓ CSV</button></div>
         <div class="sr">
           <div class="sw2"><span class="si">⌕</span><input id="mov-q" type="text" placeholder="Search..." onkeyup="renderMovements()"/></div>
-          <div style="display:inline-block;">
+          <div class="sr-controls">
               <button class="fc on" onclick="setMF('all',this)">All</button>
               <button class="fc" onclick="setMF('IN',this)">IN</button>
               <button class="fc" onclick="setMF('OUT',this)">OUT</button>
@@ -775,8 +793,8 @@ tbody tr:hover{background:rgba(255,255,255,1); transform: scale(1.005); box-shad
           <button class="tb" onclick="showRepTab('monthly',this)">Monthly</button>
         </div>
         <div class="sr" style="margin-top:14px; border-bottom:none; background:transparent;">
-            <div class="fi" style="display:inline-block; width:45%; margin-right:2%;"><select id="rep-staff" onchange="renderReports(currentRepPeriod)"><option value="all">All Staff</option></select></div>
-            <div class="fi" style="display:inline-block; width:45%;"><select id="rep-room" class="room-select" onchange="renderReports(currentRepPeriod)"><option value="all">All Rooms</option></select></div>
+            <div class="fi" style="width:calc(50% - 8px);"><select id="rep-staff" onchange="renderReports(currentRepPeriod)"><option value="all">All Staff</option></select></div>
+            <div class="fi" style="width:calc(50% - 8px);"><select id="rep-room" class="room-select" onchange="renderReports(currentRepPeriod)"><option value="all">All Rooms</option></select></div>
         </div>
         <div class="tp on" id="rep-daily"><div class="rsg" id="rg-daily"></div><div class="ts"><table><thead><tr><th>Time</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Notes</th></tr></thead><tbody id="rt-daily"></tbody></table></div></div>
         <div class="tp" id="rep-weekly"><div class="rsg" id="rg-weekly"></div><div class="ts"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Staff</th><th>Room/Notes</th></tr></thead><tbody id="rt-weekly"></tbody></table></div></div>
@@ -1727,7 +1745,7 @@ function renderLinen() {
         '<div class="lcg">' +
           '<div class="lci la"><div class="lcn">'+(l.available||0)+'</div><div class="lcl">Available</div></div>' +
           '<div class="lci lu"><div class="lcn">'+(l.inUse||0)+'</div><div class="lcl">In Use</div></div>' +
-          '<div class="lci lw"><div class="lcn">'+(l.inWash||0)+'</div><div class="lcl">In Wash</div></div>' +
+          '<div class="lci lwi"><div class="lcn">'+(l.inWash||0)+'</div><div class="lcl">In Wash</div></div>' +
         '</div>' +
         '<div class="lbg">' +
           '<button class="btn bp" onclick="openLinen(\''+(l.id||'')+'\',\'issue\')">Issue</button>' +

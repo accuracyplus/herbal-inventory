@@ -1,0 +1,9 @@
+# HiFive Inventory — Pages client.
+#
+# This file stops wrangler walking up to the repo root and finding the API Worker's config.
+# `name` is the safety net Transport learned the hard way (4 September 2026): a bare
+# `wrangler pages deploy` with no project picks one, and once deployed the HiFive ID portal
+# over another app. The deploy script still passes --project-name explicitly.
+name = "hifive-inventory"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-06-01"

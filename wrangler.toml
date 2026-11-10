@@ -1,0 +1,51 @@
+# HiFive Inventory — API Worker
+#
+# The single source of truth for configuration, as in HiFive Recruitment and Transport. A deploy
+# overwrites remote config, so anything set only in the Cloudflare dashboard is dropped on the
+# next deploy. Add it here instead.
+
+name = "hifive-inventory"
+main = "src/worker.js"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ── D1 ────────────────────────────────────────────────────────────────────────
+# The system of record for every table. Create it once, then paste the id below:
+#   npx wrangler d1 create hifive-inventory
+[[d1_databases]]
+binding = "DB"
+database_name = "hifive-inventory"
+database_id = "PASTE-THE-DATABASE-ID-HERE"
+
+# ── HiFive ID service binding ────────────────────────────────────────────────
+# Required. Cloudflare refuses a Worker-to-Worker fetch on the same zone (error 1042), and every
+# HiFive module is on *.sinusuresh.workers.dev — without this every sign-in fails as a bad token.
+[[services]]
+binding = "HFID"
+service = "hifive-id"
+
+# No cron trigger: the account is at the free plan's limit of five. Nothing here needs one —
+# alerts are computed when Today is opened, and HiFive ID's hub asks /pending/service itself.
+
+[vars]
+APP_ORIGIN = "https://hifive-inventory.pages.dev"
+# For `npm run dev` only; ignored in production unless the page is served from one of these.
+LOCAL_ORIGINS = "http://localhost:5173"
+
+# Only the PATH of this URL is used; the origin comes from the HFID service binding.
+HFID_JWKS_URL = "https://hifive-id.sinusuresh.workers.dev/.well-known/jwks.json"
+HFID_ISSUER   = "hifive-id"
+HFID_AUDIENCE = "hifive-inventory"
+
+# What "Can access" in HiFive ID gives somebody Inventory has never held, at first sign-in, in the
+# unit whose name matches their HiFive ID entity. STAFF records use, moves linen and requests
+# stock; it sees quantities but no costs. Remove the line and a grant alone gives nothing: they
+# are told to ask their unit administrator. UNIT_ADMIN can never be given this way.
+HFID_GRANT_ROLE = "STAFF"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[version_metadata]
+binding = "CF_VERSION_METADATA"

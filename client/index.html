@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f6362" />
+    <meta name="description" content="HiFive Inventory — stock, requests, purchasing and linen." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <!--
+      The HiFive theme, applied before first paint (Design Guide Part J). theme-init.js and
+      theme-defaults.js fall back to the copy in /theme-fallback/v1 if the design system's site
+      is unreachable, without any inline script (the CSP allows none).
+    -->
+    <script src="https://hifive-design.pages.dev/theme/v1/boot.js"></script>
+    <script src="/theme-init.js"></script>
+    <script src="/theme-defaults.js"></script>
+    <link rel="stylesheet" href="https://hifive-design.pages.dev/theme/v1/theme.css" />
+    <title>HiFive Inventory</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

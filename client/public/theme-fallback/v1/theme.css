@@ -1,0 +1,209 @@
+/* ============================================================
+   HiFive design tokens — shared by HiFive ID and every app in the hub
+   ------------------------------------------------------------
+   Served by the HiFive ID worker at /theme.css and loaded by hub-button.js.
+   Apps never use these raw tokens directly; each app has a small alias file
+   mapping its own variable names onto these. Change a palette here and every
+   app follows.
+
+   Colour tokens are space-separated RGB triplets so they work with alpha:
+       background: rgb(var(--brand-500) / .15);
+   Ramps: --brand (primary), --pop (accent), --coral (warning/attention),
+          --ink (neutrals, 50 = lightest surface, 950 = darkest), --sky (third data colour)
+   Skins: <html data-skin="water|earth|air|fire|luna|sol|aami|aadi">  (default water = electric blue; air = teal)
+   Style: <html data-style="lit|soft">                   (default lit inside apps)
+   Mode : <html data-theme="light|dark">                 (default light)
+   ============================================================ */
+
+
+:root {
+  --sky-50: 233 238 251; --sky-100: 201 214 243; --sky-200: 157 179 230; --sky-300: 111 143 214; --sky-400: 74 111 192; --sky-500: 47 84 166; --sky-600: 31 69 146; --sky-700: 4 55 128; --sky-800: 8 42 96; --sky-900: 6 29 68;
+  --brand-50: 232 241 255; --brand-100: 197 220 255; --brand-200: 146 189 255; --brand-300: 92 156 255; --brand-400: 47 125 240; --brand-500: 2 94 196; --brand-600: 2 78 163; --brand-700: 3 63 131; --brand-800: 4 48 102; --brand-900: 2 32 74;
+  --pop-50: 230 251 254; --pop-100: 191 245 252; --pop-200: 134 235 248; --pop-300: 75 223 243; --pop-400: 31 212 238; --pop-500: 14 204 237; --pop-600: 10 167 195; --pop-700: 8 132 155; --pop-800: 7 100 118; --pop-900: 5 69 82;
+  --coral-50: 253 238 234; --coral-100: 251 213 204; --coral-200: 247 179 163; --coral-300: 243 144 122; --coral-400: 240 121 95; --coral-500: 232 93 62; --coral-600: 201 69 42; --coral-700: 163 56 31; --coral-800: 122 42 23; --coral-900: 82 28 15;
+  --ink-50: 243 246 251; --ink-100: 230 235 244; --ink-200: 204 213 229; --ink-300: 169 182 207; --ink-400: 125 140 171; --ink-500: 91 106 138; --ink-600: 68 80 108; --ink-700: 50 60 84; --ink-800: 32 41 64; --ink-900: 16 23 42; --ink-950: 3 8 18;
+}
+:root[data-skin="water"] {
+  --sky-50: 233 238 251; --sky-100: 201 214 243; --sky-200: 157 179 230; --sky-300: 111 143 214; --sky-400: 74 111 192; --sky-500: 47 84 166; --sky-600: 31 69 146; --sky-700: 4 55 128; --sky-800: 8 42 96; --sky-900: 6 29 68;
+  --brand-50: 232 241 255; --brand-100: 197 220 255; --brand-200: 146 189 255; --brand-300: 92 156 255; --brand-400: 47 125 240; --brand-500: 2 94 196; --brand-600: 2 78 163; --brand-700: 3 63 131; --brand-800: 4 48 102; --brand-900: 2 32 74;
+  --pop-50: 230 251 254; --pop-100: 191 245 252; --pop-200: 134 235 248; --pop-300: 75 223 243; --pop-400: 31 212 238; --pop-500: 14 204 237; --pop-600: 10 167 195; --pop-700: 8 132 155; --pop-800: 7 100 118; --pop-900: 5 69 82;
+  --coral-50: 253 238 234; --coral-100: 251 213 204; --coral-200: 247 179 163; --coral-300: 243 144 122; --coral-400: 240 121 95; --coral-500: 232 93 62; --coral-600: 201 69 42; --coral-700: 163 56 31; --coral-800: 122 42 23; --coral-900: 82 28 15;
+  --ink-50: 243 246 251; --ink-100: 230 235 244; --ink-200: 204 213 229; --ink-300: 169 182 207; --ink-400: 125 140 171; --ink-500: 91 106 138; --ink-600: 68 80 108; --ink-700: 50 60 84; --ink-800: 32 41 64; --ink-900: 16 23 42; --ink-950: 3 8 18;
+}
+
+:root[data-skin="earth"] {
+  --sky-50: 251 245 230; --sky-100: 244 230 194; --sky-200: 233 208 147; --sky-300: 220 184 100; --sky-400: 207 162 63; --sky-500: 191 140 36; --sky-600: 157 113 28; --sky-700: 124 89 22; --sky-800: 94 67 17; --sky-900: 67 48 12;
+  --brand-50: 233 243 238; --brand-100: 207 228 216; --brand-200: 166 203 182; --brand-300: 118 173 144; --brand-400: 76 144 110; --brand-500: 47 122 90; --brand-600: 37 99 72; --brand-700: 30 80 57; --brand-800: 24 63 46; --brand-900: 15 42 31;
+  --pop-50: 246 239 232; --pop-100: 234 216 200; --pop-200: 214 183 156; --pop-300: 191 148 114; --pop-400: 164 113 79; --pop-500: 135 87 58; --pop-600: 110 69 45; --pop-700: 86 54 35; --pop-800: 63 40 26; --pop-900: 42 26 17;
+  --coral-50: 253 238 234; --coral-100: 251 213 204; --coral-200: 247 179 163; --coral-300: 243 144 122; --coral-400: 240 121 95; --coral-500: 232 93 62; --coral-600: 201 69 42; --coral-700: 163 56 31; --coral-800: 122 42 23; --coral-900: 82 28 15;
+  --ink-50: 250 247 241; --ink-100: 241 235 224; --ink-200: 226 216 199; --ink-300: 203 189 166; --ink-400: 164 146 122; --ink-500: 125 108 87; --ink-600: 94 81 65; --ink-700: 71 61 49; --ink-800: 48 41 33; --ink-900: 30 26 21; --ink-950: 18 16 9;
+}
+
+:root[data-skin="air"] {
+  --brand-50: 227 247 245; --brand-100: 192 236 232; --brand-200: 138 220 214; --brand-300: 79 199 192; --brand-400: 34 176 169; --brand-500: 21 152 148; --brand-600: 16 124 122; --brand-700: 15 99 98; --brand-800: 15 79 78; --brand-900: 10 57 56;
+  --pop-50: 242 241 238; --pop-100: 226 224 218; --pop-200: 201 198 189; --pop-300: 168 164 153; --pop-400: 134 130 122; --pop-500: 102 99 92; --pop-600: 77 74 69; --pop-700: 58 56 52; --pop-800: 39 38 36; --pop-900: 23 22 21;
+  --coral-50: 253 238 234; --coral-100: 251 213 204; --coral-200: 247 179 163; --coral-300: 243 144 122; --coral-400: 240 121 95; --coral-500: 232 93 62; --coral-600: 201 69 42; --coral-700: 163 56 31; --coral-800: 122 42 23; --coral-900: 82 28 15;
+  --ink-50: 247 246 242; --ink-100: 238 236 230; --ink-200: 221 218 209; --ink-300: 196 192 181; --ink-400: 154 150 139; --ink-500: 114 110 101; --ink-600: 85 82 75; --ink-700: 63 61 56; --ink-800: 42 41 38; --ink-900: 27 26 24; --ink-950: 17 17 16;
+  --sky-50: 230 251 248; --sky-100: 197 245 239; --sky-200: 147 235 225; --sky-300: 91 220 208; --sky-400: 44 207 192; --sky-500: 25 184 170; --sky-600: 17 153 144; --sky-700: 15 122 116; --sky-800: 14 96 92; --sky-900: 10 70 68;
+}
+
+:root[data-skin="fire"] {
+  --sky-50:255 240 230; --sky-100:255 214 189; --sky-200:255 176 136; --sky-300:251 138 79; --sky-400:243 103 26; --sky-500:220 88 16; --sky-600:184 72 12; --sky-700:146 57 9; --sky-800:110 43 7; --sky-900:75 29 5;
+  --brand-50:251 235 231; --brand-100:245 201 191; --brand-200:235 154 136; --brand-300:223 106 81; --brand-400:207 68 38; --brand-500:175 38 16; --brand-600:147 31 13; --brand-700:118 25 10; --brand-800:90 19 8; --brand-900:62 13 5;
+  --pop-50:247 238 238; --pop-100:233 211 212; --pop-200:210 169 171; --pop-300:178 124 128; --pop-400:143 87 91; --pop-500:109 59 62; --pop-600:76 35 37; --pop-700:61 28 30; --pop-800:45 21 22; --pop-900:30 14 15;
+  --coral-50:255 247 230; --coral-100:255 233 191; --coral-200:255 213 138; --coral-300:253 191 87; --coral-400:247 166 46; --coral-500:227 141 20; --coral-600:187 112 14; --coral-700:148 88 11; --coral-800:111 66 8; --coral-900:76 45 5;
+  --ink-50:244 243 242; --ink-100:230 228 226; --ink-200:207 203 200; --ink-300:172 167 163; --ink-400:127 122 118; --ink-500:90 86 83; --ink-600:68 65 64; --ink-700:48 48 48; --ink-800:37 36 36; --ink-900:23 22 22; --ink-950:15 14 13;
+}
+
+:root[data-skin="luna"] {
+  --sky-50: 230 238 244; --sky-100: 194 214 227; --sky-200: 144 178 201; --sky-300: 95 141 171; --sky-400: 56 108 141; --sky-500: 29 82 116; --sky-600: 2 56 89; --sky-700: 3 47 74; --sky-800: 2 38 60; --sky-900: 1 28 64;
+  --brand-50: 233 242 248; --brand-100: 201 223 236; --brand-200: 155 194 218; --brand-300: 110 163 196; --brand-400: 74 132 171; --brand-500: 38 101 140; --brand-600: 31 85 119; --brand-700: 25 69 98; --brand-800: 19 54 77; --brand-900: 13 37 55;
+  --pop-50: 234 247 249; --pop-100: 201 235 240; --pop-200: 159 219 228; --pop-300: 120 199 212; --pop-400: 84 172 191; --pop-500: 61 147 166; --pop-600: 47 122 139; --pop-700: 38 98 114; --pop-800: 29 75 88; --pop-900: 20 52 62;
+  --coral-50: 253 238 234; --coral-100: 251 213 204; --coral-200: 247 179 163; --coral-300: 243 144 122; --coral-400: 240 121 95; --coral-500: 232 93 62; --coral-600: 201 69 42; --coral-700: 163 56 31; --coral-800: 122 42 23; --coral-900: 82 28 15;
+  --ink-50: 241 248 250; --ink-100: 226 238 242; --ink-200: 199 219 226; --ink-300: 163 191 202; --ink-400: 119 149 164; --ink-500: 85 113 127; --ink-600: 63 87 102; --ink-700: 47 66 80; --ink-800: 30 47 60; --ink-900: 15 31 45; --ink-950: 1 28 64;
+}
+
+:root[data-skin="sol"] {
+  --sky-50:255 250 240; --sky-100:255 242 219; --sky-200:255 227 179; --sky-300:247 208 144; --sky-400:233 184 106; --sky-500:209 157 73; --sky-600:173 126 51; --sky-700:135 97 36; --sky-800:99 71 24; --sky-900:66 48 15;
+  --brand-50:255 248 230; --brand-100:255 236 191; --brand-200:255 219 140; --brand-300:253 201 90; --brand-400:251 185 49; --brand-500:234 162 22; --brand-600:196 133 15; --brand-700:156 105 12; --brand-800:117 78 9; --brand-900:80 53 6;
+  --pop-50:255 241 232; --pop-100:255 217 194; --pop-200:255 182 138; --pop-300:251 148 82; --pop-400:244 122 45; --pop-500:234 97 19; --pop-600:201 79 14; --pop-700:163 63 11; --pop-800:125 48 9; --pop-900:86 33 7;
+  --coral-50:253 238 236; --coral-100:249 211 207; --coral-200:242 169 161; --coral-300:233 123 112; --coral-400:223 87 74; --coral-500:201 59 46; --coral-600:168 47 36; --coral-700:134 38 29; --coral-800:101 28 22; --coral-900:69 19 15;
+  --ink-50:253 249 242; --ink-100:246 238 223; --ink-200:233 220 196; --ink-300:210 191 156; --ink-400:169 143 108; --ink-500:128 105 76; --ink-600:96 78 57; --ink-700:74 60 44; --ink-800:53 42 31; --ink-900:36 28 20; --ink-950:21 16 11;
+}
+
+:root[data-skin="aami"] {
+  --sky-50:253 240 245; --sky-100:250 215 229; --sky-200:244 175 203; --sky-300:238 134 177; --sky-400:233 87 147; --sky-500:217 63 128; --sky-600:182 45 104; --sky-700:146 35 81; --sky-800:110 26 61; --sky-900:74 17 41;
+  --brand-50:243 236 250; --brand-100:224 205 241; --brand-200:193 156 227; --brand-300:160 108 212; --brand-400:129 64 192; --brand-500:107 31 173; --brand-600:97 12 159; --brand-700:78 10 128; --brand-800:59 7 98; --brand-900:40 5 68;
+  --pop-50:251 233 245; --pop-100:245 198 230; --pop-200:234 143 207; --pop-300:224 90 184; --pop-400:218 12 129; --pop-500:195 11 116; --pop-600:163 9 97; --pop-700:131 7 78; --pop-800:99 5 59; --pop-900:69 3 41;
+  --coral-50:253 238 240; --coral-100:249 211 216; --coral-200:242 168 178; --coral-300:233 122 138; --coral-400:221 86 105; --coral-500:198 58 79; --coral-600:165 45 64; --coral-700:133 36 51; --coral-800:100 26 38; --coral-900:69 17 26;
+  --ink-50:248 245 250; --ink-100:238 232 243; --ink-200:218 208 227; --ink-300:185 169 200; --ink-400:143 122 163; --ink-500:108 90 128; --ink-600:83 68 98; --ink-700:64 52 75; --ink-800:44 35 52; --ink-900:29 22 34; --ink-950:18 13 22;
+}
+
+:root[data-skin="aadi"] {
+  --sky-50:238 246 248; --sky-100:212 232 236; --sky-200:176 211 218; --sky-300:141 190 200; --sky-400:112 163 172; --sky-500:83 147 163; --sky-600:68 122 135; --sky-700:54 97 107; --sky-800:40 72 79; --sky-900:26 48 53;
+  --brand-50:233 241 245; --brand-100:199 219 229; --brand-200:148 188 205; --brand-300:83 147 163; --brand-400:47 112 137; --brand-500:23 86 111; --brand-600:19 71 92; --brand-700:15 57 73; --brand-800:11 43 55; --brand-900:7 29 38;
+  --pop-50:251 236 237; --pop-100:244 207 208; --pop-200:233 162 164; --pop-300:217 116 119; --pop-400:198 85 90; --pop-500:175 61 65; --pop-600:147 50 54; --pop-700:118 40 43; --pop-800:90 30 33; --pop-900:63 20 23;
+  --coral-50:255 247 230; --coral-100:255 233 191; --coral-200:255 213 138; --coral-300:253 191 87; --coral-400:247 166 46; --coral-500:227 141 20; --coral-600:187 112 14; --coral-700:148 88 11; --coral-800:111 66 8; --coral-900:76 45 5;
+  --ink-50:241 244 246; --ink-100:224 230 234; --ink-200:195 206 213; --ink-300:156 173 184; --ink-400:111 133 147; --ink-500:79 100 114; --ink-600:59 76 88; --ink-700:43 56 66; --ink-800:30 40 49; --ink-900:19 26 31; --ink-950:11 16 19;
+}
+
+/* ---- page ground behind the app column, per skin. Dark applies only when the person chose it. ---- */
+:root { --page-bg: #025ec4; --page-fg: #10172a; }
+:root[data-skin="water"] { --page-bg: #025ec4; --page-fg: #10172a; }
+:root[data-theme="dark"] { --page-bg: #030812; --page-fg: #e6ebf4; color-scheme: dark; }
+:root[data-skin="water"][data-theme="dark"] { --page-bg: #030812; --page-fg: #e6ebf4; color-scheme: dark; }
+:root[data-skin="earth"] { --page-bg: #2f7a5a; --page-fg: #1e1a15; }
+:root[data-skin="earth"][data-theme="dark"] { --page-bg: #0f2a1f; --page-fg: #f1ebe0; color-scheme: dark; }
+:root[data-skin="air"] { --page-bg: #2ccfc0; --page-fg: #1b1a18; }
+:root[data-skin="air"][data-theme="dark"] { --page-bg: #0b2b29; --page-fg: #eeece6; color-scheme: dark; }
+:root[data-skin="fire"] { --page-bg: #af2610; --page-fg: #171616; }
+:root[data-skin="fire"][data-theme="dark"] { --page-bg: #0f0e0d; --page-fg: #e6e4e2; color-scheme: dark; }
+:root[data-skin="luna"] { --page-bg: #26658c; --page-fg: #011c40; }
+:root[data-skin="luna"][data-theme="dark"] { --page-bg: #011c40; --page-fg: #e2eef2; color-scheme: dark; }
+:root[data-skin="sol"] { --page-bg: #fbb931; --page-fg: #241c14; }
+:root[data-skin="sol"][data-theme="dark"] { --page-bg: #1c130a; --page-fg: #fff2db; color-scheme: dark; }
+:root[data-skin="aami"] { --page-bg: #940b92; --page-fg: #1d1622; }
+:root[data-skin="aami"][data-theme="dark"] { --page-bg: #1a0a2a; --page-fg: #f3ecfa; color-scheme: dark; }
+:root[data-skin="aadi"] { --page-bg: #17566f; --page-fg: #131a1f; }
+:root[data-skin="aadi"][data-theme="dark"] { --page-bg: #131a1f; --page-fg: #e0e6ea; color-scheme: dark; }
+
+/* ---- semantic tokens: fixed meaning regardless of skin ---- */
+:root {
+  --ok: 31 157 99;          /* success green  */
+  --warn: 217 145 42;       /* amber          */
+  --danger: 207 53 82;      /* red            */
+  --info: var(--sky-500);
+  --ok-soft: 31 157 99;  --warn-soft: 217 145 42;  --danger-soft: 207 53 82;   /* use with / .12 alpha */
+
+  /* type */
+  --font-display: 'Baloo 2', 'Nunito', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: Inter, 'Nunito', -apple-system, 'Segoe UI', Roboto, 'Noto Sans Malayalam', sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* radii & shadows (lit) */
+  --r-sm: 10px; --r-md: 16px; --r-lg: 24px; --r-pill: 999px;
+  --shadow-card: 0 1px 2px rgb(var(--ink-900) / .06), 0 8px 24px -12px rgb(var(--ink-900) / .18);
+  --shadow-float: 0 16px 40px -16px rgb(var(--ink-900) / .45);
+
+  /* derived surfaces (apps read these, not the ramps) */
+  --surface-0: rgb(var(--ink-50));          /* page ground            */
+  --surface-1: #ffffff;                      /* card                   */
+  --surface-2: rgb(var(--ink-100));          /* inset / pressed        */
+  --line: rgb(var(--ink-200));
+  --line-strong: rgb(var(--ink-300));
+  --text: rgb(var(--ink-800));
+  --text-strong: rgb(var(--ink-900));
+  --text-muted: rgb(var(--ink-600));
+  --text-faint: rgb(var(--ink-500));
+  --primary: rgb(var(--brand-600));
+  --primary-hover: rgb(var(--brand-700));
+  --primary-soft: rgb(var(--brand-50));
+  --on-primary: #ffffff;
+  --accent: rgb(var(--pop-600));
+  --accent-soft: rgb(var(--pop-50));
+  --attention: rgb(var(--coral-600));
+  --attention-soft: rgb(var(--coral-50));
+}
+.dark, [data-theme="dark"] {
+  --surface-0: rgb(var(--ink-950));
+  --surface-1: rgb(var(--ink-800));
+  --surface-2: rgb(var(--ink-900));
+  --line: rgb(var(--ink-700));
+  --line-strong: rgb(var(--ink-600));
+  --text: rgb(var(--ink-100));
+  --text-strong: #ffffff;
+  --text-muted: rgb(var(--ink-300));
+  --text-faint: rgb(var(--ink-400));
+  --primary: rgb(var(--brand-400));
+  --primary-hover: rgb(var(--brand-300));
+  --primary-soft: rgb(var(--brand-900) / .4);
+  --accent: rgb(var(--pop-400));
+  --accent-soft: rgb(var(--pop-900) / .35);
+  --attention: rgb(var(--coral-400));
+  --attention-soft: rgb(var(--coral-900) / .35);
+  --shadow-card: 0 1px 0 rgb(255 255 255 / .04) inset, 0 12px 32px -16px rgb(0 0 0 / .7);
+}
+
+/* ---- soft style: only cards and pills change; dense tables stay flat ---- */
+[data-style="soft"] {
+  --surface-1: linear-gradient(145deg, rgb(255 255 255 / .94), rgb(var(--brand-50) / .9));
+  --shadow-card: 12px 12px 28px rgb(var(--ink-300) / .55), -10px -10px 24px rgb(255 255 255 / .8), inset 0 1px 0 #ffffff;
+  --shadow-inset: inset 3px 3px 6px rgb(var(--ink-300) / .6), inset -3px -3px 6px #ffffff;
+  --r-md: 20px; --r-lg: 28px;
+}
+.dark[data-style="soft"], [data-theme="dark"][data-style="soft"] {
+  --surface-1: linear-gradient(145deg, rgb(var(--ink-700) / .9), rgb(var(--brand-900) / .55));
+  --shadow-card: 10px 10px 26px rgb(var(--ink-950) / .85), -6px -6px 18px rgb(var(--ink-700) / .3), inset 0 1px 0 rgb(255 255 255 / .16);
+  --shadow-inset: inset 4px 4px 10px rgb(var(--ink-950)), inset -4px -4px 10px rgb(var(--ink-700) / .5);
+}
+
+/* ---- text on colour: per-palette fixes so every button and pill reaches 4.5:1 ----
+   Checked by scripts/check-contrast.mjs (Design Guide Part F). White on a light primary
+   fails in dark mode for most palettes, and Sol's gold fails even in light, so the
+   text colour is chosen per palette and mode. Light mode keeps white everywhere but Sol.
+   --on-attention is the text colour for a filled attention pill; light mode is white,
+   dark mode is ink, and Fire and Aadi (orange coral) darken the fill one step instead. */
+:root { --on-attention: #ffffff; }
+:root[data-skin="sol"] { --on-primary: rgb(var(--ink-950)); }
+:root[data-skin="fire"], :root[data-skin="aadi"] { --attention: rgb(var(--coral-700)); }
+
+:root[data-skin="water"][data-theme="dark"], :root[data-skin="water"].dark,
+:root[data-skin="earth"][data-theme="dark"], :root[data-skin="earth"].dark,
+:root[data-skin="air"][data-theme="dark"],   :root[data-skin="air"].dark,
+:root[data-skin="sol"][data-theme="dark"],   :root[data-skin="sol"].dark { --on-primary: rgb(var(--ink-950)); }
+:root[data-skin="fire"][data-theme="dark"],  :root[data-skin="fire"].dark,
+:root[data-skin="aami"][data-theme="dark"],  :root[data-skin="aami"].dark,
+:root[data-skin="aadi"][data-theme="dark"],  :root[data-skin="aadi"].dark { --on-primary: #ffffff; }
+/* Luna's brand-400 passes with neither white nor ink; one step darker with white does. */
+:root[data-skin="luna"][data-theme="dark"],  :root[data-skin="luna"].dark { --primary: rgb(var(--brand-500)); --primary-hover: rgb(var(--brand-400)); --on-primary: #ffffff; }
+:root[data-theme="dark"], :root.dark { --on-attention: rgb(var(--ink-950)); --attention: rgb(var(--coral-400)); }
+:root[data-skin="fire"][data-theme="dark"], :root[data-skin="fire"].dark,
+:root[data-skin="aadi"][data-theme="dark"], :root[data-skin="aadi"].dark { --attention: rgb(var(--coral-400)); }
+
+/* ---- performance tier (Design Guide Part K) ----
+   boot.js sets data-tier="full|lite" on <html> before first paint. Lite keeps every
+   number, hint and action; it only drops decoration. Soft falls back to Lit. */
+[data-tier="lite"] { --shadow-card: 0 1px 2px rgb(var(--ink-900) / .08); --shadow-float: 0 2px 6px rgb(var(--ink-900) / .16); }
+[data-tier="lite"][data-style="soft"] { --surface-1: #ffffff; --shadow-inset: none; --r-md: 16px; --r-lg: 24px; }
+.dark[data-tier="lite"][data-style="soft"], [data-theme="dark"][data-tier="lite"][data-style="soft"] { --surface-1: rgb(var(--ink-800)); }
+[data-tier="lite"] * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; animation: none !important; transition: none !important; }

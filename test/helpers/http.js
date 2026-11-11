@@ -4,7 +4,7 @@
  * is served through the HFID binding — so sign-in is verified exactly as in production.
  */
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createSign, generateKeyPairSync } from 'node:crypto';
@@ -28,6 +28,9 @@ export const PEOPLE = {
   viewer:  { id: 'p-viewer',  code: 'HPV001',  name: 'Vera Viewer',     seats: { [HP]: ['VIEWER'] } },
   hv:      { id: 'p-hv',      code: 'HVK001',  name: 'Hari Valley',     seats: { [HV]: ['STOREKEEPER', 'MANAGER'] } },
 };
+
+/** A room and a person, for tests about something else: the default unit setting needs both. */
+export const FOR = { areaId: AREA.room1, personId: PEOPLE.staff.id };
 
 let key = null;
 function hfidKey() {
@@ -55,6 +58,9 @@ export const tokenFor = (who) => {
 
 export function testEnv(extra = {}) {
   const DB = new TestD1(join(root, 'schema.sql'));
+  for (const f of readdirSync(join(root, 'migrations')).filter((n) => n.endsWith('.sql')).sort()) {
+    DB.exec(readFileSync(join(root, 'migrations', f), 'utf8'));
+  }
   const now = new Date().toISOString();
   DB.exec(`
     INSERT INTO units (id, code, name, active, created_at) VALUES

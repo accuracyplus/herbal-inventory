@@ -26,8 +26,12 @@ npx wrangler d1 create hifive-inventory
 
 ```powershell
 npm run migrate
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0001_departments_and_people.sql
 npm run seed
 ```
+
+   Every later file in `migrations/` is run the same way, in number order. `/version` names any
+   that are missing.
 
 4. Deploy the Worker and check it answers:
 
@@ -74,14 +78,16 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
 ## C. In the Inventory app (signed in as yourself)
 
 1. **Admin → Stores**: check "Main store" and "Spa store"; rename or add any others.
-2. **Admin → Rooms & areas**: the import adds the old app's rooms; add any missing.
+2. **Admin → Departments**: add them (Spa, Front office). **Admin → Rooms & areas**: the import
+   adds the old app's rooms; add any missing and give each its department.
 3. **Admin → Import**: open the old app's data link shown there, save the page, choose the file,
    and press **Check first** only. Read the report and fix anything it lists in the old app.
    The real import is step D2.
 4. **Admin → People**: add each person with their HiFive ID employee code and role. The import
    report lists the names the old app knew.
 5. **Purchasing → Suppliers**: add the suppliers.
-6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park.
+6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park, and
+   whether use is recorded against the room, the person, or both (both unless you change it).
 
 ## D. Switch-over
 

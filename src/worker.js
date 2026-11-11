@@ -29,8 +29,8 @@ import { REPORTS } from './domain/reports.js';
 import { today } from './domain/today.js';
 import { allSettings } from './domain/settings.js';
 import {
-  auditLog, listPeople, listSuppliers, listUnits, requireGroupAdmin, saveArea, savePerson, saveSettings, saveStore,
-  saveSupplier, saveUnit,
+  auditLog, listDepartments, listPeople, listPeopleToPick, listSuppliers, listUnits, requireGroupAdmin, saveArea,
+  saveDepartment, savePerson, saveSettings, saveStore, saveSupplier, saveUnit,
 } from './domain/admin.js';
 import { runImport } from './domain/importer.js';
 import { pendingForStaff } from './domain/pending.js';
@@ -313,6 +313,7 @@ api('GET', '/api/lookup', async ({ env, url }, user) => {
 });
 api('GET', '/api/stores', async ({ env, url }, user) => json(await listStores(env, user, { all: url.searchParams.get('all') === '1' })));
 api('GET', '/api/areas', async ({ env, url }, user) => json(await listAreas(env, user, { all: url.searchParams.get('all') === '1' })));
+api('GET', '/api/departments', async ({ env, url }, user) => json(await listDepartments(env, user, { all: url.searchParams.get('all') === '1' })));
 api('GET', '/api/categories', async ({ env }, user) => json(await categories(env, user)));
 api('GET', '/api/suppliers', async ({ env, url }, user) => json(await listSuppliers(env, user, { all: url.searchParams.get('all') === '1' })));
 api('GET', '/api/batches', async ({ env, url }, user) => {
@@ -456,6 +457,9 @@ api('POST', '/api/stores', async ({ request, env }, user) => { requireMay(user, 
 api('PUT', '/api/stores/:id', async ({ request, env, params }, user) => { requireMay(user, 'admin'); return json(await saveStore(env, user, await body(request), params.id)); });
 api('POST', '/api/areas', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await saveArea(env, user, await body(request)), 201); });
 api('PUT', '/api/areas/:id', async ({ request, env, params }, user) => { requireMay(user, 'admin'); return json(await saveArea(env, user, await body(request), params.id)); });
+api('POST', '/api/departments', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await saveDepartment(env, user, await body(request)), 201); });
+api('PUT', '/api/departments/:id', async ({ request, env, params }, user) => { requireMay(user, 'admin'); return json(await saveDepartment(env, user, await body(request), params.id)); });
+api('GET', '/api/people/pick', async ({ env }, user) => { requireMay(user, 'use.for_others'); return json(await listPeopleToPick(env, user)); });
 api('GET', '/api/people', async ({ env }, user) => { requireMay(user, 'admin'); return json(await listPeople(env, user)); });
 api('PUT', '/api/people', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await savePerson(env, user, await body(request))); });
 api('GET', '/api/settings', async ({ env }, user) => json(await allSettings(env, user.unitId)));

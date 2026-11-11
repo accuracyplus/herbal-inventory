@@ -34,6 +34,7 @@ const DECIDE = ['MANAGER', 'UNIT_ADMIN'];
 export const RULES = {
   'stock.view':        ALL,
   'stock.use':         ['STAFF', ...OPS],                  // record use, move linen
+  'use.for_others':    OPS,                                // say that somebody else used it
   'cost.view':         ['PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],
   'request.create':    ['STAFF', 'STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN'],
   'request.decide':    DECIDE,
@@ -91,7 +92,7 @@ export async function storeFor(env, user, storeId, { forWrite = true } = {}) {
 export async function areaFor(env, user, areaId) {
   if (!areaId) return null;
   const area = await env.DB.prepare(
-    `SELECT id, code, name, active FROM areas WHERE id = ? AND unit_id = ?`,
+    `SELECT id, code, name, active, department_id FROM areas WHERE id = ? AND unit_id = ?`,
   ).bind(areaId, user.unitId).first();
   if (!area) refuse('NOT_FOUND', 'That room or area does not exist in this unit.', 404);
   return area;

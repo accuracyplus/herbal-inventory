@@ -24,6 +24,7 @@ and HiFive ID's hub asks `/pending/service` itself.
 - `units` — one per HiFive business. `name` must match the HiFive ID entity name.
 - `staff` — one row per person, keyed by HiFive ID **employee code** (the sign-in join).
 - `staff_units` — a person's roles in a unit, optionally limited to some stores.
+- `departments` — per unit; every room or bench (`areas`) belongs to one once the unit has any.
 - The client sends `x-unit`; the server checks the seat and fences every query on that unit.
   Another unit's records answer 404, never 403.
 - `staff.group_admin` = every unit, every role — only while HiFive ID also says `admin`/`hr`.
@@ -52,6 +53,12 @@ without its stock, nor stock without its receipt.
   back; the total changes only on receipt or discard.
 - Counts snapshot the system quantity at the start and post `counted − snapshot` to the balance
   at approval, so stock used while the shelf was counted is not taken twice.
+
+- Use: every `ISSUE` goes through `src/domain/consumption.js`, which applies the unit's
+  `consumption.record` setting (room, person, or both; both by default). `person_id`,
+  `person_name` and `department_id` are copied onto the movement, so moving a room to another
+  department later does not rewrite past figures. Staff record as themselves; `use.for_others`
+  lets store roles name somebody else. Stock given out against a request goes on the requester.
 
 ## 4. HiFive ID
 

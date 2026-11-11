@@ -27,7 +27,9 @@ export async function listStores(env, user, { all = false } = {}) {
 
 export async function listAreas(env, user, { all = false } = {}) {
   const { results } = await env.DB.prepare(
-    `SELECT id, code, name, kind, active FROM areas WHERE unit_id = ? ${all ? '' : 'AND active = 1'} ORDER BY name`,
+    `SELECT a.id, a.code, a.name, a.kind, a.active, a.department_id, d.name AS department_name
+       FROM areas a LEFT JOIN departments d ON d.id = a.department_id
+      WHERE a.unit_id = ? ${all ? '' : 'AND a.active = 1'} ORDER BY a.name`,
   ).bind(user.unitId).all();
   return results || [];
 }

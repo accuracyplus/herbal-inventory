@@ -29,10 +29,16 @@ function Done({ text, again, children }) {
 }
 
 export function UseScreen() {
-  const { stock, lists, route, refreshStock, refreshBadges, toast } = useApp();
+  const { me, can, stock, lists, route, refreshStock, refreshBadges, toast } = useApp();
   const stores = useMyStores('SUB');
+  const mode = me.settings['consumption.record'] || 'both';
+  const needRoom = mode !== 'person';
+  const needPerson = mode !== 'room';
+  const forOthers = can('use.for_others');
+  const { data: people, error: peopleError } = useData(needPerson && forOthers ? '/api/people/pick' : null);
   const [storeId, setStoreId] = useState('');
   const [areaId, setAreaId] = useState('');
+  const [personId, setPersonId] = useState('');
   const [purpose, setPurpose] = useState('');
   const [lines, setLines] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -50,22 +56,36 @@ export function UseScreen() {
   const save = async () => {
     setBusy(true); setErr(null);
     try {
-      await post('/api/use', { storeId, areaId: areaId || null, purpose, lines: toPayload(lines) });
-      setDone({ n: lines.length, store: stores.find((s) => s.id === storeId)?.name, area: lists.areas.find((a) => a.id === areaId)?.name });
+      await post('/api/use', { storeId, areaId: areaId || null, personId: personId || null, purpose, lines: toPayload(lines) });
+      setDone({
+        n: lines.length, store: stores.find((s) => s.id === storeId)?.name, area: lists.areas.find((a) => a.id === areaId)?.name,
+        person: personId ? people?.find((p) => p.id === personId)?.name : (needPerson ? me.name : null),
+      });
       toast('Use recorded');
-      setLines([]); setPurpose('');
+      setLines([]); setPurpose(''); setPersonId('');
       refreshStock(); refreshBadges();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
-  if (done) return <Page title="Record use"><Done text={`Recorded ${done.n} item${done.n > 1 ? 's' : ''} from ${done.store}${done.area ? ` for ${done.area}` : ''}.`} again={() => setDone(null)} /></Page>;
+  if (done) return <Page title="Record use"><Done text={`Recorded ${done.n} item${done.n > 1 ? 's' : ''} from ${done.store}${done.area ? ` for ${done.area}` : ''}${done.person ? ` · used by ${done.person}` : ''}.`} again={() => setDone(null)} /></Page>;
   return (
-    <Page title="Record use" subtitle="What was taken from the shelf, and where it went.">
+    <Page title="Record use" subtitle="What was taken from the shelf, where it went, and who used it.">
       <Card>
         <div className="form two">
           <Field label="From store"><Select value={storeId} onChange={(v) => { setStoreId(v); }} options={stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
-          <Field label="Room or area" hint="Where it was used. Leave empty for general use."><Select value={areaId} onChange={setAreaId} placeholder="Not a room" options={lists.areas.map((a) => ({ value: a.id, label: a.name }))} /></Field>
-          <Field label="Purpose" className="span2"><input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Optional — e.g. Abhyanga, Kizhi, cleaning, tester" maxLength={120} /></Field>
+          <Field label="Room or area" hint={needRoom ? 'Where it was used.' : 'Where it was used. Leave empty for general use.'}>
+            <Select value={areaId} onChange={setAreaId} placeholder={needRoom ? 'Choose a room or area' : 'Not a room'} options={lists.areas.map((a) => ({ value: a.id, label: a.name }))} />
+          </Field>
+          {needPerson && (
+            <Field label="Used by" hint={forOthers ? 'The person who used this stock.' : 'Recorded under your name. To record for somebody else, ask the store keeper.'}>
+              {forOthers
+                ? <Select value={personId} onChange={setPersonId} placeholder="Choose a person" options={(people || []).map((p) => ({ value: p.id, label: p.name }))} />
+                : <input value={me.name} disabled />}
+            </Field>
+          )}
+          <Field label="Purpose" className={needPerson ? '' : 'span2'}><input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Optional — e.g. Abhyanga, Kizhi, cleaning, tester" maxLength={120} /></Field>
         </div>
+        {needRoom && lists.areas.length === 0 && <div className="note warn">No rooms or areas are set up yet. Ask your unit administrator to add them in Admin.</div>}
+        <ErrorNote error={peopleError} />
       </Card>
       <Card title="Items">
         <LineEditor mode="out" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} pickerFilter={(i) => !i.isLinen} />

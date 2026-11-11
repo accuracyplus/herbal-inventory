@@ -13,7 +13,8 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
 | `schema.sql` | D1 schema, with the append-only triggers on the ledger and audit log |
 | `client/` | React app (Vite), on the HiFive design tokens |
 | `seed/` | Herbal Park, its two stores, and the first administrator |
-| `test/` | 48 tests against a real SQLite engine and real RS256 tokens: `npm test` |
+| `migrations/` | Schema changes after `schema.sql`, run in number order |
+| `test/` | Tests against a real SQLite engine and real RS256 tokens: `npm test`. `test/serve.mjs` runs the app on this PC with throwaway data |
 | `docs/DEPLOY.md` | Step-by-step go-live checklist |
 | `ARCHITECTURE.md` | How it works and why |
 
@@ -23,8 +24,9 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
   one person can hold different roles in several units and switch between them.
 - **Stock** per store, with reorder / critical / top-up levels per store, weighted average cost,
   batches with expiry dates issued first-expiry-first (expired stock is never handed out).
-- **Record use** to a room or purpose; **transfers** between stores; **receive deliveries**
-  against a purchase order or as a local purchase.
+- **Record use** against a room and the person who used it, with the room's department kept on
+  the record (each unit chooses room, person or both); **transfers** between stores; **receive
+  deliveries** against a purchase order or as a local purchase.
 - **Requests**: staff ask, a manager approves (or the unit switches approval off), the store gives
   out in one go or several.
 - **Purchasing**: "what to buy" from levels and open orders, purchase orders from draft to

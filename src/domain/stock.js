@@ -94,7 +94,8 @@ async function fefo(env, { store, item, qty, kind, preferExpired }) {
  *   batchNo, expiry,             for a positive line on an expiry-tracked item
  *   batchId,                     to take from one named batch
  *   unitCost,                    receipts only: moves the item's average cost
- *   areaId, counterpartStoreId, reason, note
+ *   areaId, counterpartStoreId, reason, note,
+ *   personId, personName, departmentId   ISSUE: who used it, and the room's department then
  * }
  * posting: { kind, unitId, doc: { type, id, ref }, actor: { id, name }, at, preferExpired }
  */
@@ -207,15 +208,16 @@ export async function buildPosting(env, posting, lines) {
     stmts.push(env.DB.prepare(
       `INSERT INTO movements (id, unit_id, at, kind, item_id, store_id, batch_id, qty, balance_after,
                               unit_cost, value, doc_type, doc_id, doc_ref, area_id, counterpart_store_id,
-                              reason, note, actor_id, actor_name)
+                              reason, note, actor_id, actor_name, person_id, person_name, department_id)
        VALUES (?,?,?,?,?,?, ${batchSql ? batchSql.sql : 'NULL'}, ?,
                (SELECT qty FROM balances WHERE store_id = ? AND item_id = ?),
-               ?,?,?,?,?,?,?,?,?,?,?)`,
+               ?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     ).bind(id, unitId, at, kind, p.item.id, p.store.id, ...(batchSql ? batchSql.args : []), p.qty,
            p.store.id, p.item.id,
            unitCost, m2(p.qty * unitCost), doc.type ?? null, doc.id ?? null, doc.ref ?? null,
            p.areaId ?? null, p.counterpartStoreId ?? null, p.reason ?? null, p.note ?? null,
-           actor?.id ?? null, actor?.name ?? null));
+           actor?.id ?? null, actor?.name ?? null,
+           p.personId ?? null, p.personName ?? null, p.departmentId ?? null));
     moved.push({
       id, item: p.item, itemId: p.item.id, storeId: p.store.id, qty: p.qty, unitCost,
       batchId: p.batchId ?? null, batchNo: p.batchNo ?? null, expiry: p.expiry ?? null,

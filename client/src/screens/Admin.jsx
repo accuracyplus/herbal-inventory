@@ -16,6 +16,7 @@ export default function Admin() {
   const tabs = [
     can('items.edit') && ['items', 'Items'],
     can('admin') && ['stores', 'Stores'],
+    can('admin') && ['departments', 'Departments'],
     can('admin') && ['areas', 'Rooms & areas'],
     can('admin') && ['people', 'People'],
     can('admin') && ['settings', 'Settings'],
@@ -29,6 +30,7 @@ export default function Admin() {
       <Segmented label="Section" value={tab} onChange={setTab} options={tabs.map(([v, l]) => ({ value: v, label: l }))} />
       {tab === 'items' && <Items />}
       {tab === 'stores' && <Stores />}
+      {tab === 'departments' && <Departments />}
       {tab === 'areas' && <Areas />}
       {tab === 'people' && <People />}
       {tab === 'settings' && <Settings />}
@@ -72,7 +74,7 @@ function Items() {
   );
 }
 
-function SimpleList({ path, title, kinds, empty, makeBody, fields }) {
+function SimpleList({ path, title, kinds, empty, makeBody, fields, columns = [] }) {
   const { toast, refreshStock } = useApp();
   const { data, error, loading, reload } = useData(`${path}?all=1`);
   const [editing, setEditing] = useState(null);
@@ -88,14 +90,15 @@ function SimpleList({ path, title, kinds, empty, makeBody, fields }) {
   };
   return (
     <>
-      <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => setEditing({ kind: kinds[0].value, active: 1 })}>Add</Button></div>
+      <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => setEditing({ kind: kinds?.[0].value, active: 1 })}>Add</Button></div>
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}
       {data && (
         <Card pad={false}>
           <Table rows={data} onRow={(r) => setEditing({ ...r })} empty={empty} columns={[
             { key: 'name', label: title, primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name} {!r.active && <Pill tone="faint">Closed</Pill>}</span><span className="row-sub"><code>{r.code}</code></span></span> },
-            { key: 'kind', label: 'Kind', render: (r) => kinds.find((k) => k.value === r.kind)?.label || r.kind },
+            ...(kinds ? [{ key: 'kind', label: 'Kind', render: (r) => kinds.find((k) => k.value === r.kind)?.label || r.kind }] : []),
+            ...columns,
           ]} />
         </Card>
       )}
@@ -105,7 +108,7 @@ function SimpleList({ path, title, kinds, empty, makeBody, fields }) {
           <div className="form two">
             <Field label="Name"><input value={editing.name || ''} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></Field>
             <Field label="Short code" hint="Letters and numbers, used in lists and exports."><input value={editing.code || ''} onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })} /></Field>
-            <Field label="Kind"><Select value={editing.kind} onChange={(v) => setEditing({ ...editing, kind: v })} options={kinds} /></Field>
+            {kinds && <Field label="Kind"><Select value={editing.kind} onChange={(v) => setEditing({ ...editing, kind: v })} options={kinds} /></Field>}
             {fields?.(editing, setEditing)}
             {editing.id && <div className="span2"><Check checked={!editing.active} onChange={(v) => setEditing({ ...editing, active: v ? 0 : 1 })}>Closed — no longer in use</Check></div>}
           </div>
@@ -126,11 +129,28 @@ const Stores = () => (
   </>
 );
 
-const Areas = () => (
-  <SimpleList path="/api/areas" title="Room or area" empty="No rooms yet. Add treatment rooms, the front desk, the pharmacy counter…"
-    kinds={[{ value: 'ROOM', label: 'Treatment room' }, { value: 'DESK', label: 'Front desk' }, { value: 'COUNTER', label: 'Counter' }, { value: 'OFFICE', label: 'Office' }, { value: 'OTHER', label: 'Other' }]}
-    makeBody={(e) => ({ code: e.code, name: e.name, kind: e.kind, active: !!e.active })} />
+const Departments = () => (
+  <>
+    <div className="note"><Icon name="unit" size={18} /><span>A department groups rooms and benches: Spa and Front office, or Haematology and Biochemistry. Stock used in a room counts towards its department.</span></div>
+    <SimpleList path="/api/departments" title="Department" empty="No departments yet. Add one, then give each room its department."
+      makeBody={(e) => ({ code: e.code, name: e.name, active: !!e.active })}
+      columns={[{ key: 'rooms', label: 'Open rooms', align: 'right' }]} />
+  </>
 );
+
+function Areas() {
+  const { data: departments } = useData('/api/departments');
+  const options = (departments || []).map((d) => ({ value: d.id, label: d.name }));
+  return (
+    <SimpleList path="/api/areas" title="Room or area" empty="No rooms yet. Add treatment rooms, the front desk, the pharmacy counter…"
+      kinds={[{ value: 'ROOM', label: 'Treatment room' }, { value: 'BENCH', label: 'Bench' }, { value: 'DESK', label: 'Front desk' }, { value: 'COUNTER', label: 'Counter' }, { value: 'OFFICE', label: 'Office' }, { value: 'OTHER', label: 'Other' }]}
+      makeBody={(e) => ({ code: e.code, name: e.name, kind: e.kind, departmentId: e.department_id || null, active: !!e.active })}
+      columns={[{ key: 'department_name', label: 'Department', render: (r) => r.department_name || <span className="faint">None</span> }]}
+      fields={(e, set) => options.length > 0 && (
+        <Field label="Department"><Select value={e.department_id || ''} onChange={(v) => set({ ...e, department_id: v })} placeholder="Choose a department" options={options} /></Field>
+      )} />
+  );
+}
 
 function People() {
   const { me, lists, toast } = useApp();
@@ -218,7 +238,7 @@ function Settings() {
           {data.map((s) => (
             <Field key={s.key} label={<>{s.label}<Hint text={s.hint} /></>}>
               {s.options
-                ? <Select value={vals[s.key] ?? s.value} onChange={(v) => setVals({ ...vals, [s.key]: v })} options={s.options.map((o) => ({ value: o, label: o === 'none' ? 'No — straight to the store' : o === 'required' ? 'Yes — a manager approves first' : o }))} />
+                ? <Select value={vals[s.key] ?? s.value} onChange={(v) => setVals({ ...vals, [s.key]: v })} options={s.options.map((o) => ({ value: o, label: s.labels?.[o] ? s.labels[o] : o === 'none' ? 'No — straight to the store' : o === 'required' ? 'Yes — a manager approves first' : o }))} />
                 : <input type="number" min={s.number[0]} max={s.number[1]} value={vals[s.key] ?? s.value} onChange={(e) => setVals({ ...vals, [s.key]: e.target.value })} />}
             </Field>
           ))}

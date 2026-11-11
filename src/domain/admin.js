@@ -51,6 +51,63 @@ export async function saveStore(env, user, body, id = null) {
   return { ok: true, id: newId };
 }
 
+// ── Departments ──────────────────────────────────────────────────────────────
+
+export async function listDepartments(env, user, { all = false } = {}) {
+  const { results } = await env.DB.prepare(
+    `SELECT d.id, d.code, d.name, d.active,
+            (SELECT COUNT(*) FROM areas WHERE department_id = d.id AND active = 1) AS rooms
+       FROM departments d WHERE d.unit_id = ? ${all ? '' : 'AND d.active = 1'} ORDER BY d.name`,
+  ).bind(user.unitId).all();
+  return results || [];
+}
+
+export async function saveDepartment(env, user, body, id = null) {
+  const code = codeOf(body.code, 'department');
+  const name = text(body.name, 80);
+  if (!name) refuse('NAME_REQUIRED', 'The department needs a name.');
+  const clash = await env.DB.prepare(`SELECT id FROM departments WHERE unit_id = ? AND code = ? AND id <> ?`).bind(user.unitId, code, id || '').first();
+  if (clash) refuse('CODE_TAKEN', `Another department already uses the code ${code}.`, 409);
+  const now = nowIso();
+  if (id) {
+    const d = await env.DB.prepare(`SELECT * FROM departments WHERE id = ? AND unit_id = ?`).bind(id, user.unitId).first();
+    if (!d) refuse('NOT_FOUND', 'That department does not exist in this unit.', 404);
+    if (body.active === false && d.active) {
+      const open = await env.DB.prepare(`SELECT 1 FROM areas WHERE department_id = ? AND active = 1 LIMIT 1`).bind(id).first();
+      if (open) refuse('HAS_ROOMS', `${d.name} still has open rooms or areas. Move or close them first.`);
+    }
+    await commit(env, [
+      env.DB.prepare(`UPDATE departments SET code = ?, name = ?, active = ?, updated_at = ?, updated_by = ? WHERE id = ?`)
+        .bind(code, name, body.active === false ? 0 : 1, now, user.fullName, id),
+      auditStmt(env, user, 'DEPARTMENT_EDIT', code, name),
+    ]);
+    return { ok: true, id };
+  }
+  const newId = uuid();
+  await commit(env, [
+    env.DB.prepare(`INSERT INTO departments (id, unit_id, code, name, active, updated_at, updated_by) VALUES (?,?,?,?,1,?,?)`)
+      .bind(newId, user.unitId, code, name, now, user.fullName),
+    auditStmt(env, user, 'DEPARTMENT_CREATE', code, name),
+  ]);
+  return { ok: true, id: newId };
+}
+
+/**
+ * The department a room belongs to. Optional only until the unit has set up departments: rooms
+ * brought over by the import have none, and must not stop the unit working.
+ */
+async function departmentFor(env, user, departmentId) {
+  if (departmentId) {
+    const d = await env.DB.prepare(`SELECT id, name, active FROM departments WHERE id = ? AND unit_id = ?`).bind(departmentId, user.unitId).first();
+    if (!d) refuse('NOT_FOUND', 'That department does not exist in this unit.', 404);
+    if (!d.active) refuse('DEPARTMENT_CLOSED', `${d.name} is closed. Choose another department.`);
+    return d.id;
+  }
+  const any = await env.DB.prepare(`SELECT 1 FROM departments WHERE unit_id = ? AND active = 1 LIMIT 1`).bind(user.unitId).first();
+  if (any) refuse('DEPARTMENT_REQUIRED', 'Choose the department this room or area belongs to.');
+  return null;
+}
+
 // ── Rooms and areas ──────────────────────────────────────────────────────────
 
 export async function saveArea(env, user, body, id = null) {
@@ -60,21 +117,22 @@ export async function saveArea(env, user, body, id = null) {
   const kind = text(body.kind, 30) || 'ROOM';
   const clash = await env.DB.prepare(`SELECT id FROM areas WHERE unit_id = ? AND code = ? AND id <> ?`).bind(user.unitId, code, id || '').first();
   if (clash) refuse('CODE_TAKEN', `Another room or area already uses the code ${code}.`, 409);
+  const departmentId = await departmentFor(env, user, body.departmentId);
   const now = nowIso();
   if (id) {
     const a = await env.DB.prepare(`SELECT id FROM areas WHERE id = ? AND unit_id = ?`).bind(id, user.unitId).first();
     if (!a) refuse('NOT_FOUND', 'That room or area does not exist in this unit.', 404);
     await commit(env, [
-      env.DB.prepare(`UPDATE areas SET code = ?, name = ?, kind = ?, active = ?, updated_at = ?, updated_by = ? WHERE id = ?`)
-        .bind(code, name, kind, body.active === false ? 0 : 1, now, user.fullName, id),
+      env.DB.prepare(`UPDATE areas SET code = ?, name = ?, kind = ?, department_id = ?, active = ?, updated_at = ?, updated_by = ? WHERE id = ?`)
+        .bind(code, name, kind, departmentId, body.active === false ? 0 : 1, now, user.fullName, id),
       auditStmt(env, user, 'AREA_EDIT', code, name),
     ]);
     return { ok: true, id };
   }
   const newId = uuid();
   await commit(env, [
-    env.DB.prepare(`INSERT INTO areas (id, unit_id, code, name, kind, active, updated_at, updated_by) VALUES (?,?,?,?,?,1,?,?)`)
-      .bind(newId, user.unitId, code, name, kind, now, user.fullName),
+    env.DB.prepare(`INSERT INTO areas (id, unit_id, code, name, kind, department_id, active, updated_at, updated_by) VALUES (?,?,?,?,?,?,1,?,?)`)
+      .bind(newId, user.unitId, code, name, kind, departmentId, now, user.fullName),
     auditStmt(env, user, 'AREA_CREATE', code, name),
   ]);
   return { ok: true, id: newId };
@@ -132,6 +190,18 @@ export async function listPeople(env, user) {
       WHERE su.unit_id = ? ORDER BY su.active DESC, s.full_name`,
   ).bind(user.unitId).all();
   return (results || []).map((r) => ({ ...r, roles: jsonList(r.roles), stores: r.stores ? jsonList(r.stores) : null }));
+}
+
+/** Who stock can be recorded against: names only, for the picker on Record use. */
+export async function listPeopleToPick(env, user) {
+  const { results } = await env.DB.prepare(
+    `SELECT s.id, s.code, s.full_name AS name, su.roles
+       FROM staff_units su JOIN staff s ON s.id = su.staff_id
+      WHERE su.unit_id = ? AND su.active = 1 AND s.active = 1 ORDER BY s.full_name`,
+  ).bind(user.unitId).all();
+  return (results || [])
+    .filter((p) => jsonList(p.roles).some((r) => r !== 'VIEWER'))
+    .map(({ id, code, name }) => ({ id, code, name }));
 }
 
 /**

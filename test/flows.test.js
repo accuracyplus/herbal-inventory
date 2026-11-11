@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AREA, bal, call, hfidToken, makeItem, receive, S, testEnv } from './helpers/http.js';
+import { AREA, bal, call, hfidToken, makeItem, receive, S, testEnv, FOR } from './helpers/http.js';
 
 // ── Requests ─────────────────────────────────────────────────────────────────
 
@@ -172,7 +172,7 @@ test('count: blind for the counter, variance posted on approval, and use during 
   assert.ok(sheet.body.lines.every((l) => l.expected === null));
 
   // Two bottles of A are used while the shelf is being counted.
-  await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, lines: [{ itemId: a, qty: 2 }] } });
+  await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, ...FOR, lines: [{ itemId: a, qty: 2 }] } });
 
   await call(env, 'PUT', `/api/counts/${c.body.id}/lines`, { as: 'keeper', body: { lines: [{ itemId: a, counted: 9 }, { itemId: b, counted: 5 }] } });
   assert.equal((await call(env, 'POST', `/api/counts/${c.body.id}/submit`, { as: 'keeper' })).status, 200);
@@ -257,7 +257,7 @@ test('reports answer for the unit, and the purchases report is limited to people
   const env = testEnv();
   const oil = await makeItem(env);
   await receive(env, oil, 10, { unitCost: 3 });
-  await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, areaId: AREA.room1, lines: [{ itemId: oil, qty: 4 }] } });
+  await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, ...FOR, lines: [{ itemId: oil, qty: 4 }] } });
   for (const name of ['valuation', 'consumption', 'ledger', 'expiry', 'variance', 'slow']) {
     const r = await call(env, 'GET', `/api/reports/${name}`, { as: 'manager' });
     assert.equal(r.status, 200, name);

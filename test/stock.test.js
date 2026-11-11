@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AREA, bal, call, makeItem, receive, S, testEnv } from './helpers/http.js';
+import { AREA, bal, call, makeItem, receive, S, testEnv, FOR } from './helpers/http.js';
 
 const day = (n) => new Date(Date.now() + n * 864e5 + 4 * 3600e3).toISOString().slice(0, 10);
 
@@ -28,10 +28,10 @@ test('use takes stock away, and taking more than is there is refused with the nu
   const env = testEnv();
   const id = await makeItem(env, { name: 'Dhanwantharam oil' });
   await receive(env, id, 5, { storeId: S.sub });
-  const ok = await call(env, 'POST', '/api/use', { as: 'staff', body: { storeId: S.sub, areaId: AREA.room1, lines: [{ itemId: id, qty: 2 }] } });
+  const ok = await call(env, 'POST', '/api/use', { as: 'staff', body: { storeId: S.sub, ...FOR, lines: [{ itemId: id, qty: 2 }] } });
   assert.equal(ok.status, 201);
   assert.equal(bal(env, S.sub, id).qty, 3);
-  const no = await call(env, 'POST', '/api/use', { as: 'staff', body: { storeId: S.sub, lines: [{ itemId: id, qty: 4 }] } });
+  const no = await call(env, 'POST', '/api/use', { as: 'staff', body: { storeId: S.sub, ...FOR, lines: [{ itemId: id, qty: 4 }] } });
   assert.equal(no.status, 422);
   assert.equal(no.body.error.code, 'NOT_ENOUGH');
   assert.match(no.body.error.message, /Only 3 bottle of Dhanwantharam oil in Spa sub store/);
@@ -42,7 +42,7 @@ test('two lines of the same item are summed before checking the shelf', async ()
   const env = testEnv();
   const id = await makeItem(env);
   await receive(env, id, 3);
-  const res = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, lines: [{ itemId: id, qty: 2 }, { itemId: id, qty: 2 }] } });
+  const res = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, ...FOR, lines: [{ itemId: id, qty: 2 }, { itemId: id, qty: 2 }] } });
   assert.equal(res.status, 422);
   assert.equal(bal(env, S.main, id).qty, 3);
 });
@@ -71,7 +71,7 @@ test('an item that tracks expiry needs a date on receipt, and is issued first-ex
 
   await receive(env, id, 5, { expiry: day(200), batchNo: 'LATE' });
   await receive(env, id, 5, { expiry: day(40), batchNo: 'EARLY' });
-  const use = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, lines: [{ itemId: id, qty: 7 }] } });
+  const use = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, ...FOR, lines: [{ itemId: id, qty: 7 }] } });
   assert.equal(use.status, 201);
   const left = env.DB.db.prepare(`SELECT batch_no, qty FROM batches WHERE item_id = ? ORDER BY expiry`).all(id).map((b) => [b.batch_no, b.qty]);
   assert.deepEqual(left, [['EARLY', 0], ['LATE', 3]]);
@@ -84,7 +84,7 @@ test('expired stock is never handed out; it has to be written off', async () => 
   // Arrange an expired batch directly: a receipt of expired goods is itself a thing to refuse at the door.
   await receive(env, id, 2, { expiry: day(10), batchNo: 'B1' });
   env.DB.db.prepare(`UPDATE batches SET expiry = ? WHERE item_id = ?`).run(day(-3), id);
-  const res = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, lines: [{ itemId: id, qty: 1 }] } });
+  const res = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, ...FOR, lines: [{ itemId: id, qty: 1 }] } });
   assert.equal(res.status, 422);
   assert.equal(res.body.error.code, 'ONLY_EXPIRED');
 });
@@ -133,7 +133,7 @@ test('linen cannot be "used up" through the ordinary use screen', async () => {
   const env = testEnv();
   const id = await makeItem(env, { isLinen: true });
   await receive(env, id, 5, { storeId: S.sub });
-  const res = await call(env, 'POST', '/api/use', { as: 'staff', body: { storeId: S.sub, lines: [{ itemId: id, qty: 1 }] } });
+  const res = await call(env, 'POST', '/api/use', { as: 'staff', body: { storeId: S.sub, ...FOR, lines: [{ itemId: id, qty: 1 }] } });
   assert.equal(res.status, 422);
   assert.equal(res.body.error.code, 'USE_LINEN_SCREEN');
 });
@@ -158,7 +158,7 @@ test('switching on expiry tracking with stock held turns the shelf into an undat
   assert.equal(on.status, 200);
   const b = env.DB.db.prepare(`SELECT store_id, expiry, qty FROM batches WHERE item_id = ? ORDER BY qty DESC`).all(id).map((r) => [r.store_id, r.expiry, r.qty]);
   assert.deepEqual(b, [[S.main, '', 5], [S.sub, '', 2]]);
-  const use = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, lines: [{ itemId: id, qty: 3 }] } });
+  const use = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, ...FOR, lines: [{ itemId: id, qty: 3 }] } });
   assert.equal(use.status, 201);
   assert.equal(env.DB.db.prepare(`SELECT qty FROM batches WHERE item_id = ? AND store_id = ?`).get(id, S.main).qty, 2);
   const expiry = await call(env, 'GET', '/api/reports/expiry', { as: 'manager' });

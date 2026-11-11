@@ -6,16 +6,16 @@ import { Card, Page, Table, useApp } from '../ui.jsx';
 import Icon from '../icons.jsx';
 
 const ACTIONS = {
-  'stock.view': 'See stock', 'stock.use': 'Record use and move linen', 'cost.view': 'See costs and values',
+  'stock.view': 'See stock', 'stock.use': 'Record use and move linen', 'use.for_others': 'Record use for somebody else', 'cost.view': 'See costs and values',
   'request.create': 'Ask for stock', 'request.decide': 'Approve requests', 'request.fulfil': 'Give out requested stock',
   transfer: 'Transfer between stores', receive: 'Receive deliveries', 'adjust.raise': 'Raise corrections',
   'adjust.decide': 'Approve corrections', 'count.run': 'Count stock', 'count.decide': 'Approve counts',
   'po.edit': 'Draft purchase orders', 'po.decide': 'Approve purchase orders', 'supplier.edit': 'Keep suppliers',
-  'items.edit': 'Keep the item list and levels', reports: 'See reports', admin: 'Stores, rooms, people, settings, import',
+  'items.edit': 'Keep the item list and levels', reports: 'See reports', admin: 'Stores, departments, rooms, people, settings, import',
 };
 
 const FLOWS = [
-  ['use', 'Using stock', 'Record use → choose the store and the room → add items. Expiry items go first-expiry-first; expired stock is refused.'],
+  ['use', 'Using stock', 'Record use → choose the store, the room and who used it → add items. Expiry items go first-expiry-first; expired stock is refused.'],
   ['requests', 'Getting stock from the store', 'New request → items and where they are needed → a manager approves (unless the unit has switched that off) → the store gives it out, in one go or several.'],
   ['purchasing', 'Buying', 'Purchasing → What to buy shows what is at or below its reorder level → draft an order per supplier → submit → a manager approves → print it for the supplier → Receive delivery against it when it arrives.'],
   ['linen', 'Linen', 'Each piece is clean on the shelf, in a room, or at the laundry. Send to a room, send to the laundry, take back clean. Today flags laundry that has not come back.'],

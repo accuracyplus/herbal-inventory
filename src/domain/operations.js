@@ -9,6 +9,7 @@ import { refuse } from '../lib/errors.js';
 import { isoDate, m2, nextRef, nonNegative, nowIso, positive, q3, text, uuid } from '../lib/data.js';
 import { actorOf, auditStmt } from '../lib/audit.js';
 import { areaFor, storeFor } from './access.js';
+import { consumptionFor } from './consumption.js';
 import { buildLinenMove, buildPosting, commit, loadItems } from './stock.js';
 
 const MAX_LINES = 200;
@@ -49,7 +50,7 @@ function refuseInactive(items) {
 /** Record use: stock leaves a store for a room, a treatment, or a purpose. */
 export async function recordUse(env, user, body) {
   const store = await storeFor(env, user, body.storeId);
-  const area = await areaFor(env, user, body.areaId);
+  const { area, person, departmentId } = await consumptionFor(env, user, { areaId: body.areaId, personId: body.personId });
   const lines = parseLines(body.lines);
   const items = await loadItems(env, user.unitId, lines.map((l) => l.itemId));
   refuseInactive(items);
@@ -63,9 +64,10 @@ export async function recordUse(env, user, body) {
   }, lines.map((l) => ({
     item: items.get(l.itemId), store, qty: -l.qty, batchId: l.batchId,
     areaId: area?.id, reason: purpose, note: l.note || text(body.note, 300),
+    personId: person?.id, personName: person?.name, departmentId,
   })));
   await commit(env, [...statements, auditStmt(env, user, 'USE', docId,
-    `${lines.length} line(s) from ${store.name}${area ? ` to ${area.name}` : ''}${purpose ? ` — ${purpose}` : ''}`)]);
+    `${lines.length} line(s) from ${store.name}${area ? ` to ${area.name}` : ''}${person ? ` by ${person.name}` : ''}${purpose ? ` — ${purpose}` : ''}`)]);
   return { ok: true, id: docId, value };
 }
 
@@ -93,8 +95,15 @@ export async function transfer(env, user, body, { request = null, ref: givenRef 
 
   // To an area (fulfilling a request for use) it is an issue, not a transfer.
   if (!to) {
+    const { person, departmentId } = await consumptionFor(env, user, {
+      areaId: area.id, personId: body.personId,
+      requester: request ? { id: request.requested_by, name: request.requested_by_name } : null,
+    });
     const { statements } = await buildPosting(env, { kind: 'ISSUE', unitId: user.unitId, actor, doc },
-      lines.map((l) => ({ item: items.get(l.itemId), store: from, qty: -l.qty, batchId: l.batchId, areaId: area.id, note })));
+      lines.map((l) => ({
+        item: items.get(l.itemId), store: from, qty: -l.qty, batchId: l.batchId, areaId: area.id, note,
+        personId: person?.id, personName: person?.name, departmentId,
+      })));
     return {
       id, ref, statements: [
         env.DB.prepare(

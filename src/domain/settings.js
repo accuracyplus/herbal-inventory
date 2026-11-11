@@ -11,6 +11,12 @@ export const SETTINGS = {
     hint: 'When off, a request goes straight to the store to be given out.',
     options: ['required', 'none'], default: 'required',
   },
+  'consumption.record': {
+    label: 'When stock is used, record',
+    hint: 'What must be filled in on Record use. A department comes from the room.',
+    options: ['both', 'room', 'person'], default: 'both',
+    labels: { both: 'The room and the person', room: 'The room only', person: 'The person only' },
+  },
   'expiry.warn_days': {
     label: 'Warn about expiry this many days ahead',
     hint: 'Batches expiring within this many days show on Today and in the expiry report.',

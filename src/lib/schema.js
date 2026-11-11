@@ -6,6 +6,7 @@
 
 export const LEVELS = [
   { level: 1, file: 'schema.sql', table: 'legacy_movements', column: 'remarks' },
+  { level: 2, file: 'migrations/0001_departments_and_people.sql', table: 'movements', column: 'department_id' },
 ];
 
 export const EXPECTED_LEVEL = LEVELS[LEVELS.length - 1].level;

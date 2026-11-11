@@ -30,6 +30,9 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
 - **Scanning** with the phone's camera on every list of items, or **Scan with phone** from a
   computer (a QR code pairs the person's phone; scans land on the computer's list); a Scan screen
   for walking the store; unknown barcodes are saved to the item by store roles.
+- **Services with recipes** (treatments, or lab tests): what each normally uses is defined once;
+  recording one takes it all off the shelf together, editable first, and a report compares actual
+  use with the recipe by service, item, room and (for managers) person.
 - **Deliveries in two steps**: the receiver counts against the delivery note, a manager approves,
   then stock is on the shelf. Photos or PDFs of the note, invoice and LPO are kept with each
   delivery; a photo of the note can be read to fill the form in, each supplier's wording and pack

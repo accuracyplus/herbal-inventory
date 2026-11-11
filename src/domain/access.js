@@ -52,6 +52,7 @@ export const RULES = {
   'po.decide':         DECIDE,
   'supplier.edit':     ['PURCHASER', ...DECIDE],
   'items.edit':        DECIDE,
+  'services.edit':     DECIDE,                             // services and what each normally uses
   'barcode.link':      ['STOREKEEPER', 'PURCHASER', ...DECIDE], // say which item an unknown barcode is
   'reports':           ['STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],
   'admin':             ['UNIT_ADMIN'],

@@ -83,6 +83,18 @@ without its stock, nor stock without its receipt.
   bundled and loaded on demand (`client/src/scan/reader.js`): CSP allows scripts from self only.
   `_headers` allows the camera for this origin (`camera=(self)`).
 
+## 3d. Services and their recipes
+
+- `src/domain/services.js`. A service (`services`, with `service_items` as its recipe) is what
+  one treatment or one lab test normally uses; the unit chooses the word (`services.word`).
+  Recording one is ordinary use: `ISSUE` movements through the stock engine in one batch, with
+  the room, person and department decided by `consumption.js` like every other use.
+- The recipe fills the form and can be changed before saving. `service_record_lines` keeps the
+  recipe's quantity for the number done (`std_qty`) beside what was used (`qty`) and the cost at
+  the time, so a later change to a recipe does not rewrite the past.
+- The services report is a sum over those lines: by service, item and room, and by person for
+  `cost.people` in name order. Linen is never part of a recipe.
+
 ## 3c. Deliveries, their paperwork, and reading the note
 
 - `src/domain/receipts.js`. A delivery is recorded by the receiver as `PENDING` with its lines

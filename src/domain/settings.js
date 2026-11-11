@@ -35,6 +35,11 @@ export const SETTINGS = {
     options: ['both', 'room', 'person'], default: 'both',
     labels: { both: 'The room and the person', room: 'The room only', person: 'The person only' },
   },
+  'services.word': {
+    label: 'What this unit calls its services',
+    hint: 'The word used on the menu and screens for the work that uses stock by a recipe: a treatment at a spa, a test in a lab.',
+    options: ['Services', 'Treatments', 'Tests'], default: 'Services',
+  },
   'custody.account_hours': {
     label: 'Call taken stock unaccounted for after this many hours',
     hint: 'Stock somebody has taken and not recorded as used or returned by then is flagged to them and to their manager on Today.',

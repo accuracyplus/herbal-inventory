@@ -9,10 +9,10 @@ import { downloadCsv, fmtDate, fmtDateTime, fmtMoney, fmtQty, gstToday } from '.
 import { Button, Card, ErrorNote, Field, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Table, useApp, useData } from '../ui.jsx';
 
 const ALL = [
-  ['consumption', 'Usage'], ['people', 'By person'], ['group', 'Group summary'], ['valuation', 'Stock value'], ['expiry', 'Expiry'], ['ledger', 'Movements'],
+  ['consumption', 'Usage'], ['services', 'Services'], ['people', 'By person'], ['group', 'Group summary'], ['valuation', 'Stock value'], ['expiry', 'Expiry'], ['ledger', 'Movements'],
   ['variance', 'Variances'], ['slow', 'Slow-moving'], ['purchases', 'Purchases'], ['legacy', 'Old app history'],
 ];
-const RANGED = ['consumption', 'people', 'ledger', 'variance', 'purchases'];
+const RANGED = ['consumption', 'services', 'people', 'ledger', 'variance', 'purchases'];
 const BY_STORE = ['consumption', 'people', 'ledger'];
 
 export default function Reports() {
@@ -22,6 +22,7 @@ export default function Reports() {
     if (k === 'group') return me.groupSummary;
     return k === 'purchases' ? can('cost.view') : true;
   });
+  const word = me.settings['services.word'] || 'Services';
   const [tab, setTab] = useState(route.query.get('r') || 'consumption');
   const [from, setFrom] = useState(gstToday(-29));
   const [to, setTo] = useState(gstToday());
@@ -36,7 +37,7 @@ export default function Reports() {
 
   return (
     <Page title="Reports" subtitle="Download any table as CSV for Excel.">
-      <Segmented label="Report" value={tab} onChange={setTab} options={tabs.map(([v, l]) => ({ value: v, label: l }))} />
+      <Segmented label="Report" value={tab} onChange={setTab} options={tabs.map(([v, l]) => ({ value: v, label: v === 'services' ? word : l }))} />
       {RANGED.includes(tab) && (
         <Card>
           <div className="row">
@@ -57,6 +58,7 @@ export default function Reports() {
       {data && !loading && (
         <>
           {tab === 'consumption' && data.byDepartment && <Consumption d={data} />}
+          {tab === 'services' && data.byService && <ServiceUse d={data} word={word} />}
           {tab === 'people' && data.rows && <People d={data} />}
           {tab === 'group' && data.totals && <Group d={data} />}
           {tab === 'valuation' && <Valuation d={data} />}
@@ -122,6 +124,53 @@ function Consumption({ d }) {
           ...(money ? [{ key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
         ]} />
       </Card>
+    </>
+  );
+}
+
+/** Actual use against the recipes. A difference is a plain number with its sign, not a verdict. */
+function ServiceUse({ d, word }) {
+  const { can, currency } = useApp();
+  const money = can('cost.view');
+  const m = (v) => fmtMoney(v, currency);
+  const diff = (a, b, f = fmtQty) => { const x = +(a - b).toFixed(3); return x === 0 ? <span className="faint">none</span> : <b>{x > 0 ? '+' : '−'}{f(Math.abs(x))}</b>; };
+  const valueCols = money ? [
+    { key: 'std_value', label: 'By the recipe', align: 'right', sortable: false, render: (r) => m(r.std_value) },
+    { key: 'value', label: 'Actually used', align: 'right', sortable: false, render: (r) => m(r.value) },
+    { key: 'diff', label: 'Difference', align: 'right', sortable: false, render: (r) => diff(r.value, r.std_value, m) },
+  ] : [];
+  const csvCols = (first) => [first, { key: 'times', label: 'Done' }, ...(money ? [{ key: 'std_value', label: `By the recipe (${currency})` }, { key: 'value', label: `Actually used (${currency})` }] : [])];
+  const one = word.replace(/s$/, '');
+  return (
+    <>
+      <Card title={`By ${one.toLowerCase()}`} hint="What the recipes said should be used for the number done, beside what was recorded as used, at each item's cost at the time." pad={false}
+        actions={<Csv name={`${word.toLowerCase()}-${d.from}-${d.to}`} rows={d.byService} cols={csvCols({ key: 'name', label: one })} />}>
+        <Table rows={d.byService} rowKey={(r) => r.service_id} empty={`No ${word.toLowerCase()} were recorded in this period.`} columns={[
+          { key: 'name', label: one, primary: true, sortable: false }, { key: 'times', label: 'Done', align: 'right', sortable: false }, ...valueCols,
+        ]} />
+      </Card>
+      {d.byItem.length > 0 && (
+        <Card title="By item" hint="Where the difference comes from: each item's quantity by the recipe and as used." pad={false}
+          actions={<Csv name={`${word.toLowerCase()}-items-${d.from}-${d.to}`} rows={d.byItem} cols={[{ key: 'service', label: one }, { key: 'code', label: 'Code' }, { key: 'name', label: 'Item' }, { key: 'uom', label: 'Unit' }, { key: 'std_qty', label: 'By the recipe' }, { key: 'qty', label: 'Used' }]} />}>
+          <Table rows={d.byItem} rowKey={(r) => `${r.service_id}-${r.code}`} columns={[
+            { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub">{r.service}</span></span> },
+            { key: 'std_qty', label: 'By the recipe', align: 'right', render: (r) => `${fmtQty(r.std_qty)} ${r.uom}` },
+            { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
+            { key: 'diff', label: 'Difference', align: 'right', sort: (r) => r.qty - r.std_qty, render: (r) => diff(r.qty, r.std_qty) },
+          ]} />
+        </Card>
+      )}
+      {d.byArea.length > 0 && (
+        <Card title="By room" pad={false} actions={<Csv name={`${word.toLowerCase()}-rooms-${d.from}-${d.to}`} rows={d.byArea} cols={csvCols({ key: 'name', label: 'Room' })} />}>
+          <Table rows={d.byArea} rowKey={(r) => r.name} columns={[{ key: 'name', label: 'Room', primary: true, sortable: false }, { key: 'times', label: 'Done', align: 'right', sortable: false }, ...valueCols]} />
+        </Card>
+      )}
+      {d.byPerson?.length > 0 && (
+        <Card title="By person" hint="Only managers and administrators see this. Listed by name: this is a record, not a ranking." pad={false}
+          actions={<Csv name={`${word.toLowerCase()}-people-${d.from}-${d.to}`} rows={d.byPerson} cols={csvCols({ key: 'name', label: 'Person' })} />}>
+          <Table rows={d.byPerson} rowKey={(r) => r.person_id ?? 'none'} columns={[{ key: 'name', label: 'Person', primary: true, sortable: false }, { key: 'times', label: 'Done', align: 'right', sortable: false }, ...valueCols]} />
+        </Card>
+      )}
     </>
   );
 }

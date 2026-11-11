@@ -109,6 +109,42 @@ export async function costByPerson(env, user, url) {
   return { ...r, rows: results || [] };
 }
 
+/**
+ * Services: what was actually used against what the recipes said, for the period. By service,
+ * by item within a service, by room; and by person for those who manage people, in name order.
+ * Valued at what each item cost when the service was recorded. Without cost.view: quantities only.
+ */
+export async function servicesReport(env, user, url) {
+  const r = range(url);
+  const serviceId = url.searchParams.get('service') || null;
+  const where = `r.unit_id = ? AND r.at >= ? AND r.at < ? ${serviceId ? 'AND r.service_id = ?' : ''}`;
+  const args = [user.unitId, r.fromAt, r.toAt, ...(serviceId ? [serviceId] : [])];
+  const sums = `round(SUM(l.std_qty * l.unit_cost), 2) AS std_value, round(SUM(l.qty * l.unit_cost), 2) AS value`;
+  const from = `FROM service_record_lines l JOIN service_records r ON r.id = l.record_id`;
+  const done = (group) => `(SELECT COALESCE(SUM(x.times), 0) FROM service_records x WHERE ${where.replace(/\br\./g, 'x.')} AND ${group})`;
+  const [byService, byItem, byArea, byPerson] = await Promise.all([
+    env.DB.prepare(`SELECT r.service_id, MAX(r.service_name) AS name, ${done('x.service_id = r.service_id')} AS times, ${sums} ${from} WHERE ${where} GROUP BY r.service_id ORDER BY name`).bind(...args, ...args).all(),
+    env.DB.prepare(
+      `SELECT r.service_id, MAX(r.service_name) AS service, i.code, i.name, i.uom, round(SUM(l.std_qty), 3) AS std_qty, round(SUM(l.qty), 3) AS qty, ${sums}
+         ${from} JOIN items i ON i.id = l.item_id WHERE ${where} GROUP BY r.service_id, l.item_id ORDER BY service, i.name`,
+    ).bind(...args).all(),
+    env.DB.prepare(
+      `SELECT COALESCE(a.name, 'No room recorded') AS name, ${done('x.area_id IS r.area_id')} AS times, ${sums}
+         ${from} LEFT JOIN areas a ON a.id = r.area_id WHERE ${where} GROUP BY r.area_id ORDER BY CASE WHEN a.name IS NULL THEN 1 ELSE 0 END, a.name`,
+    ).bind(...args, ...args).all(),
+    may(user, 'cost.people') ? env.DB.prepare(
+      `SELECT r.person_id, COALESCE(MAX(r.person_name), 'Not recorded') AS name, ${done('x.person_id IS r.person_id')} AS times, ${sums}
+         ${from} WHERE ${where} GROUP BY r.person_id ORDER BY CASE WHEN r.person_id IS NULL THEN 1 ELSE 0 END, name`,
+    ).bind(...args, ...args).all() : { results: null },
+  ]);
+  const strip = (rows) => (money(user) ? rows : rows.map(({ value, std_value, ...x }) => x));
+  return {
+    ...r,
+    byService: strip(byService.results || []), byItem: strip(byItem.results || []), byArea: strip(byArea.results || []),
+    byPerson: byPerson.results ? byPerson.results : undefined,
+  };
+}
+
 /** A person's own use. Costs are theirs to see; item by item it stays quantities, as for all staff. */
 export async function myUse(env, user, url) {
   const r = range(url);
@@ -256,7 +292,7 @@ export async function purchases(env, user, url) {
   return { ...r, bySupplier: bySupplier || [], receipts: receipts || [] };
 }
 
-export const REPORTS = { valuation, consumption, people: costByPerson, ledger, expiry: expiryReport, variance, slow: slowMoving, purchases };
+export const REPORTS = { valuation, consumption, people: costByPerson, services: servicesReport, ledger, expiry: expiryReport, variance, slow: slowMoving, purchases };
 
 /** Quantities rounded for display, in one place. */
 export const qty = q3;

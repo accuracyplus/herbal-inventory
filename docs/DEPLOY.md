@@ -31,6 +31,7 @@ npx wrangler d1 execute hifive-inventory --remote --file=migrations/0002_custody
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0003_group_summary.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0004_scanning.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0005_deliveries.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0006_services.sql
 npm run seed
 ```
 
@@ -110,7 +111,10 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
    Deliveries: whether a manager approves each one before it is on the shelf, whether the
    delivery note must be attached first, and whether notes are read from a photo (all on unless
    you change them).
-7. **Receive**, on a phone: photograph one real delivery note and check what it reads. Reading
+   Also there: the unit's word for its services (Treatments at Herbal Park).
+7. **Treatments → Recipes**: add each treatment with what one normally uses. Part of a bottle is a
+   decimal, so check each oil's unit first: an item counted in bottles takes 0.25 for a quarter.
+8. **Receive**, on a phone: photograph one real delivery note and check what it reads. Reading
    was proven on a printed sample only; a creased or handwritten note has not been tried.
 
 ## D. Switch-over

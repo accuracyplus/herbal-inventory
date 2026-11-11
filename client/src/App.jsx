@@ -15,6 +15,7 @@ import { TransferScreen, UseScreen } from './screens/Record.jsx';
 import ReceiveScreen from './screens/Receive.jsx';
 import WithMe from './screens/WithMe.jsx';
 import Scan from './screens/Scan.jsx';
+import Services from './screens/Services.jsx';
 import Linen from './screens/Linen.jsx';
 import Requests from './screens/Requests.jsx';
 import Purchasing from './screens/Purchasing.jsx';
@@ -29,6 +30,7 @@ const SCREENS = [
   { id: 'today', label: 'Today', icon: 'today', group: 'main', any: ['stock.view'], el: Today },
   { id: 'stock', label: 'Stock', icon: 'stock', group: 'main', any: ['stock.view'], el: Stock },
   { id: 'use', label: 'Record use', icon: 'use', group: 'do', any: ['stock.use'], el: UseScreen },
+  { id: 'services', label: 'Services', icon: 'sparkle', group: 'do', any: ['stock.use', 'services.edit'], el: Services },
   { id: 'scan', label: 'Scan', icon: 'scan', group: 'do', any: ['stock.view'], el: Scan },
   { id: 'with-me', label: 'With me', icon: 'custody', group: 'do', any: ['stock.use'], el: WithMe },
   { id: 'linen', label: 'Linen', icon: 'linen', group: 'do', any: ['stock.view'], el: Linen },
@@ -122,7 +124,9 @@ export default function App() {
 
   useEffect(() => { if (me) { refreshStock(); refreshBadges(); } }, [me, refreshStock, refreshBadges]);
 
-  const visible = useMemo(() => (me ? SCREENS.filter((s) => s.any.some((a) => me.can.includes(a))) : []), [me]);
+  // The unit's own word for its services (treatments, tests) is what the menu says.
+  const visible = useMemo(() => (me ? SCREENS.filter((s) => s.any.some((a) => me.can.includes(a)))
+    .map((s) => (s.id === 'services' ? { ...s, label: me.settings?.['services.word'] || s.label } : s)) : []), [me]);
 
   const switchUnit = async (id) => {
     unitPref.set(id);

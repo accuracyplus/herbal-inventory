@@ -31,6 +31,7 @@ import { countAction, getCount, listCounts, saveCountLines, startCount } from '.
 import { heldByMe, returnHeld, takeStock, unaccountedInUnit, useHeld } from './domain/custody.js';
 import { groupMonthly, myUse, REPORTS } from './domain/reports.js';
 import { hfidPeople, takeHfidName } from './domain/people.js';
+import { listServices, recentServices, recordService, saveService } from './domain/services.js';
 import { BULK_KINDS, bulkTemplate, bulkUpload } from './domain/bulk.js';
 import { addScan, closeSession, linkBarcode, openSession, pairSession, sessionEvents } from './domain/scanning.js';
 import { today } from './domain/today.js';
@@ -419,6 +420,14 @@ api('POST', '/api/scan/sessions/:id/pair', async ({ env, params }, user) => json
 api('POST', '/api/scan/sessions/:id/scans', async ({ request, env, params }, user) => json(await addScan(env, user, params.id, await body(request))));
 api('POST', '/api/scan/sessions/:id/close', async ({ env, params }, user) => json(await closeSession(env, user, params.id)));
 api('POST', '/api/items/:id/barcodes', async ({ request, env, params }, user) => { requireMay(user, 'barcode.link'); return json(await linkBarcode(env, user, params.id, await body(request))); });
+
+// ── Services and their recipes ───────────────────────────────────────────────
+
+api('GET', '/api/services', async ({ env, url }, user) => json(await listServices(env, user, { all: url.searchParams.get('all') === '1' && may(user, 'services.edit') })));
+api('POST', '/api/services', async ({ request, env }, user) => { requireMay(user, 'services.edit'); return json(await saveService(env, user, await body(request)), 201); });
+api('PUT', '/api/services/:id', async ({ request, env, params }, user) => { requireMay(user, 'services.edit'); return json(await saveService(env, user, await body(request), params.id)); });
+api('GET', '/api/service-records', async ({ env }, user) => { requireMay(user, 'stock.use'); return json(await recentServices(env, user)); });
+api('POST', '/api/service-records', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await recordService(env, user, await body(request)), 201); });
 
 // ── Stock with people ────────────────────────────────────────────────────────
 

@@ -38,11 +38,14 @@ const aiReply = {
 const env = testEnv({ APP_ORIGIN: `http://localhost:${port}`, roster, aiReply });
 const ctx = { waitUntil: () => {} };
 
+const seeded = [];
 for (const [name, category] of [['Dhanwantharam thailam', 'Oils'], ['Kizhi powder', 'Herbs']]) {
   const id = await makeItem(env, { name, category });
+  seeded.push(id);
   await receive(env, id, 40);
   await receive(env, id, 20, { storeId: S.sub });
 }
+await call(env, 'POST', '/api/services', { as: 'manager', body: { code: 'ABH', name: 'Abhyanga', items: [{ itemId: seeded[0], qty: 0.25 }, { itemId: seeded[1], qty: 2 }] } });
 
 await call(env, 'POST', '/api/suppliers', { as: 'buyer', body: { name: 'Kerala Ayurveda Traders' } });
 

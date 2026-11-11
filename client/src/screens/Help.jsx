@@ -6,7 +6,7 @@ import { Card, Page, Table, useApp } from '../ui.jsx';
 import Icon from '../icons.jsx';
 
 const ACTIONS = {
-  'stock.view': 'See stock', 'stock.use': 'Record use and move linen', 'use.for_others': 'Record use or give stock for somebody else', 'custody.team': 'See and settle what the team holds', 'cost.view': 'See costs and values',
+  'stock.view': 'See stock', 'stock.use': 'Record use and move linen', 'use.for_others': 'Record use or give stock for somebody else', 'custody.team': 'See and settle what the team holds', 'cost.people': 'See cost per person', 'cost.view': 'See costs and values',
   'request.create': 'Ask for stock', 'request.decide': 'Approve requests', 'request.fulfil': 'Give out requested stock',
   transfer: 'Transfer between stores', receive: 'Receive deliveries', 'adjust.raise': 'Raise corrections',
   'adjust.decide': 'Approve corrections', 'count.run': 'Count stock', 'count.decide': 'Approve counts',

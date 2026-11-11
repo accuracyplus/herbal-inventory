@@ -127,7 +127,7 @@ export async function requireConsoleSession(request, env) {
 }
 
 const findStaff = (env, code) => env.DB.prepare(
-  `SELECT id, code, full_name, group_admin, active FROM staff WHERE UPPER(TRIM(code)) = ?`,
+  `SELECT id, code, full_name, group_admin, group_summary, active FROM staff WHERE UPPER(TRIM(code)) = ?`,
 ).bind(String(code).trim().toUpperCase()).first();
 
 /** Every active seat a person holds, in active units. */
@@ -200,6 +200,7 @@ export async function resolveAuthContext(request, env) {
     code: staff.code,
     fullName: staff.full_name,
     groupAdmin,
+    groupSummary: groupAdmin || !!staff.group_summary,
     unit: { id: unit.id, code: unit.code, name: unit.name },
     unitId: unit.id,
     roles: unit.roles,

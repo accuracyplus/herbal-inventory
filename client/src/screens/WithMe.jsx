@@ -6,12 +6,13 @@
  */
 
 import { useEffect, useState } from 'react';
-import { fmtDate, fmtQty, post } from '../api.js';
+import { fmtDate, fmtMoney, fmtQty, gstToday, post } from '../api.js';
 import LineEditor, { lineErrors, toPayload } from '../lines.jsx';
 import {
-  Button, Card, ErrorNote, Field, Loading, Page, Pill, Quiet, Segmented, Select, Sheet, Stepper, useApp, useData,
+  Button, Card, ErrorNote, Field, Loading, Page, Pill, Quiet, Segmented, Select, Sheet, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
+import { Bars } from './Reports.jsx';
 
 const ageText = (h) => (h < 1 ? 'under an hour' : h < 48 ? `${h} hour${h === 1 ? '' : 's'}` : `${Math.floor(h / 24)} days`);
 
@@ -110,6 +111,43 @@ function Team() {
   );
 }
 
+/** A person's own use: their cost is theirs to see, and nobody else's is shown beside it. */
+function MyUse() {
+  const { currency } = useApp();
+  const [from, setFrom] = useState(gstToday(-29));
+  const [to, setTo] = useState(gstToday());
+  const path = `/api/my-use?from=${from}&to=${to}`;
+  const { data, error, loading, reload } = useData(path, [path]);
+  return (
+    <>
+      <Card>
+        <div className="form two">
+          <Field label="From"><input type="date" value={from} max={to} onChange={(e) => e.target.value && setFrom(e.target.value)} /></Field>
+          <Field label="To"><input type="date" value={to} min={from} onChange={(e) => e.target.value && setTo(e.target.value)} /></Field>
+        </div>
+      </Card>
+      <ErrorNote error={error} onRetry={reload} />
+      {loading && !data && <Loading />}
+      {data && !data.byItem.length && <Quiet>You have not recorded anything as used in this period.</Quiet>}
+      {data?.byItem.length > 0 && (
+        <>
+          <Card title="Cost of what I used" hint="At the cost of the stock when it was used or taken. Only you and your managers can see this.">
+            <p className="tile-value">{fmtMoney(data.total, currency)}</p>
+            <Bars rows={data.byCategory} fmt={(v) => fmtMoney(v, currency, 0)} />
+          </Card>
+          <Card title="What I used" pad={false}>
+            <Table rows={data.byItem} rowKey={(r) => r.code} columns={[
+              { key: 'name', label: 'Item', primary: true },
+              { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
+              { key: 'times', label: 'Times', align: 'right' },
+            ]} />
+          </Card>
+        </>
+      )}
+    </>
+  );
+}
+
 function Take() {
   const { me, can, stock, lists, navigate, refreshStock, refreshBadges, toast } = useApp();
   const stores = useMyStores('SUB');
@@ -167,8 +205,10 @@ export default function WithMe() {
   return (
     <Page title="With me" subtitle="Stock taken from the store and not yet used or returned."
       actions={<Button icon="plus" onClick={() => navigate('with-me/take')}>Take stock</Button>}>
-      {team && <Segmented label="Whose" value={tab} onChange={setTab} options={[{ value: 'mine', label: 'With me' }, { value: 'team', label: 'Team' }]} />}
-      {tab === 'mine' ? <Mine /> : <Team />}
+      <Segmented label="Show" value={tab} onChange={setTab} options={[{ value: 'mine', label: 'With me' }, { value: 'used', label: 'My use' }, ...(team ? [{ value: 'team', label: 'Team' }] : [])]} />
+      {tab === 'mine' && <Mine />}
+      {tab === 'used' && <MyUse />}
+      {tab === 'team' && <Team />}
     </Page>
   );
 }

@@ -185,7 +185,7 @@ export async function saveSupplier(env, user, body, id = null) {
 
 export async function listPeople(env, user) {
   const { results } = await env.DB.prepare(
-    `SELECT s.id, s.code, s.full_name, s.active AS staff_active, s.hfid_sub IS NOT NULL AS signed_in,
+    `SELECT s.id, s.code, s.full_name, s.active AS staff_active, s.hfid_sub IS NOT NULL AS signed_in, s.group_summary,
             su.roles, su.stores, su.active, su.updated_at, su.updated_by,
             (SELECT MAX(at) FROM audit_log WHERE action = 'SIGN_IN_HFID' AND actor_id = s.id) AS last_sign_in
        FROM staff_units su JOIN staff s ON s.id = su.staff_id
@@ -245,6 +245,12 @@ export async function savePerson(env, user, body) {
      ON CONFLICT(staff_id, unit_id) DO UPDATE SET roles = excluded.roles, stores = excluded.stores, active = excluded.active,
        updated_at = excluded.updated_at, updated_by = excluded.updated_by`,
   ).bind(staff.id, user.unitId, JSON.stringify(roles), stores, active, now, user.fullName));
+  if (body.groupSummary !== undefined) {
+    requireGroupAdmin(user);
+    stmts.push(env.DB.prepare(`UPDATE staff SET group_summary = ?, updated_at = ?, updated_by = ? WHERE id = ?`)
+      .bind(body.groupSummary ? 1 : 0, now, user.fullName, staff.id));
+    stmts.push(auditStmt(env, user, 'GROUP_SUMMARY', code, `${staff.full_name}: ${body.groupSummary ? 'can see' : 'cannot see'} the group monthly summary`));
+  }
   stmts.push(auditStmt(env, user, active ? 'SEAT_SET' : 'SEAT_REMOVE', code, `${staff.full_name}: ${roles.join(', ')}`));
   await commit(env, stmts);
   return { ok: true, staffId: staff.id };

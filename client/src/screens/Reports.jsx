@@ -1,6 +1,7 @@
 /**
  * Reports. Each one a table you can download, with a picture where the shape matters.
- * Nothing here ranks people: consumption is by item, category, room and day.
+ * Nothing here ranks people or units: cost per person and the summary across units are in name
+ * order, and their columns cannot be sorted.
  */
 
 import { useState } from 'react';
@@ -8,22 +9,28 @@ import { downloadCsv, fmtDate, fmtDateTime, fmtMoney, fmtQty, gstToday } from '.
 import { Button, Card, ErrorNote, Field, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Table, useApp, useData } from '../ui.jsx';
 
 const ALL = [
-  ['consumption', 'Usage'], ['valuation', 'Stock value'], ['expiry', 'Expiry'], ['ledger', 'Movements'],
+  ['consumption', 'Usage'], ['people', 'By person'], ['group', 'Group summary'], ['valuation', 'Stock value'], ['expiry', 'Expiry'], ['ledger', 'Movements'],
   ['variance', 'Variances'], ['slow', 'Slow-moving'], ['purchases', 'Purchases'], ['legacy', 'Old app history'],
 ];
-const RANGED = ['consumption', 'ledger', 'variance', 'purchases'];
+const RANGED = ['consumption', 'people', 'ledger', 'variance', 'purchases'];
+const BY_STORE = ['consumption', 'people', 'ledger'];
 
 export default function Reports() {
-  const { route, can } = useApp();
-  const tabs = ALL.filter(([k]) => (k === 'purchases' || k === 'valuation' ? can('cost.view') || k === 'valuation' : true));
+  const { route, can, me } = useApp();
+  const tabs = ALL.filter(([k]) => {
+    if (k === 'people') return can('cost.people');
+    if (k === 'group') return me.groupSummary;
+    return k === 'purchases' ? can('cost.view') : true;
+  });
   const [tab, setTab] = useState(route.query.get('r') || 'consumption');
   const [from, setFrom] = useState(gstToday(-29));
   const [to, setTo] = useState(gstToday());
+  const [month, setMonth] = useState(gstToday().slice(0, 7));
   const [storeId, setStoreId] = useState('');
   const qs = new URLSearchParams();
   if (RANGED.includes(tab)) { qs.set('from', from); qs.set('to', to); }
-  if (storeId && ['consumption', 'ledger'].includes(tab)) qs.set('store', storeId);
-  const path = tab === 'legacy' ? '/api/legacy' : `/api/reports/${tab}?${qs}`;
+  if (storeId && BY_STORE.includes(tab)) qs.set('store', storeId);
+  const path = tab === 'legacy' ? '/api/legacy' : tab === 'group' ? `/api/group/monthly?month=${month}` : `/api/reports/${tab}?${qs}`;
   const { data, error, loading, reload } = useData(path, [path]);
   const { lists } = useApp();
 
@@ -35,7 +42,7 @@ export default function Reports() {
           <div className="row">
             <Field label="From"><input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} /></Field>
             <Field label="To"><input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} /></Field>
-            {['consumption', 'ledger'].includes(tab) && (
+            {BY_STORE.includes(tab) && (
               <Field label="Store"><Select value={storeId} onChange={setStoreId} placeholder="All stores" options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
             )}
             <div className="row" style={{ alignSelf: 'flex-end' }}>
@@ -44,11 +51,14 @@ export default function Reports() {
           </div>
         </Card>
       )}
+      {tab === 'group' && <Card><div className="row"><Field label="Month"><input type="month" value={month} max={gstToday().slice(0, 7)} onChange={(e) => e.target.value && setMonth(e.target.value)} /></Field></div></Card>}
       <ErrorNote error={error} onRetry={reload} />
       {loading && <Loading />}
       {data && !loading && (
         <>
-          {tab === 'consumption' && <Consumption d={data} />}
+          {tab === 'consumption' && data.byDepartment && <Consumption d={data} />}
+          {tab === 'people' && data.rows && <People d={data} />}
+          {tab === 'group' && data.totals && <Group d={data} />}
           {tab === 'valuation' && <Valuation d={data} />}
           {tab === 'expiry' && <Expiry d={data} />}
           {tab === 'ledger' && <Ledger d={data} />}
@@ -62,7 +72,7 @@ export default function Reports() {
   );
 }
 
-function Bars({ rows, value = 'value', label = 'name', fmt }) {
+export function Bars({ rows, value = 'value', label = 'name', fmt }) {
   const max = Math.max(...rows.map((r) => Math.abs(r[value]) || 0), 1);
   if (!rows.length) return <Quiet>Nothing in this period.</Quiet>;
   return (
@@ -89,9 +99,14 @@ function Consumption({ d }) {
   return (
     <>
       <div className="grid2">
-        <Card title={`By category${money ? ', at cost' : ''}`}><Bars rows={d.byCategory} value={by} fmt={fmt} /></Card>
-        <Card title="By room or purpose"><Bars rows={d.byArea} value={money ? 'value' : 'times'} fmt={money ? fmt : (v) => `${v} times`} /></Card>
+        <Card title={`By category${money ? ', at cost' : ''}`} actions={<Csv name={`usage-by-category-${d.from}-${d.to}`} rows={d.byCategory} />}><Bars rows={d.byCategory} value={by} fmt={fmt} /></Card>
+        <Card title="By room or purpose" actions={<Csv name={`usage-by-room-${d.from}-${d.to}`} rows={d.byArea} />}><Bars rows={d.byArea} value={money ? 'value' : 'times'} fmt={money ? fmt : (v) => `${v} times`} /></Card>
       </div>
+      {d.byDepartment.length > 0 && (
+        <Card title="By department" hint="The department a room belonged to when the stock was used. Listed by name." actions={<Csv name={`usage-by-department-${d.from}-${d.to}`} rows={d.byDepartment} />}>
+          <Bars rows={d.byDepartment} value={money ? 'value' : 'times'} fmt={money ? fmt : (v) => `${v} times`} />
+        </Card>
+      )}
       {d.byDay.length > 1 && (
         <Card title="Day by day" hint={`From ${fmtDate(d.from)} to ${fmtDate(d.to)}.`}>
           <div className="spark" role="img" aria-label={`Daily usage, highest ${fmt(max)}`}>
@@ -105,6 +120,52 @@ function Consumption({ d }) {
           { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
           { key: 'times', label: 'Times', align: 'right' },
           ...(money ? [{ key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
+        ]} />
+      </Card>
+    </>
+  );
+}
+
+function People({ d }) {
+  const { currency } = useApp();
+  return (
+    <Card title="Cost of stock used, by person" hint="Only managers and administrators see this page. Each person sees their own figures under With me. Listed by name: this is a record, not a ranking." pad={false}
+      actions={<Csv name={`usage-by-person-${d.from}-${d.to}`} rows={d.rows} cols={[{ key: 'name', label: 'Person' }, { key: 'code', label: 'Employee code' }, { key: 'times', label: 'Times' }, { key: 'value', label: `Cost (${currency})` }]} />}>
+      <Table rows={d.rows} rowKey={(r) => r.person_id ?? 'none'} empty="Nothing was recorded as used in this period." columns={[
+        { key: 'name', label: 'Person', primary: true, sortable: false, render: (r) => <span className="min0"><span className="row-label">{r.name}</span>{r.code && <span className="row-sub"><code>{r.code}</code></span>}</span> },
+        { key: 'times', label: 'Times', align: 'right', sortable: false },
+        { key: 'value', label: 'Cost', align: 'right', sortable: false, render: (r) => fmtMoney(r.value, currency) },
+      ]} />
+    </Card>
+  );
+}
+
+function Group({ d }) {
+  const { currency } = useApp();
+  const m = (v) => fmtMoney(v, currency, 0);
+  const title = new Date(`${d.month}-01T00:00:00+04:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Asia/Dubai' });
+  return (
+    <>
+      <dl className="kv">
+        <div><dt>Used</dt><dd>{m(d.totals.used)}</dd></div>
+        <div><dt>Received</dt><dd>{m(d.totals.received)}</dd></div>
+        <div><dt>Written off</dt><dd>{m(d.totals.writtenOff)}</dd></div>
+        <div><dt>Stock value now</dt><dd>{m(d.totals.stockValueNow)}</dd></div>
+      </dl>
+      <Card title={title} hint="Counts and totals for each unit, listed by name. Stock value and unaccounted items are as they stand today, whichever month is chosen." pad={false}
+        actions={<Csv name={`group-summary-${d.month}`} rows={d.rows} cols={[
+          { key: 'unit', label: 'Unit' }, { key: 'lines', label: 'Lines used' }, { key: 'used', label: `Used (${currency})` }, { key: 'deliveries', label: 'Deliveries' },
+          { key: 'received', label: `Received (${currency})` }, { key: 'writtenOff', label: `Written off (${currency})` }, { key: 'stockValueNow', label: `Stock value now (${currency})` }, { key: 'unaccountedNow', label: 'Unaccounted now' },
+        ]} />}>
+        <Table rows={d.rows} rowKey={(r) => r.code} empty="No units yet." columns={[
+          { key: 'unit', label: 'Unit', primary: true, sortable: false },
+          { key: 'lines', label: 'Lines used', align: 'right', sortable: false },
+          { key: 'used', label: 'Used', align: 'right', sortable: false, render: (r) => m(r.used) },
+          { key: 'deliveries', label: 'Deliveries', align: 'right', sortable: false },
+          { key: 'received', label: 'Received', align: 'right', sortable: false, render: (r) => m(r.received) },
+          { key: 'writtenOff', label: 'Written off', align: 'right', sortable: false, render: (r) => m(r.writtenOff) },
+          { key: 'stockValueNow', label: 'Stock value now', align: 'right', sortable: false, render: (r) => m(r.stockValueNow) },
+          { key: 'unaccountedNow', label: 'Unaccounted now', align: 'right', sortable: false },
         ]} />
       </Card>
     </>

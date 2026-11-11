@@ -147,7 +147,9 @@ export async function itemDetail(env, user, id) {
     `SELECT COALESCE(SUM(-qty), 0) AS used FROM movements
       WHERE item_id = ? AND kind = 'ISSUE' AND at > datetime('now', '-30 days')`,
   ).bind(id).first();
-  const strip = (m) => (showCost ? m : { ...m, unit_cost: undefined, value: undefined });
+  const strip = (m) => (showCost
+    ? (['ISSUE', 'TAKE', 'RETURN'].includes(m.kind) && !may(user, 'cost.people') ? { ...m, actor_name: null } : m)
+    : { ...m, unit_cost: undefined, value: undefined });
   // How much, never who: this sheet is open to everybody who can see stock.
   const out = await env.DB.prepare(`SELECT COALESCE(SUM(qty), 0) AS n FROM custody WHERE item_id = ? AND qty > 0`).bind(id).first();
   return {

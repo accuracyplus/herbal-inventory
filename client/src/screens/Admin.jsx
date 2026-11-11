@@ -162,7 +162,10 @@ function People() {
   const save = async () => {
     setBusy(true); setErr(null);
     try {
-      await put('/api/people', { code: editing.code, name: editing.full_name, roles: editing.roles, stores: editing.limit ? editing.stores : null, active: editing.active !== 0 });
+      await put('/api/people', {
+        code: editing.code, name: editing.full_name, roles: editing.roles, stores: editing.limit ? editing.stores : null, active: editing.active !== 0,
+        ...(me.groupAdmin ? { groupSummary: !!editing.group_summary } : {}),
+      });
       toast('Saved'); setEditing(null); reload();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
@@ -210,6 +213,11 @@ function People() {
             <div className="stack" style={{ gap: 4, paddingLeft: 30 }}>
               {lists.stores.map((s) => <Check key={s.id} checked={editing.stores.includes(s.id)} onChange={() => toggleStore(s.id)}>{s.name}</Check>)}
             </div>
+          )}
+          {me.groupAdmin && (
+            <Check checked={!!editing.group_summary} onChange={(v) => setEditing({ ...editing, group_summary: v ? 1 : 0 })}>
+              <b>Director</b> <span className="muted">— can see the group monthly summary: counts and totals for every unit, no names. Give them a Viewer seat so the Reports screen shows.</span>
+            </Check>
           )}
           {editing.active === 0 && <div className="note warn"><Icon name="alert" size={18} />Saving will remove them from {me.unit.name}. Their records stay.</div>}
           <ErrorNote error={err} />

@@ -84,8 +84,12 @@ gives `HFID_GRANT_ROLE` (STAFF) in the unit matching the HiFive ID entity; never
 
 ## 5. Things deliberately not done
 
-- **No ranking of people.** Usage is reported by item, category, room and day (Design Guide rule
-  5). Who did what is in the ledger as a record.
+- **No ranking of people or units** (Design Guide rule 5). Cost per person (`cost.people`:
+  Manager, Unit administrator) and the group summary are in name order, and their columns cannot
+  be sorted. A person sees their own under With me. Somebody who sees costs but does not manage
+  people gets ledger lines for use without the name, or the ledger would be cost per person.
+- **Directors are not read from HiFive ID yet.** Its directors app is not in Inventory's token,
+  so a group administrator sets `staff.group_summary` on the People screen.
 - **No PIN sign-in.** Everybody has HiFive ID; a second credential is a second thing to leak.
 - **No replay of the old app's history into the ledger.** It sits in `legacy_movements` for
   reference; replaying it on top of the opening balances would count everything twice.

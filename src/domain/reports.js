@@ -1,14 +1,15 @@
 /**
  * Reports. Every one returns plain rows the client can show as a table, chart and CSV.
  *
- * None of them ranks people (design guide rule 5, "nobody is compared"): consumption is by
- * item, category, room and day — never by who recorded it. Who did what is in the ledger,
- * where it belongs, as a record rather than a league table.
+ * None of them ranks people or units (design guide rule 5, "nobody is compared"). Cost per
+ * person exists for the person and for those who manage them, in name order, and the monthly
+ * summary across units is in unit name order with no names of people at all.
  */
 
 import { refuse } from '../lib/errors.js';
-import { gstDate, isoDate, q3 } from '../lib/data.js';
+import { gstDate, isoDate, m2, q3 } from '../lib/data.js';
 import { may } from './access.js';
+import { accountHours } from './custody.js';
 import { setting } from './settings.js';
 
 /** A Gulf-time date range as UTC instants. Defaults to the last 30 days. */
@@ -26,6 +27,18 @@ export function range(url) {
 }
 
 const money = (user) => may(user, 'cost.view');
+
+const USE_KINDS = ['ISSUE', 'TAKE', 'RETURN'];
+
+/**
+ * One line of the ledger as this person may see it. No cost without cost.view; and a name beside
+ * the value of stock somebody used would be cost per person, so somebody who sees costs but does
+ * not manage people (Purchasing, a Viewer) sees that line without the name.
+ */
+export function hideCostPerPerson(user, m) {
+  if (!money(user)) { const { unit_cost, value, ...x } = m; return x; }
+  return USE_KINDS.includes(m.kind) && !may(user, 'cost.people') ? { ...m, actor_name: null } : m;
+}
 
 export async function valuation(env, user) {
   const { results } = await env.DB.prepare(
@@ -56,7 +69,7 @@ export async function consumption(env, user, url) {
   const base = `FROM movements m JOIN items i ON i.id = m.item_id
                 WHERE m.unit_id = ? AND m.kind = 'ISSUE' AND m.at >= ? AND m.at < ? ${storeId ? 'AND m.store_id = ?' : ''}`;
   const args = [user.unitId, r.fromAt, r.toAt, ...(storeId ? [storeId] : [])];
-  const [byItem, byCategory, byArea, byDay] = await Promise.all([
+  const [byItem, byCategory, byArea, byDay, byDepartment] = await Promise.all([
     env.DB.prepare(`SELECT i.code, i.name, i.category, i.uom, round(SUM(-m.qty), 3) AS qty, round(SUM(-m.value), 2) AS value,
                            COUNT(*) AS times ${base} GROUP BY i.id ORDER BY value DESC, qty DESC`).bind(...args).all(),
     env.DB.prepare(`SELECT i.category AS name, round(SUM(-m.value), 2) AS value, round(SUM(-m.qty), 3) AS qty ${base} GROUP BY i.category ORDER BY value DESC`).bind(...args).all(),
@@ -65,6 +78,11 @@ export async function consumption(env, user, url) {
                      WHERE m.unit_id = ? AND m.kind = 'ISSUE' AND m.at >= ? AND m.at < ? ${storeId ? 'AND m.store_id = ?' : ''}
                      GROUP BY 1 ORDER BY value DESC`).bind(...args).all(),
     env.DB.prepare(`SELECT date(m.at, '+4 hours') AS day, round(SUM(-m.value), 2) AS value, round(SUM(-m.qty), 3) AS qty ${base} GROUP BY day ORDER BY day`).bind(...args).all(),
+    // By name: a department is a team, and teams are not ranked either.
+    env.DB.prepare(`SELECT COALESCE(d.name, 'No department') AS name, round(SUM(-m.value), 2) AS value, COUNT(*) AS times
+                      FROM movements m JOIN items i ON i.id = m.item_id LEFT JOIN departments d ON d.id = m.department_id
+                     WHERE m.unit_id = ? AND m.kind = 'ISSUE' AND m.at >= ? AND m.at < ? ${storeId ? 'AND m.store_id = ?' : ''}
+                     GROUP BY 1 ORDER BY CASE WHEN d.name IS NULL THEN 1 ELSE 0 END, d.name`).bind(...args).all(),
   ]);
   const strip = (rows) => (money(user) ? rows : rows.map(({ value, ...x }) => x));
   return {
@@ -73,7 +91,79 @@ export async function consumption(env, user, url) {
     byCategory: strip(byCategory.results || []),
     byArea: strip(byArea.results || []),
     byDay: strip(byDay.results || []),
+    byDepartment: strip(byDepartment.results || []),
   };
+}
+
+/** Cost per person, for those who manage them. In name order: a record, not a league table. */
+export async function costByPerson(env, user, url) {
+  const r = range(url);
+  const storeId = url.searchParams.get('store') || null;
+  const { results } = await env.DB.prepare(
+    `SELECT m.person_id, COALESCE(MAX(m.person_name), 'Not recorded') AS name, s.code, COUNT(*) AS times, round(SUM(-m.value), 2) AS value
+       FROM movements m LEFT JOIN staff s ON s.id = m.person_id
+      WHERE m.unit_id = ? AND m.kind = 'ISSUE' AND m.at >= ? AND m.at < ? ${storeId ? 'AND m.store_id = ?' : ''}
+      GROUP BY m.person_id
+      ORDER BY CASE WHEN m.person_id IS NULL THEN 1 ELSE 0 END, name`,
+  ).bind(user.unitId, r.fromAt, r.toAt, ...(storeId ? [storeId] : [])).all();
+  return { ...r, rows: results || [] };
+}
+
+/** A person's own use. Costs are theirs to see; item by item it stays quantities, as for all staff. */
+export async function myUse(env, user, url) {
+  const r = range(url);
+  const args = [user.unitId, user.staffId, r.fromAt, r.toAt];
+  const base = `FROM movements m JOIN items i ON i.id = m.item_id WHERE m.unit_id = ? AND m.person_id = ? AND m.kind = 'ISSUE' AND m.at >= ? AND m.at < ?`;
+  const [{ results: byCategory }, { results: byItem }] = await Promise.all([
+    env.DB.prepare(`SELECT i.category AS name, round(SUM(-m.value), 2) AS value ${base} GROUP BY i.category ORDER BY value DESC`).bind(...args).all(),
+    env.DB.prepare(`SELECT i.code, i.name, i.uom, round(SUM(-m.qty), 3) AS qty, COUNT(*) AS times ${base} GROUP BY i.id ORDER BY i.name`).bind(...args).all(),
+  ]);
+  return { ...r, total: m2((byCategory || []).reduce((s, c) => s + c.value, 0)), byCategory: byCategory || [], byItem: byItem || [] };
+}
+
+/**
+ * The month across units, for directors and group administrators: counts and totals per unit, no
+ * names of people. In unit name order, so it is a summary and not a ranking of the businesses.
+ * Deliberately not fenced to one unit; the route is what limits who may ask.
+ */
+export async function groupMonthly(env, monthParam) {
+  const month = monthParam || gstDate().slice(0, 7);
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) refuse('BAD_MONTH', 'Choose a month.');
+  const [y, mo] = month.split('-').map(Number);
+  const next = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 7);
+  const fromAt = new Date(`${month}-01T00:00:00+04:00`).toISOString();
+  const toAt = new Date(`${next}-01T00:00:00+04:00`).toISOString();
+  const [{ results: units }, { results: moved }, { results: deliveries }, { results: shelves }, { results: held }] = await Promise.all([
+    env.DB.prepare(`SELECT id, code, name FROM units WHERE active = 1 ORDER BY name`).all(),
+    env.DB.prepare(
+      `SELECT unit_id, SUM(kind = 'ISSUE') AS lines, COALESCE(SUM(CASE WHEN kind = 'ISSUE' THEN -value END), 0) AS used,
+              COALESCE(SUM(CASE WHEN kind IN ('ADJUST','COUNT') AND value < 0 THEN -value END), 0) AS written_off
+         FROM movements WHERE at >= ? AND at < ? GROUP BY unit_id`,
+    ).bind(fromAt, toAt).all(),
+    env.DB.prepare(`SELECT unit_id, COUNT(*) AS n, COALESCE(SUM(total), 0) AS value FROM receipts WHERE at >= ? AND at < ? GROUP BY unit_id`).bind(fromAt, toAt).all(),
+    env.DB.prepare(
+      `SELECT s.unit_id, SUM((b.qty + b.in_use + b.in_wash) * i.avg_cost) AS value
+         FROM balances b JOIN stores s ON s.id = b.store_id JOIN items i ON i.id = b.item_id GROUP BY s.unit_id`,
+    ).all(),
+    env.DB.prepare(`SELECT c.unit_id, SUM(c.qty * i.avg_cost) AS value FROM custody c JOIN items i ON i.id = c.item_id WHERE c.qty > 0 GROUP BY c.unit_id`).all(),
+  ]);
+  const by = (rows) => new Map((rows || []).map((r) => [r.unit_id, r]));
+  const m = by(moved); const d = by(deliveries); const s = by(shelves); const h = by(held);
+  const rows = [];
+  for (const u of units || []) {
+    const cutoff = new Date(Date.now() - (await accountHours(env, u.id)) * 36e5).toISOString();
+    const out = await env.DB.prepare(`SELECT COUNT(*) AS n FROM custody WHERE unit_id = ? AND qty > 0 AND taken_at < ?`).bind(u.id, cutoff).first();
+    rows.push({
+      unit: u.name, code: u.code,
+      lines: m.get(u.id)?.lines || 0, used: m2(m.get(u.id)?.used || 0),
+      deliveries: d.get(u.id)?.n || 0, received: m2(d.get(u.id)?.value || 0),
+      writtenOff: m2(m.get(u.id)?.written_off || 0),
+      stockValueNow: m2((s.get(u.id)?.value || 0) + (h.get(u.id)?.value || 0)),
+      unaccountedNow: out.n,
+    });
+  }
+  const sum = (k) => m2(rows.reduce((t, r) => t + r[k], 0));
+  return { month, rows, totals: { lines: sum('lines'), used: sum('used'), deliveries: sum('deliveries'), received: sum('received'), writtenOff: sum('writtenOff'), stockValueNow: sum('stockValueNow'), unaccountedNow: sum('unaccountedNow') } };
 }
 
 export async function ledger(env, user, url) {
@@ -95,7 +185,7 @@ export async function ledger(env, user, url) {
       ORDER BY m.at DESC LIMIT 3000`,
   ).bind(...args).all();
   const rows = results || [];
-  return { ...r, rows: money(user) ? rows : rows.map(({ unit_cost, value, ...x }) => x), capped: rows.length === 3000 };
+  return { ...r, rows: rows.map((m) => hideCostPerPerson(user, m)), capped: rows.length === 3000 };
 }
 
 export async function expiryReport(env, user) {
@@ -166,7 +256,7 @@ export async function purchases(env, user, url) {
   return { ...r, bySupplier: bySupplier || [], receipts: receipts || [] };
 }
 
-export const REPORTS = { valuation, consumption, ledger, expiry: expiryReport, variance, slow: slowMoving, purchases };
+export const REPORTS = { valuation, consumption, people: costByPerson, ledger, expiry: expiryReport, variance, slow: slowMoving, purchases };
 
 /** Quantities rounded for display, in one place. */
 export const qty = q3;

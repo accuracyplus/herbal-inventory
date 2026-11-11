@@ -26,7 +26,7 @@ import { getPo, listPos, poAction, savePo, suggestions } from './domain/purchasi
 import { decideAdjustment, getAdjustment, listAdjustments, raiseAdjustment, REASONS } from './domain/adjustments.js';
 import { countAction, getCount, listCounts, saveCountLines, startCount } from './domain/counts.js';
 import { heldByMe, returnHeld, takeStock, unaccountedInUnit, useHeld } from './domain/custody.js';
-import { REPORTS } from './domain/reports.js';
+import { groupMonthly, myUse, REPORTS } from './domain/reports.js';
 import { today } from './domain/today.js';
 import { allSettings } from './domain/settings.js';
 import {
@@ -292,7 +292,7 @@ on('PUT', '/api/roles/:empId', async ({ request, env, params }) => {
 api('GET', '/api/me', async ({ env }, user) => {
   const settings = await allSettings(env, user.unitId);
   return json({
-    staffId: user.staffId, code: user.code, name: user.fullName, groupAdmin: user.groupAdmin,
+    staffId: user.staffId, code: user.code, name: user.fullName, groupAdmin: user.groupAdmin, groupSummary: user.groupSummary,
     unit: user.unit, units: user.units, roles: user.roles, stores: user.stores,
     can: abilities(user),
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
@@ -443,7 +443,13 @@ api('GET', '/api/reports/:name', async ({ env, url, params }, user) => {
   const fn = REPORTS[params.name];
   if (!fn) return fail(404, 'NOT_FOUND', 'No such report.');
   if (params.name === 'purchases') requireMay(user, 'cost.view');
+  if (params.name === 'people') requireMay(user, 'cost.people');
   return json(await fn(env, user, url));
+});
+api('GET', '/api/my-use', async ({ env, url }, user) => json(await myUse(env, user, url)));
+api('GET', '/api/group/monthly', async ({ env, url }, user) => {
+  if (!user.groupSummary) return fail(403, 'AUTH', 'The group summary is for directors and group administrators.');
+  return json(await groupMonthly(env, url.searchParams.get('month')));
 });
 api('GET', '/api/legacy', async ({ env, url }, user) => {
   requireMay(user, 'reports');

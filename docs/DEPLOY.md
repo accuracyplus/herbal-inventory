@@ -28,6 +28,7 @@ npx wrangler d1 create hifive-inventory
 npm run migrate
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0001_departments_and_people.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0002_custody.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0003_group_summary.sql
 npm run seed
 ```
 
@@ -86,6 +87,7 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
    The real import is step D2.
 4. **Admin → People**: add each person with their HiFive ID employee code and role. The import
    report lists the names the old app knew.
+   For each director: a Viewer seat, and tick **Director** so they see the group monthly summary.
 5. **Purchasing → Suppliers**: add the suppliers.
 6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park, and
    whether use is recorded against the room, the person, or both (both unless you change it), and

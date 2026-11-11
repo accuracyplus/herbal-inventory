@@ -36,6 +36,7 @@ export const RULES = {
   'stock.use':         ['STAFF', ...OPS],                  // record use, move linen
   'use.for_others':    OPS,                                // say that somebody else used it
   'custody.team':      DECIDE,                             // see and settle what the team holds
+  'cost.people':       DECIDE,                             // cost per person, by name
   'cost.view':         ['PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],
   'request.create':    ['STAFF', 'STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN'],
   'request.decide':    DECIDE,

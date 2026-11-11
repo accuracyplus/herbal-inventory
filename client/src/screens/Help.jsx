@@ -17,6 +17,7 @@ const ACTIONS = {
 const FLOWS = [
   ['use', 'Using stock', 'Record use → choose the store, the room and who used it → add items. Expiry items go first-expiry-first; expired stock is refused.'],
   ['scan', 'Scanning', 'Scan on any list of items uses this device\'s camera; on a computer, Scan with phone shows a code to open on your phone, and each scan lands on the computer\'s list. Scan in the menu is for walking the store. A barcode nobody knows asks which item it is.'],
+  ['download', 'Many items at once', 'Admin → Bulk upload → download the sheet, edit it in Excel, choose the file. It is checked first and shows what would be added or changed; nothing is saved until you press Save, and a file with a problem saves nothing.'],
   ['custody', 'Taking stock to use later', 'With me → Take stock → it stays with you until you record it as used or return it. Only used stock counts as consumption. Held too long, it is flagged to you and your manager.'],
   ['requests', 'Getting stock from the store', 'New request → items and where they are needed → a manager approves (unless the unit has switched that off) → the store gives it out, in one go or several.'],
   ['purchasing', 'Buying', 'Purchasing → What to buy shows what is at or below its reorder level → draft an order per supplier → submit → a manager approves → print it for the supplier → Receive delivery against it when it arrives.'],

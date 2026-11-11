@@ -83,6 +83,21 @@ without its stock, nor stock without its receipt.
   bundled and loaded on demand (`client/src/scan/reader.js`): CSP allows scripts from self only.
   `_headers` allows the camera for this origin (`camera=(self)`).
 
+## 3b. Bulk upload
+
+- `src/domain/bulk.js`: items, suppliers, rooms and areas. The page reads the file
+  (`client/src/sheet.js`, Excel or CSV) and sends headings and rows; the server decides. A check
+  reports each row as add, change, no change or problem and changes nothing; applying re-checks
+  and saves only a file with no problems, in one batch. Rows match on code (items, rooms) or name
+  (suppliers); a blank cell leaves the field alone; nothing is deleted.
+- Master data only: no balances, batches or movements. Switching expiry tracking or linen on an
+  item that holds stock is refused and sent to the item's own screen.
+- New rows go in as multi-row inserts (D1 binds 100 values a statement), so a first load of
+  several hundred items fits in one request; past 800 statements the file is refused.
+- The template is the unit's own list. Its code, barcode, phone and TRN columns are Text for the
+  whole column, which is why `sheet.js` writes .xlsx itself (on `fflate`) rather than through a
+  library that cannot. Checked in Excel 16: opens clean, typed leading zeros are kept.
+
 ## 4. HiFive ID
 
 | Route | Who calls it | Guard |

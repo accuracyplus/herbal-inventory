@@ -30,6 +30,8 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
 - **Scanning** with the phone's camera on every list of items, or **Scan with phone** from a
   computer (a QR code pairs the person's phone; scans land on the computer's list); a Scan screen
   for walking the store; unknown barcodes are saved to the item by store roles.
+- **Bulk upload** of items (with levels per store), suppliers, and rooms and areas from Excel or
+  CSV: download the list, edit it, and a check shows what would change before anything is saved.
 - **With me**: staff take stock to themselves or their room, then record it as used or return it;
   anything held too long is flagged to them and their manager, with no ranking of people.
 - **Requests**: staff ask, a manager approves (or the unit switches approval off), the store gives

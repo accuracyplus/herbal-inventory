@@ -92,7 +92,9 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
 4. **Admin → People**: Add a person, pick them from HiFive ID's staff list, and give them a role.
    The import report lists the names the old app knew.
    For each director: a Viewer seat, and tick **Director** so they see the group monthly summary.
-5. **Purchasing → Suppliers**: add the suppliers.
+5. **Purchasing → Suppliers**: add the suppliers, or **Admin → Bulk upload → Suppliers** to load
+   them from a sheet. The same tab loads new items, levels and rooms; after the import (D2) it
+   is the quick way to set barcodes, suppliers and levels for many items at once.
 6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park, and
    whether use is recorded against the room, the person, or both (both unless you change it), and
    after how many hours taken stock counts as unaccounted for (24 unless you change it).

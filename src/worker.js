@@ -28,6 +28,7 @@ import { countAction, getCount, listCounts, saveCountLines, startCount } from '.
 import { heldByMe, returnHeld, takeStock, unaccountedInUnit, useHeld } from './domain/custody.js';
 import { groupMonthly, myUse, REPORTS } from './domain/reports.js';
 import { hfidPeople, takeHfidName } from './domain/people.js';
+import { BULK_KINDS, bulkTemplate, bulkUpload } from './domain/bulk.js';
 import { addScan, closeSession, linkBarcode, openSession, pairSession, sessionEvents } from './domain/scanning.js';
 import { today } from './domain/today.js';
 import { allSettings } from './domain/settings.js';
@@ -499,6 +500,19 @@ api('POST', '/api/hfid/people/:code/name', async ({ request, env, params }, user
 api('GET', '/api/settings', async ({ env }, user) => json(await allSettings(env, user.unitId)));
 api('PUT', '/api/settings', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await saveSettings(env, user, await body(request))); });
 api('GET', '/api/audit', async ({ env, url }, user) => { requireMay(user, 'admin'); return json(await auditLog(env, user, { q: text(url.searchParams.get('q'), 60) })); });
+const bulkKind = (user, params) => {
+  const kind = BULK_KINDS[params.kind] ? params.kind : null;
+  if (kind) requireMay(user, BULK_KINDS[kind].may);
+  return kind;
+};
+api('GET', '/api/bulk/:kind/template', async ({ env, params }, user) => {
+  const kind = bulkKind(user, params);
+  return kind ? json(await bulkTemplate(env, user, kind)) : fail(404, 'NOT_FOUND', 'There is no bulk upload for that.');
+});
+api('POST', '/api/bulk/:kind', async ({ request, env, params }, user) => {
+  const kind = bulkKind(user, params);
+  return kind ? json(await bulkUpload(env, user, kind, await body(request))) : fail(404, 'NOT_FOUND', 'There is no bulk upload for that.');
+});
 api('POST', '/api/import', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await runImport(env, user, await body(request))); });
 
 api('GET', '/api/units', async ({ env }, user) => { requireGroupAdmin(user); return json(await listUnits(env)); });

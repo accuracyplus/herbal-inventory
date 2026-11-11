@@ -10,6 +10,7 @@ import {
   Button, Card, Check, ErrorNote, Field, Hint, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, StatusRows, Table, useApp, useData,
 } from '../ui.jsx';
 import { ItemForm } from './Stock.jsx';
+import Bulk from './Bulk.jsx';
 
 export default function Admin() {
   const { can, me, route } = useApp();
@@ -20,6 +21,7 @@ export default function Admin() {
     can('admin') && ['areas', 'Rooms & areas'],
     can('admin') && ['people', 'People'],
     can('admin') && ['settings', 'Settings'],
+    (can('items.edit') || can('supplier.edit') || can('admin')) && ['bulk', 'Bulk upload'],
     can('admin') && ['import', 'Import'],
     can('admin') && ['audit', 'Activity log'],
     me.groupAdmin && ['units', 'Units'],
@@ -34,6 +36,7 @@ export default function Admin() {
       {tab === 'areas' && <Areas />}
       {tab === 'people' && <People />}
       {tab === 'settings' && <Settings />}
+      {tab === 'bulk' && <Bulk />}
       {tab === 'import' && <Import />}
       {tab === 'audit' && <Audit />}
       {tab === 'units' && <Units />}

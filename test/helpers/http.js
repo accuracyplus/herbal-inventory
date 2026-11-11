@@ -56,6 +56,22 @@ export const tokenFor = (who) => {
   return hfidToken({ sub: `hf-${p.id}`, emp_code: p.code, name: p.name, role: p.claimRole || 'employee', entity: 'Herbal Park' });
 };
 
+/** HiFive ID's register as the tests see it: everybody in PEOPLE, plus two codes tests add. */
+export function defaultRoster() {
+  return [
+    ...Object.values(PEOPLE).map((p) => ({
+      employee_code: p.code, full_name: p.name, entity: p.seats[HV] ? 'Herbal Valley' : 'Herbal Park',
+      department: 'Spa', designation: 'Therapist', start_date: '2024-01-01', end_date: null, notice_date: null, status: 'active',
+    })),
+    { employee_code: 'HPNEW1', full_name: 'New Therapist', entity: 'Herbal Park', start_date: '2024-01-01', status: 'active' },
+    { employee_code: 'HPNEW2', full_name: 'Nisha Nair', entity: 'Herbal Park', start_date: '2024-01-01', status: 'active' },
+  ];
+}
+
+/**
+ * Options: `roster` (rows /roster answers with), `rosterFails` (a status HiFive ID answers with),
+ * `rosterCalls` (an array each roster request's bearer is pushed to, to check who asked).
+ */
 export function testEnv(extra = {}) {
   const DB = new TestD1(join(root, 'schema.sql'));
   for (const f of readdirSync(join(root, 'migrations')).filter((n) => n.endsWith('.sql')).sort()) {
@@ -85,7 +101,17 @@ export function testEnv(extra = {}) {
     HFID_ISSUER: 'hifive-id',
     HFID_AUDIENCE: 'hifive-inventory',
     HFID_JWKS_URL: 'https://hifive-id.test/.well-known/jwks.json',
-    HFID: { fetch: async () => new Response(JSON.stringify({ keys: [k.jwk] })) },
+    HFID: {
+      fetch: async (req) => {
+        const u = new URL(req.url);
+        if (u.pathname === '/roster') {
+          extra.rosterCalls?.push({ app: u.searchParams.get('app'), bearer: req.headers.get('authorization') });
+          if (extra.rosterFails) return new Response(JSON.stringify({ error: 'unknown_app', message: 'Pass ?app=<key> naming the calling application' }), { status: extra.rosterFails });
+          return new Response(JSON.stringify({ as_of: new Date().toISOString(), via: 'session', staff: extra.roster ?? defaultRoster() }));
+        }
+        return new Response(JSON.stringify({ keys: [k.jwk] }));
+      },
+    },
     ...extra,
   };
 }

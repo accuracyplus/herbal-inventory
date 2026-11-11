@@ -10,9 +10,10 @@ import { gstDate, q3 } from '../lib/data.js';
 import { may } from './access.js';
 import { stockList } from './catalog.js';
 import { custodyWaiting } from './custody.js';
+import { reviewCount } from './people.js';
 import { setting } from './settings.js';
 
-export async function today(env, user) {
+export async function today(env, user, { bearer } = {}) {
   const u = user.unitId;
   const waiting = [];
   const one = (sql, ...args) => env.DB.prepare(sql).bind(...args).first();
@@ -47,6 +48,10 @@ export async function today(env, user) {
   }
 
   waiting.push(...await custodyWaiting(env, user));
+  if (may(user, 'admin')) {
+    const n = await reviewCount(env, user, bearer);
+    if (n) waiting.push({ key: 'people-review', screen: 'admin', to: 'admin?tab=people', n, text: `${n} change${n > 1 ? 's' : ''} from HiFive ID to review: joiners, leavers, names` });
+  }
 
   // The person's own requests: what has happened to them this week.
   const { results: mine } = await env.DB.prepare(

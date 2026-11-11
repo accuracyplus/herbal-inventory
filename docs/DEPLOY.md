@@ -73,6 +73,9 @@ Register a new HiFive module: Inventory.
   Transport's /pending/service; it returns { items: [{ text, days }] }.
 - Weekly reconciliation: GET /api/roster on the same Worker, admin/hr assertion, same shape as
   Transport's.
+- Inventory reads GET /roster?app=inventory with the signed-in administrator's own Inventory
+  token (as Transport's People screen does). No service token is needed: Inventory has no
+  scheduled job.
 - Admin console role dropdown: GET/PUT /api/roles/:empId on the same Worker, same contract as
   Transport's. Roles offered: STAFF, STOREKEEPER, PURCHASER, MANAGER, VIEWER.
 Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed wherever Transport's is.
@@ -86,8 +89,8 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
 3. **Admin → Import**: open the old app's data link shown there, save the page, choose the file,
    and press **Check first** only. Read the report and fix anything it lists in the old app.
    The real import is step D2.
-4. **Admin → People**: add each person with their HiFive ID employee code and role. The import
-   report lists the names the old app knew.
+4. **Admin → People**: Add a person, pick them from HiFive ID's staff list, and give them a role.
+   The import report lists the names the old app knew.
    For each director: a Viewer seat, and tick **Director** so they see the group monthly summary.
 5. **Purchasing → Suppliers**: add the suppliers.
 6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park, and

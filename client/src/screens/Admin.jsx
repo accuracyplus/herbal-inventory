@@ -4,10 +4,10 @@
  */
 
 import { useMemo, useState } from 'react';
-import { fmtDateTime, fmtQty, post, put } from '../api.js';
+import { fmtDate, fmtDateTime, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Hint, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Hint, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, StatusRows, Table, useApp, useData,
 } from '../ui.jsx';
 import { ItemForm } from './Stock.jsx';
 
@@ -152,13 +152,72 @@ function Areas() {
   );
 }
 
+/** Somebody from HiFive ID's staff list who has no seat here yet: this unit's people first. */
+function PersonPicker({ people, onPick }) {
+  const [q, setQ] = useState('');
+  const t = q.trim().toLowerCase();
+  const shown = people.filter((p) => !p.seated && (!t || `${p.name} ${p.code} ${p.designation || ''} ${p.department || ''}`.toLowerCase().includes(t))).slice(0, 40);
+  return (
+    <div className="stack">
+      <SearchBox value={q} onChange={setQ} placeholder="Find by name, employee code or job" />
+      {shown.length
+        ? <StatusRows rows={shown.map((p) => ({
+          key: p.code, icon: 'plus', tone: p.inUnit ? 'brand' : 'faint', label: p.name,
+          sub: [p.code, p.designation, p.inUnit ? null : p.entity].filter(Boolean).join(' · '),
+          onClick: () => onPick(p),
+        }))} />
+        : <Quiet icon="search">Nobody in HiFive ID matches “{q}”, or they already have a seat here.</Quiet>}
+    </div>
+  );
+}
+
+const dmy = (d) => (d ? fmtDate(d) : '');
+
+/** What HiFive ID says has changed: decisions for an administrator, never made for them. */
+function Review({ hf, people, onOpen, onRename, onAdd }) {
+  const r = hf.review;
+  const open = (code) => { const p = people?.find((x) => x.code === code); if (p) onOpen(p); };
+  const blocks = [
+    r.left.length > 0 && ['Left, according to HiFive ID', 'danger', r.left.map((p) => ({ key: p.code, label: p.name, sub: `${p.code}${p.endDate ? ` · last day ${dmy(p.endDate)}` : ''} · still has a seat here`, action: ['Open', () => open(p.code)] }))],
+    r.joiners.length > 0 && ['Joined recently', 'brand', r.joiners.map((p) => ({ key: p.code, label: p.name, sub: [p.code, p.designation, p.startDate && `started ${dmy(p.startDate)}`].filter(Boolean).join(' · '), action: ['Add', () => onAdd(p)] }))],
+    r.renamed.length > 0 && ['Name differs from HiFive ID', 'warn', r.renamed.map((p) => ({ key: p.code, label: `${p.name} → ${p.hfidName}`, sub: p.code, action: ['Use HiFive ID’s name', () => onRename(p.code)] }))],
+    r.unknown.length > 0 && ['Not in HiFive ID', 'warn', r.unknown.map((p) => ({ key: p.code, label: p.name, sub: `${p.code} · check the code, or ask HR`, action: ['Open', () => open(p.code)] }))],
+    r.leaving.length > 0 && ['Leaving soon', 'faint', r.leaving.map((p) => ({ key: p.code, label: p.name, sub: `${p.code}${p.endDate ? ` · last day ${dmy(p.endDate)}` : ''}${p.noticeDate ? ` · notice from ${dmy(p.noticeDate)}` : ''}` }))],
+  ].filter(Boolean);
+  if (!blocks.length) return <Quiet>HiFive ID and this unit agree: no joiners, leavers or name changes to look at.</Quiet>;
+  return (
+    <Card title="From HiFive ID" hint="Compared with HiFive ID's staff list when this page opened. Nothing changes until you act: a leaver keeps their seat here until you remove it.">
+      <div className="stack">
+        {blocks.map(([title, tone, rows]) => (
+          <div key={title} className="stack" style={{ gap: 6 }}>
+            <h3 className="caption">{title}</h3>
+            <ul className="lots">
+              {rows.map((x) => (
+                <li key={x.key} className="lot">
+                  <div className="min0"><span className={`row-label ${tone === 'danger' ? 'tone-txt-CRITICAL' : ''}`}>{x.label}</span><span className="row-sub">{x.sub}</span></div>
+                  {x.action && <div className="lot-actions"><Button kind="secondary" onClick={x.action[1]}>{x.action[0]}</Button></div>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 function People() {
-  const { me, lists, toast } = useApp();
+  const { me, lists, toast, refreshBadges } = useApp();
   const { data, error, loading, reload } = useData('/api/people');
+  const hf = useData('/api/hfid/people');
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const roles = Object.keys(me.labels.roles);
+  const startAdd = (p) => setEditing({ code: p?.code || '', full_name: p?.name || '', roles: ['STAFF'], stores: [], limit: false, isNew: true, picked: !!p });
+  const rename = async (code) => {
+    try { const r = await post(`/api/hfid/people/${encodeURIComponent(code)}/name`); toast(r.unchanged ? 'Already the same' : `Now ${r.name}`); reload(); hf.reload(); refreshBadges(); } catch (e) { toast(e.message, 'danger'); }
+  };
   const save = async () => {
     setBusy(true); setErr(null);
     try {
@@ -166,15 +225,18 @@ function People() {
         code: editing.code, name: editing.full_name, roles: editing.roles, stores: editing.limit ? editing.stores : null, active: editing.active !== 0,
         ...(me.groupAdmin ? { groupSummary: !!editing.group_summary } : {}),
       });
-      toast('Saved'); setEditing(null); reload();
+      toast('Saved'); setEditing(null); reload(); hf.reload(); refreshBadges();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   const toggleRole = (r) => setEditing((e) => ({ ...e, roles: e.roles.includes(r) ? e.roles.filter((x) => x !== r) : [...e.roles.filter((x) => (r === 'VIEWER' ? false : x !== 'VIEWER')), r] }));
   const toggleStore = (id) => setEditing((e) => ({ ...e, stores: e.stores.includes(id) ? e.stores.filter((x) => x !== id) : [...e.stores, id] }));
   return (
     <>
-      <div className="note"><Icon name="help" size={18} /><span>People sign in with HiFive ID, and are matched by their <b>employee code</b>. Somebody HiFive ID grants Inventory to is added here automatically as {me.labels.roles.STAFF} on first sign-in.</span></div>
-      <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => setEditing({ code: '', full_name: '', roles: ['STAFF'], stores: [], limit: false, isNew: true })}>Add a person</Button></div>
+      <div className="note"><Icon name="help" size={18} /><span>People come from HiFive ID's staff list and sign in with HiFive ID. Somebody HiFive ID grants Inventory to is added here automatically as {me.labels.roles.STAFF} on first sign-in.</span></div>
+      <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => startAdd(null)}>Add a person</Button></div>
+      {hf.loading && !hf.data && <Loading what="Reading HiFive ID's staff list" />}
+      {hf.error && <ErrorNote error={hf.error} onRetry={hf.reload} />}
+      {hf.data && <Review hf={hf.data} people={data} onAdd={startAdd} onRename={rename} onOpen={(p) => setEditing({ ...p, limit: !!p.stores, stores: p.stores || [] })} />}
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}
       {data && (
@@ -193,12 +255,22 @@ function People() {
             {!editing.isNew && editing.active !== 0 && <Button kind="ghost" busy={busy} onClick={() => { setEditing({ ...editing, active: 0 }); }}>Remove from this unit</Button>}
             <Button kind="secondary" onClick={() => setEditing(null)}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button>
           </>}>
-          <div className="form two">
-            <Field label="HiFive ID employee code" hint="Exactly as in HiFive ID, e.g. HPAHC040. This is how sign-in finds them.">
-              <input value={editing.code} disabled={!editing.isNew} onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })} />
-            </Field>
-            <Field label="Full name"><input value={editing.full_name} disabled={!editing.isNew} onChange={(e) => setEditing({ ...editing, full_name: e.target.value })} /></Field>
-          </div>
+          {editing.isNew && !editing.picked && hf.data && (
+            <PersonPicker people={hf.data.people} onPick={(p) => setEditing({ ...editing, code: p.code, full_name: p.name, picked: true })} />
+          )}
+          {editing.isNew && !editing.picked && !hf.data && (
+            <div className="note warn"><Icon name="alert" size={18} /><span>HiFive ID's staff list could not be read{hf.loading ? ' yet' : ''}. Type the employee code exactly as in HiFive ID; the activity log will say it was not checked.</span></div>
+          )}
+          {(!editing.isNew || editing.picked || !hf.data) && (
+            <div className="form two">
+              <Field label="HiFive ID employee code" hint="This is how sign-in finds them.">
+                <input value={editing.code} disabled={!editing.isNew || editing.picked} onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })} />
+              </Field>
+              <Field label="Full name" hint="As HiFive ID has it."><input value={editing.full_name} disabled={!editing.isNew || editing.picked} onChange={(e) => setEditing({ ...editing, full_name: e.target.value })} /></Field>
+            </div>
+          )}
+          {editing.isNew && editing.picked && <div><Button kind="ghost" onClick={() => setEditing({ ...editing, code: '', full_name: '', picked: false })}>Choose somebody else</Button></div>}
+          {(!editing.isNew || editing.picked || !hf.data) && (<>
           <Field label="Roles in this unit">
             <div className="stack" style={{ gap: 4 }}>
               {roles.map((r) => (
@@ -219,6 +291,7 @@ function People() {
               <b>Director</b> <span className="muted">— can see the group monthly summary: counts and totals for every unit, no names. Give them a Viewer seat so the Reports screen shows.</span>
             </Check>
           )}
+          </>)}
           {editing.active === 0 && <div className="note warn"><Icon name="alert" size={18} />Saving will remove them from {me.unit.name}. Their records stay.</div>}
           <ErrorNote error={err} />
         </Sheet>

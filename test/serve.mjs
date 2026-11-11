@@ -15,11 +15,18 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import worker from '../src/worker.js';
-import { makeItem, receive, S, testEnv, tokenFor } from './helpers/http.js';
+import { defaultRoster, makeItem, receive, S, testEnv, tokenFor } from './helpers/http.js';
 
 const port = Number(process.argv[2]) || 8791;
 const dist = join(dirname(fileURLToPath(import.meta.url)), '..', 'client', 'dist');
-const env = testEnv({ APP_ORIGIN: `http://localhost:${port}` });
+// A made-up HiFive ID register with something to review: a joiner, a leaver, a spelling.
+const day = (d) => new Date(Date.now() + d * 864e5).toISOString().slice(0, 10);
+const roster = defaultRoster().map((r) => (
+  r.employee_code === 'HPV001' ? { ...r, status: 'exited', end_date: day(-3) }
+    : r.employee_code === 'HPB001' ? { ...r, full_name: 'Bilal Ahmed Buyer' }
+      : r.employee_code === 'HPK001' ? { ...r, end_date: day(25), notice_date: day(-5) } : r));
+roster.push({ employee_code: 'HPAHC040', full_name: 'Anitha Krishnan', entity: 'Herbal Park', designation: 'Therapist', start_date: day(-4), status: 'active' });
+const env = testEnv({ APP_ORIGIN: `http://localhost:${port}`, roster });
 const ctx = { waitUntil: () => {} };
 
 for (const [name, category] of [['Dhanwantharam thailam', 'Oils'], ['Kizhi powder', 'Herbs']]) {

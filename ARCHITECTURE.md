@@ -93,6 +93,13 @@ without its stock, nor stock without its receipt.
 | `GET /api/roster` | weekly reconciliation | admin/hr assertion for this audience |
 | `GET/PUT /api/roles/:empId` | the HiFive ID admin console | console session (`aud`/`module` = `hifive-id`), admin/hr |
 
+Inventory also reads HiFive ID: `GET /roster?app=inventory` (`src/lib/roster.js`, the shape of
+Transport's), with the administrator's own session, when Admin → People or Today opens. It is
+compared with the unit's seats: a picker of everybody still working, and a review of recent
+joiners (30 days), leavers, people on notice, names that differ and codes HiFive ID does not hold.
+Nothing is changed by reading it. A new seat is checked against it (code must exist, not left;
+the name is HiFive ID's); with HiFive ID unreachable the typed code stands and the log says so.
+
 Tokens must carry `module: inventory` and `aud: hifive-inventory`. "Can access" with no seat here
 gives `HFID_GRANT_ROLE` (STAFF) in the unit matching the HiFive ID entity; never Unit admin.
 
@@ -107,4 +114,7 @@ gives `HFID_GRANT_ROLE` (STAFF) in the unit matching the HiFive ID entity; never
 - **No PIN sign-in.** Everybody has HiFive ID; a second credential is a second thing to leak.
 - **No replay of the old app's history into the ledger.** It sits in `legacy_movements` for
   reference; replaying it on top of the opening balances would count everything twice.
-- **People are not imported.** The sheet has names, not employee codes.
+- **People are not imported.** The sheet has names, not employee codes. They are picked from
+  HiFive ID's staff list instead.
+- **Nobody is removed automatically.** A leaver in HiFive ID is put to an administrator; HiFive ID
+  itself stops them signing in.

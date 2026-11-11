@@ -12,7 +12,7 @@ const greeting = () => {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 };
 
-const ICON = { requests: 'requests', purchasing: 'purchasing', corrections: 'corrections', counts: 'counts', 'with-me': 'custody' };
+const ICON = { requests: 'requests', purchasing: 'purchasing', corrections: 'corrections', counts: 'counts', 'with-me': 'custody', admin: 'unit' };
 
 export default function Today() {
   const { me, navigate, can, currency } = useApp();
@@ -51,7 +51,7 @@ export default function Today() {
                     key: w.key, icon: ICON[w.screen] || 'requests', label: w.text,
                     flag: w.urgent > 0 && w.key !== 'po-receive' ? `${w.urgent} urgent` : null,
                     tone: w.urgent ? 'danger' : 'brand',
-                    onClick: () => navigate(`${w.screen}${w.filter ? `?status=${w.filter}` : ''}`),
+                    onClick: () => navigate(w.to || `${w.screen}${w.filter ? `?status=${w.filter}` : ''}`),
                   }))} />
                 ) : <Quiet>Nothing waiting for you.</Quiet>}
               </Card>

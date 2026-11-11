@@ -27,6 +27,7 @@ import { decideAdjustment, getAdjustment, listAdjustments, raiseAdjustment, REAS
 import { countAction, getCount, listCounts, saveCountLines, startCount } from './domain/counts.js';
 import { heldByMe, returnHeld, takeStock, unaccountedInUnit, useHeld } from './domain/custody.js';
 import { groupMonthly, myUse, REPORTS } from './domain/reports.js';
+import { hfidPeople, takeHfidName } from './domain/people.js';
 import { addScan, closeSession, linkBarcode, openSession, pairSession, sessionEvents } from './domain/scanning.js';
 import { today } from './domain/today.js';
 import { allSettings } from './domain/settings.js';
@@ -73,6 +74,9 @@ const api = (method, pattern, handler) => on(method, pattern, async (c) => {
   c.user = user;
   return handler(c, user);
 });
+
+/** The signed-in person's own HiFive ID token: what reads the roster on their behalf. */
+const bearerOf = (request) => (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '') || null;
 
 const body = async (request) => {
   try { return await request.json(); } catch { return {}; }
@@ -301,7 +305,7 @@ api('GET', '/api/me', async ({ env }, user) => {
   });
 });
 
-api('GET', '/api/today', async ({ env }, user) => json(await today(env, user)));
+api('GET', '/api/today', async ({ request, env }, user) => json(await today(env, user, { bearer: bearerOf(request) })));
 
 // ── Stock ────────────────────────────────────────────────────────────────────
 
@@ -486,7 +490,12 @@ api('POST', '/api/departments', async ({ request, env }, user) => { requireMay(u
 api('PUT', '/api/departments/:id', async ({ request, env, params }, user) => { requireMay(user, 'admin'); return json(await saveDepartment(env, user, await body(request), params.id)); });
 api('GET', '/api/people/pick', async ({ env }, user) => { requireMay(user, 'use.for_others'); return json(await listPeopleToPick(env, user)); });
 api('GET', '/api/people', async ({ env }, user) => { requireMay(user, 'admin'); return json(await listPeople(env, user)); });
-api('PUT', '/api/people', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await savePerson(env, user, await body(request))); });
+api('PUT', '/api/people', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await savePerson(env, user, await body(request), { bearer: bearerOf(request) })); });
+api('GET', '/api/hfid/people', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await hfidPeople(env, user, bearerOf(request))); });
+api('POST', '/api/hfid/people/:code/name', async ({ request, env, params }, user) => {
+  requireMay(user, 'admin');
+  return json(await takeHfidName(env, user, decodeURIComponent(params.code), bearerOf(request)));
+});
 api('GET', '/api/settings', async ({ env }, user) => json(await allSettings(env, user.unitId)));
 api('PUT', '/api/settings', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await saveSettings(env, user, await body(request))); });
 api('GET', '/api/audit', async ({ env, url }, user) => { requireMay(user, 'admin'); return json(await auditLog(env, user, { q: text(url.searchParams.get('q'), 60) })); });

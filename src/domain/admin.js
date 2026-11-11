@@ -8,6 +8,7 @@ import { jsonList, nowIso, text, uuid } from '../lib/data.js';
 import { auditStmt } from '../lib/audit.js';
 import { ROLES } from '../lib/auth.js';
 import { commit } from './stock.js';
+import { checkNewSeat } from './people.js';
 import { validSetting } from './settings.js';
 
 const CODE = /^[A-Za-z0-9._-]{1,20}$/;
@@ -211,7 +212,7 @@ export async function listPeopleToPick(env, user) {
  * this app has never held them — the code must be their HiFive ID employee code, because that
  * is how sign-in finds them.
  */
-export async function savePerson(env, user, body) {
+export async function savePerson(env, user, body, { bearer } = {}) {
   const code = text(body.code, 30)?.toUpperCase();
   if (!code || !/^[A-Z0-9._-]+$/.test(code)) refuse('BAD_CODE', 'Enter their HiFive ID employee code, for example HPAHC040.');
   const roles = [...new Set((body.roles || []).filter((r) => ROLES.includes(r)))];
@@ -228,8 +229,12 @@ export async function savePerson(env, user, body) {
   const now = nowIso();
   const stmts = [];
   let staff = await env.DB.prepare(`SELECT id, full_name FROM staff WHERE UPPER(TRIM(code)) = ?`).bind(code).first();
+  const active = body.active === false ? 0 : 1;
+  // A new seat is checked against HiFive ID: the code must be there, and not somebody who has left.
+  const seatedHere = staff && await env.DB.prepare(`SELECT 1 FROM staff_units WHERE staff_id = ? AND unit_id = ? AND active = 1`).bind(staff.id, user.unitId).first();
+  const hfid = active && !seatedHere ? await checkNewSeat(env, code, bearer) : { checked: false, skipped: true };
   if (!staff) {
-    const name = text(body.name, 120);
+    const name = hfid.name || text(body.name, 120);
     if (!name) refuse('NAME_REQUIRED', `${code} is new here: enter their full name as it is in HiFive ID.`);
     staff = { id: uuid(), full_name: name };
     stmts.push(env.DB.prepare(`INSERT INTO staff (id, code, full_name, active, updated_at, updated_by) VALUES (?,?,?,1,?,?)`)
@@ -238,7 +243,6 @@ export async function savePerson(env, user, body) {
   if (staff.id === user.staffId && !roles.includes('UNIT_ADMIN') && !user.groupAdmin) {
     refuse('SELF_DEMOTE', 'You cannot remove your own administrator role. Ask another administrator.');
   }
-  const active = body.active === false ? 0 : 1;
   if (!active || !roles.includes('UNIT_ADMIN')) await refuseLastAdmin(env, user, staff.id);
   stmts.push(env.DB.prepare(
     `INSERT INTO staff_units (staff_id, unit_id, roles, stores, active, updated_at, updated_by) VALUES (?,?,?,?,?,?,?)
@@ -251,7 +255,8 @@ export async function savePerson(env, user, body) {
       .bind(body.groupSummary ? 1 : 0, now, user.fullName, staff.id));
     stmts.push(auditStmt(env, user, 'GROUP_SUMMARY', code, `${staff.full_name}: ${body.groupSummary ? 'can see' : 'cannot see'} the group monthly summary`));
   }
-  stmts.push(auditStmt(env, user, active ? 'SEAT_SET' : 'SEAT_REMOVE', code, `${staff.full_name}: ${roles.join(', ')}`));
+  stmts.push(auditStmt(env, user, active ? 'SEAT_SET' : 'SEAT_REMOVE', code,
+    `${staff.full_name}: ${roles.join(', ')}${!hfid.checked && !hfid.skipped ? ' (HiFive ID could not be checked)' : ''}`));
   await commit(env, stmts);
   return { ok: true, staffId: staff.id };
 }

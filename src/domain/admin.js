@@ -34,6 +34,8 @@ export async function saveStore(env, user, body, id = null) {
     if (body.active === false && s.active) {
       const held = await env.DB.prepare(`SELECT 1 FROM balances WHERE store_id = ? AND (qty > 0 OR in_use > 0 OR in_wash > 0) LIMIT 1`).bind(id).first();
       if (held) refuse('HAS_STOCK', `${s.name} still holds stock. Transfer it out before closing the store.`);
+      const out = await env.DB.prepare(`SELECT 1 FROM custody WHERE store_id = ? AND qty > 0 LIMIT 1`).bind(id).first();
+      if (out) refuse('HAS_HELD_STOCK', `Stock taken from ${s.name} is still with people. It has to be used or returned before the store can close.`);
     }
     await commit(env, [
       env.DB.prepare(`UPDATE stores SET code = ?, name = ?, kind = ?, sort = ?, active = ?, updated_at = ?, updated_by = ? WHERE id = ?`)

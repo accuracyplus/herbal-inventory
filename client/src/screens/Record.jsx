@@ -10,7 +10,7 @@ import LineEditor, { lineErrors, newLine, toPayload } from '../lines.jsx';
 import { Button, Card, ErrorNote, Field, Loading, Page, Select, useApp, useData } from '../ui.jsx';
 
 /** The stores this person may record against, the sub stores first for use. */
-function useMyStores(prefer) {
+export function useMyStores(prefer) {
   const { lists } = useApp();
   return useMemo(() => {
     const mine = lists.stores.filter((s) => s.mine);

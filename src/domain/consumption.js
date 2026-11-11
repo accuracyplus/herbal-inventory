@@ -33,6 +33,17 @@ async function personFor(env, user, personId, required) {
 }
 
 /**
+ * Who is taking stock into their keeping. There is always a holder, whatever the unit records
+ * for use: somebody has to answer for it. The room is optional until it is used.
+ */
+export async function holderFor(env, user, { areaId, personId }) {
+  const area = await areaFor(env, user, areaId);
+  if (area && !area.active) refuse('AREA_CLOSED', `${area.name} is closed. Choose another room or area.`);
+  const person = await personFor(env, user, personId, true);
+  return { area, person, departmentId: area?.department_id ?? null };
+}
+
+/**
  * @param areaId     the room or area, if one was chosen
  * @param personId   who it was used by, if one was chosen
  * @param requester  { id, name } when stock is given out against a request: the person who asked

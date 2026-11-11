@@ -27,6 +27,8 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
 - **Record use** against a room and the person who used it, with the room's department kept on
   the record (each unit chooses room, person or both); **transfers** between stores; **receive
   deliveries** against a purchase order or as a local purchase.
+- **With me**: staff take stock to themselves or their room, then record it as used or return it;
+  anything held too long is flagged to them and their manager, with no ranking of people.
 - **Requests**: staff ask, a manager approves (or the unit switches approval off), the store gives
   out in one go or several.
 - **Purchasing**: "what to buy" from levels and open orders, purchase orders from draft to

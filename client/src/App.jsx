@@ -12,6 +12,7 @@ import { AppCtx, Loading, Sheet, useToasts } from './ui.jsx';
 import Today from './screens/Today.jsx';
 import Stock from './screens/Stock.jsx';
 import { ReceiveScreen, TransferScreen, UseScreen } from './screens/Record.jsx';
+import WithMe from './screens/WithMe.jsx';
 import Linen from './screens/Linen.jsx';
 import Requests from './screens/Requests.jsx';
 import Purchasing from './screens/Purchasing.jsx';
@@ -26,6 +27,7 @@ const SCREENS = [
   { id: 'today', label: 'Today', icon: 'today', group: 'main', any: ['stock.view'], el: Today },
   { id: 'stock', label: 'Stock', icon: 'stock', group: 'main', any: ['stock.view'], el: Stock },
   { id: 'use', label: 'Record use', icon: 'use', group: 'do', any: ['stock.use'], el: UseScreen },
+  { id: 'with-me', label: 'With me', icon: 'custody', group: 'do', any: ['stock.use'], el: WithMe },
   { id: 'linen', label: 'Linen', icon: 'linen', group: 'do', any: ['stock.view'], el: Linen },
   { id: 'requests', label: 'Requests', icon: 'requests', group: 'do', any: ['request.create', 'request.decide', 'request.fulfil', 'reports'], el: Requests },
   { id: 'receive', label: 'Receive', icon: 'receive', group: 'store', any: ['receive'], el: ReceiveScreen },

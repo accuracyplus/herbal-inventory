@@ -17,6 +17,11 @@ export const SETTINGS = {
     options: ['both', 'room', 'person'], default: 'both',
     labels: { both: 'The room and the person', room: 'The room only', person: 'The person only' },
   },
+  'custody.account_hours': {
+    label: 'Call taken stock unaccounted for after this many hours',
+    hint: 'Stock somebody has taken and not recorded as used or returned by then is flagged to them and to their manager on Today.',
+    number: [1, 720], default: '24',
+  },
   'expiry.warn_days': {
     label: 'Warn about expiry this many days ahead',
     hint: 'Batches expiring within this many days show on Today and in the expiry report.',

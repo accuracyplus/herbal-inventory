@@ -9,6 +9,7 @@
 import { gstDate, q3 } from '../lib/data.js';
 import { may } from './access.js';
 import { stockList } from './catalog.js';
+import { custodyWaiting } from './custody.js';
 import { setting } from './settings.js';
 
 export async function today(env, user) {
@@ -44,6 +45,8 @@ export async function today(env, user) {
     const r = await one(`SELECT COUNT(*) AS n FROM counts WHERE unit_id = ? AND status = 'OPEN'`, u);
     if (r.n) waiting.push({ key: 'count-open', screen: 'counts', n: r.n, text: `${r.n} stock count${r.n > 1 ? 's' : ''} in progress` });
   }
+
+  waiting.push(...await custodyWaiting(env, user));
 
   // The person's own requests: what has happened to them this week.
   const { results: mine } = await env.DB.prepare(

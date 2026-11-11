@@ -12,7 +12,7 @@ const greeting = () => {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 };
 
-const ICON = { requests: 'requests', purchasing: 'purchasing', corrections: 'corrections', counts: 'counts' };
+const ICON = { requests: 'requests', purchasing: 'purchasing', corrections: 'corrections', counts: 'counts', 'with-me': 'custody' };
 
 export default function Today() {
   const { me, navigate, can, currency } = useApp();
@@ -29,7 +29,7 @@ export default function Today() {
         <>
           <div className="tiles">
             {can('cost.view') && data.stockValue !== null && (
-              <Tile icon="stock" tone="brand" value={fmtMoney(data.stockValue, currency, 0)} label="Stock value on hand" hint="Every shelf, room and laundry piece in this unit, at average cost." onClick={() => navigate('reports')} />
+              <Tile icon="stock" tone="brand" value={fmtMoney(data.stockValue, currency, 0)} label="Stock value on hand" hint="Every shelf, room and laundry piece in this unit, and stock with people, at average cost." onClick={() => navigate('reports')} />
             )}
             <Tile icon="alert" tone={data.shortCounts.out + data.shortCounts.critical ? 'danger' : 'ok'}
               value={data.shortCounts.out + data.shortCounts.critical}

@@ -128,6 +128,7 @@ function Valuation({ d }) {
           { key: 'store', label: 'Store' },
           { key: 'qty', label: 'Shelf', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
           { key: 'out', label: 'Rooms / laundry', align: 'right', render: (r) => (r.in_use || r.in_wash ? `${fmtQty(r.in_use)} / ${fmtQty(r.in_wash)}` : '—') },
+          { key: 'with_people', label: 'With people', align: 'right', render: (r) => (r.with_people ? fmtQty(r.with_people) : '—') },
           ...(money ? [{ key: 'avg_cost', label: 'Avg cost', align: 'right', render: (r) => fmtMoney(r.avg_cost, currency) }, { key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
         ]} />
       </Card>
@@ -153,7 +154,7 @@ function Expiry({ d }) {
   );
 }
 
-const KIND = { RECEIPT: 'Received', ISSUE: 'Used', TRANSFER_OUT: 'Sent', TRANSFER_IN: 'Arrived', ADJUST: 'Correction', COUNT: 'Count', OPENING: 'Opening', LINEN: 'Linen' };
+const KIND = { RECEIPT: 'Received', ISSUE: 'Used', TRANSFER_OUT: 'Sent', TRANSFER_IN: 'Arrived', ADJUST: 'Correction', COUNT: 'Count', OPENING: 'Opening', LINEN: 'Linen', TAKE: 'Taken', RETURN: 'Returned' };
 
 function Ledger({ d }) {
   const { can, currency } = useApp();

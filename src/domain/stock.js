@@ -19,8 +19,11 @@
 import { DomainError, refuse } from '../lib/errors.js';
 import { gstDate, m2, nowIso, q3, uuid } from '../lib/data.js';
 
-export const KINDS = ['RECEIPT', 'ISSUE', 'TRANSFER_OUT', 'TRANSFER_IN', 'ADJUST', 'COUNT', 'OPENING', 'LINEN'];
+export const KINDS = ['RECEIPT', 'ISSUE', 'TRANSFER_OUT', 'TRANSFER_IN', 'ADJUST', 'COUNT', 'OPENING', 'LINEN', 'TAKE', 'RETURN'];
 export const LINEN_STATES = { available: 'qty', in_use: 'in_use', in_wash: 'in_wash' };
+
+/** Kinds that hand stock to somebody: expired stock is never given out. */
+const handsOut = (kind) => kind === 'ISSUE' || kind === 'TRANSFER_OUT' || kind === 'TAKE';
 
 /** Items by id, fenced to the unit. Refuses an id from another unit as not found. */
 export async function loadItems(env, unitId, ids) {
@@ -58,7 +61,7 @@ async function fefo(env, { store, item, qty, kind, preferExpired }) {
   ).bind(store.id, item.id).all();
   let rows = results || [];
   const expired = (b) => b.expiry && b.expiry < today;
-  if (kind === 'ISSUE' || kind === 'TRANSFER_OUT') {
+  if (handsOut(kind)) {
     const usable = rows.filter((b) => !expired(b));
     if (!usable.length && rows.length) {
       refuse('ONLY_EXPIRED',
@@ -79,7 +82,7 @@ async function fefo(env, { store, item, qty, kind, preferExpired }) {
   if (left > 0) {
     const have = q3(qty - left);
     refuse('NOT_ENOUGH',
-      `Only ${fmt(have)} ${item.uom} of ${item.name} can be taken from ${store.name}${kind === 'ISSUE' || kind === 'TRANSFER_OUT' ? ' (expired stock is not counted)' : ''}.`,
+      `Only ${fmt(have)} ${item.uom} of ${item.name} can be taken from ${store.name}${handsOut(kind) ? ' (expired stock is not counted)' : ''}.`,
       422, { itemId: item.id, available: have });
   }
   return out;
@@ -232,14 +235,71 @@ export async function buildPosting(env, posting, lines) {
   return { statements: stmts, moved, value };
 }
 
-/** Everything of an item the unit holds: shelves, rooms and laundry. Used for average cost. */
+/** Everything of an item the unit holds: shelves, rooms, laundry and people. Used for average cost. */
 async function onHandInUnit(env, unitId, itemId) {
   const row = await env.DB.prepare(
-    `SELECT COALESCE(SUM(b.qty + b.in_use + b.in_wash), 0) AS n
-       FROM balances b JOIN stores s ON s.id = b.store_id
-      WHERE s.unit_id = ? AND b.item_id = ?`,
+    `SELECT COALESCE((SELECT SUM(b.qty + b.in_use + b.in_wash)
+                        FROM balances b JOIN stores s ON s.id = b.store_id
+                       WHERE s.unit_id = ?1 AND b.item_id = ?2), 0)
+          + COALESCE((SELECT SUM(c.qty) FROM custody c WHERE c.unit_id = ?1 AND c.item_id = ?2), 0) AS n`,
   ).bind(unitId, itemId).first();
   return Number(row?.n || 0);
+}
+
+// ── Custody: stock taken by a person, then used or returned ─────────────────
+
+/**
+ * Stock leaves the shelf and goes into somebody's keeping. One custody row per batch taken, so
+ * each carries its own age and can go back into the batch it came from.
+ */
+export async function buildTake(env, { unitId, actor, store, person, areaId, departmentId, lines, note, docId }) {
+  const at = nowIso();
+  const { statements, moved } = await buildPosting(env, { kind: 'TAKE', unitId, actor, at, doc: { type: 'CUSTODY', id: docId } },
+    lines.map((l) => ({
+      item: l.item, store, qty: -l.qty, batchId: l.batchId, areaId, note,
+      personId: person.id, personName: person.name, departmentId,
+    })));
+  const rows = moved.map((m) => env.DB.prepare(
+    `INSERT INTO custody (id, unit_id, person_id, person_name, store_id, item_id, batch_id, area_id, qty, taken_qty,
+                          unit_cost, taken_at, taken_by, taken_by_name, doc_id)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+  ).bind(uuid(), unitId, person.id, person.name, store.id, m.itemId, m.batchId, areaId ?? null, -m.qty, -m.qty,
+         m.unitCost, at, actor.id, actor.name, docId));
+  return { statements: [...statements, ...rows] };
+}
+
+const lessHeld = (env, lot, qty) => env.DB.prepare(`UPDATE custody SET qty = round(qty - ?, 3) WHERE id = ?`).bind(qty, lot.id);
+
+/**
+ * Held stock recorded as used. It left the shelf when it was taken, so this is an ISSUE that does
+ * not touch the shelf (from_state 'custody'), valued at what it cost when it was taken. The CHECK
+ * on custody.qty is the backstop for the same piece being settled twice at once.
+ */
+export function buildCustodyUse(env, { lot, qty, actor, areaId, departmentId, reason, note, docId }) {
+  const value = m2(-qty * lot.unit_cost);
+  return {
+    value,
+    statements: [
+      lessHeld(env, lot, qty),
+      env.DB.prepare(
+        `INSERT INTO movements (id, unit_id, at, kind, item_id, store_id, batch_id, qty, balance_after, from_state, to_state,
+                                unit_cost, value, doc_type, doc_id, area_id, reason, note, actor_id, actor_name,
+                                person_id, person_name, department_id)
+         VALUES (?,?,?,'ISSUE',?,?,?,?, (SELECT qty FROM balances WHERE store_id = ? AND item_id = ?), 'custody', 'used',
+                 ?,?,'CUSTODY',?,?,?,?,?,?,?,?,?)`,
+      ).bind(uuid(), lot.unit_id, nowIso(), lot.item_id, lot.store_id, lot.batch_id, -qty, lot.store_id, lot.item_id,
+             lot.unit_cost, value, docId, areaId ?? null, reason ?? null, note ?? null, actor.id, actor.name,
+             lot.person_id, lot.person_name, departmentId ?? null),
+    ],
+  };
+}
+
+/** Held stock back on the shelf it came from, in the batch it came from. */
+export async function buildCustodyReturn(env, { lot, item, store, qty, actor, note, docId }) {
+  const { statements } = await buildPosting(env, { kind: 'RETURN', unitId: lot.unit_id, actor, doc: { type: 'CUSTODY', id: docId } }, [{
+    item, store, qty, batchId: lot.batch_id, areaId: lot.area_id, note, personId: lot.person_id, personName: lot.person_name,
+  }]);
+  return { statements: [lessHeld(env, lot, qty), ...statements] };
 }
 
 /**

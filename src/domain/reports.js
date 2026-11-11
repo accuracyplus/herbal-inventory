@@ -29,11 +29,14 @@ const money = (user) => may(user, 'cost.view');
 
 export async function valuation(env, user) {
   const { results } = await env.DB.prepare(
-    `SELECT i.code, i.name, i.category, i.uom, s.name AS store, b.qty, b.in_use, b.in_wash, i.avg_cost,
-            round((b.qty + b.in_use + b.in_wash) * i.avg_cost, 2) AS value
-       FROM balances b JOIN items i ON i.id = b.item_id JOIN stores s ON s.id = b.store_id
-      WHERE s.unit_id = ? AND (b.qty > 0 OR b.in_use > 0 OR b.in_wash > 0)
-      ORDER BY i.category, i.name, s.name`,
+    `SELECT code, name, category, uom, store, qty, in_use, in_wash, with_people, avg_cost,
+            round((qty + in_use + in_wash + with_people) * avg_cost, 2) AS value
+       FROM (SELECT i.code, i.name, i.category, i.uom, s.name AS store, b.qty, b.in_use, b.in_wash, i.avg_cost,
+                    COALESCE((SELECT SUM(c.qty) FROM custody c WHERE c.store_id = b.store_id AND c.item_id = b.item_id), 0) AS with_people
+               FROM balances b JOIN items i ON i.id = b.item_id JOIN stores s ON s.id = b.store_id
+              WHERE s.unit_id = ?)
+      WHERE qty > 0 OR in_use > 0 OR in_wash > 0 OR with_people > 0
+      ORDER BY category, name, store`,
   ).bind(user.unitId).all();
   const rows = results || [];
   if (!money(user)) return { rows: rows.map(({ avg_cost, value, ...r }) => r) };

@@ -60,6 +60,15 @@ without its stock, nor stock without its receipt.
   department later does not rewrite past figures. Staff record as themselves; `use.for_others`
   lets store roles name somebody else. Stock given out against a request goes on the requester.
 
+- Custody: `custody` holds stock somebody has taken, one row per take and batch, so each has its
+  own age. A `TAKE` movement takes it off the shelf. Recorded as used it becomes an `ISSUE` with
+  `from_state = 'custody'`, which does not touch the shelf again and is valued at the cost when
+  taken; returned it is a `RETURN` into the same batch. Held stock still belongs to the unit, so
+  it counts in stock value and average cost. Only `ISSUE` is consumption.
+- Unaccounted: held past the unit's `custody.account_hours` (24 by default). A person sees their
+  own; `custody.team` (Manager, Unit administrator, and so group administrators) sees the unit's
+  in name order, with no totals.
+
 ## 4. HiFive ID
 
 | Route | Who calls it | Guard |

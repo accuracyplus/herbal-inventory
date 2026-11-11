@@ -40,7 +40,7 @@ export async function listAreas(env, user, { all = false } = {}) {
  */
 export async function stockList(env, user, { includeInactive = false } = {}) {
   const showCost = may(user, 'cost.view');
-  const [{ results: items }, { results: bals }, { results: levels }, { results: exp }] = await Promise.all([
+  const [{ results: items }, { results: bals }, { results: levels }, { results: exp }, { results: heldRows }] = await Promise.all([
     env.DB.prepare(
       `SELECT id, code, name, category, uom, barcode, tracks_expiry, is_linen, avg_cost, last_cost, supplier_id, active, notes
          FROM items WHERE unit_id = ? ${includeInactive ? '' : 'AND active = 1'} ORDER BY category, name`,
@@ -60,9 +60,11 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
         WHERE s.unit_id = ? AND bt.qty > 0
         GROUP BY bt.item_id, bt.store_id`,
     ).bind(user.unitId).all(),
+    env.DB.prepare(`SELECT item_id, store_id, SUM(qty) AS qty FROM custody WHERE unit_id = ? AND qty > 0 GROUP BY item_id, store_id`).bind(user.unitId).all(),
   ]);
   const key = (a, b) => `${a}|${b}`;
   const balMap = new Map((bals || []).map((b) => [key(b.item_id, b.store_id), b]));
+  const heldMap = new Map((heldRows || []).map((h) => [key(h.item_id, h.store_id), h.qty]));
   const lvMap = new Map((levels || []).map((l) => [key(l.item_id, l.store_id), l]));
   const expMap = new Map();
   for (const e of exp || []) {
@@ -89,7 +91,7 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
       const e = expMap.get(key(it.id, s.id));
       const qty = b?.qty ?? 0;
       return {
-        storeId: s.id, qty, inUse: b?.in_use ?? 0, inWash: b?.in_wash ?? 0,
+        storeId: s.id, qty, inUse: b?.in_use ?? 0, inWash: b?.in_wash ?? 0, withPeople: heldMap.get(key(it.id, s.id)) ?? 0,
         level: lv ? { reorder: lv.reorder, critical: lv.critical, par: lv.par } : null,
         status: levelStatus(qty, lv),
         nextExpiry: e?.next_expiry && e.next_expiry !== '' ? e.next_expiry : null,
@@ -97,7 +99,7 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
         held: !!b || !!lv,
       };
     });
-    const total = q3(per.reduce((s, p) => s + p.qty + p.inUse + p.inWash, 0));
+    const total = q3(per.reduce((s, p) => s + p.qty + p.inUse + p.inWash + p.withPeople, 0));
     const expiries = per.map((p) => p.nextExpiry).filter(Boolean).sort();
     const next = expiries[0] || null;
     const worst = ['OUT', 'CRITICAL', 'LOW', 'OK'].find((st) => per.some((p) => p.held && p.status === st)) || 'OK';
@@ -146,8 +148,11 @@ export async function itemDetail(env, user, id) {
       WHERE item_id = ? AND kind = 'ISSUE' AND at > datetime('now', '-30 days')`,
   ).bind(id).first();
   const strip = (m) => (showCost ? m : { ...m, unit_cost: undefined, value: undefined });
+  // How much, never who: this sheet is open to everybody who can see stock.
+  const out = await env.DB.prepare(`SELECT COALESCE(SUM(qty), 0) AS n FROM custody WHERE item_id = ? AND qty > 0`).bind(id).first();
   return {
     ...it,
+    with_people: q3(out?.n || 0),
     avg_cost: showCost ? it.avg_cost : undefined,
     last_cost: showCost ? it.last_cost : undefined,
     supplier: sup,
@@ -188,7 +193,10 @@ export async function saveItem(env, user, body, id = null) {
     if (!it) refuse('NOT_FOUND', 'That item does not exist in this unit.', 404);
     // Switching expiry tracking or linen on an item that already holds stock would leave the
     // batches or linen states disagreeing with the shelf.
-    const held = await env.DB.prepare(`SELECT 1 FROM balances WHERE item_id = ? AND (qty > 0 OR in_use > 0 OR in_wash > 0) LIMIT 1`).bind(id).first();
+    const held = await env.DB.prepare(
+      `SELECT 1 FROM balances WHERE item_id = ?1 AND (qty > 0 OR in_use > 0 OR in_wash > 0)
+       UNION ALL SELECT 1 FROM custody WHERE item_id = ?1 AND qty > 0 LIMIT 1`,
+    ).bind(id).first();
     if (held && it.is_linen !== f.is_linen) {
       refuse('HAS_STOCK', `${it.name} has stock. Linen can only be switched on or off while it holds none.`);
     }

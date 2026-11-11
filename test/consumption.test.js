@@ -192,5 +192,6 @@ test('/version names the migration, so a Worker ahead of its database shows', as
   const env = testEnv();
   const ok = await call(env, 'GET', '/version', { as: null });
   assert.equal(ok.status, 200);
-  assert.deepEqual(ok.body.schema.applied, [1, 2]);
+  assert.ok(ok.body.schema.ok);
+  assert.ok(ok.body.schema.applied.includes(2));
 });

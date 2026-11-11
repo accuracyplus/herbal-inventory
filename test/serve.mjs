@@ -42,6 +42,11 @@ function serveFile(path, res) {
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
   if (url.pathname === '/__token') { res.end(tokenFor(url.searchParams.get('as') || 'admin')); return; }
+  if (url.pathname === '/__age') { // Make everything held look this many hours old.
+    env.DB.db.prepare('UPDATE custody SET taken_at = ?').run(new Date(Date.now() - Number(url.searchParams.get('hours') || 0) * 36e5).toISOString());
+    res.end('ok');
+    return;
+  }
   if (!isApi(url.pathname)) { serveFile(url.pathname, res); return; }
   const chunks = [];
   for await (const c of req) chunks.push(c);

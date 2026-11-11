@@ -11,7 +11,7 @@ import {
 
 const KIND = {
   RECEIPT: 'Received', ISSUE: 'Used', TRANSFER_OUT: 'Sent', TRANSFER_IN: 'Arrived', ADJUST: 'Correction',
-  COUNT: 'Count', OPENING: 'Opening', LINEN: 'Linen',
+  COUNT: 'Count', OPENING: 'Opening', LINEN: 'Linen', TAKE: 'Taken', RETURN: 'Returned',
 };
 const STATE = { available: 'shelf', in_use: 'rooms', in_wash: 'laundry', gone: 'discarded' };
 
@@ -74,7 +74,7 @@ export default function Stock() {
   const exportCsv = () => downloadCsv(`stock-${new Date().toISOString().slice(0, 10)}.csv`, rows, [
     { key: 'code', label: 'Code' }, { key: 'name', label: 'Item' }, { key: 'category', label: 'Category' }, { key: 'uom', label: 'Unit' },
     ...stock.stores.map((s) => ({ label: s.name, value: (it) => it.stores.find((x) => x.storeId === s.id)?.qty ?? '' })),
-    { key: 'total', label: 'Total incl. linen out' }, { key: 'status', label: 'Status' }, { key: 'nextExpiry', label: 'Next expiry' },
+    { key: 'total', label: 'Total incl. linen out and stock with people' }, { key: 'status', label: 'Status' }, { key: 'nextExpiry', label: 'Next expiry' },
     ...(can('cost.view') ? [{ key: 'avgCost', label: 'Average cost' }, { key: 'value', label: 'Value' }] : []),
   ]);
 
@@ -126,6 +126,7 @@ function ItemSheet({ id, onClose, onEdit }) {
                 {it.is_linen ? <span className="row-sub">{fmtQty(b.in_use)} in rooms · {fmtQty(b.in_wash)} at laundry</span> : null}
               </div>
             ))}
+            {it.with_people > 0 && <div><dt>With people</dt><dd>{fmtQty(it.with_people)} {it.uom}</dd><span className="row-sub">Taken, not yet used or returned</span></div>}
             <div><dt>Used, last 30 days</dt><dd>{fmtQty(it.used30)} {it.uom}</dd></div>
             {can('cost.view') && <div><dt>Average cost</dt><dd>{fmtMoney(it.avg_cost, currency)}</dd></div>}
           </dl>

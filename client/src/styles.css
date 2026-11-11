@@ -405,3 +405,14 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
 .tone-txt-OUT, .tone-txt-CRITICAL { color: rgb(var(--danger)); font-weight: 700; }
 .tone-txt-LOW { color: color-mix(in srgb, rgb(var(--warn)) 70%, black); font-weight: 700; }
 .dark .tone-txt-LOW { color: rgb(var(--warn)); }
+
+/* Stock with people */
+.lots { list-style: none; margin: 0; padding: 0; }
+.lot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.lot:first-child { border-top: 0; padding-top: 0; }
+.lot:last-child { padding-bottom: 0; }
+.lot-actions { display: flex; gap: 8px; }
+@media (max-width: 560px) {
+  .lot { grid-template-columns: minmax(0, 1fr); }
+  .lot-actions > * { flex: 1; }
+}

@@ -25,6 +25,7 @@ import { cancelRequest, createRequest, decideRequest, fulfilRequest, getRequest,
 import { getPo, listPos, poAction, savePo, suggestions } from './domain/purchasing.js';
 import { decideAdjustment, getAdjustment, listAdjustments, raiseAdjustment, REASONS } from './domain/adjustments.js';
 import { countAction, getCount, listCounts, saveCountLines, startCount } from './domain/counts.js';
+import { heldByMe, returnHeld, takeStock, unaccountedInUnit, useHeld } from './domain/custody.js';
 import { REPORTS } from './domain/reports.js';
 import { today } from './domain/today.js';
 import { allSettings } from './domain/settings.js';
@@ -349,6 +350,14 @@ api('GET', '/api/linen', async ({ env }, user) => {
   ).bind(user.unitId).all();
   return json({ rows: results || [], recent: recent || [], items: linenItems || [] });
 });
+
+// ── Stock with people ────────────────────────────────────────────────────────
+
+api('POST', '/api/custody/take', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await takeStock(env, user, await body(request)), 201); });
+api('POST', '/api/custody/use', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await useHeld(env, user, await body(request))); });
+api('POST', '/api/custody/return', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await returnHeld(env, user, await body(request))); });
+api('GET', '/api/custody/mine', async ({ env }, user) => { requireMay(user, 'stock.use'); return json(await heldByMe(env, user)); });
+api('GET', '/api/custody/team', async ({ env }, user) => { requireMay(user, 'custody.team'); return json(await unaccountedInUnit(env, user)); });
 
 // ── Requests ─────────────────────────────────────────────────────────────────
 

@@ -27,6 +27,7 @@ npx wrangler d1 create hifive-inventory
 ```powershell
 npm run migrate
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0001_departments_and_people.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0002_custody.sql
 npm run seed
 ```
 
@@ -87,7 +88,8 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
    report lists the names the old app knew.
 5. **Purchasing → Suppliers**: add the suppliers.
 6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park, and
-   whether use is recorded against the room, the person, or both (both unless you change it).
+   whether use is recorded against the room, the person, or both (both unless you change it), and
+   after how many hours taken stock counts as unaccounted for (24 unless you change it).
 
 ## D. Switch-over
 

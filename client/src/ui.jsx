@@ -327,7 +327,7 @@ export function ItemPicker({ items, storeId, onPick, exclude = [], placeholder =
     const t = q.trim().toLowerCase();
     const pool = items.filter((i) => i.active !== false && !exclude.includes(i.id) && (!filter || filter(i)));
     if (!t) return pool.slice(0, 30);
-    const exact = pool.filter((i) => i.barcode === q.trim() || i.code.toLowerCase() === t);
+    const exact = pool.filter((i) => i.barcode === q.trim() || i.barcodes?.includes(q.trim()) || i.code.toLowerCase() === t);
     if (exact.length) return exact;
     return pool.filter((i) => `${i.name} ${i.code} ${i.category}`.toLowerCase().includes(t)).slice(0, 30);
   }, [q, items, exclude, filter]);

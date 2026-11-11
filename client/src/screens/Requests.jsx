@@ -99,7 +99,7 @@ function NewRequest({ preItem, onClose, onDone }) {
       </div>
       {me.settings['requests.approval'] === 'none' && <div className="note"><Icon name="check" size={18} />In {me.unit.name} requests go straight to the store — no approval step.</div>}
       {toStore && !suggestTried && <div><Button kind="ghost" icon="sparkle" onClick={fill}>Fill from this store's levels</Button></div>}
-      <LineEditor mode="request" items={stock.items} storeId={fromId} lines={lines} setLines={setLines} />
+      <LineEditor mode="request" items={stock.items} storeId={fromId} lines={lines} setLines={setLines} scan="request" />
       <ErrorNote error={err} />
     </Sheet>
   );

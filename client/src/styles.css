@@ -416,3 +416,18 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
   .lot { grid-template-columns: minmax(0, 1fr); }
   .lot-actions > * { flex: 1; }
 }
+
+/* Scanning */
+.scan-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.camera { position: relative; overflow: hidden; border-radius: var(--r-md); background: var(--surface-2); aspect-ratio: 4 / 3; max-height: 52vh; width: 100%; }
+.camera video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.camera:not(.on) video { visibility: hidden; }
+.camera-frame { position: absolute; inset: 22% 10%; border: 3px solid var(--primary); border-radius: var(--r-sm); pointer-events: none; }
+.camera-say { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 16px; text-align: center; color: var(--text-strong); font-weight: 600; }
+.camera.on .camera-say { inset: auto 0 0 0; background: var(--surface-1); padding: 8px; }
+.tally { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.tally li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.which-item { border: 1px solid var(--line-strong); }
+/* A QR code must be dark on light to be read, whatever the theme, so it keeps a white ground. */
+.qr { width: min(260px, 100%); margin: 0 auto; padding: 10px; background: white; border-radius: var(--r-sm); line-height: 0; }
+.qr svg { width: 100%; height: auto; }

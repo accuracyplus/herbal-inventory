@@ -13,6 +13,7 @@ import Today from './screens/Today.jsx';
 import Stock from './screens/Stock.jsx';
 import { ReceiveScreen, TransferScreen, UseScreen } from './screens/Record.jsx';
 import WithMe from './screens/WithMe.jsx';
+import Scan from './screens/Scan.jsx';
 import Linen from './screens/Linen.jsx';
 import Requests from './screens/Requests.jsx';
 import Purchasing from './screens/Purchasing.jsx';
@@ -27,6 +28,7 @@ const SCREENS = [
   { id: 'today', label: 'Today', icon: 'today', group: 'main', any: ['stock.view'], el: Today },
   { id: 'stock', label: 'Stock', icon: 'stock', group: 'main', any: ['stock.view'], el: Stock },
   { id: 'use', label: 'Record use', icon: 'use', group: 'do', any: ['stock.use'], el: UseScreen },
+  { id: 'scan', label: 'Scan', icon: 'scan', group: 'do', any: ['stock.view'], el: Scan },
   { id: 'with-me', label: 'With me', icon: 'custody', group: 'do', any: ['stock.use'], el: WithMe },
   { id: 'linen', label: 'Linen', icon: 'linen', group: 'do', any: ['stock.view'], el: Linen },
   { id: 'requests', label: 'Requests', icon: 'requests', group: 'do', any: ['request.create', 'request.decide', 'request.fulfil', 'reports'], el: Requests },
@@ -92,6 +94,9 @@ export default function App() {
     let arrived = null;
     try { arrived = await captureSignIn(); } catch (e) { setError(e.message); setChecking(false); return; }
     if (arrived) post('/auth/hfid/arrived').catch(() => {});
+    // A phone opening a computer's pairing link works in the unit the computer is in.
+    const askedUnit = parseHash().query.get('unit');
+    if (askedUnit) unitPref.set(askedUnit);
     if (!token.get()) { setChecking(false); return; }
     await loadMe();
     setChecking(false);

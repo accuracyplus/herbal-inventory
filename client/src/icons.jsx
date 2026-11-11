@@ -6,6 +6,8 @@ const P = {
   today: <><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20h14V9.5" /><path d="M9.5 20v-6h5v6" /></>,
   stock: <><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z" /><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" /></>,
   use: <><path d="M12 3v11" /><path d="m7.5 9.5 4.5 4.5 4.5-4.5" /><path d="M4 17v2.5h16V17" /></>,
+  scan: <><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16" /><path d="M7.5 9v6M10.5 9v6M13 9v6M16.5 9v6" /></>,
+  phone: <><rect x="7" y="2.5" width="10" height="19" rx="2" /><path d="M11 18.5h2" /></>,
   custody: <><path d="M12 3.5 4 7.5v5c0 4.2 3.3 7 8 8 4.7-1 8-3.8 8-8v-5z" /><path d="m8.5 12 2.5 2.5 4.5-4.5" /></>,
   linen: <><path d="M5 4h14v4H5z" /><path d="M6 8v12h12V8" /><path d="M9 12h6M9 15.5h6" /></>,
   requests: <><path d="M4 13 6.5 5h11L20 13v6H4z" /><path d="M4 13h4.5l1 2h5l1-2H20" /></>,

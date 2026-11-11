@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDateTime, fmtMoney, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
+import { isDesk, PairSheet, ScanSheet } from '../scan/ScanSheets.jsx';
 import {
   Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, QtyInput, Quiet, SearchBox, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
@@ -69,6 +70,7 @@ function CountSheet({ id, onClose, onChanged }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [dirty, setDirty] = useState(false);
+  const [scanning, setScanning] = useState(null);
   useEffect(() => { if (c) { setVals(Object.fromEntries(c.lines.map((l) => [l.item_id, l.counted ?? '']))); setDirty(false); } }, [c]);
   const lines = useMemo(() => (c ? c.lines.filter((l) => {
     if (q && !`${l.name} ${l.code} ${l.barcode || ''}`.toLowerCase().includes(q.toLowerCase())) return false;
@@ -90,6 +92,13 @@ function CountSheet({ id, onClose, onChanged }) {
     setBusy(true); setErr(null);
     try { const r = await post(`/api/counts/${id}/${action}`, { note }); toast(r.clamped?.length ? `${msg}. Limited to what is on the shelf for: ${r.clamped.join(', ')}` : msg); reload(); onChanged(); refreshBadges(); if (action === 'approve') refreshStock(); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
+  /** A scan counts one more of an item on this count; anything else is not part of it. */
+  const countOne = (item) => {
+    if (!c.lines.some((l) => l.item_id === item.id)) return false;
+    setVals((s) => ({ ...s, [item.id]: String((Number(s[item.id]) || 0) + 1) }));
+    setDirty(true);
+    return true;
+  };
   const counted = Object.values(vals).filter((v) => v !== '' && v !== null).length;
   const totalVar = c.lines.reduce((s, l) => s + (l.value || 0), 0);
   const mine = c.submitted_by === me.staffId;
@@ -108,8 +117,12 @@ function CountSheet({ id, onClose, onChanged }) {
         <div className="toolbar">
           <SearchBox value={q} onChange={setQ} placeholder="Find an item, or scan" />
           <Check checked={onlyLeft} onChange={setOnlyLeft}>Only those not counted</Check>
+          {can('count.run') && <Button kind="secondary" icon="scan" onClick={() => setScanning('camera')}>Scan</Button>}
+          {can('count.run') && isDesk() && <Button kind="secondary" icon="phone" onClick={() => setScanning('phone')}>Scan with phone</Button>}
         </div>
       )}
+      {scanning === 'camera' && <ScanSheet onItem={countOne} onClose={() => setScanning(null)} />}
+      {scanning === 'phone' && <PairSheet purpose="count" onItem={countOne} onClose={() => setScanning(null)} />}
       <div className="lines">
         {lines.map((l) => {
           const v = vals[l.item_id];

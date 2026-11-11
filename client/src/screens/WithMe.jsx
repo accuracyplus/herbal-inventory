@@ -187,7 +187,7 @@ function Take() {
         <ErrorNote error={peopleError} />
       </Card>
       <Card title="Items">
-        <LineEditor mode="out" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} pickerFilter={(i) => !i.isLinen} />
+        <LineEditor mode="out" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} pickerFilter={(i) => !i.isLinen} scan="take" />
       </Card>
       <ErrorNote error={err} />
       <div className="row" style={{ justifyContent: 'flex-end' }}>

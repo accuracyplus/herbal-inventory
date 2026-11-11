@@ -27,6 +27,7 @@ import { decideAdjustment, getAdjustment, listAdjustments, raiseAdjustment, REAS
 import { countAction, getCount, listCounts, saveCountLines, startCount } from './domain/counts.js';
 import { heldByMe, returnHeld, takeStock, unaccountedInUnit, useHeld } from './domain/custody.js';
 import { groupMonthly, myUse, REPORTS } from './domain/reports.js';
+import { addScan, closeSession, linkBarcode, openSession, pairSession, sessionEvents } from './domain/scanning.js';
 import { today } from './domain/today.js';
 import { allSettings } from './domain/settings.js';
 import {
@@ -350,6 +351,15 @@ api('GET', '/api/linen', async ({ env }, user) => {
   ).bind(user.unitId).all();
   return json({ rows: results || [], recent: recent || [], items: linenItems || [] });
 });
+
+// ── Scanning ─────────────────────────────────────────────────────────────────
+
+api('POST', '/api/scan/sessions', async ({ request, env }, user) => { requireMay(user, 'stock.view'); return json(await openSession(env, user, await body(request)), 201); });
+api('GET', '/api/scan/sessions/:id', async ({ env, params, url }, user) => json(await sessionEvents(env, user, params.id, url.searchParams.get('after'))));
+api('POST', '/api/scan/sessions/:id/pair', async ({ env, params }, user) => json(await pairSession(env, user, params.id)));
+api('POST', '/api/scan/sessions/:id/scans', async ({ request, env, params }, user) => json(await addScan(env, user, params.id, await body(request))));
+api('POST', '/api/scan/sessions/:id/close', async ({ env, params }, user) => json(await closeSession(env, user, params.id)));
+api('POST', '/api/items/:id/barcodes', async ({ request, env, params }, user) => { requireMay(user, 'barcode.link'); return json(await linkBarcode(env, user, params.id, await body(request))); });
 
 // ── Stock with people ────────────────────────────────────────────────────────
 

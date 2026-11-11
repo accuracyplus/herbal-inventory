@@ -6,6 +6,7 @@ import { refuse } from '../lib/errors.js';
 import { gstDate, nonNegative, nowIso, q3, text, uuid } from '../lib/data.js';
 import { auditStmt } from '../lib/audit.js';
 import { may } from './access.js';
+import { barcodeOwner, findByCode } from './scanning.js';
 import { commit } from './stock.js';
 import { setting } from './settings.js';
 
@@ -62,6 +63,9 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
     ).bind(user.unitId).all(),
     env.DB.prepare(`SELECT item_id, store_id, SUM(qty) AS qty FROM custody WHERE unit_id = ? AND qty > 0 GROUP BY item_id, store_id`).bind(user.unitId).all(),
   ]);
+  const { results: extraCodes } = await env.DB.prepare(`SELECT item_id, barcode FROM item_barcodes WHERE unit_id = ?`).bind(user.unitId).all();
+  const codesOf = new Map();
+  for (const b of extraCodes || []) codesOf.set(b.item_id, [...(codesOf.get(b.item_id) || []), b.barcode]);
   const key = (a, b) => `${a}|${b}`;
   const balMap = new Map((bals || []).map((b) => [key(b.item_id, b.store_id), b]));
   const heldMap = new Map((heldRows || []).map((h) => [key(h.item_id, h.store_id), h.qty]));
@@ -104,7 +108,7 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
     const next = expiries[0] || null;
     const worst = ['OUT', 'CRITICAL', 'LOW', 'OK'].find((st) => per.some((p) => p.held && p.status === st)) || 'OK';
     return {
-      id: it.id, code: it.code, name: it.name, category: it.category, uom: it.uom, barcode: it.barcode,
+      id: it.id, code: it.code, name: it.name, category: it.category, uom: it.uom, barcode: it.barcode, barcodes: codesOf.get(it.id) || [],
       tracksExpiry: !!it.tracks_expiry, isLinen: !!it.is_linen, active: !!it.active, notes: it.notes,
       supplierId: it.supplier_id,
       avgCost: showCost ? it.avg_cost : undefined,
@@ -189,6 +193,10 @@ export async function saveItem(env, user, body, id = null) {
   const clash = await env.DB.prepare(`SELECT id FROM items WHERE unit_id = ? AND UPPER(code) = ? AND id <> ?`)
     .bind(user.unitId, f.code, id || '').first();
   if (clash) refuse('CODE_TAKEN', `Another item already uses the code ${f.code}.`, 409);
+  if (f.barcode) {
+    const owner = await barcodeOwner(env, user.unitId, f.barcode, id || '');
+    if (owner) refuse('BARCODE_TAKEN', `${f.barcode} already belongs to ${owner.name}.`, 409);
+  }
   const now = nowIso();
   if (id) {
     const it = await env.DB.prepare(`SELECT * FROM items WHERE id = ? AND unit_id = ?`).bind(id, user.unitId).first();
@@ -268,12 +276,7 @@ export async function categories(env, user) {
   return results || [];
 }
 
-/** Find by barcode or exact code — for the scanner on the Record screens. */
+/** Find by any of an item's barcodes, or its exact code — for the scanners. */
 export async function lookup(env, user, codeOrBarcode) {
-  const v = String(codeOrBarcode || '').trim();
-  if (!v) return null;
-  return env.DB.prepare(
-    `SELECT id, code, name, uom, tracks_expiry, is_linen FROM items
-      WHERE unit_id = ? AND active = 1 AND (barcode = ? OR UPPER(code) = UPPER(?)) LIMIT 1`,
-  ).bind(user.unitId, v, v).first();
+  return findByCode(env, user.unitId, codeOrBarcode);
 }

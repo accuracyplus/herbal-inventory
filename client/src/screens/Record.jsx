@@ -88,7 +88,7 @@ export function UseScreen() {
         <ErrorNote error={peopleError} />
       </Card>
       <Card title="Items">
-        <LineEditor mode="out" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} pickerFilter={(i) => !i.isLinen} />
+        <LineEditor mode="out" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} pickerFilter={(i) => !i.isLinen} scan="use" />
       </Card>
       <ErrorNote error={err} />
       <div className="row" style={{ justifyContent: 'flex-end' }}>
@@ -132,7 +132,7 @@ export function TransferScreen() {
         </div>
       </Card>
       <Card title="Items">
-        <LineEditor mode="out" items={stock.items} storeId={fromId} lines={lines} setLines={setLines} errors={errors} />
+        <LineEditor mode="out" items={stock.items} storeId={fromId} lines={lines} setLines={setLines} errors={errors} scan="transfer" />
       </Card>
       <ErrorNote error={err} />
       <div className="row" style={{ justifyContent: 'flex-end' }}>
@@ -201,7 +201,7 @@ export function ReceiveScreen() {
         {lists.stores.length === 0 && <div className="note warn">No store is set up yet.</div>}
       </Card>
       <Card title="Items received">
-        <LineEditor mode="in" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} showCost={showCost} currency={currency} />
+        <LineEditor mode="in" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} showCost={showCost} currency={currency} scan="receive" />
       </Card>
       <ErrorNote error={err} />
       <div className="row" style={{ justifyContent: 'flex-end' }}>

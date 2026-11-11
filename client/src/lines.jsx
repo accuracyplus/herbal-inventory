@@ -12,7 +12,9 @@
 import { useEffect, useState } from 'react';
 import Icon from './icons.jsx';
 import { fmtMoney, fmtQty, get } from './api.js';
-import { Field, ItemPicker, QtyInput, Select, Stepper } from './ui.jsx';
+import { Button, Field, ItemPicker, QtyInput, Select, Stepper } from './ui.jsx';
+import { isDesk, PairSheet, ScanSheet } from './scan/ScanSheets.jsx';
+import { takeHandoff } from './scan/handoff.js';
 
 export const newLine = (item, extra = {}) => ({ key: `${item.id}-${Math.random().toString(36).slice(2, 7)}`, item, qty: '1', ...extra });
 
@@ -31,11 +33,35 @@ export function lineErrors(lines, mode, storeId) {
   return errs;
 }
 
-export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {} }) {
+/**
+ * `scan` (a purpose: use, take, transfer, receive, request) adds the Scan buttons, and takes any
+ * items handed over from the Scan screen for that purpose.
+ */
+export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan }) {
+  const [scanning, setScanning] = useState(null);
+  const fresh = (item, extra = {}) => newLine(item, { ...(mode === 'in' || mode === 'po' ? { unitCost: item.lastCost ?? item.avgCost ?? '' } : {}), ...extra });
   const add = (item) => {
     if (mode !== 'in' && lines.some((l) => l.item.id === item.id)) return;
-    setLines([...lines, newLine(item, mode === 'in' || mode === 'po' ? { unitCost: item.lastCost ?? item.avgCost ?? '' } : {})]);
+    setLines([...lines, fresh(item)]);
   };
+  /** A scan: one more of an item already on the list (its latest line, on a delivery), else a new line. */
+  const bump = (item) => {
+    if (pickerFilter && !pickerFilter(item)) return false;
+    setLines((cur) => {
+      const i = mode === 'in' ? cur.map((l) => l.item.id).lastIndexOf(item.id) : cur.findIndex((l) => l.item.id === item.id);
+      if (i < 0) return [...cur, fresh(item)];
+      return cur.map((l, j) => (j === i ? { ...l, qty: String((Number(l.qty) || 0) + 1) } : l));
+    });
+    return true;
+  };
+  useEffect(() => {
+    const handed = scan && takeHandoff(scan);
+    if (!handed) return;
+    setLines((cur) => [...cur, ...handed.map((h) => {
+      const it = items.find((i) => i.id === h.itemId);
+      return it && (!pickerFilter || pickerFilter(it)) ? fresh(it, { qty: String(h.qty) }) : null;
+    }).filter(Boolean)]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const set = (key, patch) => setLines(lines.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const drop = (key) => setLines(lines.filter((l) => l.key !== key));
   const total = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitCost) || 0), 0);
@@ -44,6 +70,14 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
     <div className="lines">
       <ItemPicker items={items} storeId={storeId} onPick={add} filter={pickerFilter}
         exclude={mode === 'in' ? [] : lines.map((l) => l.item.id)} />
+      {scan && (
+        <div className="scan-row">
+          <Button kind="secondary" icon="scan" onClick={() => setScanning('camera')}>Scan</Button>
+          {isDesk() && <Button kind="secondary" icon="phone" onClick={() => setScanning('phone')}>Scan with phone</Button>}
+        </div>
+      )}
+      {scanning === 'camera' && <ScanSheet onItem={bump} filter={pickerFilter} onClose={() => setScanning(null)} />}
+      {scanning === 'phone' && <PairSheet purpose={scan} onItem={bump} onClose={() => setScanning(null)} />}
       {lines.map((l) => {
         const here = l.item.stores?.find((s) => s.storeId === storeId);
         return (

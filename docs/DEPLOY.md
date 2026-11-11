@@ -29,6 +29,7 @@ npm run migrate
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0001_departments_and_people.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0002_custody.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0003_group_summary.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0004_scanning.sql
 npm run seed
 ```
 

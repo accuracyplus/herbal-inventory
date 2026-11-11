@@ -69,6 +69,20 @@ without its stock, nor stock without its receipt.
   own; `custody.team` (Manager, Unit administrator, and so group administrators) sees the unit's
   in name order, with no totals.
 
+## 3a. Scanning
+
+- `src/domain/scanning.js`. A barcode is found on `items.barcode` or `item_barcodes` (a second
+  pack, a case); it belongs to one item per unit, checked in both places on every save.
+- Phone pairing: the computer opens a `scan_sessions` row and shows it as a QR code; the phone,
+  signed in as the same person in the same unit, posts scans; the computer polls
+  `GET /api/scan/sessions/:id?after=seq` every 1.5 s. Polling rather than a Durable Object: it
+  needs nothing beyond D1, runs in the tests as in production, and reads only while a pairing is
+  open. A pairing ends when closed, 15 minutes after the last scan, or 4 hours after opening;
+  rows go after two days. Scans only fill in a form; nothing in scanning moves stock.
+- The camera reads with the browser's BarcodeDetector where there is one, otherwise ZXing,
+  bundled and loaded on demand (`client/src/scan/reader.js`): CSP allows scripts from self only.
+  `_headers` allows the camera for this origin (`camera=(self)`).
+
 ## 4. HiFive ID
 
 | Route | Who calls it | Guard |

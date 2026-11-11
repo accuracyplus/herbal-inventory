@@ -95,7 +95,7 @@ export function testEnv(extra = {}) {
     }
   }
   const k = hfidKey();
-  return {
+  const env = {
     DB,
     APP_ORIGIN: ORIGIN,
     HFID_ISSUER: 'hifive-id',
@@ -112,7 +112,35 @@ export function testEnv(extra = {}) {
         return new Response(JSON.stringify({ keys: [k.jwk] }));
       },
     },
+    // R2, in memory: what the Worker puts is what it gets back, and a test can reach in and change it.
+    FILES: memoryBucket(),
     ...extra,
+  };
+  // Workers AI: answers with `env.aiReply` as it stands at the time of the call (a value, or a
+  // function of the model and input); an Error is thrown. A test may change it between calls.
+  if (!extra.noAi && !('AI' in extra)) {
+    env.AI = {
+      run: async (model, input) => {
+        env.aiCalls?.push({ model, input });
+        const r = typeof env.aiReply === 'function' ? env.aiReply(model, input) : env.aiReply;
+        if (r instanceof Error) throw r;
+        return { response: r ?? null };
+      },
+    };
+  }
+  return env;
+}
+
+function memoryBucket() {
+  const objects = new Map();
+  return {
+    objects,
+    async put(key, value, opts) { objects.set(key, { bytes: Uint8Array.from(value), meta: opts?.httpMetadata }); },
+    async get(key) {
+      const o = objects.get(key);
+      return o ? { httpMetadata: o.meta, arrayBuffer: async () => o.bytes.buffer.slice(o.bytes.byteOffset, o.bytes.byteOffset + o.bytes.byteLength) } : null;
+    },
+    async delete(key) { objects.delete(key); },
   };
 }
 
@@ -143,13 +171,52 @@ export async function makeItem(env, fields = {}) {
   return res.body.id;
 }
 
-export async function receive(env, itemId, qty, extra = {}) {
-  const res = await call(env, 'POST', '/api/receipts', {
-    as: 'keeper', body: { storeId: extra.storeId || S.main, lines: [{ itemId, qty, unitCost: extra.unitCost ?? 10, expiry: extra.expiry, batchNo: extra.batchNo }] },
-  });
-  if (res.status !== 201) throw new Error(`receive: ${res.status} ${JSON.stringify(res.body)}`);
-  return res.body;
+let fileNo = 0;
+/** A small file of a kind the app keeps. Each one differs, so two on one delivery are two files. */
+export const pdfBytes = (words = 'delivery note') => new TextEncoder().encode(`%PDF-1.4\n% ${words} ${fileNo += 1}\n`);
+export const jpegBytes = (words = 'photo') => Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, ...new TextEncoder().encode(`${words} ${fileNo += 1}`)]);
+
+/** A file sent the way the page sends one: a form with the file and its fields. */
+export async function upload(env, path, { as = 'keeper', unit, bytes = pdfBytes(), name = 'note.pdf', type = 'application/pdf', ...fields } = {}) {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(fields)) if (v !== undefined && v !== null) form.set(k, v);
+  if (bytes) form.set('file', new File([bytes], name, { type }));
+  const headers = { origin: ORIGIN, authorization: `Bearer ${tokenFor(as)}` };
+  if (unit) headers['x-unit'] = unit;
+  const res = await worker.fetch(new Request(`https://worker.test${path}`, { method: 'POST', headers, body: form }), env, ctx());
+  const text = await res.text();
+  let parsed = null;
+  try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
+  return { status: res.status, body: parsed };
 }
+
+/** A file fetched back, as bytes. */
+export async function download(env, path, { as = 'keeper', unit } = {}) {
+  const headers = { origin: ORIGIN, authorization: `Bearer ${tokenFor(as)}` };
+  if (unit) headers['x-unit'] = unit;
+  const res = await worker.fetch(new Request(`https://worker.test${path}`, { headers }), env, ctx());
+  return { status: res.status, headers: res.headers, bytes: new Uint8Array(await res.arrayBuffer()) };
+}
+
+/**
+ * A delivery taken all the way to the shelf, as a unit on its default settings does it: the
+ * store keeper records it and attaches the note, and a manager approves.
+ */
+export async function deliver(env, body, { as = 'keeper', approver = 'manager' } = {}) {
+  const rec = await call(env, 'POST', '/api/receipts', { as, body });
+  if (rec.status !== 201) throw new Error(`deliver: ${rec.status} ${JSON.stringify(rec.body)}`);
+  if (rec.body.status === 'PENDING') {
+    const note = await upload(env, `/api/receipts/${rec.body.id}/files`, { as, kind: 'NOTE' });
+    if (note.status !== 201) throw new Error(`deliver, attaching the note: ${note.status} ${JSON.stringify(note.body)}`);
+    const ok = await call(env, 'POST', `/api/receipts/${rec.body.id}/approve`, { as: approver });
+    if (ok.status !== 200) throw new Error(`deliver, approving: ${ok.status} ${JSON.stringify(ok.body)}`);
+  }
+  return rec.body;
+}
+
+export const receive = (env, itemId, qty, extra = {}) => deliver(env, {
+  storeId: extra.storeId || S.main, lines: [{ itemId, qty, unitCost: extra.unitCost ?? 10, expiry: extra.expiry, batchNo: extra.batchNo }],
+});
 
 export const bal = (env, storeId, itemId) =>
   env.DB.db.prepare(`SELECT qty, in_use, in_wash FROM balances WHERE store_id = ? AND item_id = ?`).get(storeId, itemId) || { qty: 0, in_use: 0, in_wash: 0 };

@@ -33,11 +33,23 @@ export function lineErrors(lines, mode, storeId) {
   return errs;
 }
 
+/** For a delivery: lines whose count differs from the note. A warning to read, not a stop. */
+export function noteDifferences(lines) {
+  const out = {};
+  for (const l of lines) {
+    const q = Number(l.qty);
+    if (l.noteQty === undefined || l.noteQty === '' || l.noteQty === null || !(q > 0) || Number(l.noteQty) === q) continue;
+    const d = +(q - Number(l.noteQty)).toFixed(3);
+    out[l.key] = `${fmtQty(Math.abs(d))} ${l.item.uom} ${d < 0 ? 'short of' : 'more than'} the note`;
+  }
+  return out;
+}
+
 /**
  * `scan` (a purpose: use, take, transfer, receive, request) adds the Scan buttons, and takes any
  * items handed over from the Scan screen for that purpose.
  */
-export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan }) {
+export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan, withNote = false, warnings = {} }) {
   const [scanning, setScanning] = useState(null);
   const fresh = (item, extra = {}) => newLine(item, { ...(mode === 'in' || mode === 'po' ? { unitCost: item.lastCost ?? item.avgCost ?? '' } : {}), ...extra });
   const add = (item) => {
@@ -81,7 +93,7 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
       {lines.map((l) => {
         const here = l.item.stores?.find((s) => s.storeId === storeId);
         return (
-          <div key={l.key} className={`line ${errors[l.key] ? 'danger' : ''}`}>
+          <div key={l.key} className={`line ${errors[l.key] ? 'danger' : warnings[l.key] ? 'warn' : ''}`}>
             <div className="min0">
               <div className="line-name">{l.item.name}</div>
               <div className="line-sub">
@@ -89,14 +101,20 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
                 {here && mode !== 'in' && mode !== 'po' && <> · {fmtQty(here.qty)} {l.item.uom} in this store</>}
                 {mode === 'adjust' && <> · enter − to take away, + to add</>}
               </div>
+              {l.noteText && <div className="line-sub">On the note: “{l.noteText}”{l.factor > 1 ? ` · 1 on the note = ${fmtQty(l.factor)} ${l.item.uom}` : ''}</div>}
             </div>
             <button className="icon-btn" onClick={() => drop(l.key)} aria-label={`Remove ${l.item.name}`}><Icon name="trash" size={18} /></button>
             <div className="line-fields">
-              <Field label={`Quantity (${l.item.uom})`} className="qty-field">
+              <Field label={`${withNote ? 'Counted' : 'Quantity'} (${l.item.uom})`} className="qty-field">
                 {mode === 'adjust'
                   ? <QtyInput value={l.qty} min={undefined} onChange={(v) => set(l.key, { qty: v })} />
                   : <Stepper value={l.qty} onChange={(v) => set(l.key, { qty: v })} />}
               </Field>
+              {withNote && (
+                <Field label="On the note" hint="What the delivery note says, if it differs from what you counted. Leave empty when they agree.">
+                  <QtyInput value={l.noteQty ?? ''} onChange={(v) => set(l.key, { noteQty: v })} label="Quantity on the note" placeholder="Same" />
+                </Field>
+              )}
               {(mode === 'in' || mode === 'po') && showCost && (
                 <Field label={`Unit cost (${currency})`}>
                   <QtyInput value={l.unitCost} onChange={(v) => set(l.key, { unitCost: v })} label="Unit cost" />
@@ -111,6 +129,7 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
               {mode === 'out' && l.item.tracksExpiry && storeId && <BatchChoice line={l} storeId={storeId} onChange={(batchId) => set(l.key, { batchId })} />}
             </div>
             {errors[l.key] && <div className="line-warning">{errors[l.key]}</div>}
+            {!errors[l.key] && warnings[l.key] && <div className="line-warning" style={{ color: 'inherit' }}>{warnings[l.key]}</div>}
           </div>
         );
       })}

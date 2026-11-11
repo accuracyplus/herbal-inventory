@@ -143,7 +143,7 @@ export async function getPo(env, user, id) {
        FROM suppliers s, stores st WHERE s.id = ? AND st.id = ?`,
   ).bind(po.supplier_id, po.store_id).first();
   const { results: receipts } = await env.DB.prepare(
-    `SELECT id, ref, at, by_name, invoice_no, total FROM receipts WHERE po_id = ? ORDER BY at`,
+    `SELECT id, ref, at, by_name, invoice_no, total, status FROM receipts WHERE po_id = ? AND status IN ('PENDING','APPROVED') ORDER BY at`,
   ).bind(po.id).all();
   return { ...po, ...extra, lines: results || [], receipts: receipts || [] };
 }

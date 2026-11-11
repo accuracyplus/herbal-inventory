@@ -15,7 +15,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import worker from '../src/worker.js';
-import { defaultRoster, makeItem, receive, S, testEnv, tokenFor } from './helpers/http.js';
+import { call, defaultRoster, makeItem, receive, S, testEnv, tokenFor } from './helpers/http.js';
 
 const port = Number(process.argv[2]) || 8791;
 const dist = join(dirname(fileURLToPath(import.meta.url)), '..', 'client', 'dist');
@@ -26,7 +26,16 @@ const roster = defaultRoster().map((r) => (
     : r.employee_code === 'HPB001' ? { ...r, full_name: 'Bilal Ahmed Buyer' }
       : r.employee_code === 'HPK001' ? { ...r, end_date: day(25), notice_date: day(-5) } : r));
 roster.push({ employee_code: 'HPAHC040', full_name: 'Anitha Krishnan', entity: 'Herbal Park', designation: 'Therapist', start_date: day(-4), status: 'active' });
-const env = testEnv({ APP_ORIGIN: `http://localhost:${port}`, roster });
+// What "reading a delivery note" answers here, whatever the photo: a stand-in for Workers AI.
+const aiReply = {
+  supplier: 'KERALA AYURVEDA TRADERS L.L.C', note_no: 'DN-4471', date: '10/11/2026',
+  lines: [
+    { text: 'Dhanwantharam Thailam 200ml (Box of 12)', qty: 2, unit: 'box', unit_price: 360 },
+    { text: 'Kizhi Powder 1kg', qty: 5, unit: 'kg', unit_price: 18.5 },
+    { text: 'Cotton Kizhi Cloth 1m', qty: 20, unit: 'pcs', unit_price: 3.25 },
+  ],
+};
+const env = testEnv({ APP_ORIGIN: `http://localhost:${port}`, roster, aiReply });
 const ctx = { waitUntil: () => {} };
 
 for (const [name, category] of [['Dhanwantharam thailam', 'Oils'], ['Kizhi powder', 'Herbs']]) {
@@ -34,6 +43,8 @@ for (const [name, category] of [['Dhanwantharam thailam', 'Oils'], ['Kizhi powde
   await receive(env, id, 40);
   await receive(env, id, 20, { storeId: S.sub });
 }
+
+await call(env, 'POST', '/api/suppliers', { as: 'buyer', body: { name: 'Kerala Ayurveda Traders' } });
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 const isApi = (path) => /^\/(api|auth|pending|version|health)(\/|$)/.test(path);

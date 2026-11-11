@@ -76,23 +76,34 @@ export class ApiError extends Error {
   }
 }
 
-export async function request(path, { method = 'GET', body, noUnit = false } = {}) {
+/** `form` sends files: an object of fields, where a File or Blob goes as a file. `blob` returns the bytes. */
+export async function request(path, { method = 'GET', body, form, blob = false, noUnit = false } = {}) {
   let res;
+  let payload;
+  if (form) {
+    payload = new FormData();
+    for (const [k, v] of Object.entries(form)) {
+      if (v === null || v === undefined || v === '') continue;
+      if (v instanceof Blob) payload.append(k, v, v.name || 'file'); else payload.append(k, String(v));
+    }
+  } else if (body !== undefined) payload = JSON.stringify(body);
   try {
     res = await fetch(`${API}${path}`, {
       method,
       headers: {
         ...(token.get() ? { authorization: `Bearer ${token.get()}` } : {}),
         ...(!noUnit && unitPref.get() ? { 'x-unit': unitPref.get() } : {}),
-        ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+        // A form sets its own content type, with the boundary the browser chose.
+        ...(body !== undefined && !form ? { 'content-type': 'application/json' } : {}),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: payload,
     });
   } catch {
     throw new ApiError(navigator.onLine === false
       ? 'You are offline. Nothing was recorded — try again when you are back online.'
       : 'Could not reach HiFive Inventory. Check your connection and try again.', 0, 'NETWORK');
   }
+  if (blob && res.ok) return res.blob();
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new ApiError(data?.error?.message || 'Something went wrong.', res.status, data?.error?.code, data?.error?.details);
@@ -103,6 +114,47 @@ export async function request(path, { method = 'GET', body, noUnit = false } = {
 export const get = (path) => request(path);
 export const post = (path, body = {}) => request(path, { method: 'POST', body });
 export const put = (path, body = {}) => request(path, { method: 'PUT', body });
+export const sendForm = (path, form) => request(path, { method: 'POST', form });
+
+/**
+ * A photo made small enough to send from a phone on a weak signal: at most `max` pixels on its
+ * long side, as JPEG. A PDF, or a picture this browser cannot open, is sent as it is.
+ */
+export async function shrinkImage(file, max = 2000, quality = 0.85) {
+  if (!file.type.startsWith('image/')) return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bmp.width * k);
+    canvas.height = Math.round(bmp.height * k);
+    canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    bmp.close?.();
+    const out = await new Promise((done) => canvas.toBlob(done, 'image/jpeg', quality));
+    if (!out || (file.type === 'image/jpeg' && out.size >= file.size)) return file;
+    return new File([out], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+  } catch {
+    return file;
+  }
+}
+
+/**
+ * Open an attached file in a new tab. The tab is opened first, while the tap still counts as one
+ * (a phone's browser blocks a window opened after waiting), and pointed at the file once it has
+ * arrived. Files are fetched with the person's sign-in; they have no address of their own.
+ */
+export async function openFile(id, name) {
+  const tab = window.open('', '_blank');
+  try {
+    const url = URL.createObjectURL(await request(`/api/files/${id}`, { blob: true }));
+    if (tab) tab.location = url;
+    else { const a = document.createElement('a'); a.href = url; a.download = name || 'file'; document.body.appendChild(a); a.click(); a.remove(); }
+    setTimeout(() => URL.revokeObjectURL(url), 60e3);
+  } catch (e) {
+    tab?.close();
+    throw e;
+  }
+}
 
 // ── Formatting ───────────────────────────────────────────────────────────────
 

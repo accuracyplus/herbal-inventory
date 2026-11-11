@@ -8,7 +8,7 @@ import Icon from '../icons.jsx';
 const ACTIONS = {
   'stock.view': 'See stock', 'stock.use': 'Record use and move linen', 'use.for_others': 'Record use or give stock for somebody else', 'custody.team': 'See and settle what the team holds', 'cost.people': 'See cost per person', 'cost.view': 'See costs and values',
   'request.create': 'Ask for stock', 'request.decide': 'Approve requests', 'request.fulfil': 'Give out requested stock',
-  transfer: 'Transfer between stores', receive: 'Receive deliveries', 'adjust.raise': 'Raise corrections',
+  transfer: 'Transfer between stores', receive: 'Record deliveries and attach their paperwork', 'receipt.decide': 'Approve deliveries', 'adjust.raise': 'Raise corrections',
   'adjust.decide': 'Approve corrections', 'count.run': 'Count stock', 'count.decide': 'Approve counts',
   'po.edit': 'Draft purchase orders', 'po.decide': 'Approve purchase orders', 'supplier.edit': 'Keep suppliers',
   'items.edit': 'Keep the item list and levels', 'barcode.link': 'Save an unknown barcode to an item', reports: 'See reports', admin: 'Stores, departments, rooms, people, settings, import',
@@ -17,6 +17,7 @@ const ACTIONS = {
 const FLOWS = [
   ['use', 'Using stock', 'Record use → choose the store, the room and who used it → add items. Expiry items go first-expiry-first; expired stock is refused.'],
   ['scan', 'Scanning', 'Scan on any list of items uses this device\'s camera; on a computer, Scan with phone shows a code to open on your phone, and each scan lands on the computer\'s list. Scan in the menu is for walking the store. A barcode nobody knows asks which item it is.'],
+  ['receive', 'Receiving a delivery', 'Receive → photograph the delivery note to fill the form in, or type it → count what arrived against the note → attach the note → record. A manager approves it under Purchasing → Deliveries, seeing any difference from the note or the order, and then the stock is on the shelf.'],
   ['download', 'Many items at once', 'Admin → Bulk upload → download the sheet, edit it in Excel, choose the file. It is checked first and shows what would be added or changed; nothing is saved until you press Save, and a file with a problem saves nothing.'],
   ['custody', 'Taking stock to use later', 'With me → Take stock → it stays with you until you record it as used or return it. Only used stock counts as consumption. Held too long, it is flagged to you and your manager.'],
   ['requests', 'Getting stock from the store', 'New request → items and where they are needed → a manager approves (unless the unit has switched that off) → the store gives it out, in one go or several.'],

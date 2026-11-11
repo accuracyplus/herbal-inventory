@@ -9,10 +9,11 @@ import LineEditor, { newLine, toPayload } from '../lines.jsx';
 import {
   Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
+import { Deliveries, DeliveryPill, ReceiptSheet } from './Deliveries.jsx';
 
 export default function Purchasing() {
   const { route, navigate, can } = useApp();
-  const [tab, setTab] = useState(route.query.get('tab') || 'orders');
+  const [tab, setTab] = useState(route.query.get('tab') || (route.id === 'd' ? 'deliveries' : 'orders'));
   const [status, setStatus] = useState(route.query.get('status') || 'OPEN');
   const [editing, setEditing] = useState(null);
   const { data, error, loading, reload } = useData(tab === 'orders' ? `/api/pos${status ? `?status=${status}` : ''}` : null, [status, tab]);
@@ -21,8 +22,10 @@ export default function Purchasing() {
     <Page title="Purchasing" subtitle="Reorder suggestions, purchase orders and suppliers."
       actions={can('po.edit') && tab === 'orders' && <Button icon="plus" onClick={() => setEditing({})}>New order</Button>}>
       <Segmented label="Section" value={tab} onChange={setTab} options={[
-        { value: 'orders', label: 'Orders' }, ...(can('po.edit') ? [{ value: 'suggest', label: 'What to buy' }] : []), { value: 'suppliers', label: 'Suppliers' },
+        { value: 'orders', label: 'Orders' }, { value: 'deliveries', label: 'Deliveries' },
+        ...(can('po.edit') ? [{ value: 'suggest', label: 'What to buy' }] : []), { value: 'suppliers', label: 'Suppliers' },
       ]} />
+      {tab === 'deliveries' && <Deliveries initialStatus={route.query.get('tab') === 'deliveries' ? route.query.get('status') : undefined} />}
       {tab === 'orders' && (
         <>
           <Segmented label="Show" value={status} onChange={setStatus} options={[
@@ -46,7 +49,8 @@ export default function Purchasing() {
       )}
       {tab === 'suggest' && <Suggestions onDraft={(prefill) => { setEditing(prefill); setTab('orders'); }} />}
       {tab === 'suppliers' && <Suppliers />}
-      {route.id && <PoSheet id={route.id} onClose={() => navigate('purchasing')} onChanged={reload} onEdit={(po) => setEditing(po)} />}
+      {route.id === 'd' && route.sub && <ReceiptSheet id={route.sub} onClose={() => navigate('purchasing?tab=deliveries')} />}
+      {route.id && route.id !== 'd' && <PoSheet id={route.id} onClose={() => navigate('purchasing')} onChanged={reload} onEdit={(po) => setEditing(po)} />}
       {editing && <PoEditor po={editing} onClose={() => setEditing(null)} onSaved={(id) => { setEditing(null); reload(); navigate(`purchasing/${id}`); }} />}
     </Page>
   );
@@ -173,7 +177,7 @@ function PoSheet({ id, onClose, onChanged, onEdit }) {
           </Card>
           {po.receipts.length > 0 && (
             <Card title="Deliveries">
-              <ul className="timeline">{po.receipts.map((r) => <li key={r.id}><span><b>{r.ref}</b> · {fmtMoney(r.total, currency)}{r.invoice_no ? ` · invoice ${r.invoice_no}` : ''}<span className="row-sub">{r.by_name}, {fmtDateTime(r.at)}</span></span></li>)}</ul>
+              <ul className="timeline">{po.receipts.map((r) => <li key={r.id}><span><button className="link" onClick={() => navigate(`purchasing/d/${r.id}`)}><b>{r.ref}</b></button> · {fmtMoney(r.total, currency)}{r.invoice_no ? ` · invoice ${r.invoice_no}` : ''} {r.status === 'PENDING' && <DeliveryPill status={r.status} />}<span className="row-sub">{r.by_name}, {fmtDateTime(r.at)}</span></span></li>)}</ul>
             </Card>
           )}
           {po.status === 'SUBMITTED' && can('po.decide') && mine && <div className="note"><Icon name="alert" size={18} />You raised this order, so another manager approves it — unless you are the only one.</div>}

@@ -83,6 +83,25 @@ without its stock, nor stock without its receipt.
   bundled and loaded on demand (`client/src/scan/reader.js`): CSP allows scripts from self only.
   `_headers` allows the camera for this origin (`camera=(self)`).
 
+## 3c. Deliveries, their paperwork, and reading the note
+
+- `src/domain/receipts.js`. A delivery is recorded by the receiver as `PENDING` with its lines
+  (`receipt_lines`: counted, what the note says, what the order still expected and its price),
+  and posts stock only when somebody else approves (`receipt.decide`, four eyes). `receipt_posted`
+  has the receipt as its primary key and is written in the posting batch, so two approvals cannot
+  put stock on the shelf twice. `receipts.approval = none` posts at once.
+- Differences are derived from the lines, never stored: counted against the note, the note
+  against the order's outstanding quantity, and the price against the order's.
+- Files (`src/lib/files.js`): R2 bucket `FILES`, private, keyed `unit/receipt/<id>/<sha256>.<ext>`.
+  D1 `files` holds kind, uploader, time and SHA-256; the type is judged from the bytes; the digest
+  is checked again on every read. Served only through the Worker, to the unit. Approval needs a
+  delivery note or invoice unless `receipts.note = optional`. Files cannot be removed once the
+  delivery is decided.
+- Reading (`src/domain/notes.js`): Workers AI, a list of vision models tried in order, JSON by
+  schema with every field required. A suggestion only: it fills the Receive form. A supplier's
+  wording is remembered in `supplier_item_map` (text, item, units per note unit) when the
+  receiver records the delivery, so a correction replaces it.
+
 ## 3b. Bulk upload
 
 - `src/domain/bulk.js`: items, suppliers, rooms and areas. The page reads the file

@@ -43,6 +43,7 @@ export const RULES = {
   'request.fulfil':    OPS,
   'transfer':          OPS,
   'receive':           [...OPS, 'PURCHASER'],
+  'receipt.decide':    DECIDE,                             // approve a delivery somebody else recorded
   'adjust.raise':      OPS,
   'adjust.decide':     DECIDE,
   'count.run':         OPS,

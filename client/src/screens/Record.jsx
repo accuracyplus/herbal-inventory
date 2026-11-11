@@ -1,10 +1,10 @@
 /**
- * The three store actions with a form: record use, transfer between stores, receive a delivery.
+ * The store actions with a form: record use, and transfer between stores. Receiving is Receive.jsx.
  * Each one: choose a store, add lines, check, save — and the screen says what happened.
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { fmtMoney, get, gstToday, post } from '../api.js';
+import { post } from '../api.js';
 import Icon from '../icons.jsx';
 import LineEditor, { lineErrors, newLine, toPayload } from '../lines.jsx';
 import { Button, Card, ErrorNote, Field, Loading, Page, Select, useApp, useData } from '../ui.jsx';
@@ -137,75 +137,6 @@ export function TransferScreen() {
       <ErrorNote error={err} />
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <Button busy={busy} disabled={!lines.length || !toId || Object.keys(errors).length > 0} onClick={save} icon="transfer">Transfer</Button>
-      </div>
-    </Page>
-  );
-}
-
-export function ReceiveScreen() {
-  const { stock, lists, route, refreshStock, refreshBadges, toast, can, currency } = useApp();
-  const stores = useMyStores('MAIN');
-  const { data: suppliers } = useData('/api/suppliers');
-  const { data: pos } = useData('/api/pos?status=OPEN');
-  const open = (pos || []).filter((p) => ['APPROVED', 'PARTLY_RECEIVED'].includes(p.status));
-  const [poId, setPoId] = useState(route.query.get('po') || '');
-  const [storeId, setStoreId] = useState('');
-  const [supplierId, setSupplierId] = useState('');
-  const [invoiceNo, setInvoiceNo] = useState('');
-  const [invoiceDate, setInvoiceDate] = useState(gstToday());
-  const [note, setNote] = useState('');
-  const [lines, setLines] = useState([]);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState(null);
-  const [done, setDone] = useState(null);
-  const showCost = can('cost.view') || can('receive');
-  useEffect(() => { if (!storeId && stores[0]) setStoreId(stores[0].id); }, [stores, storeId]);
-
-  // Choosing a purchase order fills the store, supplier and the lines still to come.
-  useEffect(() => {
-    if (!poId || !stock) return;
-    get(`/api/pos/${poId}`).then((po) => {
-      setStoreId(po.store_id); setSupplierId(po.supplier_id);
-      setLines(po.lines.filter((l) => l.received_qty < l.qty).map((l) => {
-        const item = stock.items.find((i) => i.id === l.item_id);
-        return item ? newLine(item, { qty: String(+(l.qty - l.received_qty).toFixed(3)), unitCost: l.unit_cost }) : null;
-      }).filter(Boolean));
-    }).catch((e) => setErr(e));
-  }, [poId, stock]);
-
-  if (!stock) return <Page title="Receive a delivery"><Loading /></Page>;
-  const errors = lineErrors(lines, 'in', storeId);
-  const save = async () => {
-    setBusy(true); setErr(null);
-    try {
-      const r = await post('/api/receipts', { storeId, supplierId: supplierId || null, poId: poId || null, invoiceNo, invoiceDate, note, lines: toPayload(lines) });
-      setDone(r); toast(`${r.ref} recorded`); setLines([]); setInvoiceNo(''); setNote(''); setPoId('');
-      refreshStock(); refreshBadges();
-    } catch (e) { setErr(e); } finally { setBusy(false); }
-  };
-  if (done) return <Page title="Receive a delivery"><Done text={`Delivery ${done.ref} recorded${showCost ? ` — ${fmtMoney(done.total, currency)}` : ''}.`} again={() => setDone(null)} /></Page>;
-  return (
-    <Page title="Receive a delivery" subtitle="Goods in: from a purchase order, or a local purchase.">
-      <Card>
-        <div className="form two">
-          <Field label="Purchase order" hint="Choose the order this delivery is for, and its lines fill in. Leave empty for a purchase made without one.">
-            <Select value={poId} onChange={(v) => { setPoId(v); if (!v) setLines([]); }} placeholder={open.length ? 'No order — local purchase' : 'No open orders'}
-              options={open.map((p) => ({ value: p.id, label: `${p.ref} · ${p.supplier_name}` }))} />
-          </Field>
-          <Field label="Into store"><Select value={storeId} onChange={setStoreId} disabled={!!poId} options={stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
-          <Field label="Supplier"><Select value={supplierId} onChange={setSupplierId} disabled={!!poId} placeholder="Not recorded" options={(suppliers || []).map((s) => ({ value: s.id, label: s.name }))} /></Field>
-          <Field label="Invoice number"><input value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)} placeholder="Optional" maxLength={60} /></Field>
-          <Field label="Invoice date"><input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} /></Field>
-          <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" maxLength={300} /></Field>
-        </div>
-        {lists.stores.length === 0 && <div className="note warn">No store is set up yet.</div>}
-      </Card>
-      <Card title="Items received">
-        <LineEditor mode="in" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} showCost={showCost} currency={currency} scan="receive" />
-      </Card>
-      <ErrorNote error={err} />
-      <div className="row" style={{ justifyContent: 'flex-end' }}>
-        <Button busy={busy} disabled={!lines.length || Object.keys(errors).length > 0} onClick={save} icon="receive">Receive</Button>
       </div>
     </Page>
   );

@@ -121,7 +121,7 @@ test('ledger: somebody who sees costs but does not manage people gets no name be
   assert.equal(kpr.actor_name, 'Kiran Keeper');
   assert.equal(kpr.value, undefined);
   const received = (await report(env, 'ledger', 'viewer')).body.rows.find((m) => m.kind === 'RECEIPT');
-  assert.equal(received.actor_name, 'Kiran Keeper');
+  assert.equal(received.actor_name, 'Maya Manager', 'a delivery is posted by whoever approved it, and that name stays');
 
   const detail = (await call(env, 'GET', `/api/items/${oil}`, { as: 'viewer' })).body.movements.find((m) => m.kind === 'ISSUE');
   assert.equal(detail.actor_name, null);

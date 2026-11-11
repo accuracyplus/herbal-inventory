@@ -3,10 +3,13 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(self), geolocation=(), microphone=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://hifive-design.pages.dev; style-src 'self' 'unsafe-inline' https://hifive-design.pages.dev https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://hifive-inventory.sinusuresh.workers.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://hifive-design.pages.dev; style-src 'self' 'unsafe-inline' https://hifive-design.pages.dev https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://hifive-inventory.sinusuresh.workers.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # camera=(self): the barcode scanner, on this app's own pages only. The ZXing reader used where the
 # browser has no BarcodeDetector (every iPhone) is bundled under /assets, so script-src stays self.
+#
+# img-src blob: — an attached delivery note is fetched with the person's sign-in and opened from
+# memory; it has no address of its own to link to.
 #
 # connect-src names the exact Worker origin, not https://*.workers.dev — a wildcard there would
 # let any Worker anyone has deployed receive a signed-in member of staff's requests. CSP also

@@ -10,6 +10,7 @@ export const LEVELS = [
   { level: 3, file: 'migrations/0002_custody.sql', table: 'custody', column: 'taken_qty' },
   { level: 4, file: 'migrations/0003_group_summary.sql', table: 'staff', column: 'group_summary' },
   { level: 5, file: 'migrations/0004_scanning.sql', table: 'item_barcodes', column: 'added_by' },
+  { level: 6, file: 'migrations/0005_deliveries.sql', table: 'supplier_item_map', column: 'factor' },
 ];
 
 export const EXPECTED_LEVEL = LEVELS[LEVELS.length - 1].level;

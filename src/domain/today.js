@@ -34,6 +34,14 @@ export async function today(env, user, { bearer } = {}) {
     const r = await one(`SELECT COUNT(*) AS n, SUM(expected_date IS NOT NULL AND expected_date < ?) AS late FROM purchase_orders WHERE unit_id = ? AND status IN ('APPROVED','PARTLY_RECEIVED')`, gstDate(), u);
     if (r.n) waiting.push({ key: 'po-receive', screen: 'purchasing', filter: 'APPROVED', n: r.n, urgent: r.late || 0, text: `${r.n} order${r.n > 1 ? 's' : ''} expected${r.late ? `, ${r.late} late` : ''}` });
   }
+  if (may(user, 'receipt.decide')) {
+    const r = await one(`SELECT COUNT(*) AS n FROM receipts WHERE unit_id = ? AND status = 'PENDING' AND by_id <> ?`, u, user.staffId);
+    if (r.n) waiting.push({ key: 'receipts-approve', screen: 'purchasing', to: 'purchasing?tab=deliveries&status=PENDING', n: r.n, text: `${r.n} deliver${r.n > 1 ? 'ies' : 'y'} to approve` });
+  }
+  if (may(user, 'receive')) {
+    const r = await one(`SELECT COUNT(*) AS n FROM receipts WHERE unit_id = ? AND status = 'REJECTED' AND by_id = ? AND decided_at > datetime('now', '-7 days')`, u, user.staffId);
+    if (r.n) waiting.push({ key: 'receipts-back', screen: 'purchasing', to: 'purchasing?tab=deliveries&status=REJECTED', n: r.n, urgent: r.n, text: `${r.n} deliver${r.n > 1 ? 'ies' : 'y'} you recorded ${r.n > 1 ? 'were' : 'was'} sent back` });
+  }
   if (may(user, 'adjust.decide')) {
     const r = await one(`SELECT COUNT(*) AS n FROM adjustments WHERE unit_id = ? AND status = 'PENDING' AND requested_by <> ?`, u, user.staffId);
     if (r.n) waiting.push({ key: 'adj-approve', screen: 'corrections', filter: 'PENDING', n: r.n, text: `${r.n} correction${r.n > 1 ? 's' : ''} to approve` });

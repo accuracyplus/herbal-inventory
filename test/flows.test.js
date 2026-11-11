@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AREA, bal, call, hfidToken, makeItem, receive, S, testEnv, FOR } from './helpers/http.js';
+import { AREA, bal, call, deliver, hfidToken, makeItem, receive, S, testEnv, FOR } from './helpers/http.js';
 
 // ── Requests ─────────────────────────────────────────────────────────────────
 
@@ -97,9 +97,8 @@ test('purchase order: draft, submit, approve, receive in part, then the rest', a
   assert.equal((await call(env, 'POST', `/api/pos/${po.body.id}/approve`, { as: 'buyer' })).status, 403);
   assert.equal((await call(env, 'POST', `/api/pos/${po.body.id}/approve`, { as: 'manager' })).status, 200);
 
-  const part = await call(env, 'POST', '/api/receipts', { as: 'keeper', body: { storeId: S.main, poId: po.body.id, invoiceNo: 'INV-77', lines: [{ itemId: oil, qty: 12 }] } });
-  assert.equal(part.status, 201);
-  assert.equal(part.body.total, 360);
+  const part = await deliver(env, { storeId: S.main, poId: po.body.id, invoiceNo: 'INV-77', lines: [{ itemId: oil, qty: 12 }] });
+  assert.equal(part.total, 360);
   let got = await call(env, 'GET', `/api/pos/${po.body.id}`, { as: 'manager' });
   assert.equal(got.body.status, 'PARTLY_RECEIVED');
   assert.equal(got.body.lines[0].received_qty, 12);
@@ -108,7 +107,7 @@ test('purchase order: draft, submit, approve, receive in part, then the rest', a
   assert.equal(over.status, 422);
   assert.equal(over.body.error.code, 'OVER_RECEIVED');
 
-  await call(env, 'POST', '/api/receipts', { as: 'keeper', body: { storeId: S.main, poId: po.body.id, lines: [{ itemId: oil, qty: 8 }] } });
+  await deliver(env, { storeId: S.main, poId: po.body.id, lines: [{ itemId: oil, qty: 8 }] });
   got = await call(env, 'GET', `/api/pos/${po.body.id}`, { as: 'manager' });
   assert.equal(got.body.status, 'RECEIVED');
   assert.equal(got.body.receipts.length, 2);

@@ -146,7 +146,7 @@ export async function saveArea(env, user, body, id = null) {
 export async function listSuppliers(env, user, { all = false } = {}) {
   const { results } = await env.DB.prepare(
     `SELECT s.*, (SELECT COUNT(*) FROM items WHERE supplier_id = s.id AND active = 1) AS item_count,
-            (SELECT MAX(at) FROM receipts WHERE supplier_id = s.id) AS last_delivery
+            (SELECT MAX(at) FROM receipts WHERE supplier_id = s.id AND status = 'APPROVED') AS last_delivery
        FROM suppliers s WHERE s.unit_id = ? ${all ? '' : 'AND s.active = 1'} ORDER BY s.name`,
   ).bind(user.unitId).all();
   return results || [];

@@ -140,7 +140,7 @@ export async function groupMonthly(env, monthParam) {
               COALESCE(SUM(CASE WHEN kind IN ('ADJUST','COUNT') AND value < 0 THEN -value END), 0) AS written_off
          FROM movements WHERE at >= ? AND at < ? GROUP BY unit_id`,
     ).bind(fromAt, toAt).all(),
-    env.DB.prepare(`SELECT unit_id, COUNT(*) AS n, COALESCE(SUM(total), 0) AS value FROM receipts WHERE at >= ? AND at < ? GROUP BY unit_id`).bind(fromAt, toAt).all(),
+    env.DB.prepare(`SELECT unit_id, COUNT(*) AS n, COALESCE(SUM(total), 0) AS value FROM receipts WHERE status = 'APPROVED' AND at >= ? AND at < ? GROUP BY unit_id`).bind(fromAt, toAt).all(),
     env.DB.prepare(
       `SELECT s.unit_id, SUM((b.qty + b.in_use + b.in_wash) * i.avg_cost) AS value
          FROM balances b JOIN stores s ON s.id = b.store_id JOIN items i ON i.id = b.item_id GROUP BY s.unit_id`,
@@ -244,13 +244,13 @@ export async function purchases(env, user, url) {
     env.DB.prepare(
       `SELECT COALESCE(s.name, 'No supplier recorded') AS name, COUNT(*) AS deliveries, round(SUM(r.total), 2) AS value
          FROM receipts r LEFT JOIN suppliers s ON s.id = r.supplier_id
-        WHERE r.unit_id = ? AND r.at >= ? AND r.at < ? GROUP BY 1 ORDER BY value DESC`,
+        WHERE r.unit_id = ? AND r.status = 'APPROVED' AND r.at >= ? AND r.at < ? GROUP BY 1 ORDER BY value DESC`,
     ).bind(user.unitId, r.fromAt, r.toAt).all(),
     env.DB.prepare(
-      `SELECT r.at, r.ref, s.name AS supplier, st.name AS store, p.ref AS po_ref, r.invoice_no, r.invoice_date, r.total, r.by_name
+      `SELECT r.at, r.ref, s.name AS supplier, st.name AS store, p.ref AS po_ref, r.note_no, r.invoice_no, r.invoice_date, r.total, r.by_name, r.decided_by_name AS approved_by
          FROM receipts r LEFT JOIN suppliers s ON s.id = r.supplier_id JOIN stores st ON st.id = r.store_id
          LEFT JOIN purchase_orders p ON p.id = r.po_id
-        WHERE r.unit_id = ? AND r.at >= ? AND r.at < ? ORDER BY r.at DESC`,
+        WHERE r.unit_id = ? AND r.status = 'APPROVED' AND r.at >= ? AND r.at < ? ORDER BY r.at DESC`,
     ).bind(user.unitId, r.fromAt, r.toAt).all(),
   ]);
   return { ...r, bySupplier: bySupplier || [], receipts: receipts || [] };

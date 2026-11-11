@@ -30,6 +30,10 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
 - **Scanning** with the phone's camera on every list of items, or **Scan with phone** from a
   computer (a QR code pairs the person's phone; scans land on the computer's list); a Scan screen
   for walking the store; unknown barcodes are saved to the item by store roles.
+- **Deliveries in two steps**: the receiver counts against the delivery note, a manager approves,
+  then stock is on the shelf. Photos or PDFs of the note, invoice and LPO are kept with each
+  delivery; a photo of the note can be read to fill the form in, each supplier's wording and pack
+  sizes are remembered, and differences from the note or the order are shown to the approver.
 - **Bulk upload** of items (with levels per store), suppliers, and rooms and areas from Excel or
   CSV: download the list, edit it, and a check shows what would change before anything is saved.
 - **With me**: staff take stock to themselves or their room, then record it as used or return it;

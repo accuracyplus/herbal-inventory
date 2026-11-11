@@ -30,22 +30,31 @@ npx wrangler d1 execute hifive-inventory --remote --file=migrations/0001_departm
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0002_custody.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0003_group_summary.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0004_scanning.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0005_deliveries.sql
 npm run seed
 ```
 
    Every later file in `migrations/` is run the same way, in number order. `/version` names any
    that are missing.
 
-4. Deploy the Worker and check it answers:
+4. Create the private file store for delivery notes, invoices and LPOs. Once only, and before
+   the deploy, which fails without it:
+
+```powershell
+npx wrangler r2 bucket create hifive-inventory-files
+```
+
+5. Deploy the Worker and check it answers:
 
 ```powershell
 npm run deploy
 curl https://hifive-inventory.sinusuresh.workers.dev/version
 ```
 
-   `"ok": true` and `"schema": { "ok": true }` means it is ready.
+   `"ok": true` and `"schema": { "ok": true }` means it is ready. `"bindings"` should read
+   `files: true, ai: true, hfid: true`; a `false` there is a block missing from `wrangler.toml`.
 
-5. Deploy the app:
+6. Deploy the app:
 
 ```powershell
 cd client
@@ -98,6 +107,11 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
 6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park, and
    whether use is recorded against the room, the person, or both (both unless you change it), and
    after how many hours taken stock counts as unaccounted for (24 unless you change it).
+   Deliveries: whether a manager approves each one before it is on the shelf, whether the
+   delivery note must be attached first, and whether notes are read from a photo (all on unless
+   you change them).
+7. **Receive**, on a phone: photograph one real delivery note and check what it reads. Reading
+   was proven on a printed sample only; a creased or handwritten note has not been tried.
 
 ## D. Switch-over
 

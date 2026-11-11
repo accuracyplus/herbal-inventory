@@ -11,6 +11,24 @@ export const SETTINGS = {
     hint: 'When off, a request goes straight to the store to be given out.',
     options: ['required', 'none'], default: 'required',
   },
+  'receipts.approval': {
+    label: 'Deliveries need a second person\'s approval',
+    hint: 'When on, the receiver records the delivery and a manager approves it before stock reaches the shelf. When off, a delivery is on the shelf as soon as it is recorded.',
+    options: ['required', 'none'], default: 'required',
+    labels: { required: 'Yes — a manager approves first', none: 'No — on the shelf when recorded' },
+  },
+  'receipts.note': {
+    label: 'A delivery needs its delivery note attached',
+    hint: 'A photo or PDF of the delivery note, or the invoice for a purchase with no note, before it can be approved.',
+    options: ['required', 'optional'], default: 'required',
+    labels: { required: 'Yes — cannot be approved without it', optional: 'No — it can be approved without' },
+  },
+  'receipts.read_notes': {
+    label: 'Read delivery notes from a photo',
+    hint: 'Fills in the supplier, note number and lines from a photo for the receiver to check. Each note read costs a fraction of a cent.',
+    options: ['on', 'off'], default: 'on',
+    labels: { on: 'On', off: 'Off' },
+  },
   'consumption.record': {
     label: 'When stock is used, record',
     hint: 'What must be filled in on Record use. A department comes from the room.',

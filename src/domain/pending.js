@@ -30,6 +30,10 @@ export async function pendingForStaff(env, empCode) {
       const c = await n(`SELECT COUNT(*) AS n FROM purchase_orders WHERE unit_id = ? AND status = 'SUBMITTED' AND created_by <> ?`, unit.id, staff.id);
       if (c) items.push({ text: tag(`${c} purchase order${c > 1 ? 's' : ''} to approve`), days: null });
     }
+    if (may(user, 'receipt.decide')) {
+      const c = await n(`SELECT COUNT(*) AS n FROM receipts WHERE unit_id = ? AND status = 'PENDING' AND by_id <> ?`, unit.id, staff.id);
+      if (c) items.push({ text: tag(`${c} deliver${c > 1 ? 'ies' : 'y'} to approve`), days: null });
+    }
     if (may(user, 'adjust.decide')) {
       const c = await n(`SELECT COUNT(*) AS n FROM adjustments WHERE unit_id = ? AND status = 'PENDING' AND requested_by <> ?`, unit.id, staff.id);
       if (c) items.push({ text: tag(`${c} stock correction${c > 1 ? 's' : ''} to approve`), days: null });

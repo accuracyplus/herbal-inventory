@@ -20,7 +20,10 @@ import { recordTrouble, troubleMessage } from './lib/trouble.js';
 import { schemaStatus } from './lib/schema.js';
 import { abilities, may, requireMay, ROLE_HINTS, ROLE_LABELS, RULES } from './domain/access.js';
 import { categories, itemDetail, listAreas, listStores, lookup, saveItem, stockList } from './domain/catalog.js';
-import { linenMove, receive, recordTransfer, recordUse } from './domain/operations.js';
+import { linenMove, recordTransfer, recordUse } from './domain/operations.js';
+import { decideReceipt, getReceipt, listReceipts, recordReceipt } from './domain/receipts.js';
+import { readAndMatch } from './domain/notes.js';
+import { attachFile, bytesOf, FILE_KINDS, fileRow, readFile, removeFile } from './lib/files.js';
 import { cancelRequest, createRequest, decideRequest, fulfilRequest, getRequest, listRequests } from './domain/requests.js';
 import { getPo, listPos, poAction, savePo, suggestions } from './domain/purchasing.js';
 import { decideAdjustment, getAdjustment, listAdjustments, raiseAdjustment, REASONS } from './domain/adjustments.js';
@@ -127,6 +130,8 @@ export default {
       return json({
         ok: schema.ok, app: 'inventory',
         build: { commit: env.BUILD_COMMIT || null, version: meta.id || null, deployedAt: meta.timestamp || null },
+        // A deploy can drop a binding without a word; these say so in one curl.
+        bindings: { files: !!env.FILES, ai: !!env.AI?.run, hfid: !!env.HFID?.fetch },
         schema, at: nowIso(),
       }, schema.ok ? 200 : 503);
     }
@@ -302,7 +307,9 @@ api('GET', '/api/me', async ({ env }, user) => {
     unit: user.unit, units: user.units, roles: user.roles, stores: user.stores,
     can: abilities(user),
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
-    labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS },
+    labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: FILE_KINDS },
+    // What this deployment has switched on, so a screen can say "not set up" before it is tried.
+    has: { files: !!env.FILES, reading: !!env.AI?.run },
   });
 });
 
@@ -336,7 +343,54 @@ api('GET', '/api/batches', async ({ env, url }, user) => {
 
 api('POST', '/api/use', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await recordUse(env, user, await body(request)), 201); });
 api('POST', '/api/transfers', async ({ request, env }, user) => { requireMay(user, 'transfer'); return json(await recordTransfer(env, user, await body(request)), 201); });
-api('POST', '/api/receipts', async ({ request, env }, user) => { requireMay(user, 'receive'); return json(await receive(env, user, await body(request)), 201); });
+// ── Deliveries, their paperwork, and reading the note ────────────────────────
+
+const RECEIPT_VIEW = (user) => may(user, 'receive') || may(user, 'receipt.decide') || may(user, 'po.edit') || may(user, 'reports');
+const form = async (request) => { try { return await request.formData(); } catch { return null; } };
+
+api('POST', '/api/receipts', async ({ request, env }, user) => { requireMay(user, 'receive'); return json(await recordReceipt(env, user, await body(request)), 201); });
+api('GET', '/api/receipts', async ({ env, url }, user) => {
+  if (!RECEIPT_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
+  return json(await listReceipts(env, user, { status: url.searchParams.get('status') || null }));
+});
+api('POST', '/api/receipts/read', async ({ request, env }, user) => {
+  requireMay(user, 'receive');
+  const f = await form(request);
+  // A photo sized for reading: the page sends a copy about 1,600 pixels wide, not the original.
+  const { bytes, mime } = await bytesOf(f?.get('file'), { images: true, max: 4 * 1024 * 1024 });
+  return json(await readAndMatch(env, user, { bytes, mime, supplierId: text(f.get('supplierId'), 60) }));
+});
+api('GET', '/api/receipts/:id', async ({ env, params }, user) => {
+  if (!RECEIPT_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
+  return json(await getReceipt(env, user, params.id));
+});
+api('POST', '/api/receipts/:id/files', async ({ request, env, params }, user) => {
+  requireMay(user, 'receive');
+  const r = await getReceipt(env, user, params.id);
+  if (['REJECTED', 'CANCELLED'].includes(r.status)) return fail(409, 'CLOSED', `${r.ref} was ${r.status.toLowerCase()}; nothing more can be attached to it.`);
+  const f = await form(request);
+  return json(await attachFile(env, user, { docType: 'RECEIPT', docId: r.id, docRef: r.ref, kind: String(f?.get('kind') || ''), file: f?.get('file') }), 201);
+});
+api('POST', '/api/receipts/:id/:action', async ({ request, env, params }, user) => json(await decideReceipt(env, user, params.id, params.action, await body(request))));
+
+api('GET', '/api/files/:id', async ({ env, params }, user) => {
+  if (!RECEIPT_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
+  const f = await fileRow(env, user, params.id);
+  const bytes = await readFile(env, f);
+  return new Response(bytes, { headers: {
+    'content-type': f.mime, 'content-length': String(bytes.length), 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff',
+    'content-disposition': `inline; filename="${f.name.replace(/[^\x20-\x7e]|["\\]/g, '_')}"`,
+  } });
+});
+api('POST', '/api/files/:id/remove', async ({ env, params }, user) => {
+  requireMay(user, 'receive');
+  const f = await fileRow(env, user, params.id);
+  const r = await getReceipt(env, user, f.doc_id);
+  // The paper an approval rested on stays with it.
+  if (r.status !== 'PENDING') return fail(409, 'CLOSED', `${r.ref} is ${r.status.toLowerCase()}; its files can no longer be removed.`);
+  if (f.uploaded_by !== user.staffId && !may(user, 'receipt.decide')) return fail(403, 'AUTH', 'Only the person who attached it, or a manager, can remove a file.');
+  return json(await removeFile(env, user, f, r.ref));
+});
 api('POST', '/api/linen', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await linenMove(env, user, await body(request)), 201); });
 api('GET', '/api/linen', async ({ env }, user) => {
   const { results } = await env.DB.prepare(

@@ -17,6 +17,20 @@ binding = "DB"
 database_name = "hifive-inventory"
 database_id = "PASTE-THE-DATABASE-ID-HERE"
 
+# ── R2: delivery notes, invoices and LPOs ────────────────────────────────────
+# Private. Files are only served back through this Worker, to somebody signed in to the unit.
+# Create the bucket once, BEFORE the first deploy with this block, or the deploy fails:
+#   npx wrangler r2 bucket create hifive-inventory-files
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "hifive-inventory-files"
+
+# ── Workers AI: reading a delivery note from its photo ───────────────────────
+# src/domain/notes.js walks a list of models, because Cloudflare retires them. Without this
+# binding the app works and says reading is not switched on. /version shows both bindings.
+[ai]
+binding = "AI"
+
 # ── HiFive ID service binding ────────────────────────────────────────────────
 # Required. Cloudflare refuses a Worker-to-Worker fetch on the same zone (error 1042), and every
 # HiFive module is on *.sinusuresh.workers.dev — without this every sign-in fails as a bad token.

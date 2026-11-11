@@ -95,6 +95,27 @@ without its stock, nor stock without its receipt.
 - The services report is a sum over those lines: by service, item and room, and by person for
   `cost.people` in name order. Linen is never part of a recipe.
 
+## 3e. Services arriving from bookings or billing
+
+- `src/domain/servicelink.js`. Another system sends each completed service to
+  `POST /hooks/services` with `Authorization: Bearer <key>`. A key (`integration_keys`) belongs to
+  one unit and one store, is shown once when made, and only its SHA-256 is kept. There is no
+  session on this route: the key is the whole identity, and the row is recorded as
+  `link:<key name>`.
+- Each row carries its own reference (`ext_ref`, the booking or invoice line). The unique index
+  on `service_records (unit_id, ext_ref)` and on `service_inbox (unit_id, ext_ref)` makes a row
+  sent twice count once, whichever way it arrives.
+- Recording is `postService` in `services.js`, the same core the signed-in screen uses, so the
+  stock engine, the audit row and the room/person rules are identical. A row that cannot be
+  recorded (unknown service, room or person; not enough stock) is kept in `service_inbox` with
+  the sentence a manager can act on, and shows on Today for `services.edit` until it is retried
+  or dismissed with a reason. Each row is its own batch: one failure never holds back the rest.
+- The same rows can come from a sheet (`/api/link/sheet`): checked first, nothing saved until
+  the person says so. This is the route until a booking or billing system is connected.
+- `services.price` is the usual price; a row may carry its own. The price actually used is kept
+  on the record, so the margin report (charged against cost of what was used, `cost.view` only)
+  does not move when a price list changes. Records with no price are counted and left out.
+
 ## 3c. Deliveries, their paperwork, and reading the note
 
 - `src/domain/receipts.js`. A delivery is recorded by the receiver as `PENDING` with its lines

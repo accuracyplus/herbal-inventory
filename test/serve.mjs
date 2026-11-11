@@ -50,7 +50,7 @@ await call(env, 'POST', '/api/services', { as: 'manager', body: { code: 'ABH', n
 await call(env, 'POST', '/api/suppliers', { as: 'buyer', body: { name: 'Kerala Ayurveda Traders' } });
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
-const isApi = (path) => /^\/(api|auth|pending|version|health)(\/|$)/.test(path);
+const isApi = (path) => /^\/(api|auth|pending|hooks|version|health)(\/|$)/.test(path);
 
 function serveFile(path, res) {
   const safe = normalize(path).replace(/^(\.\.[\\/])+/, '');

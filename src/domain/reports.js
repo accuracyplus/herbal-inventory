@@ -138,10 +138,23 @@ export async function servicesReport(env, user, url) {
     ).bind(...args, ...args).all() : { results: null },
   ]);
   const strip = (rows) => (money(user) ? rows : rows.map(({ value, std_value, ...x }) => x));
+  // Margin, for those who see costs, over the services that carry a price: what was charged less
+  // what was actually used. A service with no price is counted apart, not as a margin of nothing.
+  let margin;
+  let unpriced;
+  if (money(user)) {
+    const { results } = await env.DB.prepare(
+      `SELECT r.service_id, MAX(r.service_name) AS name, SUM(r.times) AS times, round(SUM(r.revenue), 2) AS revenue, round(SUM(r.actual_value), 2) AS cost
+         FROM service_records r WHERE ${where} AND r.revenue IS NOT NULL GROUP BY r.service_id ORDER BY name`,
+    ).bind(...args).all();
+    margin = (results || []).map((x) => ({ ...x, margin: m2(x.revenue - x.cost), percent: x.revenue > 0 ? Math.round(((x.revenue - x.cost) / x.revenue) * 1000) / 10 : null }));
+    unpriced = (await env.DB.prepare(`SELECT COALESCE(SUM(r.times), 0) AS n FROM service_records r WHERE ${where} AND r.revenue IS NULL`).bind(...args).first())?.n || 0;
+  }
   return {
     ...r,
     byService: strip(byService.results || []), byItem: strip(byItem.results || []), byArea: strip(byArea.results || []),
     byPerson: byPerson.results ? byPerson.results : undefined,
+    margin, unpriced,
   };
 }
 

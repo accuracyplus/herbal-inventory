@@ -32,6 +32,7 @@ npx wrangler d1 execute hifive-inventory --remote --file=migrations/0003_group_s
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0004_scanning.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0005_deliveries.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0006_services.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0007_service_link.sql
 npm run seed
 ```
 
@@ -114,6 +115,11 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
    Also there: the unit's word for its services (Treatments at Herbal Park).
 7. **Treatments → Recipes**: add each treatment with what one normally uses. Part of a bottle is a
    decimal, so check each oil's unit first: an item counted in bottles takes 0.25 for a quarter.
+   Add the usual price if the margin report is wanted.
+   **Treatments → From bookings or billing**: nothing to do until a booking or billing system is
+   to send treatments by itself. Then make a key there (it is shown once; give it to whoever
+   sets up the other system, never by chat or email in the clear) and send them the example on
+   the same card. Until then the sheet on that page does the same job by upload.
 8. **Receive**, on a phone: photograph one real delivery note and check what it reads. Reading
    was proven on a printed sample only; a creased or handwritten note has not been tried.
 

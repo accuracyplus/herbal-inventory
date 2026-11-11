@@ -11,6 +11,7 @@ import { may } from './access.js';
 import { stockList } from './catalog.js';
 import { custodyWaiting } from './custody.js';
 import { reviewCount } from './people.js';
+import { inboxWaiting } from './servicelink.js';
 import { setting } from './settings.js';
 
 export async function today(env, user, { bearer } = {}) {
@@ -41,6 +42,10 @@ export async function today(env, user, { bearer } = {}) {
   if (may(user, 'receive')) {
     const r = await one(`SELECT COUNT(*) AS n FROM receipts WHERE unit_id = ? AND status = 'REJECTED' AND by_id = ? AND decided_at > datetime('now', '-7 days')`, u, user.staffId);
     if (r.n) waiting.push({ key: 'receipts-back', screen: 'purchasing', to: 'purchasing?tab=deliveries&status=REJECTED', n: r.n, urgent: r.n, text: `${r.n} deliver${r.n > 1 ? 'ies' : 'y'} you recorded ${r.n > 1 ? 'were' : 'was'} sent back` });
+  }
+  if (may(user, 'services.edit')) {
+    const n = await inboxWaiting(env, u);
+    if (n) waiting.push({ key: 'link-inbox', screen: 'services', to: 'services?tab=link', n, urgent: n, text: `${n} service${n > 1 ? 's' : ''} from bookings or billing could not be recorded` });
   }
   if (may(user, 'adjust.decide')) {
     const r = await one(`SELECT COUNT(*) AS n FROM adjustments WHERE unit_id = ? AND status = 'PENDING' AND requested_by <> ?`, u, user.staffId);

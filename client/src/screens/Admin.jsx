@@ -344,8 +344,11 @@ function Import() {
   const subs = lists.stores.filter((s) => s.kind === 'SUB');
   const [file, setFile] = useState(null);
   const [data, setData] = useState(null);
-  const [mainId, setMainId] = useState(mains[0]?.id || '');
-  const [subId, setSubId] = useState(subs[0]?.id || '');
+  // The store list can arrive after this tab opens; what each box shows must be what is sent.
+  const [mainChosen, setMainId] = useState('');
+  const [subChosen, setSubId] = useState('');
+  const mainId = mainChosen || mains[0]?.id || lists.stores[0]?.id || '';
+  const subId = subChosen || subs[0]?.id || lists.stores[0]?.id || '';
   const [report, setReport] = useState(null);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);

@@ -33,6 +33,10 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
 - **Services with recipes** (treatments, or lab tests): what each normally uses is defined once;
   recording one takes it all off the shelf together, editable first, and a report compares actual
   use with the recipe by service, item, room and (for managers) person.
+- **Bookings and billing link**: a booking or billing system sends each completed service with a
+  key and the stock comes off by itself, once per reference; what cannot be recorded waits with
+  its reason for a manager. Until something is connected, the same list uploads as a sheet. With
+  prices, a report shows charged against used for each service.
 - **Deliveries in two steps**: the receiver counts against the delivery note, a manager approves,
   then stock is on the shelf. Photos or PDFs of the note, invoice and LPO are kept with each
   delivery; a photo of the note can be read to fill the form in, each supplier's wording and pack

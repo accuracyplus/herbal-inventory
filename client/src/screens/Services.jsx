@@ -14,6 +14,7 @@ import {
   Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, Quiet, Segmented, Select, Sheet, StatusRows, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
+import ServiceLink from './ServiceLink.jsx';
 
 export const ONE = { Services: 'service', Treatments: 'treatment', Tests: 'test' };
 
@@ -22,15 +23,20 @@ export default function Services() {
   const word = me.settings['services.word'] || 'Services';
   const edits = can('services.edit');
   const records = can('stock.use');
-  const [tab, setTab] = useState(records ? 'record' : 'recipes');
+  const { route } = useApp();
+  const asked = route.query.get('tab');
+  const [tab, setTab] = useState(edits && ['recipes', 'link'].includes(asked) ? asked : records ? 'record' : 'recipes');
   const { data, error, loading, reload } = useData(`/api/services${edits ? '?all=1' : ''}`);
   return (
     <Page title={word} subtitle={`Record a ${ONE[word]} and what it normally uses comes off the shelf together.`}>
-      {edits && records && <Segmented label="Section" value={tab} onChange={setTab} options={[{ value: 'record', label: `Record a ${ONE[word]}` }, { value: 'recipes', label: 'Recipes' }]} />}
+      {edits && <Segmented label="Section" value={tab} onChange={setTab} options={[
+        ...(records ? [{ value: 'record', label: `Record a ${ONE[word]}` }] : []), { value: 'recipes', label: 'Recipes' }, { value: 'link', label: 'From bookings or billing' },
+      ]} />}
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}
       {data && tab === 'record' && <Record services={data.filter((s) => s.active)} word={word} onRecipes={edits ? () => setTab('recipes') : null} />}
       {data && tab === 'recipes' && <Recipes services={data} word={word} reload={reload} />}
+      {tab === 'link' && edits && <ServiceLink word={word} />}
     </Page>
   );
 }
@@ -163,7 +169,11 @@ function Recipes({ services, word, reload }) {
         <Table rows={services} onRow={setEditing} empty={`No ${word.toLowerCase()} yet. Add one with what it normally uses.`} columns={[
           { key: 'name', label: word.replace(/s$/, ''), primary: true, render: (s) => <span className="min0"><span className="row-label">{s.name} {!s.active && <Pill tone="faint">No longer offered</Pill>}</span><span className="row-sub"><code>{s.code}</code></span></span> },
           { key: 'items', label: 'Normally uses', sortable: false, render: (s) => s.items.map((i) => `${fmtQty(i.qty)} ${i.uom} ${i.name}`).join(', ') },
-          ...(can('cost.view') ? [{ key: 'stdCost', label: 'Cost of one', align: 'right', render: (s) => fmtMoney(s.stdCost, currency) }] : []),
+          ...(can('cost.view') ? [
+            { key: 'stdCost', label: 'Cost of one', align: 'right', render: (s) => fmtMoney(s.stdCost, currency) },
+            { key: 'price', label: 'Usual price', align: 'right', render: (s) => (s.price === null || s.price === undefined ? <span className="faint">not set</span> : fmtMoney(s.price, currency)) },
+            { key: 'margin', label: 'Margin', align: 'right', render: (s) => (s.margin === undefined ? '—' : fmtMoney(s.margin, currency)) },
+          ] : []),
         ]} />
       </Card>
       {editing && stock && <RecipeSheet s={editing} one={one} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); toast('Saved'); reload(); }} />}
@@ -173,7 +183,7 @@ function Recipes({ services, word, reload }) {
 
 function RecipeSheet({ s, one, onClose, onSaved }) {
   const { stock } = useApp();
-  const [f, setF] = useState({ code: s.code, name: s.name, active: s.active !== 0 });
+  const [f, setF] = useState({ code: s.code, name: s.name, price: s.price ?? '', active: s.active !== 0 });
   const [lines, setLines] = useState(() => s.items.map((i) => { const it = stock.items.find((x) => x.id === i.itemId); return it ? newLine(it, { qty: String(i.qty) }) : null; }).filter(Boolean));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -181,7 +191,7 @@ function RecipeSheet({ s, one, onClose, onSaved }) {
   const save = async () => {
     setBusy(true); setErr(null);
     try {
-      const body = { code: f.code, name: f.name, active: f.active, items: toPayload(lines) };
+      const body = { code: f.code, name: f.name, price: f.price === '' ? null : f.price, active: f.active, items: toPayload(lines) };
       if (s.id) await put(`/api/services/${s.id}`, body); else await post('/api/services', body);
       onSaved();
     } catch (e) { setErr(e); setBusy(false); }
@@ -191,7 +201,8 @@ function RecipeSheet({ s, one, onClose, onSaved }) {
       footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
       <div className="form two">
         <Field label="Name"><input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Abhyanga" maxLength={80} /></Field>
-        <Field label="Short code" hint="Letters and numbers, used in lists and exports."><input value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} placeholder="ABH" maxLength={20} /></Field>
+        <Field label="Short code" hint="Letters and numbers, used in lists and exports. A booking or billing system names the service by this."><input value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} placeholder="ABH" maxLength={20} /></Field>
+        <Field label="Usual price (optional)" hint="What one is charged at. Used for the margin when a service is recorded with no price of its own."><input type="number" min="0" step="any" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></Field>
       </div>
       <Card title={`What one ${one} normally uses`} hint="In each item's own unit. Part of a bottle is a decimal: a quarter of a bottle is 0.25.">
         <LineEditor mode="request" items={stock.items} lines={lines} setLines={setLines} pickerFilter={(i) => !i.isLinen} />

@@ -32,6 +32,9 @@ import { heldByMe, returnHeld, takeStock, unaccountedInUnit, useHeld } from './d
 import { groupMonthly, myUse, REPORTS } from './domain/reports.js';
 import { hfidPeople, takeHfidName } from './domain/people.js';
 import { listServices, recentServices, recordService, saveService } from './domain/services.js';
+import {
+  createKey, dismissInbox, importSheet, linkFor, listInbox, listKeys, retryInbox, revokeKey, SHEET_COLUMNS, takeServices,
+} from './domain/servicelink.js';
 import { BULK_KINDS, bulkTemplate, bulkUpload } from './domain/bulk.js';
 import { addScan, closeSession, linkBarcode, openSession, pairSession, sessionEvents } from './domain/scanning.js';
 import { today } from './domain/today.js';
@@ -428,6 +431,30 @@ api('POST', '/api/services', async ({ request, env }, user) => { requireMay(user
 api('PUT', '/api/services/:id', async ({ request, env, params }, user) => { requireMay(user, 'services.edit'); return json(await saveService(env, user, await body(request), params.id)); });
 api('GET', '/api/service-records', async ({ env }, user) => { requireMay(user, 'stock.use'); return json(await recentServices(env, user)); });
 api('POST', '/api/service-records', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await recordService(env, user, await body(request)), 201); });
+
+// ── The link to a booking or billing system ──────────────────────────────────
+
+/**
+ * Completed services from another system. Not a signed-in person: the key says which unit, and
+ * which connection. Answers 200 with what became of each row, including the ones that are now
+ * waiting in the inbox, so the sender need not send them again.
+ */
+on('POST', '/hooks/services', async ({ request, env }) => {
+  const link = await linkFor(env, request);
+  if (!link) return fail(401, 'AUTH', 'Send the connection\'s key as Authorization: Bearer hfinv_…');
+  const b = await body(request);
+  return json({ unit: link.unitName, ...await takeServices(env, link, Array.isArray(b) ? b : b?.services) });
+});
+
+api('GET', '/api/link/keys', async ({ env }, user) => { requireMay(user, 'admin'); return json(await listKeys(env, user)); });
+api('POST', '/api/link/keys', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await createKey(env, user, await body(request)), 201); });
+api('POST', '/api/link/keys/:id/revoke', async ({ env, params }, user) => { requireMay(user, 'admin'); return json(await revokeKey(env, user, params.id)); });
+api('GET', '/api/link/sheet', async (c, user) => { requireMay(user, 'services.edit'); return json({ sheet: 'Services done', fileName: `inventory-services-done-${user.unit.code}`, columns: SHEET_COLUMNS.map(({ header, text: t, width, hint, required }) => ({ header, text: !!t, width, hint, required: !!required })), rows: [] }); });
+api('POST', '/api/link/sheet', async ({ request, env }, user) => { requireMay(user, 'services.edit'); return json(await importSheet(env, user, await body(request))); });
+api('GET', '/api/link/inbox', async ({ env, url }, user) => { requireMay(user, 'services.edit'); return json(await listInbox(env, user, { status: ['FAILED', 'DISMISSED'].includes(url.searchParams.get('status')) ? url.searchParams.get('status') : 'FAILED' })); });
+api('POST', '/api/link/inbox/retry', async ({ env }, user) => { requireMay(user, 'services.edit'); return json(await retryInbox(env, user)); });
+api('POST', '/api/link/inbox/:id/retry', async ({ env, params }, user) => { requireMay(user, 'services.edit'); return json(await retryInbox(env, user, params.id)); });
+api('POST', '/api/link/inbox/:id/dismiss', async ({ request, env, params }, user) => { requireMay(user, 'services.edit'); return json(await dismissInbox(env, user, params.id, await body(request))); });
 
 // ── Stock with people ────────────────────────────────────────────────────────
 

@@ -59,7 +59,8 @@ export default function Purchasing() {
 function Suggestions({ onDraft }) {
   const { lists, stock, currency } = useApp();
   const mains = lists.stores.filter((s) => s.kind === 'MAIN');
-  const [storeId, setStoreId] = useState(mains[0]?.id || lists.stores[0]?.id || '');
+  const [chosen, setStoreId] = useState('');
+  const storeId = chosen || mains[0]?.id || lists.stores[0]?.id || '';
   const { data, error, loading } = useData(storeId ? `/api/pos/suggestions?store=${storeId}` : null, [storeId]);
   const bySupplier = {};
   for (const r of data || []) (bySupplier[r.supplier_id || ''] ||= { name: r.supplier_name || 'No usual supplier', rows: [] }).rows.push(r);

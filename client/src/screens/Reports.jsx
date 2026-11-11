@@ -149,6 +149,19 @@ function ServiceUse({ d, word }) {
           { key: 'name', label: one, primary: true, sortable: false }, { key: 'times', label: 'Done', align: 'right', sortable: false }, ...valueCols,
         ]} />
       </Card>
+      {d.margin?.length > 0 && (
+        <Card title="Price and margin" hint="What was charged less what was actually used, for those recorded with a price (sent by billing, or the usual price on the recipe). Listed by name." pad={false}
+          actions={<Csv name={`${word.toLowerCase()}-margin-${d.from}-${d.to}`} rows={d.margin} cols={[{ key: 'name', label: one }, { key: 'times', label: 'Done' }, { key: 'revenue', label: `Charged (${currency})` }, { key: 'cost', label: `Used (${currency})` }, { key: 'margin', label: `Margin (${currency})` }, { key: 'percent', label: 'Margin %' }]} />}>
+          <Table rows={d.margin} rowKey={(r) => r.service_id} columns={[
+            { key: 'name', label: one, primary: true, sortable: false }, { key: 'times', label: 'Done', align: 'right', sortable: false },
+            { key: 'revenue', label: 'Charged', align: 'right', sortable: false, render: (r) => m(r.revenue) },
+            { key: 'cost', label: 'Used', align: 'right', sortable: false, render: (r) => m(r.cost) },
+            { key: 'margin', label: 'Margin', align: 'right', sortable: false, render: (r) => <b>{m(r.margin)}</b> },
+            { key: 'percent', label: '%', align: 'right', sortable: false, render: (r) => (r.percent === null ? '—' : `${r.percent}%`) },
+          ]} />
+          {d.unpriced > 0 && <p className="muted" style={{ padding: '0 18px 14px' }}>{d.unpriced} more {d.unpriced === 1 ? 'was' : 'were'} recorded with no price, and {d.unpriced === 1 ? 'is' : 'are'} left out of the margin.</p>}
+        </Card>
+      )}
       {d.byItem.length > 0 && (
         <Card title="By item" hint="Where the difference comes from: each item's quantity by the recipe and as used." pad={false}
           actions={<Csv name={`${word.toLowerCase()}-items-${d.from}-${d.to}`} rows={d.byItem} cols={[{ key: 'service', label: one }, { key: 'code', label: 'Code' }, { key: 'name', label: 'Item' }, { key: 'uom', label: 'Unit' }, { key: 'std_qty', label: 'By the recipe' }, { key: 'qty', label: 'Used' }]} />}>

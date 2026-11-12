@@ -53,3 +53,12 @@ test('appearance: HiFive ID\'s language passes through only when it is one Inven
   env.me = { prefs: { skin: 'water', style: 'soft', mode: 'light', lang: 'ar' } };
   assert.equal((await call(env, 'GET', '/api/appearance', { as: 'staff' })).body.prefs.lang, null);
 });
+
+test('a Worker live before migration 0011 still signs people in, and does not show the walkthrough every time', async () => {
+  const env = testEnv();
+  env.DB.db.exec('ALTER TABLE staff DROP COLUMN tour_done_at; ALTER TABLE staff DROP COLUMN lang;');
+  const r = await call(env, 'GET', '/api/me', { as: 'staff' });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.lang, null);
+  assert.equal(r.body.tourDoneAt, 'unavailable');
+});

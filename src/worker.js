@@ -340,11 +340,13 @@ on('PUT', '/api/roles/:empId', async ({ request, env, params }) => {
 
 api('GET', '/api/me', async ({ env }, user) => {
   const settings = await allSettings(env, user.unitId);
-  const own = await env.DB.prepare(`SELECT lang, tour_done_at FROM staff WHERE id = ?`).bind(user.staffId).first();
+  // Read apart, so a Worker that goes live before migration 0011 still signs everyone in: the
+  // language is then "not chosen" and the walkthrough counts as seen, rather than shown every time.
+  const own = await env.DB.prepare(`SELECT lang, tour_done_at FROM staff WHERE id = ?`).bind(user.staffId).first().catch(() => false);
   return json({
     staffId: user.staffId, code: user.code, name: user.fullName, groupAdmin: user.groupAdmin, groupSummary: user.groupSummary,
     // Inventory's own copy of the interface language (D-043); HiFive ID's choice, when it has one, wins.
-    lang: own?.lang ?? null, tourDoneAt: own?.tour_done_at ?? null,
+    lang: own?.lang ?? null, tourDoneAt: own === false ? 'unavailable' : own?.tour_done_at ?? null,
     unit: user.unit, units: user.units, roles: user.roles, stores: user.stores,
     can: abilities(user),
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),

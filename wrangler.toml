@@ -15,7 +15,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "hifive-inventory"
-database_id = "PASTE-THE-DATABASE-ID-HERE"
+database_id = "a2df9d1d-3029-4947-a779-325a9fbc2f65"
 
 # ── R2: delivery notes, invoices and LPOs ────────────────────────────────────
 # Private. Files are only served back through this Worker, to somebody signed in to the unit.

@@ -51,7 +51,10 @@ export function noteDifferences(lines) {
  * items handed over from the Scan screen for that purpose.
  */
 /** `notes` is one more line of text under an item, by item id: what was last paid for it, say. */
-export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan, withNote = false, warnings = {}, notes = {} }) {
+/** The packs a line can be written in on an order or a delivery: buying packs, this supplier's or anybody's. */
+export const buyPacks = (item, supplierId) => (item.packs || []).filter((p) => p.use !== 'STORE' && (!p.supplierId || !supplierId || p.supplierId === supplierId));
+
+export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan, withNote = false, warnings = {}, notes = {}, supplierId = null }) {
   const [scanning, setScanning] = useState(null);
   const fresh = (item, extra = {}) => newLine(item, { ...(mode === 'in' || mode === 'po' ? { unitCost: item.lastCost ?? item.avgCost ?? '' } : {}), ...extra });
   const add = (item) => {
@@ -85,6 +88,14 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
       {lines.map((l) => {
         const here = l.item.stores?.find((s) => s.storeId === storeId);
         const what = withNote ? 'Counted' : mode === 'adjust' ? 'Change' : 'How much';
+        const packs = mode === 'in' || mode === 'po' ? buyPacks(l.item, supplierId) : [];
+        const unit = l.pack ? l.pack.label : l.item.uom;
+        const choosePack = (id) => {
+          const pack = packs.find((p) => p.id === id) || null;
+          const was = l.pack?.factor || 1;
+          const base = l.unitCost === '' || l.unitCost === undefined ? null : Number(l.unitCost) / was;
+          set(l.key, { packId: pack?.id || null, pack, ...(base === null ? {} : { unitCost: String(+(base * (pack?.factor || 1)).toFixed(4)) }) });
+        };
         return (
           <div key={l.key} className="inv-line">
             <div className="inv-line__top">
@@ -103,15 +114,20 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
             <div className="inv-line__fields">
               {mode === 'adjust'
                 ? <QuantityField label={`${what}: ${l.item.name}`} hideLabel bare min={-999999} value={l.qty} unit={l.item.uom} onChange={(v) => set(l.key, { qty: v })} error={errors[l.key]} />
-                : <QuantityField label={`${what}: ${l.item.name}`} hideLabel value={l.qty} unit={l.item.uom} onChange={(v) => set(l.key, { qty: v })} error={errors[l.key]} />}
+                : <QuantityField label={`${what}: ${l.item.name}`} hideLabel value={l.qty} unit={unit} onChange={(v) => set(l.key, { qty: v })} error={errors[l.key]} />}
+              {packs.length > 0 && (
+                <Field label="Written in" hint={l.pack ? `${fmtQty((Number(l.qty) || 0) * l.pack.factor)} ${l.item.uom} to the stock` : undefined}>
+                  <Select value={l.packId || ''} onChange={choosePack} options={[{ value: '', label: l.item.uom }, ...packs.map((p) => ({ value: p.id, label: `${p.label} (${fmtQty(p.factor)} ${l.item.uom})` }))]} />
+                </Field>
+              )}
               {withNote && (
                 <Field label="On the note" hint="What the delivery note says, if it differs from what you counted. Leave empty when they agree.">
                   <QtyInput value={l.noteQty ?? ''} onChange={(v) => set(l.key, { noteQty: v })} label="Quantity on the note" placeholder="Same" />
                 </Field>
               )}
               {(mode === 'in' || mode === 'po') && showCost && (
-                <Field label={`Unit cost (${currency})`}>
-                  <QtyInput value={l.unitCost} onChange={(v) => set(l.key, { unitCost: v })} label="Unit cost" />
+                <Field label={l.pack ? `Cost per ${l.pack.label} (${currency})` : `Unit cost (${currency})`}>
+                  <QtyInput value={l.unitCost} onChange={(v) => set(l.key, { unitCost: v })} label={l.pack ? `Cost per ${l.pack.label}` : 'Unit cost'} />
                 </Field>
               )}
               {mode === 'in' && l.item.tracksExpiry && (
@@ -160,8 +176,14 @@ function BatchChoice({ line, storeId, onChange }) {
   );
 }
 
-export const toPayload = (lines, extra = () => ({})) => lines.map((l) => ({
-  itemId: l.item.id, qty: Number(l.qty), ...(l.batchId ? { batchId: l.batchId } : {}),
-  ...(l.unitCost !== undefined && l.unitCost !== '' ? { unitCost: Number(l.unitCost) } : {}),
-  ...(l.expiry ? { expiry: l.expiry } : {}), ...(l.batchNo ? { batchNo: l.batchNo } : {}), ...extra(l),
-}));
+export const toPayload = (lines, extra = () => ({})) => lines.map((l) => {
+  const hasCost = l.unitCost !== undefined && l.unitCost !== '';
+  // Written in a pack: the server works the item's own quantity and price out from the pack.
+  const f = l.pack?.factor || 1;
+  return {
+    itemId: l.item.id, qty: +(Number(l.qty) * f).toFixed(3), ...(l.batchId ? { batchId: l.batchId } : {}),
+    ...(hasCost ? { unitCost: +(Number(l.unitCost) / f).toFixed(4) } : {}),
+    ...(l.pack ? { packId: l.pack.id, packQty: Number(l.qty), ...(hasCost ? { packCost: Number(l.unitCost) } : {}) } : {}),
+    ...(l.expiry ? { expiry: l.expiry } : {}), ...(l.batchNo ? { batchNo: l.batchNo } : {}), ...extra(l),
+  };
+});

@@ -110,7 +110,12 @@ function PoEditor({ po, onClose, onSaved }) {
   const [note, setNote] = useState(po.note || '');
   const [lines, setLines] = useState(() => (po.lines || []).map((l) => {
     const it = stock?.items.find((i) => i.id === l.item_id);
-    return it ? newLine(it, { qty: String(l.qty), unitCost: l.unit_cost }) : null;
+    if (!it) return null;
+    // A line ordered in a pack opens in that pack again.
+    const pack = l.pack_label ? (it.packs || []).find((p) => p.label === l.pack_label) : null;
+    return pack && l.pack_qty
+      ? newLine(it, { qty: String(l.pack_qty), unitCost: l.pack_cost ?? +(l.unit_cost * pack.factor).toFixed(2), pack, packId: pack.id })
+      : newLine(it, { qty: String(l.qty), unitCost: l.unit_cost });
   }).filter(Boolean));
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState(false);
@@ -154,7 +159,7 @@ function PoEditor({ po, onClose, onSaved }) {
         <Field label="Note to the supplier (optional)" hint="Printed on the order."><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} /></Field>
       </div>
       {suppliers && !suppliers.length && <Note tone="warn" icon="alert">Add a supplier first, on the Suppliers tab.</Note>}
-      <LineEditor mode="po" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} showCost currency={currency} notes={notes} />
+      <LineEditor mode="po" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} showCost currency={currency} notes={notes} supplierId={supplierId || null} />
       {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">Still needed: {missing.join(', ')}.</Note>}
       <ErrorNote error={err} />
     </Sheet>

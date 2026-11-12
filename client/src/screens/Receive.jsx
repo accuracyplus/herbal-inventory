@@ -131,7 +131,14 @@ export default function ReceiveScreen() {
       setStoreId(po.store_id); setSupplierId(po.supplier_id);
       setLines(po.lines.filter((l) => l.received_qty < l.qty).map((l) => {
         const item = stock.items.find((i) => i.id === l.item_id);
-        return item ? newLine(item, { qty: String(+(l.qty - l.received_qty).toFixed(3)), unitCost: l.unit_cost }) : null;
+        if (!item) return null;
+        const left = +(l.qty - l.received_qty).toFixed(3);
+        // Ordered in a pack: still to come in the same pack, while it is a whole number of them.
+        const pack = l.pack_label ? (item.packs || []).find((p) => p.label === l.pack_label) : null;
+        const packs = pack ? +(left / pack.factor).toFixed(3) : 0;
+        return pack && Number.isInteger(packs)
+          ? newLine(item, { qty: String(packs), unitCost: l.pack_cost ?? +(l.unit_cost * pack.factor).toFixed(2), pack, packId: pack.id })
+          : newLine(item, { qty: String(left), unitCost: l.unit_cost });
       }).filter(Boolean));
     }).catch((e) => setErr(e));
   }, [poId, stock]);
@@ -183,7 +190,8 @@ export default function ReceiveScreen() {
     try {
       const r = await post('/api/receipts', {
         storeId, supplierId: supplierId || null, poId: poId || null, noteNo, noteDate: noteDate || null, invoiceNo, invoiceDate: invoiceDate || null, note,
-        lines: toPayload(lines, (l) => ({ noteQty: l.noteQty === '' || l.noteQty === undefined ? null : Number(l.noteQty), noteText: l.noteText || null, factor: l.factor || 1 })),
+        // A line counted in packs has its note quantity in the same packs.
+        lines: toPayload(lines, (l) => ({ noteQty: l.noteQty === '' || l.noteQty === undefined || l.noteQty === null ? null : +(Number(l.noteQty) * (l.pack?.factor || 1)).toFixed(3), noteText: l.noteText || null, factor: l.factor || 1 })),
       });
       // The delivery is recorded; a file that fails to send is said, and can be added afterwards.
       const failed = [];
@@ -251,7 +259,7 @@ export default function ReceiveScreen() {
         {lists.stores.length === 0 && <Note tone="warn">No store is set up yet.</Note>}
       </Card>
       <Card title="What arrived">
-        <LineEditor mode="in" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} warnings={warnings} showCost={showCost} currency={currency} scan="receive" withNote />
+        <LineEditor mode="in" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} warnings={warnings} showCost={showCost} currency={currency} scan="receive" withNote supplierId={supplierId || null} />
       </Card>
       <Card title="Paperwork" hint="Photos or PDFs of the delivery note, the supplier's invoice and the LPO. Each is kept with who attached it and when.">
         {me.has?.files === false

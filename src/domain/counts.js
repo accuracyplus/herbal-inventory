@@ -63,10 +63,12 @@ async function load(env, user, id) {
 export async function getCount(env, user, id) {
   const c = await load(env, user, id);
   const { results } = await env.DB.prepare(
-    `SELECT cl.*, i.code, i.name, i.uom, i.category, i.avg_cost, i.barcode, COALESCE(b.qty, 0) AS current_qty
+    `SELECT cl.*, i.code, i.name, i.uom, i.category, i.avg_cost, i.barcode, COALESCE(b.qty, 0) AS current_qty, loc.location
        FROM count_lines cl JOIN items i ON i.id = cl.item_id
-       LEFT JOIN balances b ON b.item_id = cl.item_id AND b.store_id = ?
-      WHERE cl.count_id = ? ORDER BY i.category, i.name`,
+       LEFT JOIN balances b ON b.item_id = cl.item_id AND b.store_id = ?1
+       LEFT JOIN item_locations loc ON loc.item_id = cl.item_id AND loc.store_id = ?1
+      WHERE cl.count_id = ?2
+      ORDER BY CASE WHEN loc.location IS NULL THEN 1 ELSE 0 END, loc.location, i.category, i.name`,
   ).bind(c.store_id, c.id).all();
   // While the count is open and blind, the expected figure is withheld from everyone who
   // only counts. Whoever approves sees it — they have to.

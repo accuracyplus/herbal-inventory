@@ -71,11 +71,13 @@ export async function getRequest(env, user, id) {
   const r = await load(env, user, id);
   const { results } = await env.DB.prepare(
     `SELECT rl.*, i.code, i.name, i.uom, i.tracks_expiry, i.is_linen,
-            COALESCE(b.qty, 0) AS available
+            COALESCE(b.qty, 0) AS available, loc.location
        FROM request_lines rl
        JOIN items i ON i.id = rl.item_id
-       LEFT JOIN balances b ON b.item_id = rl.item_id AND b.store_id = ?
-      WHERE rl.request_id = ? ORDER BY i.name`,
+       LEFT JOIN balances b ON b.item_id = rl.item_id AND b.store_id = ?1
+       LEFT JOIN item_locations loc ON loc.item_id = rl.item_id AND loc.store_id = ?1
+      WHERE rl.request_id = ?2
+      ORDER BY CASE WHEN loc.location IS NULL THEN 1 ELSE 0 END, loc.location, i.name`,
   ).bind(r.from_store_id, r.id).all();
   const names = await env.DB.prepare(
     `SELECT (SELECT name FROM stores WHERE id = ?) AS from_name,

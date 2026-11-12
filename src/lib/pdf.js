@@ -85,7 +85,11 @@ export async function poPdf(po, { unitName, currency = 'AED' }) {
 
   tableHead();
   for (const l of po.lines) {
-    const name = wrap(font, 10, l.name, itemWidth);
+    // Ordered in a pack: the supplier's own way of saying it, under the name.
+    const asPack = l.pack_label && l.pack_qty
+      ? [`${qty(l.pack_qty)} x ${plain(l.pack_label)}${l.pack_cost != null ? ` at ${money(l.pack_cost, currency)} each` : ''}`]
+      : [];
+    const name = [...wrap(font, 10, l.name, itemWidth), ...asPack.flatMap((t) => wrap(font, 10, t, itemWidth))];
     if (y - name.length * 13 < M + 70) newPage(true);
     write(l.code, X.code, 9, font, SOFT);
     right(`${qty(l.qty)} ${plain(l.uom)}`, X.qty); right(money(l.unit_cost, currency), X.price); right(money(l.qty * l.unit_cost, currency), X.total);

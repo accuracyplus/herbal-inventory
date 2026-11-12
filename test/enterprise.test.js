@@ -73,6 +73,91 @@ test('approval limits: a purchase order above the amount', async () => {
   assert.equal((await call(env, 'POST', `/api/pos/${po.body.id}/approve`, { as: 'admin' })).status, 200);
 });
 
+// ── Pack sizes ───────────────────────────────────────────────────────────────────────────
+
+const editItem = (env, id, body) => call(env, 'PUT', `/api/items/${id}`, { as: 'manager', body: { code: 'OIL1', name: 'Massage oil', uom: 'bottle', category: 'Oils', ...body } });
+const stockItem = async (env, id, as = 'manager') => (await call(env, 'GET', '/api/stock', { as })).body.items.find((i) => i.id === id);
+
+async function withPacks() {
+  const env = testEnv();
+  env.DB.db.prepare(`INSERT INTO suppliers (id, unit_id, name, active) VALUES ('sp-1', ?, 'Kerala Oils', 1), ('sp-2', ?, 'Gulf Supplies', 1)`).run(HP, HP);
+  env.oil = await makeItem(env, { code: 'OIL1' });
+  await settings(env, { 'packs.on': 'on' });
+  const r = await editItem(env, env.oil, { packs: [
+    { label: 'Carton of 48', factor: 48, supplierId: 'sp-1', use: 'BUY' },
+    { label: 'Box of 12', factor: 12, use: 'BOTH' },
+  ] });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  env.packs = (await stockItem(env, env.oil)).packs;
+  env.carton = env.packs.find((p) => p.label === 'Carton of 48').id;
+  env.box = env.packs.find((p) => p.label === 'Box of 12').id;
+  return env;
+}
+
+test('pack sizes: off, an item cannot be given packs', async () => {
+  const env = testEnv();
+  const oil = await makeItem(env, { code: 'OIL1' });
+  const r = await editItem(env, oil, { packs: [{ label: 'Box of 12', factor: 12 }] });
+  assert.equal(r.body.error.code, 'FEATURE_OFF');
+  assert.equal((await stockItem(env, oil)).packs, undefined, 'the stock list says nothing about packs');
+});
+
+test('pack sizes: an order in cartons is pieces to the stock, the carton kept on the line and the paper', async () => {
+  const env = await withPacks();
+  assert.deepEqual(env.packs.map((p) => [p.label, p.factor, p.supplierName ?? null]), [['Box of 12', 12, null], ['Carton of 48', 48, 'Kerala Oils']]);
+  const po = await call(env, 'POST', '/api/pos', { as: 'buyer', body: {
+    supplierId: 'sp-1', storeId: S.main, lines: [{ itemId: env.oil, qty: 5, unitCost: 480, packId: env.carton, packQty: 5, packCost: 480 }],
+  } });
+  assert.equal(po.status, 201, JSON.stringify(po.body));
+  const line = env.DB.db.prepare(`SELECT qty, unit_cost, pack_label, pack_qty, pack_cost FROM po_lines WHERE po_id = ?`).get(po.body.id);
+  assert.deepEqual({ ...line }, { qty: 240, unit_cost: 10, pack_label: 'Carton of 48', pack_qty: 5, pack_cost: 480 });
+  const order = (await call(env, 'GET', `/api/pos/${po.body.id}`, { as: 'buyer' })).body;
+  assert.equal(order.total, 2400);
+
+  const other = await call(env, 'POST', '/api/pos', { as: 'buyer', body: {
+    supplierId: 'sp-2', storeId: S.main, lines: [{ itemId: env.oil, qty: 1, packId: env.carton, packQty: 1, packCost: 480 }],
+  } });
+  assert.equal(other.body.error.code, 'PACK_SUPPLIER', "Kerala Oils' carton is not Gulf Supplies'");
+});
+
+test('pack sizes: a delivery counted in boxes puts pieces on the shelf at the price of one piece', async () => {
+  const env = await withPacks();
+  const rec = await call(env, 'POST', '/api/receipts', { as: 'keeper', body: {
+    storeId: S.main, supplierId: 'sp-2', lines: [{ itemId: env.oil, qty: 3, packId: env.box, packQty: 3, packCost: 60 }],
+  } });
+  assert.equal(rec.status, 201, JSON.stringify(rec.body));
+  const line = env.DB.db.prepare(`SELECT qty, unit_cost, pack_label, pack_qty FROM receipt_lines WHERE receipt_id = ?`).get(rec.body.id);
+  assert.deepEqual({ ...line }, { qty: 36, unit_cost: 5, pack_label: 'Box of 12', pack_qty: 3 });
+  assert.equal(rec.body.total, 180);
+});
+
+// ── Shelf locations ──────────────────────────────────────────────────────────────────────
+
+test('shelf locations: set per store on the item, shown on the stock list, the count sheet and a request', async () => {
+  const env = testEnv();
+  const oil = await makeItem(env, { code: 'OIL1', name: 'Massage oil' });
+  const soap = await makeItem(env, { code: 'SOAP1', name: 'Aloe soap' });
+  await receive(env, oil, 10);
+  await receive(env, soap, 10);
+  const level = (location) => [{ storeId: S.main, reorder: 0, critical: 0, par: 0, location }];
+  assert.equal((await editItem(env, oil, { levels: level('B-2') })).body.error.code, 'FEATURE_OFF');
+  await settings(env, { 'locations.on': 'on' });
+  assert.equal((await editItem(env, oil, { levels: level('B-2') })).status, 200);
+  assert.equal((await call(env, 'PUT', `/api/items/${soap}`, { as: 'manager', body: { code: 'SOAP1', name: 'Aloe soap', uom: 'bar', category: 'Soap', levels: level('A-1') } })).status, 200);
+  assert.equal((await stockItem(env, oil)).stores.find((s) => s.storeId === S.main).location, 'B-2');
+
+  const c = await call(env, 'POST', '/api/counts', { as: 'keeper', body: { storeId: S.main } });
+  const sheet = (await call(env, 'GET', `/api/counts/${c.body.id}`, { as: 'keeper' })).body.lines;
+  assert.deepEqual(sheet.map((l) => [l.name, l.location]), [['Aloe soap', 'A-1'], ['Massage oil', 'B-2']], 'walked in shelf order');
+
+  const req = await call(env, 'POST', '/api/requests', { as: 'staff', body: { fromStoreId: S.main, toStoreId: S.sub, lines: [{ itemId: oil, qty: 1 }] } });
+  const got = (await call(env, 'GET', `/api/requests/${req.body.id}`, { as: 'keeper' })).body;
+  assert.equal(got.lines[0].location, 'B-2');
+
+  assert.equal((await editItem(env, oil, { levels: level('') })).status, 200, 'emptied, the location is removed');
+  assert.equal((await stockItem(env, oil)).stores.find((s) => s.storeId === S.main).location, null);
+});
+
 // ── Month close ──────────────────────────────────────────────────────────────────────────
 
 const close = (env, month, as = 'admin') => call(env, 'POST', '/api/periods/close', { as, body: { month } });

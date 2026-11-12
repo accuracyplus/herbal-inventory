@@ -17,6 +17,17 @@ const KIND = {
 };
 const STATE = { available: 'shelf', in_use: 'rooms', in_wash: 'laundry', gone: 'discarded' };
 
+/** The pack a quantity on the shelf is shown in: the largest one for storing. */
+export const storePack = (packs) => (packs || []).filter((p) => p.use !== 'BUY' && p.factor > 1).sort((a, b) => b.factor - a.factor)[0] || null;
+
+/** "3 × Box of 12 and 4 bottle", or null when it would say nothing more than the number. */
+export function inPack(qty, uom, pack) {
+  if (!pack || !(qty >= pack.factor)) return null;
+  const whole = Math.floor(+(qty / pack.factor).toFixed(6));
+  const rest = +(qty - whole * pack.factor).toFixed(3);
+  return `${whole} × ${pack.label}${rest ? ` and ${fmtQty(rest)} ${uom}` : ''}`;
+}
+
 export default function Stock() {
   const { stock, lists, route, navigate, can, currency } = useApp();
   const [q, setQ] = useState('');
@@ -122,12 +133,20 @@ function ItemSheet({ id, onClose, onEdit }) {
         <>
           <p className="muted"><code>{it.code}</code> · {it.category} · counted in {it.uom}{it.barcode ? <> · barcode <code>{it.barcode}</code></> : ''}{it.supplier ? ` · usual supplier ${it.supplier.name}` : ''}{it.storage ? ` · ${STORAGE[it.storage] || it.storage}` : ''}{it.open_life_days ? ` · usable ${it.open_life_days} days once opened` : ''}</p>
           {!it.active && <Note tone="warn" icon="alert">This item has been retired. It stays in the records but cannot be used or ordered.</Note>}
+          {it.packs?.length > 0 && <p className="muted">Packs: {it.packs.map((p) => `${p.label} (${fmtQty(p.factor)} ${it.uom}${p.supplierName ? `, ${p.supplierName}` : ''})`).join(' · ')}</p>}
           <dl className="hf-kv hf-kv--3">
-            {it.balances.map((b) => (
-              <div key={b.store_id}><dt>{b.store_name}</dt><dd>{fmtQty(b.qty)} {it.uom}</dd>
-                {it.is_linen ? <span className="row-sub">{fmtQty(b.in_use)} in rooms · {fmtQty(b.in_wash)} at laundry</span> : null}
-              </div>
-            ))}
+            {it.balances.map((b) => {
+              const place = it.locations?.find((l) => l.store_id === b.store_id)?.location;
+              const shown = inPack(b.qty, it.uom, storePack(it.packs));
+              return (
+                <div key={b.store_id}><dt>{b.store_name}</dt><dd>{fmtQty(b.qty)} {it.uom}</dd>
+                  {shown && <span className="row-sub">{shown}</span>}
+                  {b.on_hold > 0 && <span className="row-sub">{fmtQty(b.on_hold)} {it.uom} held for inspection</span>}
+                  {place && <span className="row-sub">Shelf {place}</span>}
+                  {it.is_linen ? <span className="row-sub">{fmtQty(b.in_use)} in rooms · {fmtQty(b.in_wash)} at laundry</span> : null}
+                </div>
+              );
+            })}
             {it.with_people > 0 && <div><dt>With people</dt><dd>{fmtQty(it.with_people)} {it.uom}</dd><span className="row-sub">Taken, not yet used or returned</span></div>}
             <div><dt>Used, last 30 days</dt><dd>{fmtQty(it.used30)} {it.uom}</dd></div>
             {can('cost.view') && <div><dt>Average cost</dt><dd>{fmtMoney(it.avg_cost, currency)}</dd></div>}
@@ -175,26 +194,38 @@ function ItemSheet({ id, onClose, onEdit }) {
 export function ItemForm({ item, stores, onClose, onSaved }) {
   const { refreshStock, toast, currency, can, stock, me } = useApp();
   const lab = me.settings?.['lots.opened'] === 'on';
+  const packsOn = me.settings?.['packs.on'] === 'on';
+  const placesOn = me.settings?.['locations.on'] === 'on';
+  const inspectOn = me.settings?.['quarantine.on'] === 'flagged';
   const { data: suppliers } = useData('/api/suppliers');
   const cats = [...new Set((stock?.items || []).map((i) => i.category))].sort();
   const levelOf = (sid) => item?.levels?.find((l) => l.store_id === sid) || item?.stores?.find((s) => s.storeId === sid)?.level || {};
+  const placeOf = (sid) => item?.locations?.find((l) => l.store_id === sid)?.location ?? item?.stores?.find((s) => s.storeId === sid)?.location ?? '';
   const [f, setF] = useState({
     code: item?.code || '', name: item?.name || '', category: item?.category || '', uom: item?.uom || 'pcs', barcode: item?.barcode || '',
     tracksExpiry: !!(item?.tracks_expiry ?? item?.tracksExpiry), isLinen: !!(item?.is_linen ?? item?.isLinen),
     supplierId: item?.supplier_id ?? item?.supplierId ?? '', notes: item?.notes || '', active: item ? !!item.active : true, unitCost: '',
     storage: item?.storage || '', openLifeDays: item?.open_life_days ?? item?.openLifeDays ?? '',
-    levels: stores.map((s) => ({ storeId: s.id, name: s.name, reorder: levelOf(s.id).reorder ?? '', critical: levelOf(s.id).critical ?? '', par: levelOf(s.id).par ?? '' })),
+    inspect: !!(item?.inspect),
+    packs: (item?.packs || []).map((p) => ({ key: p.id, label: p.label, factor: String(p.factor), supplierId: p.supplierId || '', use: p.use || 'BOTH' })),
+    levels: stores.map((s) => ({ storeId: s.id, name: s.name, reorder: levelOf(s.id).reorder ?? '', critical: levelOf(s.id).critical ?? '', par: levelOf(s.id).par ?? '', location: placeOf(s.id) || '' })),
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const setLevel = (sid, k, v) => setF((x) => ({ ...x, levels: x.levels.map((l) => (l.storeId === sid ? { ...l, [k]: v } : l)) }));
+  const setPack = (key, k, v) => setF((x) => ({ ...x, packs: x.packs.map((p) => (p.key === key ? { ...p, [k]: v } : p)) }));
   const save = async () => {
     setBusy(true); setErr(null);
     try {
-      const { storage, openLifeDays, ...rest } = f;
-      // Storage and life once opened go only where the unit uses them, so a form without them never clears them.
-      const body = { ...rest, ...(lab ? { storage, openLifeDays } : {}), supplierId: f.supplierId || null, levels: f.levels.map((l) => ({ storeId: l.storeId, reorder: l.reorder || 0, critical: l.critical || 0, par: l.par || 0 })) };
+      const { storage, openLifeDays, packs, inspect, ...rest } = f;
+      // Each feature's fields go only where the unit uses it, so a form without them never clears them.
+      const body = {
+        ...rest, ...(lab ? { storage, openLifeDays } : {}), ...(inspectOn ? { inspect } : {}),
+        ...(packsOn ? { packs: packs.filter((p) => p.label.trim() || p.factor).map((p) => ({ label: p.label, factor: Number(p.factor), supplierId: p.supplierId || null, use: p.use })) } : {}),
+        supplierId: f.supplierId || null,
+        levels: f.levels.map((l) => ({ storeId: l.storeId, reorder: l.reorder || 0, critical: l.critical || 0, par: l.par || 0, ...(placesOn ? { location: l.location } : {}) })),
+      };
       if (item?.id) await put(`/api/items/${item.id}`, body); else await post('/api/items', body);
       toast(item?.id ? 'Item saved' : 'Item added');
       await refreshStock();
@@ -228,8 +259,30 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
             </Field>
           </>
         )}
+        {inspectOn && (
+          <div className="span2"><Check checked={f.inspect} onChange={(v) => set('inspect', v)}>Inspect on arrival <span className="muted">: a delivery of it is held as not usable until somebody checks and releases it</span></Check></div>
+        )}
         <Field label="Notes" className="span2"><textarea value={f.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
       </div>
+      {packsOn && (
+        <Card title="Pack sizes" hint={`How it is bought or stored, in ${f.uom || 'its own unit'}. Stock is always kept in ${f.uom || 'its own unit'}; a pack is a way of writing it on an order or a delivery.`}>
+          <div className="stack">
+            {f.packs.length === 0 && <p className="muted">No pack sizes. It is bought and stored in {f.uom || 'its own unit'}.</p>}
+            {f.packs.map((p) => (
+              <div key={p.key} className="line" style={{ gridTemplateColumns: '1fr' }}>
+                <div className="line-fields">
+                  <Field label="Pack"><input value={p.label} onChange={(e) => setPack(p.key, 'label', e.target.value)} placeholder="Carton of 48" maxLength={40} /></Field>
+                  <Field label={`${f.uom || 'pcs'} in one`}><QtyInput value={p.factor} onChange={(v) => setPack(p.key, 'factor', v)} label={`How many ${f.uom} in ${p.label || 'this pack'}`} /></Field>
+                  <Field label="Supplier"><Select value={p.supplierId} onChange={(v) => setPack(p.key, 'supplierId', v)} placeholder="Any supplier" options={(suppliers || []).map((s) => ({ value: s.id, label: s.name }))} /></Field>
+                  <Field label="Used for"><Select value={p.use} onChange={(v) => setPack(p.key, 'use', v)} options={[{ value: 'BOTH', label: 'Buying and storing' }, { value: 'BUY', label: 'Buying only' }, { value: 'STORE', label: 'Storing only' }]} /></Field>
+                  <Button kind="ghost" icon="close" onClick={() => set('packs', f.packs.filter((x) => x.key !== p.key))}>Remove</Button>
+                </div>
+              </div>
+            ))}
+            <div><Button kind="secondary" icon="plus" onClick={() => set('packs', [...f.packs, { key: Math.random().toString(36).slice(2), label: '', factor: '', supplierId: '', use: 'BOTH' }])}>Add a pack size</Button></div>
+          </div>
+        </Card>
+      )}
       <Card title="Levels per store" hint="Leave a store at zero if the item is not kept there.">
         <div className="stack">
           {f.levels.map((l) => (
@@ -239,6 +292,7 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
                 <Field label="Reorder at"><QtyInput value={l.reorder} onChange={(v) => setLevel(l.storeId, 'reorder', v)} label={`Reorder at, ${l.name}`} /></Field>
                 <Field label="Critical at"><QtyInput value={l.critical} onChange={(v) => setLevel(l.storeId, 'critical', v)} label={`Critical at, ${l.name}`} /></Field>
                 <Field label="Top up to"><QtyInput value={l.par} onChange={(v) => setLevel(l.storeId, 'par', v)} label={`Top up to, ${l.name}`} /></Field>
+                {placesOn && <Field label="Shelf location"><input value={l.location} onChange={(e) => setLevel(l.storeId, 'location', e.target.value)} placeholder="A-3-2" maxLength={40} aria-label={`Shelf location, ${l.name}`} /></Field>}
               </div>
             </div>
           ))}

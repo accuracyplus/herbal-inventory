@@ -131,7 +131,7 @@ function CountSheet({ id, onClose, onChanged }) {
             <div key={l.item_id} className={`line ${variance ? (variance < 0 ? 'danger' : 'warn') : ''}`}>
               <div className="min0">
                 <div className="line-name">{l.name}</div>
-                <div className="line-sub"><code>{l.code}</code> · {l.category}{!c.hidden && l.expected !== null ? ` · system ${fmtQty(l.expected)} ${l.uom}` : ''}{l.counted_by ? ` · ${l.counted_by}` : ''}</div>
+                <div className="line-sub">{l.location ? <><b>Shelf {l.location}</b> · </> : null}<code>{l.code}</code> · {l.category}{!c.hidden && l.expected !== null ? ` · system ${fmtQty(l.expected)} ${l.uom}` : ''}{l.counted_by ? ` · ${l.counted_by}` : ''}</div>
               </div>
               <div style={{ width: 120 }}>
                 {open && can('count.run')

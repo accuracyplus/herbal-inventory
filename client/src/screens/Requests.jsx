@@ -129,7 +129,7 @@ function RequestSheet({ id, onClose, onChanged }) {
   const canIssue = r && ['APPROVED', 'PARTLY_ISSUED'].includes(r.status) && can('request.fulfil');
   const canCancel = r && ['PENDING', 'APPROVED'].includes(r.status) && !r.lines.some((l) => l.issued_qty > 0) && (mine || can('request.decide'));
   const lineCols = useMemo(() => [
-    { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub"><code>{l.code}</code> · {fmtQty(l.available)} {l.uom} in {r?.from_name}</span></span> },
+    { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub">{l.location ? <><b>Shelf {l.location}</b> · </> : null}<code>{l.code}</code> · {fmtQty(l.available)} {l.uom} in {r?.from_name}</span></span> },
     { key: 'qty', label: 'Asked', align: 'right', render: (l) => fmtQty(l.qty) },
     { key: 'approved_qty', label: 'Approved', align: 'right', render: (l) => (canDecide
       ? <QtyInput value={qty[l.id]} onChange={(v) => setQty((x) => ({ ...x, [l.id]: v }))} style={{ width: 96 }} label={`Approve ${l.name}`} />

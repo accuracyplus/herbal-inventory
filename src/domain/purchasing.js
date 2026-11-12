@@ -17,6 +17,7 @@ import { escapeHtml, isEmail, MailError, mailStatus, sendMail } from '../lib/mai
 import { poPdf } from '../lib/pdf.js';
 import { requireOtherApprover, storeFor } from './access.js';
 import { requireLimit } from './limits.js';
+import { applyPacks } from './packs.js';
 import { commit, loadItems } from './stock.js';
 import { setting } from './settings.js';
 import { priceGuide } from './suppliers.js';
@@ -56,7 +57,11 @@ export async function savePo(env, user, body, id = null) {
   const store = await storeFor(env, user, body.storeId, { forWrite: false });
   const lines = poLines(body.lines);
   await loadItems(env, user.unitId, lines.map((l) => l.itemId));
+  await applyPacks(env, user.unitId, lines, body.lines, { supplierId: supplier.id });
   const total = m2(lines.reduce((s, l) => s + l.qty * l.unitCost, 0));
+  const lineRow = (poId, l) => env.DB.prepare(
+    `INSERT INTO po_lines (id, po_id, item_id, qty, unit_cost, pack_label, pack_qty, pack_cost) VALUES (?,?,?,?,?,?,?,?)`,
+  ).bind(uuid(), poId, l.itemId, l.qty, l.unitCost, l.pack?.label ?? null, l.pack?.qty ?? null, l.pack?.cost ?? null);
   const expected = body.expectedDate ? isoDate(body.expectedDate) : null;
   if (body.expectedDate && !expected) refuse('BAD_DATE', 'The expected date is not a real date.');
   const now = nowIso();
@@ -70,9 +75,7 @@ export async function savePo(env, user, body, id = null) {
           WHERE id = ? AND status IN ('DRAFT','REJECTED')`,
       ).bind(supplier.id, store.id, expected, text(body.note, 500), total, po.id),
       env.DB.prepare(`DELETE FROM po_lines WHERE po_id = ?`).bind(po.id),
-      ...lines.map((l) => env.DB.prepare(
-        `INSERT INTO po_lines (id, po_id, item_id, qty, unit_cost) VALUES (?,?,?,?,?)`,
-      ).bind(uuid(), po.id, l.itemId, l.qty, l.unitCost)),
+      ...lines.map((l) => lineRow(po.id, l)),
       auditStmt(env, user, 'PO_EDIT', po.ref, `${lines.length} line(s), AED ${total}`),
     ]);
     return { ok: true, id: po.id, ref: po.ref };
@@ -87,9 +90,7 @@ export async function savePo(env, user, body, id = null) {
        VALUES (?,?,?,?,?,'DRAFT',?,?,?,?,?,?)`,
     ).bind(newId, user.unitId, ref, supplier.id, store.id, expected, text(body.note, 500), total,
            user.staffId, user.fullName, now),
-    ...lines.map((l) => env.DB.prepare(
-      `INSERT INTO po_lines (id, po_id, item_id, qty, unit_cost) VALUES (?,?,?,?,?)`,
-    ).bind(uuid(), newId, l.itemId, l.qty, l.unitCost)),
+    ...lines.map((l) => lineRow(newId, l)),
     auditStmt(env, user, 'PO_CREATE', ref, `${supplier.name}, ${lines.length} line(s), AED ${total}`),
   ]);
   return { ok: true, id: newId, ref };

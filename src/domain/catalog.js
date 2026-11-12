@@ -8,7 +8,8 @@ import { auditStmt } from '../lib/audit.js';
 import { may } from './access.js';
 import { barcodeOwner, findByCode } from './scanning.js';
 import { commit } from './stock.js';
-import { setting } from './settings.js';
+import { featureOn, setting } from './settings.js';
+import { locationsByItem, locationStatements, packsByItem, packStatements } from './packs.js';
 
 /** OUT, CRITICAL, LOW or OK, for one store's quantity against its levels. */
 export function levelStatus(qty, lv) {
@@ -48,7 +49,7 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
          FROM items WHERE unit_id = ? ${includeInactive ? '' : 'AND active = 1'} ORDER BY category, name`,
     ).bind(user.unitId).all(),
     env.DB.prepare(
-      `SELECT b.store_id, b.item_id, b.qty, b.in_use, b.in_wash FROM balances b JOIN stores s ON s.id = b.store_id
+      `SELECT b.store_id, b.item_id, b.qty, b.in_use, b.in_wash, b.on_hold FROM balances b JOIN stores s ON s.id = b.store_id
         WHERE s.unit_id = ?`,
     ).bind(user.unitId).all(),
     env.DB.prepare(
@@ -88,6 +89,8 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
   const today = gstDate();
   const warnDays = Number(await setting(env, user.unitId, 'expiry.warn_days')) || 60;
   const warnBy = gstDate(Date.now() + warnDays * 864e5);
+  const packs = (await featureOn(env, user.unitId, 'packs.on')) ? await packsByItem(env, user.unitId) : null;
+  const places = await locationsByItem(env, user.unitId);
 
   const rows = (items || []).map((it) => {
     const per = stores.map((s) => {
@@ -97,6 +100,8 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
       const qty = b?.qty ?? 0;
       return {
         storeId: s.id, qty, inUse: b?.in_use ?? 0, inWash: b?.in_wash ?? 0, withPeople: heldMap.get(key(it.id, s.id)) ?? 0,
+        onHold: b?.on_hold ?? 0,
+        ...(places ? { location: places.get(key(it.id, s.id)) || null } : {}),
         level: lv ? { reorder: lv.reorder, critical: lv.critical, par: lv.par } : null,
         status: levelStatus(qty, lv),
         nextExpiry: e?.next_expiry && e.next_expiry !== '' ? e.next_expiry : null,
@@ -112,6 +117,7 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
       id: it.id, code: it.code, name: it.name, category: it.category, uom: it.uom, barcode: it.barcode, barcodes: codesOf.get(it.id) || [],
       tracksExpiry: !!it.tracks_expiry, isLinen: !!it.is_linen, active: !!it.active, notes: it.notes,
       supplierId: it.supplier_id, storage: it.storage || null, openLifeDays: it.open_life_days ?? null,
+      ...(packs ? { packs: packs.get(it.id) || [] } : {}),
       avgCost: showCost ? it.avg_cost : undefined,
       lastCost: showCost ? it.last_cost : undefined,
       value: showCost ? Math.round(total * (it.avg_cost || 0) * 100) / 100 : undefined,
@@ -157,8 +163,12 @@ export async function itemDetail(env, user, id) {
     : { ...m, unit_cost: undefined, value: undefined });
   // How much, never who: this sheet is open to everybody who can see stock.
   const out = await env.DB.prepare(`SELECT COALESCE(SUM(qty), 0) AS n FROM custody WHERE item_id = ? AND qty > 0`).bind(id).first();
+  const packs = (await featureOn(env, user.unitId, 'packs.on')) ? (await packsByItem(env, user.unitId, [id])).get(id) || [] : undefined;
+  const places = await locationsByItem(env, user.unitId);
   return {
     ...it,
+    packs,
+    locations: places ? (bals || []).map((b) => ({ store_id: b.store_id, location: places.get(`${id}|${b.store_id}`) || null })) : undefined,
     with_people: q3(out?.n || 0),
     avg_cost: showCost ? it.avg_cost : undefined,
     last_cost: showCost ? it.last_cost : undefined,
@@ -255,6 +265,8 @@ export async function saveItem(env, user, body, id = null) {
              body.active === false ? 0 : 1, now, user.fullName, id),
       ...levelStatements(env, id, body.levels),
       ...[labStatement(env, id, body)].filter(Boolean),
+      ...await packStatements(env, user, id, body),
+      ...await locationStatements(env, user, id, body.levels),
       auditStmt(env, user, 'ITEM_EDIT', f.code, f.name),
     ]);
     return { ok: true, id };
@@ -269,6 +281,8 @@ export async function saveItem(env, user, body, id = null) {
            nonNegative(body.unitCost) ?? 0, nonNegative(body.unitCost), f.supplier_id, f.notes, now, user.fullName),
     ...levelStatements(env, newId, body.levels),
     ...[labStatement(env, newId, body)].filter(Boolean),
+    ...await packStatements(env, user, newId, body),
+    ...await locationStatements(env, user, newId, body.levels),
     auditStmt(env, user, 'ITEM_CREATE', f.code, f.name),
   ]);
   return { ok: true, id: newId };

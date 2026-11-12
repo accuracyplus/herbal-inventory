@@ -23,6 +23,7 @@ import { actorOf, auditStmt } from '../lib/audit.js';
 import { filesFor } from '../lib/files.js';
 import { may, requireOtherApprover, storeFor } from './access.js';
 import { mappingStatements } from './notes.js';
+import { applyPacks } from './packs.js';
 import { parseLines } from './operations.js';
 import { setting } from './settings.js';
 import { buildPosting, commit, loadItems } from './stock.js';
@@ -83,6 +84,11 @@ export async function recordReceipt(env, user, body) {
   const store = await storeFor(env, user, body.storeId);
   const lines = parseLines(body.lines);
   const items = await loadItems(env, user.unitId, lines.map((l) => l.itemId));
+  // Counted in packs (a carton of 48): the stock engine is given pieces, the line keeps the pack.
+  const packSupplier = body.supplierId || (body.poId
+    ? (await env.DB.prepare(`SELECT supplier_id FROM purchase_orders WHERE id = ? AND unit_id = ?`).bind(body.poId, user.unitId).first())?.supplier_id
+    : null);
+  await applyPacks(env, user.unitId, lines, body.lines, { supplierId: packSupplier || null });
   lines.forEach((l, i) => {
     const raw = body.lines[i] || {};
     const it = items.get(l.itemId);
@@ -128,9 +134,11 @@ export async function recordReceipt(env, user, body) {
            body.invoiceDate ? isoDate(body.invoiceDate) : null, text(body.noteNo, 60), noteDate, text(body.note, 300), total,
            user.staffId, user.fullName, now, direct ? 'APPROVED' : 'PENDING', direct ? now : null, direct ? 'No approval step in this unit' : null),
     ...lines.map((l) => env.DB.prepare(
-      `INSERT INTO receipt_lines (id, receipt_id, item_id, qty, note_qty, unit_cost, batch_no, expiry, note_text, po_qty, po_cost, note)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-    ).bind(uuid(), id, l.itemId, l.qty, l.noteQty, l.unitCost, l.batchNo, l.expiry, l.noteText, l.poQty, l.poCost, l.note)),
+      `INSERT INTO receipt_lines (id, receipt_id, item_id, qty, note_qty, unit_cost, batch_no, expiry, note_text, po_qty, po_cost, note,
+                                  pack_label, pack_qty, pack_cost)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    ).bind(uuid(), id, l.itemId, l.qty, l.noteQty, l.unitCost, l.batchNo, l.expiry, l.noteText, l.poQty, l.poCost, l.note,
+           l.pack?.label ?? null, l.pack?.qty ?? null, l.pack?.cost ?? null)),
     ...(supplier ? mappingStatements(env, user, supplier.id, lines) : []),
     ...(direct ? await postingStatements(env, user, receipt, store, lines, items) : []),
     auditStmt(env, user, direct ? 'RECEIVE' : 'RECEIPT_RECORD', ref, about),

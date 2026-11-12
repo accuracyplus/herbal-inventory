@@ -27,6 +27,8 @@ export async function startCount(env, user, body) {
   if (open) refuse('COUNT_OPEN', `${open.ref} is still open for ${store.name}. Finish or cancel it first.`, 409);
 
   const category = text(body.category, 80);
+  // A cycle count (feature 14): just the items named, which the ABC schedule says are due.
+  const only = Array.isArray(body.itemIds) && body.itemIds.length ? [...new Set(body.itemIds.map(String))].slice(0, 500) : null;
   const { results } = await env.DB.prepare(
     `SELECT i.id, COALESCE(b.qty, 0) AS qty
        FROM items i
@@ -34,9 +36,10 @@ export async function startCount(env, user, body) {
        LEFT JOIN item_levels lv ON lv.item_id = i.id AND lv.store_id = ?
       WHERE i.unit_id = ? AND i.active = 1 AND (b.item_id IS NOT NULL OR lv.item_id IS NOT NULL)
         ${category ? 'AND i.category = ?' : ''}
+        ${only ? `AND i.id IN (${only.map(() => '?').join(',')})` : ''}
       ORDER BY i.category, i.name`,
-  ).bind(store.id, store.id, user.unitId, ...(category ? [category] : [])).all();
-  if (!results?.length) refuse('NOTHING_TO_COUNT', `${store.name} holds nothing${category ? ` in ${category}` : ''} to count.`);
+  ).bind(store.id, store.id, user.unitId, ...(category ? [category] : []), ...(only || [])).all();
+  if (!results?.length) refuse('NOTHING_TO_COUNT', `${store.name} holds nothing${category ? ` in ${category}` : ''}${only ? ' of those items' : ''} to count.`);
 
   const id = uuid();
   const ref = await nextRef(env, user.unitId, user.unit.code, 'CNT');

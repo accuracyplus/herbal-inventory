@@ -19,6 +19,7 @@
 import { gstDate } from '../lib/data.js';
 import { may } from './access.js';
 import { SETTINGS } from './settings.js';
+import { cycleDue } from './abc.js';
 
 const DAY = 864e5;
 const dayOf = (iso) => (iso ? gstDate(Date.parse(iso)) : null);
@@ -78,7 +79,12 @@ export async function unitFacts(env, unitId, now = Date.now()) {
               MIN(next_service_on) AS first, SUM(warranty_until >= ?1 AND warranty_until <= ?2) AS warranty
          FROM assets WHERE unit_id = ?3 AND status <> 'RETIRED'`, today, soonDay, unitId) : null,
   ]);
-  return { unitId, today, hours, dueDays, warnDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits, equipment };
+  let cycle = null;
+  if (on('abc.on')) {
+    const due = (await cycleDue(env, unitId, { now })).rows.filter((r) => r.due);
+    cycle = { n: due.length, a: due.filter((r) => r.grade === 'A').length, worst: Math.max(0, ...due.map((r) => r.lateDays)) };
+  }
+  return { unitId, today, hours, dueDays, warnDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits, equipment, cycle };
 }
 
 /** Rows grouped by who raised them, without the person's own. */
@@ -170,6 +176,11 @@ export function waitingList(f, user) {
     add({ key: 'returns-credit', screen: 'returns', filter: 'SENT', n, days: late !== null && late > 0 ? -late : null, quiet: !(late > 0), action: 'Record the credit', text: `${plural(n, 'return')} waiting for a credit note` });
   }
 
+  if (f.cycle?.n && may(user, 'count.run')) {
+    // A routine, not an emergency: sent by email only once something is a week late.
+    const { n, a, worst } = f.cycle;
+    add({ key: 'cycle-due', screen: 'counts', to: 'counts?tab=cycle', n, urgent: a, days: worst >= 7 ? -worst : null, quiet: worst < 7, action: 'Count them', text: `${plural(n, 'item')} due for a cycle count${a ? `, ${a} of them A items` : ''}` });
+  }
   if (f.equipment && may(user, 'assets.edit')) {
     const { past = 0, due = 0, warranty = 0, first } = f.equipment;
     if (past || due) {

@@ -12,6 +12,8 @@ const ACTIONS = {
   'adjust.decide': 'Approve corrections', 'count.run': 'Count stock', 'count.decide': 'Approve counts',
   'po.edit': 'Draft purchase orders', 'po.decide': 'Approve purchase orders', 'supplier.edit': 'Keep suppliers',
   'items.edit': 'Keep the item list and levels', 'services.edit': 'Keep services and their recipes', 'barcode.link': 'Save an unknown barcode to an item', reports: 'See reports', admin: 'Stores, departments, rooms, people, settings, import',
+  inspect: 'Release or reject stock held for inspection', 'return.raise': 'Send goods back to a supplier', 'return.decide': 'Approve returns to suppliers',
+  'assets.edit': 'Keep the equipment register', accounts: 'Export for the accounts system',
 };
 
 const FLOWS = [
@@ -19,6 +21,8 @@ const FLOWS = [
   ['scan', 'Scanning', 'Scan on any list of items uses this device\'s camera; on a computer, Scan with phone shows a code to open on your phone, and each scan lands on the computer\'s list. Scan in the menu is for walking the store. A barcode nobody knows asks which item it is.'],
   ['sparkle', 'Recording a service by its recipe', 'Services (your unit may call them treatments or tests) → choose what was done and how many → its usual items are laid out → change anything that differed → record. It all comes off the store together. Reports compares what was used with the recipe.'],
   ['lab', 'Opened packs (where switched on)', 'In use → Open a pack → the item, the bench or analyser, and the lot (the one that expires first unless you choose). It comes off the shelf as a use and shows here with its use-by date: the printed expiry, or the days it lasts once opened, whichever is sooner. Choose it to mark it finished, or thrown away with the reason. Finished and thrown away finds every pack of a lot number.'],
+  ['returns', 'Inspection and returns (where switched on)', 'With inspection on, an approved delivery is held, not on the shelf. A manager opens Returns and inspection, checks it, and releases it or rejects it with what was wrong. To send goods back later: open the delivery, Return goods to the supplier, choose how many and why; a manager approves, the stock leaves, and Purchasing records the credit note when it comes.'],
+  ['counts', 'Cycle counts (where switched on)', 'Stock counts, Cycle counts due: the items not counted for their grade\'s number of days, A items first. Count the ones due starts an ordinary count of just those.'],
   ['reports', 'Suggested levels', 'For managers: Purchasing → Suggested levels → choose a store. Each item used there lately shows its levels now and what its real use suggests. Tick the ones to take, change any number first, and press Set levels. Nothing changes until you do. What to buy then works from the new levels.'],
   ['purchasing', 'Suppliers and their prices', 'Purchasing → Suppliers → a supplier: how their orders went over the last year, and what they charge for each item. An item\'s window shows every supplier\'s last price side by side. While an order is written, each line says what was paid last time. An approved order has a PDF button, and, once emailing is set up, a button that sends it to the supplier.'],
   ['download', 'Services from bookings or billing', 'For managers: Services → From bookings or billing. A connected system sends each one done and the stock comes off by itself; the same reference is never counted twice. One that could not be recorded waits there with the reason: fix it, then Try again. Until a system is connected, upload the sheet from the same page.'],

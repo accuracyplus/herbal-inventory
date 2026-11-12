@@ -14,6 +14,7 @@ import { STORAGE } from './InUse.jsx';
 const KIND = {
   RECEIPT: 'Received', ISSUE: 'Used', TRANSFER_OUT: 'Sent', TRANSFER_IN: 'Arrived', ADJUST: 'Correction',
   COUNT: 'Count', OPENING: 'Opening', LINEN: 'Linen', TAKE: 'Taken', RETURN: 'Returned',
+  RELEASE: 'Released after inspection', SUPPLIER_RETURN: 'Sent back to the supplier',
 };
 const STATE = { available: 'shelf', in_use: 'rooms', in_wash: 'laundry', gone: 'discarded' };
 

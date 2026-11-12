@@ -15,7 +15,7 @@ export const LEVELS = [
   { level: 8, file: 'migrations/0007_service_link.sql', table: 'service_inbox', column: 'decision_note' },
   { level: 9, file: 'migrations/0008_supplier_depth.sql', table: 'po_emails', column: 'pdf_sha256' },
   { level: 10, file: 'migrations/0009_lab_lots.sql', table: 'lot_openings', column: 'close_reason' },
-  { level: 11, file: 'migrations/0010_enterprise.sql', table: 'closed_periods', column: 'note' },
+  { level: 11, file: 'migrations/0010_enterprise.sql', table: 'item_locations', column: 'location' },
 ];
 
 export const EXPECTED_LEVEL = LEVELS[LEVELS.length - 1].level;

@@ -4,23 +4,27 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { fmtDateTime, fmtMoney, fmtQty, post, put } from '../api.js';
+import { fmtDate, fmtDateTime, fmtMoney, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import { isDesk, PairSheet, ScanSheet } from '../scan/ScanSheets.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, SearchBox, Select, Sheet, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 
 export default function Counts() {
-  const { route, navigate, can } = useApp();
+  const { route, navigate, can, me } = useApp();
   const { data, error, loading, reload } = useData('/api/counts');
   const [starting, setStarting] = useState(false);
+  const abc = me.settings?.['abc.on'] === 'on';
+  const tab = abc && route.query.get('tab') === 'cycle' ? 'cycle' : 'counts';
   return (
     <Page title="Stock counts" subtitle="Count the shelf; a manager reviews the differences before stock changes."
       actions={can('count.run') && <Button icon="plus" onClick={() => setStarting(true)}>Start a count</Button>}>
+      {abc && <Segmented label="Show" value={tab} onChange={(v) => navigate(v === 'cycle' ? 'counts?tab=cycle' : 'counts')} options={[{ value: 'counts', label: 'Counts' }, { value: 'cycle', label: 'Cycle counts due' }]} />}
+      {tab === 'cycle' && <CycleCounts onStarted={(id) => { reload(); navigate(`counts/${id}`); }} />}
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}
-      {data && (
+      {tab === 'counts' && data && (
         <Card pad={false}>
           <Table rows={data} onRow={(c) => navigate(`counts/${c.id}`)} empty="No counts yet. Start one for a store." columns={[
             { key: 'ref', label: 'Count', primary: true, render: (c) => <span className="min0"><span className="row-label">{c.ref}</span><span className="row-sub">{c.store_name}{c.category ? ` · ${c.category}` : ''}{c.blind ? ' · blind' : ''}</span></span> },
@@ -33,6 +37,53 @@ export default function Counts() {
       {starting && <StartCount onClose={() => setStarting(false)} onDone={(id) => { setStarting(false); reload(); navigate(`counts/${id}`); }} />}
       {route.id && <CountSheet id={route.id} onClose={() => navigate('counts')} onChanged={reload} />}
     </Page>
+  );
+}
+
+const GRADE_TONE = { A: 'danger', B: 'warn', C: 'plain' };
+
+/** ABC cycle counts: what is due in a store, A items first, and a count of just those. */
+function CycleCounts({ onStarted }) {
+  const { lists, can, toast } = useApp();
+  const mine = lists.stores.filter((s) => s.mine);
+  const [storeId, setStoreId] = useState(mine[0]?.id || '');
+  const [grade, setGrade] = useState('');
+  const { data, error, loading, reload } = useData(storeId ? `/api/abc?store=${storeId}` : null, [storeId]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const due = (data?.rows || []).filter((r) => r.due && (!grade || r.grade === grade));
+  const start = async () => {
+    if (!due.length) { setErr(new Error('Nothing is due in what is shown.')); return; }
+    setBusy(true); setErr(null);
+    try {
+      const r = await post('/api/counts', { storeId, itemIds: due.map((x) => x.itemId), blind: true, note: `Cycle count${grade ? `, ${grade} items` : ''}` });
+      toast(`${r.ref} started, ${r.lines} items to count`);
+      onStarted(r.id);
+    } catch (e) { setErr(e); } finally { setBusy(false); }
+  };
+  return (
+    <>
+      <Card title="Cycle counts" hint="Items are graded by the value used in the last 90 days: A, the few that are most of it, are counted most often. An item is due when it has not been counted in a store for its grade's number of days.">
+        <div className="form two">
+          <Field label="Store"><Select value={storeId} onChange={setStoreId} options={mine.map((s) => ({ value: s.id, label: s.name }))} /></Field>
+          <Field label="Grade"><Select value={grade} onChange={setGrade} placeholder="Every grade" options={['A', 'B', 'C'].map((g) => ({ value: g, label: `${g} items${data ? `: counted every ${data.days[g]} days` : ''}` }))} /></Field>
+        </div>
+        {data && <p className="muted">{data.grades.A} A, {data.grades.B} B and {data.grades.C} C items here; {data.due} due for counting.</p>}
+        <ErrorNote error={error || err} onRetry={error ? reload : undefined} />
+        {can('count.run') && data && <div className="row" style={{ justifyContent: 'flex-end' }}><Button busy={busy} icon="counts" onClick={start}>{due.length ? `Count the ${due.length} due` : 'Nothing due'}</Button></div>}
+      </Card>
+      {loading && !data && <Loading />}
+      {data && (
+        <Card pad={false}>
+          <Table caption="Due for a cycle count" rows={due} rowKey={(r) => r.itemId} empty="Nothing is due. Every item has been counted within its grade's days." columns={[
+            { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code> · {r.category}</span></span> },
+            { key: 'grade', label: 'Grade', render: (r) => <Pill tone={GRADE_TONE[r.grade]}>{r.grade}</Pill> },
+            { key: 'lastCounted', label: 'Last counted', render: (r) => (r.lastCounted ? fmtDate(r.lastCounted) : 'Never') },
+            { key: 'lateDays', label: 'Late by', align: 'right', render: (r) => (r.lateDays ? `${r.lateDays} day${r.lateDays === 1 ? '' : 's'}` : '') },
+          ]} />
+        </Card>
+      )}
+    </>
   );
 }
 

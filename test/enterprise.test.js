@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { HP, PEOPLE, S, bal, call, hfidToken, makeItem, receive, testEnv, upload } from './helpers/http.js';
 import { spreadCharges } from '../src/domain/accounts.js';
 import { addMonths } from '../src/domain/assets.js';
+import { abcClasses } from '../src/domain/abc.js';
 
 export const settings = (env, values, as = 'admin') => call(env, 'PUT', '/api/settings', { as, body: values });
 
@@ -403,6 +404,45 @@ test('equipment: registered where it is, serviced, and flagged on Today when its
   const repair = await call(env, 'POST', `/api/assets/${r.body.id}/services`, { as: 'keeper', body: { kind: 'REPAIR', onDate: today } });
   assert.equal(repair.body.nextServiceOn, addMonths(today, 6), 'a repair does not move the service date');
   assert.equal((await call(env, 'POST', `/api/assets/${r.body.id}/services`, { as: 'keeper', body: { kind: 'SERVICE', onDate: '2099-01-01' } })).body.error.code, 'FUTURE');
+});
+
+// ── ABC cycle counts ─────────────────────────────────────────────────────────────────────
+
+test('ABC: the few items that are the first 80% of the value used are A, the next 15% B, the rest C', () => {
+  const g = abcClasses([
+    { itemId: 'a', value: 50, uses: 1 }, { itemId: 'b', value: 30, uses: 1 }, { itemId: 'c', value: 10, uses: 1 },
+    { itemId: 'd', value: 6, uses: 1 }, { itemId: 'e', value: 4, uses: 1 }, { itemId: 'f', value: 0, uses: 0 },
+  ]);
+  assert.deepEqual([...g.entries()].sort(), [['a', 'A'], ['b', 'A'], ['c', 'B'], ['d', 'B'], ['e', 'C'], ['f', 'C']]);
+});
+
+test('ABC: graded from real use, all due until counted, and a cycle count of just what is due', async () => {
+  const env = testEnv();
+  const oil = await makeItem(env, { name: 'Massage oil' });
+  const soap = await makeItem(env, { name: 'Soap' });
+  const cloth = await makeItem(env, { name: 'Cotton cloth' });
+  for (const id of [oil, soap, cloth]) await receive(env, id, 100, { unitCost: 10 });
+  const use = (itemId, qty) => call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, areaId: 'ar-r1', personId: PEOPLE.keeper.id, lines: [{ itemId, qty }] } });
+  await use(oil, 50); await use(soap, 10); await use(cloth, 1);
+
+  assert.equal((await call(env, 'GET', `/api/abc?store=${S.main}`, { as: 'keeper' })).body.error.code, 'FEATURE_OFF');
+  await settings(env, { 'abc.on': 'on' });
+  const plan = (await call(env, 'GET', `/api/abc?store=${S.main}`, { as: 'keeper' })).body;
+  assert.deepEqual(plan.grades, { A: 1, B: 1, C: 1 });
+  assert.equal(plan.due, 3, 'never counted: all due');
+  assert.equal(plan.rows[0].name, 'Massage oil', 'A items first');
+  assert.equal((await call(env, 'GET', '/api/today', { as: 'keeper' })).body.waiting.find((w) => w.key === 'cycle-due').text, '3 items due for a cycle count, 1 of them A items');
+  const hub = (await call(env, 'POST', '/pending/service', { token: hfidToken({ svc: 'pending', emp_code: PEOPLE.keeper.code }) })).body.items;
+  assert.ok(!hub.some((i) => i.kind === 'inventory_cycle_due'), 'a routine count is not emailed until it is a week late');
+
+  const c = await call(env, 'POST', '/api/counts', { as: 'keeper', body: { storeId: S.main, itemIds: [oil], note: 'Cycle count' } });
+  assert.equal(c.body.lines, 1);
+  await call(env, 'PUT', `/api/counts/${c.body.id}/lines`, { as: 'keeper', body: { lines: [{ itemId: oil, counted: 50 }] } });
+  await call(env, 'POST', `/api/counts/${c.body.id}/submit`, { as: 'keeper' });
+  assert.equal((await call(env, 'POST', `/api/counts/${c.body.id}/approve`, { as: 'manager' })).status, 200);
+  const after = (await call(env, 'GET', `/api/abc?store=${S.main}`, { as: 'keeper' })).body;
+  assert.equal(after.due, 2);
+  assert.equal(after.rows.find((r) => r.name === 'Massage oil').due, false);
 });
 
 // ── Month close ──────────────────────────────────────────────────────────────────────────

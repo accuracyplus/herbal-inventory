@@ -35,6 +35,7 @@ npx wrangler d1 execute hifive-inventory --remote --file=migrations/0006_service
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0007_service_link.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0008_supplier_depth.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0009_lab_lots.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0010_enterprise.sql
 npm run seed
 ```
 
@@ -210,6 +211,13 @@ answer", not 0; the morning email's unknownGroups stays empty with Inventory on.
    **Opened packs and storage** stays off at Herbal Park. For a laboratory unit: switch it on,
    add each bench and analyser under Rooms and areas (in its department), and give each reagent
    and kit its storage and days usable once opened on the item.
+   **More features** (all off; switch on only what the unit uses): approval limits by amount,
+   pack sizes, shelf locations, holding deliveries for inspection, returns to supplier, recall
+   tracing, landed cost, the equipment register, ABC cycle counts, and accounts (VAT, exports,
+   month close). Herbal Park can leave them all off. For a laboratory, inspection ("Only items
+   marked inspect on arrival", then tick it on each reagent), returns and recall are the ones
+   ISO 15189 asks for. With approval limits on, tick **Director** on People for whoever approves
+   above a manager's amount.
 7. **Treatments → Recipes**: add each treatment with what one normally uses. Part of a bottle is a
    decimal, so check each oil's unit first: an item counted in bottles takes 0.25 for a quarter.
    Add the usual price if the margin report is wanted.

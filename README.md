@@ -40,6 +40,11 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
 - **Lab readiness** (a unit switches it on): items say where they are kept and how long they
   last once opened; an In use screen follows each opened kit or reagent to its bench or analyser,
   with its in-use date, until it is finished or thrown away, and finds every pack of a lot.
+- **More features**, each switched on per unit and off by default: approval limits by amount,
+  pack sizes (buy by the carton, store by the box, use by the piece), shelf locations, holding
+  deliveries for inspection, returns to supplier with their credit notes, recall tracing of a
+  lot, landed cost, an equipment register with service dates, ABC cycle counts, and accounts
+  (VAT on deliveries, exports for the accounts system, month close).
 - **Suggested levels**: reorder, critical and top-up levels for each store worked out from the
   last 30 and 90 days of real use and how long an order takes; a manager ticks the ones to take,
   changes any number, and sets them in one go. What to buy follows them.

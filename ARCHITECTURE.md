@@ -195,6 +195,31 @@ the name is HiFive ID's); with HiFive ID unreachable the typed code stands and t
 Tokens must carry `module: inventory` and `aud: hifive-inventory`. "Can access" with no seat here
 gives `HFID_GRANT_ROLE` (STAFF) in the unit matching the HiFive ID entity; never Unit admin.
 
+## 3i. Enterprise features (feature 14), each switched on per unit
+
+Every one is off until a unit administrator switches it on (Admin, Settings, More features); a
+switched-off feature's routes answer `FEATURE_OFF` and say where to switch it on, its screens
+and fields hide (`when:` on SCREENS, one setting or several), and its tables stay empty. One
+migration, `0010_enterprise.sql`.
+
+| Feature | Setting | Where | The rule worth knowing |
+|---|---|---|---|
+| Approval limits | `limits.on`, `limits.po/writeoff/count` | `domain/limits.js` | Above the amount: a unit admin, or somebody ticked Director. Corrections and counts are judged on their differences without signs: 5 short and 5 over is 10 of difference. |
+| Pack sizes | `packs.on` | `domain/packs.js` | Stock is always in the item's unit. A line written in a pack keeps `pack_label/qty/cost` beside the item quantity the engine moves. A supplier's own pack is refused for another supplier. |
+| Shelf locations | `locations.on` | `item_locations` | Per item per store; count sheets and request picking sort by it. |
+| Inspection | `quarantine.on` (off / flagged / all) | `domain/quality.js`, `buildRelease`, `buildHoldOut` | Held stock is `balances.on_hold` / `batches.on_hold`: owned and valued, but nothing that hands stock out reads it. Release moves no value; rejection sends it back to the supplier (returns on) or writes it off. |
+| Returns to supplier | `returns.on` | `domain/quality.js` | Against an approved delivery, at most what it brought less what is already going back; four eyes; the credit expected is the delivery's price. |
+| Recall tracing | `recall.on` | `domain/recall.js` | Read from the ledger by batch id. Person names only for `cost.people`. |
+| Landed cost | `landed.on` | `domain/accounts.js` `spreadCharges` | Spread by value (by quantity when nothing has a price), rounding on the largest line, at posting. Stock and average cost at the landed cost; `unit_cost` stays the supplier's price for price history. |
+| Equipment | `assets.on` | `domain/assets.js` | Not stock: never in the ledger. Next service = last (or purchase) + months, clamped to the month's end; a repair does not move it. |
+| ABC cycle counts | `abc.on`, `abc.a/b/c_days` | `domain/abc.js` | Graded by the value used in 90 days (A to 80%, B to 95%); an item is due in a store when its last approved count there is older than its grade's days. A cycle count is an ordinary count of named items. |
+| Accounts | `accounting.on`, `accounting.vat_rate` | `domain/accounts.js`, `domain/periods.js` | VAT beside the net, never in the cost. Month close: trigger `movements_period_closed` refuses any movement dated in a closed Gulf month, whatever writes it; only past months close; reopening needs a reason. |
+
+New lines on Today, the hub and the morning email (waiting.js): held for inspection, returns to
+approve, equipment past or near its service date. Two are on Today only until they are late:
+a credit note (emailed once a month late) and cycle counts (once a week late), because a
+routine that arrives every morning stops being read.
+
 ## 3h. Lab readiness: storage and opened packs
 
 - Off unless the unit sets `lots.opened` to `on`: the In use screen, the item fields and the

@@ -56,6 +56,7 @@ import { closedMonths, closeMonth, reopenMonth } from './domain/periods.js';
 import { decideInspection, getReturn, listInspections, listReturns, raiseReturn, RETURN_REASONS, returnAction, returnOptions } from './domain/quality.js';
 import { findLots, traceLot } from './domain/recall.js';
 import { accountsExport, CHARGE_KINDS, EXPORTS } from './domain/accounts.js';
+import { cycleSchedule } from './domain/abc.js';
 import { ASSET_STATUS, getAsset, listAssets, recordService as recordAssetService, saveAsset, SERVICE_KINDS } from './domain/assets.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
@@ -738,6 +739,13 @@ api('GET', '/api/recall', async ({ env, url }, user) => {
   requireMay(user, 'reports');
   const item = url.searchParams.get('item');
   return json(item ? await traceLot(env, user, { itemId: item, lot: url.searchParams.get('lot') }) : await findLots(env, user, url.searchParams.get('q')));
+});
+
+api('GET', '/api/abc', async ({ env, url }, user) => {
+  if (!may(user, 'count.run') && !may(user, 'reports')) requireMay(user, 'count.run');
+  const store = await env.DB.prepare(`SELECT id FROM stores WHERE id = ? AND unit_id = ?`).bind(url.searchParams.get('store') || '', user.unitId).first();
+  if (!store) return fail(404, 'NOT_FOUND', 'Choose one of this unit\'s stores.');
+  return json(await cycleSchedule(env, user, store.id));
 });
 
 api('GET', '/api/assets', async ({ env, url }, user) => {

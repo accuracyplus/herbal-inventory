@@ -12,8 +12,13 @@
     "migrate:local": "wrangler d1 execute hifive-inventory --local --file=schema.sql",
     "seed": "wrangler d1 execute hifive-inventory --remote --file=seed/0001-herbal-park.sql"
   },
-  "engines": { "node": ">=22.5" },
+  "engines": {
+    "node": ">=22.5"
+  },
   "devDependencies": {
     "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
   }
 }

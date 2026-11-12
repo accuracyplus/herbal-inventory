@@ -8,6 +8,7 @@ import Icon from '../icons.jsx';
 import {
   Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
+import { ItemPrices, priceViewer } from './Suppliers.jsx';
 
 const KIND = {
   RECEIPT: 'Received', ISSUE: 'Used', TRANSFER_OUT: 'Sent', TRANSFER_IN: 'Arrived', ADJUST: 'Correction',
@@ -150,6 +151,7 @@ function ItemSheet({ id, onClose, onEdit }) {
               ]} rows={it.batches} empty="No batches in stock." />
             </Card>
           ) : null}
+          {priceViewer(can) && <ItemPrices id={id} />}
           <Card title="Recent movements" pad={false}>
             <Table columns={[
               { key: 'at', label: 'When', render: (m) => <span className="nowrap">{fmtDateTime(m.at)}</span> },

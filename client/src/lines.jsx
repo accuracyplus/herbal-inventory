@@ -50,7 +50,8 @@ export function noteDifferences(lines) {
  * `scan` (a purpose: use, take, transfer, receive, request) adds the Scan buttons, and takes any
  * items handed over from the Scan screen for that purpose.
  */
-export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan, withNote = false, warnings = {} }) {
+/** `notes` is one more line of text under an item, by item id: what was last paid for it, say. */
+export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan, withNote = false, warnings = {}, notes = {} }) {
   const [scanning, setScanning] = useState(null);
   const fresh = (item, extra = {}) => newLine(item, { ...(mode === 'in' || mode === 'po' ? { unitCost: item.lastCost ?? item.avgCost ?? '' } : {}), ...extra });
   const add = (item) => {
@@ -95,6 +96,7 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
                   {mode === 'adjust' && <> · enter − to take away, + to add</>}
                 </span>
                 {l.noteText && <span className="row-sub">On the note: “{l.noteText}”{l.factor > 1 ? ` · 1 on the note = ${fmtQty(l.factor)} ${l.item.uom}` : ''}</span>}
+                {notes[l.item.id] && <span className="row-sub">{notes[l.item.id]}</span>}
               </div>
               <button type="button" className="icon-btn" onClick={() => drop(l.key)} aria-label={`Remove ${l.item.name}`}><Icon name="close" size={20} /></button>
             </div>

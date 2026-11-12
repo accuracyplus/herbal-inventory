@@ -50,6 +50,7 @@ export const RULES = {
   'count.decide':      DECIDE,
   'po.edit':           ['PURCHASER', ...DECIDE],
   'po.decide':         DECIDE,
+  'po.send':           ['PURCHASER', ...DECIDE],           // email an approved order to its supplier
   'supplier.edit':     ['PURCHASER', ...DECIDE],
   'items.edit':        DECIDE,
   'services.edit':     DECIDE,                             // services and what each normally uses

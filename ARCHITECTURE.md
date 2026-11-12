@@ -170,6 +170,30 @@ the name is HiFive ID's); with HiFive ID unreachable the typed code stands and t
 Tokens must carry `module: inventory` and `aud: hifive-inventory`. "Can access" with no seat here
 gives `HFID_GRANT_ROLE` (STAFF) in the unit matching the HiFive ID entity; never Unit admin.
 
+## 3f. Suppliers: prices, delivery record, and orders sent to them
+
+- `src/domain/suppliers.js`. Nothing is typed: a **price** is the unit cost on an approved
+  delivery line with a price, from a recorded supplier; a supplier's **record** is the unit's
+  approved orders of the last twelve months set against the approved deliveries that came. Both
+  are read-only and fenced on the unit. A local purchase with no supplier is history, not a
+  comparison. "Lowest" is marked only between two or more suppliers still in use.
+- An order is judged one of ON_TIME, LATE, OVERDUE, WAITING, CLOSED_SHORT, NO_DATE
+  (`judgeOrders`, with tests). Only the first three count as "judged" for "on time, n of m";
+  an order with no expected date cannot be judged, which is why the editor asks for one.
+- Prices are seen by `cost.view`, `po.edit` and `receive` (those who see or type costs); the
+  record by anyone who may see orders. Comparing suppliers is not comparing people: Design
+  Guide rule 5 is untouched.
+- **The order's PDF** is `src/lib/pdf.js` (pdf-lib, as HiFive ID makes its letters): plain
+  black on white, A4, as many pages as it needs. The built-in fonts hold Western letters only;
+  anything else becomes "?" rather than failing the order.
+- **Emailing it** is `src/lib/mail.js`: Microsoft Graph `sendMail` with an app's
+  client-credentials token, as Recruitment and HiFive ID send. Off until `MS_TENANT_ID`,
+  `MS_CLIENT_ID`, `MS_CLIENT_SECRET` and `MAIL_SENDER` are all set (`/version` bindings `mail`).
+  Only an approved or partly received order, only to the supplier's own address, only when a
+  person with `po.send` presses the button; a second send must be asked for (`again`). Every
+  attempt, sent or failed, is a row in `po_emails` with the PDF's SHA-256, and an audit row.
+  Microsoft's own error is never shown: the person gets a sentence to act on or pass on.
+
 ## 4a. The client and the HiFive design system
 
 The client was moved onto the HiFive design system on 12 November 2026 (Design Guide Part T;

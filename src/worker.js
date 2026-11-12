@@ -25,7 +25,9 @@ import { decideReceipt, getReceipt, listReceipts, recordReceipt } from './domain
 import { readAndMatch } from './domain/notes.js';
 import { attachFile, bytesOf, FILE_KINDS, fileRow, readFile, removeFile } from './lib/files.js';
 import { cancelRequest, createRequest, decideRequest, fulfilRequest, getRequest, listRequests } from './domain/requests.js';
-import { getPo, listPos, poAction, savePo, suggestions } from './domain/purchasing.js';
+import { emailPo, getPo, listPos, poAction, poPdfFor, savePo, suggestions } from './domain/purchasing.js';
+import { itemPrices, priceGuide, supplierPage, suppliersRecord } from './domain/suppliers.js';
+import { mailStatus } from './lib/mail.js';
 import { decideAdjustment, getAdjustment, listAdjustments, raiseAdjustment, REASONS } from './domain/adjustments.js';
 import { countAction, getCount, listCounts, saveCountLines, startCount } from './domain/counts.js';
 import { heldByMe, returnHeld, takeStock, unaccountedInUnit, useHeld } from './domain/custody.js';
@@ -135,7 +137,7 @@ export default {
         ok: schema.ok, app: 'inventory',
         build: { commit: env.BUILD_COMMIT || null, version: meta.id || null, deployedAt: meta.timestamp || null },
         // A deploy can drop a binding without a word; these say so in one curl.
-        bindings: { files: !!env.FILES, ai: !!env.AI?.run, hfid: !!env.HFID?.fetch },
+        bindings: { files: !!env.FILES, ai: !!env.AI?.run, hfid: !!env.HFID?.fetch, mail: mailStatus(env).ready },
         schema, at: nowIso(),
       }, schema.ok ? 200 : 503);
     }
@@ -313,7 +315,7 @@ api('GET', '/api/me', async ({ env }, user) => {
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
     labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: FILE_KINDS },
     // What this deployment has switched on, so a screen can say "not set up" before it is tried.
-    has: { files: !!env.FILES, reading: !!env.AI?.run },
+    has: { files: !!env.FILES, reading: !!env.AI?.run, mail: mailStatus(env).ready },
   });
 });
 
@@ -355,6 +357,29 @@ api('GET', '/api/areas', async ({ env, url }, user) => json(await listAreas(env,
 api('GET', '/api/departments', async ({ env, url }, user) => json(await listDepartments(env, user, { all: url.searchParams.get('all') === '1' })));
 api('GET', '/api/categories', async ({ env }, user) => json(await categories(env, user)));
 api('GET', '/api/suppliers', async ({ env, url }, user) => json(await listSuppliers(env, user, { all: url.searchParams.get('all') === '1' })));
+
+// Supplier depth. Prices are what deliveries cost, so they follow the same rule as cost on a
+// delivery: those who see cost, write orders or receive. The delivery record is for whoever
+// may see purchase orders.
+const PRICE_VIEW = (user) => may(user, 'cost.view') || may(user, 'po.edit') || may(user, 'receive');
+const SUPPLIER_VIEW = (user) => PRICE_VIEW(user) || may(user, 'po.decide') || may(user, 'supplier.edit') || may(user, 'reports');
+api('GET', '/api/suppliers/record', async ({ env }, user) => {
+  if (!SUPPLIER_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
+  return json(await suppliersRecord(env, user));
+});
+api('GET', '/api/suppliers/:id', async ({ env, params }, user) => {
+  if (!SUPPLIER_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
+  return json(await supplierPage(env, user, params.id, { prices: PRICE_VIEW(user) }));
+});
+api('GET', '/api/items/:id/prices', async ({ env, params }, user) => {
+  if (!PRICE_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
+  return json(await itemPrices(env, user, params.id));
+});
+api('POST', '/api/prices/guide', async ({ request, env }, user) => {
+  if (!PRICE_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
+  const b = await body(request);
+  return json(await priceGuide(env, user, { supplierId: String(b.supplierId || ''), itemIds: Array.isArray(b.itemIds) ? b.itemIds : [] }));
+});
 api('GET', '/api/batches', async ({ env, url }, user) => {
   const { results } = await env.DB.prepare(
     `SELECT bt.id, bt.batch_no, bt.expiry, bt.qty FROM batches bt JOIN stores s ON s.id = bt.store_id
@@ -518,8 +543,18 @@ api('GET', '/api/pos/suggestions', async ({ env, url }, user) => {
 api('POST', '/api/pos', async ({ request, env }, user) => { requireMay(user, 'po.edit'); return json(await savePo(env, user, await body(request)), 201); });
 api('GET', '/api/pos/:id', async ({ env, params }, user) => {
   if (!PO_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
-  return json(await getPo(env, user, params.id));
+  return json(await getPo(env, user, params.id, { prices: PRICE_VIEW(user) }));
 });
+api('GET', '/api/pos/:id/pdf', async ({ env, params }, user) => {
+  if (!PO_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
+  const { bytes, name } = await poPdfFor(env, user, params.id);
+  return new Response(bytes, { headers: {
+    'content-type': 'application/pdf', 'content-length': String(bytes.length), 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff',
+    'content-disposition': `inline; filename="${name}"`,
+  } });
+});
+// Before the general /:action route below, which would otherwise take it for an action.
+api('POST', '/api/pos/:id/email', async ({ request, env, params }, user) => { requireMay(user, 'po.send'); return json(await emailPo(env, user, params.id, await body(request))); });
 api('PUT', '/api/pos/:id', async ({ request, env, params }, user) => { requireMay(user, 'po.edit'); return json(await savePo(env, user, await body(request), params.id)); });
 api('POST', '/api/pos/:id/:action', async ({ request, env, params }, user) => {
   const action = params.action;

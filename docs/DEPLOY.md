@@ -33,6 +33,7 @@ npx wrangler d1 execute hifive-inventory --remote --file=migrations/0004_scannin
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0005_deliveries.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0006_services.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0007_service_link.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0008_supplier_depth.sql
 npm run seed
 ```
 
@@ -55,6 +56,27 @@ curl https://hifive-inventory.sinusuresh.workers.dev/version
 
    `"ok": true` and `"schema": { "ok": true }` means it is ready. `"bindings"` should read
    `files: true, ai: true, hfid: true`; a `false` there is a block missing from `wrangler.toml`.
+   `mail` stays `false` until step 5a is done, and that is fine: everything else works.
+
+5a. **Optional: emailing approved orders to suppliers.** Without it, the order's PDF button
+   still works and the buyer attaches it to their own email. To send from the app, it needs a
+   Microsoft 365 app registration with the application permission **Mail.Send**, admin
+   consented, and one mailbox to send from (a shared mailbox such as purchasing@ is best). It
+   can be the app Recruitment or HiFive ID already uses, if that app may send from this mailbox.
+   Put the mailbox in `wrangler.toml` under `[vars]` as `MAIL_SENDER = "purchasing@…"`, then:
+
+```powershell
+npx wrangler secret put MS_TENANT_ID
+npx wrangler secret put MS_CLIENT_ID
+npx wrangler secret put MS_CLIENT_SECRET
+npm run deploy
+curl https://hifive-inventory.sinusuresh.workers.dev/version
+```
+
+   `"mail": true` under `"bindings"` means the button appears. The first real send is the test:
+   email one approved order to yourself by setting your own address on a test supplier. An
+   application access policy that limits the app to that one mailbox is worth adding in
+   Exchange, so the secret cannot send as anybody else.
 
 6. Deploy the app:
 
@@ -104,7 +126,9 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
    The import report lists the names the old app knew.
    For each director: a Viewer seat, and tick **Director** so they see the group monthly summary.
 5. **Purchasing → Suppliers**: add the suppliers, or **Admin → Bulk upload → Suppliers** to load
-   them from a sheet. The same tab loads new items, levels and rooms; after the import (D2) it
+   them from a sheet. Give each one its email address if orders are to be emailed, and its usual
+   delivery time. Prices and each supplier's delivery record build up by themselves from
+   approved deliveries; give each order an expected date, or it cannot be judged for time. The same tab loads new items, levels and rooms; after the import (D2) it
    is the quick way to set barcodes, suppliers and levels for many items at once.
 6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park, and
    whether use is recorded against the room, the person, or both (both unless you change it), and

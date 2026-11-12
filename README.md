@@ -37,6 +37,10 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
   key and the stock comes off by itself, once per reference; what cannot be recorded waits with
   its reason for a manager. Until something is connected, the same list uploads as a sheet. With
   prices, a report shows charged against used for each service.
+- **Suppliers**: what each supplier charged for every item, side by side, with the lowest marked;
+  the last price paid shown while an order is written and approved; each supplier's record (on
+  time, late, closed short, lines short of the note). An approved order downloads as a PDF and,
+  once a Microsoft 365 mailbox is set up, is emailed to the supplier from the app.
 - **Deliveries in two steps**: the receiver counts against the delivery note, a manager approves,
   then stock is on the shelf. Photos or PDFs of the note, invoice and LPO are kept with each
   delivery; a photo of the note can be read to fill the form in, each supplier's wording and pack

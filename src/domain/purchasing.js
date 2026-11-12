@@ -12,8 +12,13 @@
 import { refuse } from '../lib/errors.js';
 import { isoDate, m2, nextRef, nonNegative, nowIso, positive, q3, text, uuid } from '../lib/data.js';
 import { auditStmt } from '../lib/audit.js';
+import { digestHex } from '../lib/files.js';
+import { escapeHtml, isEmail, MailError, mailStatus, sendMail } from '../lib/mail.js';
+import { poPdf } from '../lib/pdf.js';
 import { requireOtherApprover, storeFor } from './access.js';
 import { commit, loadItems } from './stock.js';
+import { setting } from './settings.js';
+import { priceGuide } from './suppliers.js';
 
 async function supplierFor(env, user, id) {
   if (!id) refuse('SUPPLIER_REQUIRED', 'Choose a supplier.');
@@ -131,7 +136,7 @@ export async function poAction(env, user, id, action, body = {}) {
   refuse('BAD_ACTION', 'Unknown action.');
 }
 
-export async function getPo(env, user, id) {
+export async function getPo(env, user, id, { prices = false } = {}) {
   const po = await load(env, user, id);
   const { results } = await env.DB.prepare(
     `SELECT pl.*, i.code, i.name, i.uom, i.tracks_expiry FROM po_lines pl JOIN items i ON i.id = pl.item_id
@@ -145,8 +150,79 @@ export async function getPo(env, user, id) {
   const { results: receipts } = await env.DB.prepare(
     `SELECT id, ref, at, by_name, invoice_no, total, status FROM receipts WHERE po_id = ? AND status IN ('PENDING','APPROVED') ORDER BY at`,
   ).bind(po.id).all();
-  return { ...po, ...extra, lines: results || [], receipts: receipts || [] };
+  const { results: emails } = await env.DB.prepare(
+    `SELECT to_email, cc, status, error, by_name, at FROM po_emails WHERE po_id = ? ORDER BY at DESC LIMIT 20`,
+  ).bind(po.id).all();
+  const lines = results || [];
+  // What this supplier was last paid for each item, so the approver sees a price that has gone up.
+  if (prices && lines.length) {
+    const guide = await priceGuide(env, user, { supplierId: po.supplier_id, itemIds: lines.map((l) => l.item_id) });
+    for (const l of lines) {
+      const g = guide[l.item_id];
+      l.last_cost = g?.here?.price ?? null;
+      l.last_day = g?.here?.day ?? null;
+      l.best = g?.best ?? null;
+    }
+  }
+  return { ...po, ...extra, lines, receipts: receipts || [], emails: emails || [] };
 }
+
+/** The order as a PDF: the same bytes whether it is downloaded or emailed. */
+export async function poPdfFor(env, user, id) {
+  const po = await getPo(env, user, id);
+  const bytes = await poPdf(po, { unitName: user.unit.name, currency: (await setting(env, user.unitId, 'currency')) || 'AED' });
+  return { po, bytes, name: `${po.ref}.pdf` };
+}
+
+/**
+ * Email an approved order to its supplier, with the PDF. A person presses the button; nothing is
+ * ever sent by itself. Every attempt is kept on the order, sent or failed, with who and when.
+ * A second send has to be asked for on purpose (`again`), so a double press sends one email.
+ */
+export async function emailPo(env, user, id, body = {}) {
+  const st = mailStatus(env);
+  if (!st.ready) refuse('MAIL_NOT_SET_UP', 'Emailing is not set up for this app yet. Download the PDF and send it yourself.', 409);
+  const { po, bytes, name } = await poPdfFor(env, user, id);
+  if (!['APPROVED', 'PARTLY_RECEIVED'].includes(po.status)) {
+    refuse('NOT_APPROVED', `Only an approved order can be sent to the supplier. ${po.ref} is ${STATE_WORDS[po.status] || po.status.toLowerCase()}.`, 409);
+  }
+  const to = String(po.supplier_email || '').trim();
+  if (!isEmail(to)) refuse('NO_SUPPLIER_EMAIL', `${po.supplier_name} has no email address. Add it under Purchasing, Suppliers, then send again.`, 422);
+  // Separated by commas, semicolons or new lines; a space inside one is a mistake to point out, not a separator.
+  const cc = [...new Set(String(body.cc || '').split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean))];
+  if (cc.length > 5) refuse('TOO_MANY_COPIES', 'At most five addresses can be copied.');
+  const wrong = cc.find((a) => !isEmail(a));
+  if (wrong) refuse('BAD_EMAIL', `“${wrong}” does not look like an email address.`);
+  const sent = po.emails.find((e) => e.status === 'SENT');
+  if (sent && body.again !== true) {
+    refuse('ALREADY_SENT', `${po.ref} was already emailed to ${sent.to_email} by ${sent.by_name}. Press Send again if the supplier needs another copy.`, 409, { at: sent.at, to: sent.to_email });
+  }
+
+  const note = text(body.message, 1000);
+  const subject = `Purchase order ${po.ref} from ${user.unit.name}`;
+  const html = [
+    `<p>Dear ${escapeHtml(po.supplier_contact || po.supplier_name)},</p>`,
+    `<p>Please find attached purchase order <b>${escapeHtml(po.ref)}</b> from ${escapeHtml(user.unit.name)}, to be delivered to ${escapeHtml(po.store_name)}${po.expected_date ? ` by ${escapeHtml(po.expected_date)}` : ''}.</p>`,
+    note ? `<p>${escapeHtml(note).replace(/\n/g, '<br>')}</p>` : '',
+    '<p>Please send the delivery note with the goods, and reply to this email if anything on the order cannot be supplied.</p>',
+    `<p>${escapeHtml(user.fullName)}<br>${escapeHtml(user.unit.name)}</p>`,
+  ].join('');
+  const digest = await digestHex(bytes);
+  const row = (status, error) => env.DB.prepare(
+    `INSERT INTO po_emails (id, unit_id, po_id, to_email, cc, subject, status, error, pdf_sha256, by_id, by_name, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+  ).bind(uuid(), user.unitId, po.id, to, cc.join(', ') || null, subject, status, error, digest, user.staffId, user.fullName, nowIso());
+  try {
+    await sendMail(env, { to: [to], cc, subject, html, attachments: [{ name, type: 'application/pdf', bytes }] });
+  } catch (e) {
+    const said = e instanceof MailError ? e.message : 'The email could not be sent. Try again; if it keeps failing, tell an administrator.';
+    await commit(env, [row('FAILED', said), auditStmt(env, user, 'PO_EMAIL_FAILED', po.ref, said)]);
+    refuse('MAIL_FAILED', said, 502);
+  }
+  await commit(env, [row('SENT', null), auditStmt(env, user, 'PO_EMAIL', po.ref, `to ${to}${cc.length ? `, copy to ${cc.join(', ')}` : ''}`)]);
+  return { ok: true, to, cc };
+}
+
+const STATE_WORDS = { DRAFT: 'still a draft', SUBMITTED: 'waiting for approval', REJECTED: 'sent back', CANCELLED: 'cancelled', RECEIVED: 'fully received' };
 
 export async function listPos(env, user, { status }) {
   const where = ['p.unit_id = ?'];

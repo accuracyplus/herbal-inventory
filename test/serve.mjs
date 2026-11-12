@@ -15,7 +15,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import worker from '../src/worker.js';
-import { call, defaultRoster, makeItem, receive, S, testEnv, tokenFor } from './helpers/http.js';
+import { call, defaultRoster, deliver, makeItem, receive, S, testEnv, tokenFor } from './helpers/http.js';
 
 const port = Number(process.argv[2]) || 8791;
 const dist = join(dirname(fileURLToPath(import.meta.url)), '..', 'client', 'dist');
@@ -35,7 +35,18 @@ const aiReply = {
     { text: 'Cotton Kizhi Cloth 1m', qty: 20, unit: 'pcs', unit_price: 3.25 },
   ],
 };
-const env = testEnv({ APP_ORIGIN: `http://localhost:${port}`, roster, aiReply });
+// A stand-in for Microsoft 365, so the email button can be tried here: it accepts every email
+// and sends nothing. Each one is printed so you can see what would have gone.
+const MAIL = {
+  MS_TENANT_ID: 'local', MS_CLIENT_ID: 'local', MS_CLIENT_SECRET: 'local', MAIL_SENDER: 'purchasing@herbalpark.example',
+  MAIL_FETCH: async (url, init) => {
+    if (String(url).includes('/oauth2/')) return new Response(JSON.stringify({ access_token: 'local' }));
+    const m = JSON.parse(init.body).message;
+    console.log(`(not sent) email "${m.subject}" to ${m.toRecipients.map((r) => r.emailAddress.address).join(', ')} with ${m.attachments?.length || 0} attachment(s)`);
+    return new Response(null, { status: 202 });
+  },
+};
+const env = testEnv({ APP_ORIGIN: `http://localhost:${port}`, roster, aiReply, ...MAIL });
 const ctx = { waitUntil: () => {} };
 
 const seeded = [];
@@ -64,6 +75,29 @@ await step('nasya', () => receive(env, nasya, 2, { expiry: day(12), batchNo: 'N-
 await step('a request', () => call(env, 'POST', '/api/requests', { as: 'staff', body: { toStoreId: S.sub, urgency: 'URGENT', lines: [{ itemId: cloth, qty: 6 }] } }));
 await step('a delivery waiting', () => call(env, 'POST', '/api/receipts', { as: 'keeper', body: { storeId: S.main, supplierId: sup.body?.id, noteNo: 'DN-4471', lines: [{ itemId: seeded[1], qty: 4, unitCost: 18.5, noteQty: 5 }, { itemId: cloth, qty: 20, unitCost: 3.25 }] } }));
 await step('stock taken', () => call(env, 'POST', '/api/custody/take', { as: 'staff', body: { storeId: S.sub, lines: [{ itemId: seeded[1], qty: 1 }] } }));
+
+// A second supplier and some history, for prices and the delivery record: two orders that
+// arrived (one late), one approved and not due, and one waiting for approval at a higher price.
+const sup2 = await call(env, 'POST', '/api/suppliers', { as: 'buyer', body: { name: 'Al Noor Spa Supplies', contact: 'Ravi', email: 'orders@alnoor.example', leadDays: 4 } });
+await call(env, 'PUT', `/api/suppliers/${sup.body?.id}`, { as: 'buyer', body: { name: 'Kerala Ayurveda Traders', contact: 'Suresh', email: 'sales@keralaayurveda.example', leadDays: 7 } });
+const back = (id, days) => env.DB.db.prepare(`UPDATE receipts SET at = ? WHERE id = ?`).run(new Date(Date.now() - days * 864e5).toISOString(), id);
+const ordered = async (supplierId, lines, expected) => {
+  const p = await call(env, 'POST', '/api/pos', { as: 'buyer', body: { supplierId, storeId: S.main, expectedDate: expected, lines } });
+  await call(env, 'POST', `/api/pos/${p.body.id}/submit`, { as: 'buyer' });
+  await call(env, 'POST', `/api/pos/${p.body.id}/approve`, { as: 'manager' });
+  return p.body.id;
+};
+await step('price history', async () => {
+  back((await deliver(env, { storeId: S.main, supplierId: sup.body.id, lines: [{ itemId: cloth, qty: 40, unitCost: 3.1 }] })).id, 60);
+  back((await deliver(env, { storeId: S.main, supplierId: sup2.body.id, lines: [{ itemId: cloth, qty: 40, unitCost: 2.9 }, { itemId: seeded[1], qty: 10, unitCost: 17 }] })).id, 30);
+  const onTime = await ordered(sup2.body.id, [{ itemId: paper, qty: 10, unitCost: 9.5 }], day(3));
+  await deliver(env, { storeId: S.main, poId: onTime, supplierId: sup2.body.id, lines: [{ itemId: paper, qty: 10, unitCost: 9.5 }] });
+  const late = await ordered(sup.body.id, [{ itemId: nasya, qty: 4, unitCost: 22 }], day(-4));
+  await deliver(env, { storeId: S.main, poId: late, supplierId: sup.body.id, lines: [{ itemId: nasya, qty: 4, unitCost: 22, noteQty: 5, expiry: day(200), batchNo: 'N-1040' }] });
+  await ordered(sup2.body.id, [{ itemId: cloth, qty: 60, unitCost: 3 }], day(6));
+  const waiting = await call(env, 'POST', '/api/pos', { as: 'buyer', body: { supplierId: sup.body.id, storeId: S.main, expectedDate: day(10), lines: [{ itemId: cloth, qty: 80, unitCost: 3.4 }, { itemId: seeded[1], qty: 10, unitCost: 18.5 }] } });
+  return call(env, 'POST', `/api/pos/${waiting.body.id}/submit`, { as: 'buyer' });
+});
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 const isApi = (path) => /^\/(api|auth|pending|hooks|version|health)(\/|$)/.test(path);

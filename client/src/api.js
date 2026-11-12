@@ -143,10 +143,13 @@ export async function shrinkImage(file, max = 2000, quality = 0.85) {
  * (a phone's browser blocks a window opened after waiting), and pointed at the file once it has
  * arrived. Files are fetched with the person's sign-in; they have no address of their own.
  */
-export async function openFile(id, name) {
+export const openFile = (id, name) => openPath(`/api/files/${id}`, name);
+
+/** Any file the Worker hands back (an order's PDF), opened the same way. */
+export async function openPath(path, name) {
   const tab = window.open('', '_blank');
   try {
-    const url = URL.createObjectURL(await request(`/api/files/${id}`, { blob: true }));
+    const url = URL.createObjectURL(await request(path, { blob: true }));
     if (tab) tab.location = url;
     else { const a = document.createElement('a'); a.href = url; a.download = name || 'file'; document.body.appendChild(a); a.click(); a.remove(); }
     setTimeout(() => URL.revokeObjectURL(url), 60e3);

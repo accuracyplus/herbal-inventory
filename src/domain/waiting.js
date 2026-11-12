@@ -84,7 +84,11 @@ export async function unitFacts(env, unitId, now = Date.now()) {
     const due = (await cycleDue(env, unitId, { now })).rows.filter((r) => r.due);
     cycle = { n: due.length, a: due.filter((r) => r.grade === 'A').length, worst: Math.max(0, ...due.map((r) => r.lateDays)) };
   }
-  return { unitId, today, hours, dueDays, warnDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits, equipment, cycle };
+  // Store keepers in the unit: giving out approved requests is theirs, when there is one.
+  const keepers = Number((await one(
+    `SELECT COUNT(*) AS n FROM staff_units su JOIN staff s ON s.id = su.staff_id
+      WHERE su.unit_id = ? AND su.active = 1 AND s.active = 1 AND su.roles LIKE '%"STOREKEEPER"%'`, unitId)).n) || 0;
+  return { unitId, today, hours, keepers, dueDays, warnDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits, equipment, cycle };
 }
 
 /** Rows grouped by who raised them, without the person's own. */
@@ -114,7 +118,10 @@ export function waitingList(f, user) {
     const r = others(f.requests, user.staffId);
     if (r.n) add({ key: 'requests-approve', screen: 'requests', filter: 'PENDING', n: r.n, urgent: r.urgent, days: since(t, r.oldest), action: 'Approve', text: `${plural(r.n, 'request')} to approve` });
   }
-  if (may(user, 'request.fulfil') && f.toIssue.n) {
+  // Giving out is the store keepers' (Sinu, 12 Nov 2026: "store keepers only"); a manager who may
+  // also fulfil is told only when the unit has no store keeper, so approved stock never waits unseen.
+  const keeper = (user.roles || []).includes('STOREKEEPER');
+  if (may(user, 'request.fulfil') && f.toIssue.n && (keeper || !f.keepers)) {
     add({ key: 'requests-issue', screen: 'requests', filter: 'APPROVED', n: f.toIssue.n, urgent: f.toIssue.urgent || 0, days: since(t, f.toIssue.oldest), action: 'Give out', text: `${plural(f.toIssue.n, 'approved request')} to give out` });
   }
   if (may(user, 'po.decide')) {
@@ -215,7 +222,9 @@ export const hrefOf = (w, unitId) => {
 export function forHfid(w, unit, manyUnits) {
   return {
     kind: `inventory_${w.key.replace(/-/g, '_')}`,
-    text: manyUnits ? `${w.text} at ${unit.name}` : w.text,
+    // Urgency rides in the words: the email and the hub have no flag of their own for it. An
+    // expected order's lateness is already in its text.
+    text: `${manyUnits ? `${w.text} at ${unit.name}` : w.text}${w.urgent > 0 && w.key !== 'po-receive' ? `, ${w.urgent} urgent` : ''}`,
     detail: unit.name,
     days: w.days ?? null,
     ...(w.due ? { due: w.due } : {}),

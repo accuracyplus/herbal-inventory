@@ -169,3 +169,26 @@ test('stock in hand for everybody: every seat holder once, zero included', async
   assert.equal(r.body.people.find((x) => x.emp_code === PEOPLE.staff.code).holding, 1);
   assert.equal(r.body.people.find((x) => x.emp_code === PEOPLE.viewer.code).holding, 0);
 });
+
+test('giving out is the store keepers\' line; a manager is told only where the unit has no store keeper', async () => {
+  const env = await setUp();
+  const r = await ask(env, 'staff');
+  await call(env, 'POST', `/api/requests/${r.body.id}/decide`, { as: 'manager', body: { action: 'APPROVE', lines: [] } });
+  const kinds = async (code) => ((await everybody(env)).find((p) => p.emp_code === code)?.items || []).map((i) => i.kind);
+  assert.ok((await kinds(PEOPLE.keeper.code)).includes('inventory_requests_issue'));
+  assert.ok(!(await kinds(PEOPLE.manager.code)).includes('inventory_requests_issue'), 'the keeper gives it out, not the manager');
+  assert.ok(!(await today(env, 'manager')).some((w) => w.key === 'requests-issue'), 'Today says the same as the email');
+  env.DB.db.prepare(`UPDATE staff_units SET active = 0 WHERE staff_id = ?`).run(PEOPLE.keeper.id);
+  assert.ok((await kinds(PEOPLE.manager.code)).includes('inventory_requests_issue'), 'no store keeper: the manager is told');
+});
+
+test('an urgent request says so in the email and the hub, which have no flag of their own', async () => {
+  const env = await setUp();
+  await call(env, 'POST', '/api/requests', { as: 'staff', body: { toStoreId: S.sub, urgency: 'URGENT', lines: [{ itemId: env.oil, qty: 1 }] } });
+  await ask(env, 'staff');
+  const item = (await hub(env, PEOPLE.manager.code)).find((i) => i.kind === 'inventory_requests_approve');
+  assert.equal(item.text, '2 requests to approve, 1 urgent');
+  const line = (await today(env, 'manager')).find((w) => w.key === 'requests-approve');
+  assert.equal(line.text, '2 requests to approve', 'Today shows urgency as its own flag');
+  assert.equal(line.urgent, 1);
+});

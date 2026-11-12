@@ -12,6 +12,7 @@
  */
 
 import { get } from './api.js';
+import { syncIcons } from './appIcon.js';
 
 const CACHE_KEY = 'hifive-prefs'; // the key boot.js reads before first paint
 const SKINS = ['water', 'air', 'earth', 'fire', 'luna', 'sol', 'aami', 'aadi'];
@@ -57,6 +58,7 @@ function wear(cache) {
   root.setAttribute('data-theme', s.mode);
   root.classList.toggle('dark', s.mode === 'dark');
   syncChromeColour();
+  syncIcons(s.skin);
 }
 
 let lastAsked = 0;

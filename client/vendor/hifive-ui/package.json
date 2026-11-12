@@ -1,0 +1,21 @@
+{
+  "name": "@hifive/ui",
+  "version": "0.17.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/hifive-ui.js",
+  "module": "./dist/hifive-ui.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/hifive-ui.js"
+    },
+    "./styles.css": "./dist/hifive-ui.css"
+  },
+  "peerDependencies": {
+    "react": "^18.3.0 || ^19.0.0",
+    "react-dom": "^18.3.0 || ^19.0.0"
+  },
+  "vendoredFrom": "https://github.com/accuracyplus/hifive-design/tree/main/packages/ui"
+}

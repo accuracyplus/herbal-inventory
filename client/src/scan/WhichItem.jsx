@@ -23,10 +23,10 @@ export default function WhichItem({ barcode, filter, onPicked, onCancel }) {
     onPicked(item, link);
   };
   return (
-    <div className="card which-item" role="group" aria-label="Unknown barcode">
+    <div className="hf-card inv-card which-item" role="group" aria-label="Unknown barcode">
       <div className="stack">
         <div>
-          <h2 className="caption">Which item is this?</h2>
+          <h2 className="hf-cap">Which item is this?</h2>
           <p className="muted">Nothing in this unit has the code <code>{barcode}</code>.</p>
         </div>
         <ItemPicker items={stock?.items || []} onPick={pick} filter={filter} placeholder="Find the item — name or code" />

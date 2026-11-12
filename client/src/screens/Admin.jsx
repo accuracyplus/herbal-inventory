@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Hint, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, StatusRows, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Hint, Loading, Note, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, StatusRows, Table, useApp, useData,
 } from '../ui.jsx';
 import { ItemForm } from './Stock.jsx';
 import Bulk from './Bulk.jsx';
@@ -67,7 +67,7 @@ function Items() {
             { key: 'category', label: 'Category' },
             { key: 'uom', label: 'Counted in' },
             { key: 'kind', label: 'Kind', render: (i) => (i.isLinen ? 'Linen' : i.tracksExpiry ? 'Batches & expiry' : 'Simple') },
-            { key: 'levels', label: 'Levels set', render: (i) => i.stores.filter((s) => s.level).length || '—' },
+            { key: 'levels', label: 'Levels set', render: (i) => i.stores.filter((s) => s.level).length || '' },
             { key: 'total', label: 'Total', align: 'right', render: (i) => fmtQty(i.total) },
           ]} />
         </Card>
@@ -124,7 +124,7 @@ function SimpleList({ path, title, kinds, empty, makeBody, fields, columns = [] 
 
 const Stores = () => (
   <>
-    <div className="note"><Icon name="stock" size={18} /><span>A <b>main store</b> receives deliveries; <b>sub stores</b> (a spa cupboard, a counter) are topped up from it through requests and transfers.</span></div>
+    <Note icon="stock"><span>A <b>main store</b> receives deliveries; <b>sub stores</b> (a spa cupboard, a counter) are topped up from it through requests and transfers.</span></Note>
     <SimpleList path="/api/stores" title="Store" empty="No stores yet."
       kinds={[{ value: 'MAIN', label: 'Main store' }, { value: 'SUB', label: 'Sub store' }]}
       makeBody={(e) => ({ code: e.code, name: e.name, kind: e.kind, sort: e.sort || 0, active: !!e.active })}
@@ -134,7 +134,7 @@ const Stores = () => (
 
 const Departments = () => (
   <>
-    <div className="note"><Icon name="unit" size={18} /><span>A department groups rooms and benches: Spa and Front office, or Haematology and Biochemistry. Stock used in a room counts towards its department.</span></div>
+    <Note icon="unit"><span>A department groups rooms and benches: Spa and Front office, or Haematology and Biochemistry. Stock used in a room counts towards its department.</span></Note>
     <SimpleList path="/api/departments" title="Department" empty="No departments yet. Add one, then give each room its department."
       makeBody={(e) => ({ code: e.code, name: e.name, active: !!e.active })}
       columns={[{ key: 'rooms', label: 'Open rooms', align: 'right' }]} />
@@ -193,7 +193,7 @@ function Review({ hf, people, onOpen, onRename, onAdd }) {
       <div className="stack">
         {blocks.map(([title, tone, rows]) => (
           <div key={title} className="stack" style={{ gap: 6 }}>
-            <h3 className="caption">{title}</h3>
+            <h3 className="hf-cap">{title}</h3>
             <ul className="lots">
               {rows.map((x) => (
                 <li key={x.key} className="lot">
@@ -235,7 +235,7 @@ function People() {
   const toggleStore = (id) => setEditing((e) => ({ ...e, stores: e.stores.includes(id) ? e.stores.filter((x) => x !== id) : [...e.stores, id] }));
   return (
     <>
-      <div className="note"><Icon name="help" size={18} /><span>People come from HiFive ID's staff list and sign in with HiFive ID. Somebody HiFive ID grants Inventory to is added here automatically as {me.labels.roles.STAFF} on first sign-in.</span></div>
+      <Note icon="help"><span>People come from HiFive ID's staff list and sign in with HiFive ID. Somebody HiFive ID grants Inventory to is added here automatically as {me.labels.roles.STAFF} on first sign-in.</span></Note>
       <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => startAdd(null)}>Add a person</Button></div>
       {hf.loading && !hf.data && <Loading what="Reading HiFive ID's staff list" />}
       {hf.error && <ErrorNote error={hf.error} onRetry={hf.reload} />}
@@ -262,7 +262,7 @@ function People() {
             <PersonPicker people={hf.data.people} onPick={(p) => setEditing({ ...editing, code: p.code, full_name: p.name, picked: true })} />
           )}
           {editing.isNew && !editing.picked && !hf.data && (
-            <div className="note warn"><Icon name="alert" size={18} /><span>HiFive ID's staff list could not be read{hf.loading ? ' yet' : ''}. Type the employee code exactly as in HiFive ID; the activity log will say it was not checked.</span></div>
+            <Note tone="warn" icon="alert"><span>HiFive ID's staff list could not be read{hf.loading ? ' yet' : ''}. Type the employee code exactly as in HiFive ID; the activity log will say it was not checked.</span></Note>
           )}
           {(!editing.isNew || editing.picked || !hf.data) && (
             <div className="form two">
@@ -295,7 +295,7 @@ function People() {
             </Check>
           )}
           </>)}
-          {editing.active === 0 && <div className="note warn"><Icon name="alert" size={18} />Saving will remove them from {me.unit.name}. Their records stay.</div>}
+          {editing.active === 0 && <Note tone="warn" icon="alert">Saving will remove them from {me.unit.name}. Their records stay.</Note>}
           <ErrorNote error={err} />
         </Sheet>
       )}
@@ -371,7 +371,7 @@ function Import() {
       if (!dryRun) { setDone(true); toast('Import finished'); refreshStock(); }
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
-  if (lists.stores.length < 2) return <Card><div className="note warn"><Icon name="alert" size={18} />Set up a main store and a sub store first (Stores tab), so the old Main and Sub figures have somewhere to go.</div></Card>;
+  if (lists.stores.length < 2) return <Card><Note tone="warn" icon="alert">Set up a main store and a sub store first (Stores tab), so the old Main and Sub figures have somewhere to go.</Note></Card>;
   return (
     <div className="stack">
       <Card title="1 · Get the old app's data">
@@ -398,10 +398,10 @@ function Import() {
             {report.pendingRequests > 0 && <><dt>Open requests</dt><dd>{report.pendingRequests} pending in the old app are not carried over — ask staff to raise them again here.</dd></>}
           </dl>
           {report.problems.length > 0 && (
-            <div className="note warn"><Icon name="alert" size={18} /><div><b>Please look at these:</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{report.problems.map((p) => <li key={p}>{p}</li>)}</ul></div></div>
+            <Note tone="warn" icon="alert"><div><b>Please look at these:</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{report.problems.map((p) => <li key={p}>{p}</li>)}</ul></div></Note>
           )}
           {report.staffToAdd.length > 0 && (
-            <div className="note"><Icon name="help" size={18} /><div><b>People are not imported.</b> The old app knew names, not HiFive ID employee codes. Add these on the People tab with their codes: {report.staffToAdd.map((s) => s.name).join(', ')}.</div></div>
+            <Note icon="help"><div><b>People are not imported.</b> The old app knew names, not HiFive ID employee codes. Add these on the People tab with their codes: {report.staffToAdd.map((s) => s.name).join(', ')}.</div></Note>
           )}
           {!done && <div className="row"><Button busy={busy} onClick={() => run(false)}>Import now</Button><span className="muted">Runs once. It is refused if this unit already has stock movements.</span></div>}
           {done && <Quiet>Done. Check the Stock screen against the old app before switching over.</Quiet>}
@@ -449,7 +449,7 @@ function Units() {
   };
   return (
     <>
-      <div className="note"><Icon name="unit" size={18} /><span>Each HiFive business is a unit with its own stores, items and people. The name must match the entity name in HiFive ID, so first sign-ins land in the right unit.</span></div>
+      <Note icon="unit"><span>Each HiFive business is a unit with its own stores, items and people. The name must match the entity name in HiFive ID, so first sign-ins land in the right unit.</span></Note>
       <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => setEditing({ active: 1 })}>New unit</Button></div>
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}

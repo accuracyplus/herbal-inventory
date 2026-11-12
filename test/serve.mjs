@@ -47,7 +47,23 @@ for (const [name, category] of [['Dhanwantharam thailam', 'Oils'], ['Kizhi powde
 }
 await call(env, 'POST', '/api/services', { as: 'manager', body: { code: 'ABH', name: 'Abhyanga', items: [{ itemId: seeded[0], qty: 0.25 }, { itemId: seeded[1], qty: 2 }] } });
 
-await call(env, 'POST', '/api/suppliers', { as: 'buyer', body: { name: 'Kerala Ayurveda Traders' } });
+const sup = await call(env, 'POST', '/api/suppliers', { as: 'buyer', body: { name: 'Kerala Ayurveda Traders' } });
+
+// Enough going on to look at every state: short and expiring stock, a request and a delivery
+// waiting for a manager, and stock a person is still holding. A step that is refused says so
+// and the rest carries on: this is a demonstration, not a test.
+const lv = (reorder, critical, par) => [{ storeId: S.main, reorder, critical, par }];
+const step = async (what, run) => { try { const r = await run(); if (r?.status >= 400) console.log(`seed, ${what}: ${r.status} ${JSON.stringify(r.body)}`); return r; } catch (e) { console.log(`seed, ${what}: ${e.message}`); return null; } };
+const cloth = await makeItem(env, { code: 'CON-021', name: 'Cotton kizhi cloth', category: 'Consumables', uom: 'pcs', levels: lv(40, 10, 120) });
+const paper = await makeItem(env, { code: 'CON-007', name: 'Massage table paper roll', category: 'Consumables', uom: 'roll', levels: lv(6, 2, 18) });
+const nasya = await makeItem(env, { code: 'OIL-022', name: 'Nasya oil', category: 'Oils', uom: 'bottle', tracksExpiry: true, levels: lv(4, 1, 12) });
+await makeItem(env, { code: 'HRB-011', name: 'Navarakizhi rice', category: 'Herbs', uom: 'kg', levels: lv(8, 2, 24) });
+await step('cloth', () => receive(env, cloth, 18));
+await step('paper', () => receive(env, paper, 1));
+await step('nasya', () => receive(env, nasya, 2, { expiry: day(12), batchNo: 'N-0912' }));
+await step('a request', () => call(env, 'POST', '/api/requests', { as: 'staff', body: { toStoreId: S.sub, urgency: 'URGENT', lines: [{ itemId: cloth, qty: 6 }] } }));
+await step('a delivery waiting', () => call(env, 'POST', '/api/receipts', { as: 'keeper', body: { storeId: S.main, supplierId: sup.body?.id, noteNo: 'DN-4471', lines: [{ itemId: seeded[1], qty: 4, unitCost: 18.5, noteQty: 5 }, { itemId: cloth, qty: 20, unitCost: 3.25 }] } }));
+await step('stock taken', () => call(env, 'POST', '/api/custody/take', { as: 'staff', body: { storeId: S.sub, lines: [{ itemId: seeded[1], qty: 1 }] } }));
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 const isApi = (path) => /^\/(api|auth|pending|hooks|version|health)(\/|$)/.test(path);

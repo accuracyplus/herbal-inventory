@@ -12,7 +12,8 @@
 import { useEffect, useState } from 'react';
 import Icon from './icons.jsx';
 import { fmtMoney, fmtQty, get } from './api.js';
-import { Button, Field, ItemPicker, QtyInput, Select, Stepper } from './ui.jsx';
+import { QuantityField } from '@hifive/ui';
+import { Button, Field, ItemPicker, Pill, QtyInput, Select } from './ui.jsx';
 import { isDesk, PairSheet, ScanSheet } from './scan/ScanSheets.jsx';
 import { takeHandoff } from './scan/handoff.js';
 
@@ -79,37 +80,28 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
   const total = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitCost) || 0), 0);
 
   return (
-    <div className="lines">
-      <ItemPicker items={items} storeId={storeId} onPick={add} filter={pickerFilter}
-        exclude={mode === 'in' ? [] : lines.map((l) => l.item.id)} />
-      {scan && (
-        <div className="scan-row">
-          <Button kind="secondary" icon="scan" onClick={() => setScanning('camera')}>Scan</Button>
-          {isDesk() && <Button kind="secondary" icon="phone" onClick={() => setScanning('phone')}>Scan with phone</Button>}
-        </div>
-      )}
-      {scanning === 'camera' && <ScanSheet onItem={bump} filter={pickerFilter} onClose={() => setScanning(null)} />}
-      {scanning === 'phone' && <PairSheet purpose={scan} onItem={bump} onClose={() => setScanning(null)} />}
+    <div className="inv-lines">
       {lines.map((l) => {
         const here = l.item.stores?.find((s) => s.storeId === storeId);
+        const what = withNote ? 'Counted' : mode === 'adjust' ? 'Change' : 'How much';
         return (
-          <div key={l.key} className={`line ${errors[l.key] ? 'danger' : warnings[l.key] ? 'warn' : ''}`}>
-            <div className="min0">
-              <div className="line-name">{l.item.name}</div>
-              <div className="line-sub">
-                <code>{l.item.code}</code>
-                {here && mode !== 'in' && mode !== 'po' && <> · {fmtQty(here.qty)} {l.item.uom} in this store</>}
-                {mode === 'adjust' && <> · enter − to take away, + to add</>}
+          <div key={l.key} className="inv-line">
+            <div className="inv-line__top">
+              <div className="min0 grow">
+                <span className="row-label">{l.item.name}</span>
+                <span className="row-sub">
+                  <code>{l.item.code}</code>
+                  {here && mode !== 'in' && mode !== 'po' && <> · {fmtQty(here.qty)} {l.item.uom} in this store</>}
+                  {mode === 'adjust' && <> · enter − to take away, + to add</>}
+                </span>
+                {l.noteText && <span className="row-sub">On the note: “{l.noteText}”{l.factor > 1 ? ` · 1 on the note = ${fmtQty(l.factor)} ${l.item.uom}` : ''}</span>}
               </div>
-              {l.noteText && <div className="line-sub">On the note: “{l.noteText}”{l.factor > 1 ? ` · 1 on the note = ${fmtQty(l.factor)} ${l.item.uom}` : ''}</div>}
+              <button type="button" className="icon-btn" onClick={() => drop(l.key)} aria-label={`Remove ${l.item.name}`}><Icon name="close" size={20} /></button>
             </div>
-            <button className="icon-btn" onClick={() => drop(l.key)} aria-label={`Remove ${l.item.name}`}><Icon name="trash" size={18} /></button>
-            <div className="line-fields">
-              <Field label={`${withNote ? 'Counted' : 'Quantity'} (${l.item.uom})`} className="qty-field">
-                {mode === 'adjust'
-                  ? <QtyInput value={l.qty} min={undefined} onChange={(v) => set(l.key, { qty: v })} />
-                  : <Stepper value={l.qty} onChange={(v) => set(l.key, { qty: v })} />}
-              </Field>
+            <div className="inv-line__fields">
+              {mode === 'adjust'
+                ? <QuantityField label={`${what}: ${l.item.name}`} hideLabel bare min={-999999} value={l.qty} unit={l.item.uom} onChange={(v) => set(l.key, { qty: v })} error={errors[l.key]} />
+                : <QuantityField label={`${what}: ${l.item.name}`} hideLabel value={l.qty} unit={l.item.uom} onChange={(v) => set(l.key, { qty: v })} error={errors[l.key]} />}
               {withNote && (
                 <Field label="On the note" hint="What the delivery note says, if it differs from what you counted. Leave empty when they agree.">
                   <QtyInput value={l.noteQty ?? ''} onChange={(v) => set(l.key, { noteQty: v })} label="Quantity on the note" placeholder="Same" />
@@ -128,14 +120,25 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
               )}
               {mode === 'out' && l.item.tracksExpiry && storeId && <BatchChoice line={l} storeId={storeId} onChange={(batchId) => set(l.key, { batchId })} />}
             </div>
-            {errors[l.key] && <div className="line-warning">{errors[l.key]}</div>}
-            {!errors[l.key] && warnings[l.key] && <div className="line-warning" style={{ color: 'inherit' }}>{warnings[l.key]}</div>}
+            {!errors[l.key] && warnings[l.key] && <div><Pill tone="warn">{warnings[l.key]}</Pill></div>}
           </div>
         );
       })}
       {(mode === 'in' || mode === 'po') && showCost && lines.length > 0 && (
         <p className="r"><span className="muted">Total </span><b>{fmtMoney(total, currency)}</b></p>
       )}
+      <div className={lines.length ? 'inv-line inv-line--add' : 'inv-line--add'}>
+        <ItemPicker items={items} storeId={storeId} onPick={add} filter={pickerFilter} label={lines.length ? 'Add another item' : 'Add an item'} showLabel
+          placeholder="Type a name or a code" exclude={mode === 'in' ? [] : lines.map((l) => l.item.id)} />
+        {scan && (
+          <div className="scan-row">
+            <Button kind="ghost" icon="scan" onClick={() => setScanning('camera')}>Scan</Button>
+            {isDesk() && <Button kind="ghost" icon="phone" onClick={() => setScanning('phone')}>Scan with a phone</Button>}
+          </div>
+        )}
+      </div>
+      {scanning === 'camera' && <ScanSheet onItem={bump} filter={pickerFilter} onClose={() => setScanning(null)} />}
+      {scanning === 'phone' && <PairSheet purpose={scan} onItem={bump} onClose={() => setScanning(null)} />}
     </div>
   );
 }

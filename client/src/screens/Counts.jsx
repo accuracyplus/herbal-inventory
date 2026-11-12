@@ -8,7 +8,7 @@ import { fmtDateTime, fmtMoney, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import { isDesk, PairSheet, ScanSheet } from '../scan/ScanSheets.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, QtyInput, Quiet, SearchBox, Select, Sheet, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, SearchBox, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 
 export default function Counts() {
@@ -148,7 +148,7 @@ function CountSheet({ id, onClose, onChanged }) {
         })}
         {!lines.length && <Quiet>Every item is counted.</Quiet>}
       </div>
-      {c.status === 'SUBMITTED' && can('count.decide') && mine && <div className="note"><Icon name="alert" size={18} />You submitted this count, so another manager approves it — unless you are the only one.</div>}
+      {c.status === 'SUBMITTED' && can('count.decide') && mine && <Note icon="alert">You submitted this count, so another manager approves it — unless you are the only one.</Note>}
       {['OPEN', 'SUBMITTED'].includes(c.status) && <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Optional" /></Field>}
       {c.decided_at && <p className="muted">{c.status === 'APPROVED' ? 'Approved' : 'Closed'} by {c.decided_by_name}, {fmtDateTime(c.decided_at)}{c.decision_note ? ` — “${c.decision_note}”` : ''}</p>}
       <ErrorNote error={err} />

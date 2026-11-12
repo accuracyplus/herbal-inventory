@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { downloadCsv, fmtDate, fmtDateTime, fmtMoney, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, QtyInput, SearchBox, Select, Sheet, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 
 const KIND = {
@@ -42,6 +42,7 @@ export default function Stock() {
 
   if (!stock) return <Page title="Stock"><Loading /></Page>;
   const shortN = stock.items.filter((i) => ['OUT', 'CRITICAL', 'LOW'].includes(i.status)).length;
+  const expiringN = stock.items.filter((i) => i.expiry === 'SOON' || i.expiry === 'EXPIRED').length;
   const qtyFor = (it) => (storeId ? it.stores.find((s) => s.storeId === storeId) : null);
 
   const columns = [
@@ -52,7 +53,7 @@ export default function Stock() {
       key: `s-${s.id}`, label: s.name, align: 'right', sort: (it) => it.stores.find((x) => x.storeId === s.id)?.qty ?? 0,
       render: (it) => {
         const x = it.stores.find((y) => y.storeId === s.id);
-        if (!x?.held) return <span className="faint">—</span>;
+        if (!x?.held) return '';
         return <span className={x.status === 'OK' ? '' : `tone-txt-${x.status}`}>{fmtQty(x.qty)}{it.isLinen && (x.inUse || x.inWash) ? <span className="faint"> +{fmtQty(x.inUse + x.inWash)} out</span> : ''}</span>;
       },
     }))),
@@ -67,7 +68,7 @@ export default function Stock() {
       );
     } }] : []),
     { key: 'status', label: 'Status', sort: (it) => ['OUT', 'CRITICAL', 'LOW', 'OK'].indexOf(qtyFor(it)?.status || it.status), render: (it) => <Pill status={qtyFor(it)?.status || it.status} /> },
-    { key: 'nextExpiry', label: 'Next expiry', render: (it) => (it.nextExpiry ? <Pill status={it.expiry}>{fmtDate(it.nextExpiry)}</Pill> : <span className="faint">—</span>) },
+    { key: 'nextExpiry', label: 'Next expiry', render: (it) => (it.nextExpiry ? <Pill status={it.expiry}>{fmtDate(it.nextExpiry)}</Pill> : '') },
     ...(can('cost.view') ? [{ key: 'value', label: 'Value', align: 'right', render: (it) => fmtMoney(it.value, currency) }] : []),
   ];
 
@@ -89,11 +90,10 @@ export default function Stock() {
         <Select value={storeId} onChange={setStoreId} placeholder="All stores" options={stock.stores.map((s) => ({ value: s.id, label: s.name }))} aria-label="Store" />
         <Select value={category} onChange={setCategory} placeholder="All categories" options={cats.map((c) => ({ value: c, label: c }))} aria-label="Category" />
       </div>
-      <div className="chips" role="group" aria-label="Show">
-        {[['all', 'All'], ['short', `Short${shortN ? ` · ${shortN}` : ''}`], ['expiring', 'Expiring'], ['linen', 'Linen']].map(([v, l]) => (
-          <button key={v} className={`chip ${filter === v ? 'on' : ''}`} onClick={() => setFilter(v)}>{l}</button>
-        ))}
-      </div>
+      <Segmented label="Show" value={filter} onChange={setFilter} options={[
+        { value: 'all', label: 'All', n: stock.items.length }, { value: 'short', label: 'Short', n: shortN },
+        { value: 'expiring', label: 'Expiring', n: expiringN }, { value: 'linen', label: 'Linen' },
+      ]} />
       <Card pad={false}>
         <Table columns={columns} rows={rows} onRow={(it) => navigate(`stock/${it.id}`)}
           empty={q || filter !== 'all' || category ? 'No item matches these filters.' : 'No items yet. An administrator can add them, or import the old app\'s list.'} />
@@ -119,8 +119,8 @@ function ItemSheet({ id, onClose, onEdit }) {
       {it && (
         <>
           <p className="muted"><code>{it.code}</code> · {it.category} · counted in {it.uom}{it.barcode ? <> · barcode <code>{it.barcode}</code></> : ''}{it.supplier ? ` · usual supplier ${it.supplier.name}` : ''}</p>
-          {!it.active && <div className="note warn"><Icon name="alert" size={18} />This item has been retired. It stays in the records but cannot be used or ordered.</div>}
-          <dl className="kv">
+          {!it.active && <Note tone="warn" icon="alert">This item has been retired. It stays in the records but cannot be used or ordered.</Note>}
+          <dl className="hf-kv hf-kv--3">
             {it.balances.map((b) => (
               <div key={b.store_id}><dt>{b.store_name}</dt><dd>{fmtQty(b.qty)} {it.uom}</dd>
                 {it.is_linen ? <span className="row-sub">{fmtQty(b.in_use)} in rooms · {fmtQty(b.in_wash)} at laundry</span> : null}
@@ -144,7 +144,7 @@ function ItemSheet({ id, onClose, onEdit }) {
             <Card title="Batches" hint="Issued first-expiry-first. A batch with no date is shown last and is worth checking.">
               <Table columns={[
                 { key: 'store_name', label: 'Store', primary: true },
-                { key: 'batch_no', label: 'Lot', render: (b) => b.batch_no || <span className="faint">—</span> },
+                { key: 'batch_no', label: 'Lot', render: (b) => b.batch_no || '' },
                 { key: 'expiry', label: 'Expiry', render: (b) => (b.expiry ? fmtDate(b.expiry) : <Pill status="UNKNOWN" />) },
                 { key: 'qty', label: 'Qty', align: 'right', render: (b) => fmtQty(b.qty) },
               ]} rows={it.batches} empty="No batches in stock." />

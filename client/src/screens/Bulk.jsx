@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { post } from '../api.js';
 import Icon from '../icons.jsx';
-import { Button, Card, ErrorNote, Field, Loading, Pill, Quiet, Segmented, useApp, useData } from '../ui.jsx';
+import { Button, Card, ErrorNote, Field, Loading, Note, Pill, Quiet, Segmented, useApp, useData } from '../ui.jsx';
 
 const ACTION = { add: ['ok', 'Add'], change: ['brand', 'Change'], same: ['faint', 'No change'], problem: ['danger', 'Problem'] };
 const SHOWN = 200;
@@ -116,15 +116,15 @@ export default function Bulk() {
       {report && (
         <Card title={report.applied ? '3 · Saved' : '3 · What this file would do'} actions={file && <span className="muted">{file.name}</span>}>
           <div className="stack">
-            <dl className="kv">
+            <dl className="hf-kv hf-kv--3">
               <div><dt>{report.applied ? 'Added' : 'To add'}</dt><dd>{s.add}</dd></div>
               <div><dt>{report.applied ? 'Changed' : 'To change'}</dt><dd>{s.change}</dd></div>
               <div><dt>No change</dt><dd>{s.same}</dd></div>
               <div><dt>Problems</dt><dd className={s.problems ? 'tone-txt-CRITICAL' : ''}>{s.problems}</dd></div>
             </dl>
-            {report.ignored.length > 0 && <div className="note warn"><Icon name="alert" size={18} /><span>These columns are not part of this sheet and were ignored: <b>{report.ignored.join(', ')}</b>. If one is a misspelt heading, fix it and choose the file again.</span></div>}
+            {report.ignored.length > 0 && <Note tone="warn" icon="alert"><span>These columns are not part of this sheet and were ignored: <b>{report.ignored.join(', ')}</b>. If one is a misspelt heading, fix it and choose the file again.</span></Note>}
             {report.applied && <Quiet>Saved. Download the sheet again before the next round of changes, so it starts from what is here now.</Quiet>}
-            {!report.applied && s.problems > 0 && <div className="note danger"><Icon name="alert" size={18} /><span>Nothing can be saved until the {s.problems === 1 ? 'row' : `${s.problems} rows`} below {s.problems === 1 ? 'is' : 'are'} fixed in the file. Then choose it again.</span></div>}
+            {!report.applied && s.problems > 0 && <Note tone="danger" icon="alert" role="alert"><span>Nothing can be saved until the {s.problems === 1 ? 'row' : `${s.problems} rows`} below {s.problems === 1 ? 'is' : 'are'} fixed in the file. Then choose it again.</span></Note>}
             {!report.applied && !s.problems && !todo && <Quiet>The file matches what is already here. There is nothing to save.</Quiet>}
 
             <Segmented label="Show" value={show} onChange={setShow} options={[

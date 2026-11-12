@@ -1,12 +1,18 @@
 /**
- * The shared pieces every screen is built from, using only the HiFive design tokens.
+ * The pieces every screen is built from. Each one is drawn by the HiFive library (@hifive/ui);
+ * this file only fits the library's components to the way Inventory's screens ask for them
+ * (an icon by name, a status by its code), so a change to the library reaches every screen.
  *
- * Named after the Design Guide's components where one exists: Tile (C4), StatusRows (C7),
- * Hint (C8), Sheet (C9). Everything else is the plain kit a stock app needs: fields, tables,
- * pills, an item picker and a line editor.
+ * Nothing here has a look of its own. A piece the library lacks is asked for in hifive-design
+ * (Design Guide Part J), never drawn here.
  */
 
-import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Children, cloneElement, createContext, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ChevronDown, Search as SearchGlass, X } from 'lucide-react';
+import {
+  Banner, Button as HfButton, Checkbox, Chip, ChipGroup, DataTable, Hint as HfHint, ListRow, Loading as HfLoading,
+  Picker, QuantityField, Quiet as HfQuiet, Sheet as HfSheet, StatusChip, Tile as HfTile, Toast,
+} from '@hifive/ui';
 import Icon from './icons.jsx';
 import { fmtQty, get } from './api.js';
 
@@ -39,13 +45,11 @@ export function useData(path, deps = []) {
 export function Page({ title, subtitle, actions, children, back }) {
   return (
     <div className="page">
+      {back && <button type="button" className="hf-btn hf-btn--quiet inv-back" onClick={back}><Icon name="back" size={18} />Back</button>}
       <header className="page-head">
-        <div className="page-title">
-          {back && <button className="icon-btn" onClick={back} aria-label="Back"><Icon name="back" /></button>}
-          <div className="min0">
-            <h1>{title}</h1>
-            {subtitle && <p className="muted">{subtitle}</p>}
-          </div>
+        <div className="min0">
+          <h1 className="inv-h1">{title}</h1>
+          {subtitle && <p className="inv-lede">{subtitle}</p>}
         </div>
         {actions && <div className="page-actions">{actions}</div>}
       </header>
@@ -54,12 +58,13 @@ export function Page({ title, subtitle, actions, children, back }) {
   );
 }
 
+/** A card that holds a form or facts has a heading; one that holds a list or a table has a caption. */
 export function Card({ title, hint, actions, children, className = '', pad = true }) {
   return (
-    <section className={`card ${pad ? '' : 'nopad'} ${className}`}>
+    <section className={`hf-card inv-card ${pad ? '' : 'nopad'} ${className}`}>
       {(title || actions) && (
-        <div className="card-head">
-          <h2 className="caption">{title}{hint && <Hint text={hint} />}</h2>
+        <div className="inv-card__h">
+          <h2 className={pad ? 'inv-h2' : 'hf-cap inv-cap'}>{title}{hint && <Hint text={hint} />}</h2>
           {actions}
         </div>
       )}
@@ -68,329 +73,241 @@ export function Card({ title, hint, actions, children, className = '', pad = tru
   );
 }
 
-/** C4 · Tile: one live number with its label. */
+const TILE_TONE = { brand: 'brand', accent: 'pop', danger: 'danger', warn: 'warn', ok: 'ok' };
+
+/** C4 · Tile: one live number with its label. A tile is never shown for zero: the screen leaves it out. */
 export function Tile({ icon, value, label, tone = 'brand', onClick, hint }) {
-  const Tag = onClick ? 'button' : 'div';
-  return (
-    <Tag className={`tile tone-${tone}`} onClick={onClick}>
-      <span className="tile-icon"><Icon name={icon} size={18} /></span>
-      <span className="tile-value">{value}</span>
-      <span className="tile-label">{label}{hint && <Hint text={hint} />}</span>
-    </Tag>
-  );
+  return <HfTile tone={TILE_TONE[tone] || 'brand'} icon={<Icon name={icon} size={18} />} value={value} label={label} hint={hint} onClick={onClick} />;
 }
 
-/** C7 · Status rows: icon | label, with the value as a sub-line. */
+/** Rows in a card: icon, what it is, a line under it, and where it goes. A flag is said as a status chip. */
 export function StatusRows({ rows }) {
   return (
-    <ul className="status-rows">
+    <div className="hf-listcard__rows inv-rows">
       {rows.map((r) => (
-        <li key={r.key}>
-          <button className="status-row" onClick={r.onClick} disabled={!r.onClick}>
-            <span className={`row-icon tone-${r.tone || 'brand'}`}><Icon name={r.icon} size={18} /></span>
-            <span className="min0 grow">
-              <span className="row-label">{r.label}{r.flag && <span className="row-flag">{r.flag}</span>}</span>
-              {r.sub && <span className="row-sub">{r.sub}</span>}
-            </span>
-            {r.onClick && <Icon name="chevron" size={16} className="faint" />}
-          </button>
-        </li>
+        <ListRow key={r.key} icon={r.icon ? <Icon name={r.icon} size={20} /> : undefined} title={r.label} sub={r.sub} onClick={r.onClick}
+          trailing={r.flag ? <StatusChip tone={r.tone === 'warn' ? 'warn' : 'danger'}>{r.flag}</StatusChip> : r.end} />
       ))}
-    </ul>
+    </div>
   );
 }
 
-/** Rule 3: an empty section collapses to one friendly line, never an empty box. */
+/** An empty section collapses to one line, never an empty box. */
 export function Quiet({ children, icon = 'check' }) {
-  return <p className="quiet"><Icon name={icon} size={16} />{children}</p>;
+  return <HfQuiet icon={<Icon name={icon} size={16} />}>{children}</HfQuiet>;
 }
 
 /** C8 · Hint: a "?" that opens one to three sentences. */
-export function Hint({ text: body }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!open) return undefined;
-    const close = (e) => { if (e.type === 'keydown' ? e.key === 'Escape' : !ref.current?.contains(e.target)) setOpen(false); };
-    document.addEventListener('pointerdown', close);
-    document.addEventListener('keydown', close);
-    return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', close); };
-  }, [open]);
+export function Hint({ text }) {
+  return <HfHint text={text} />;
+}
+
+/** C9 · Sheet: bottom sheet on a phone, centred dialog on a desk. The footer stays in view. */
+export function Sheet({ title, onClose, children, footer, wide = false }) {
   return (
-    <span className="hint" ref={ref}>
-      <button type="button" className="hint-btn" aria-label="What is this?" aria-expanded={open} onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}>?</button>
-      {open && <span className="hint-pop" role="tooltip">{body}</span>}
-    </span>
+    <HfSheet open title={title} onClose={onClose} wide={wide}>
+      <div className="inv-sheet__body">{children}</div>
+      {footer && <div className="inv-sheet__foot">{footer}</div>}
+    </HfSheet>
   );
 }
 
-/** C9 · Sheet: bottom sheet on a phone, centred dialog on a desk. */
-export function Sheet({ title, onClose, children, footer, wide = false }) {
-  const id = useId();
-  useEffect(() => {
-    const esc = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', esc);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', esc); document.body.style.overflow = prev; };
-  }, [onClose]);
-  return (
-    <div className="scrim" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={id}>
-        <div className="sheet-head">
-          <h2 id={id}>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="close" /></button>
-        </div>
-        <div className="sheet-body">{children}</div>
-        {footer && <div className="sheet-foot">{footer}</div>}
-      </div>
-    </div>
-  );
+/** A note inside a screen: something to know (plain), to look at (warn), or that stopped it (danger). */
+export function Note({ tone = 'plain', icon, children, role }) {
+  return <Banner tone={tone} role={role} icon={icon ? <Icon name={icon} size={18} /> : undefined}>{children}</Banner>;
 }
 
 // ── Controls ─────────────────────────────────────────────────────────────────
 
-export function Button({ kind = 'primary', icon, children, busy, className = '', ...rest }) {
+// The Design Guide has three buttons. What used to be a red button is a secondary one: the
+// words say what it does, and anything that cannot be undone asks first.
+const VARIANT = { primary: 'primary', secondary: 'secondary', ghost: 'quiet', danger: 'secondary' };
+
+export function Button({ kind = 'primary', icon, children, busy, className = '', disabled, ...rest }) {
+  const block = /\bblock\b/.test(className);
   return (
-    <button className={`btn btn-${kind} ${className}`} disabled={busy || rest.disabled} {...rest}>
-      {icon && <Icon name={icon} size={18} />}
-      <span>{busy ? 'Working…' : children}</span>
-    </button>
+    <HfButton variant={VARIANT[kind] || 'secondary'} fit={!block} icon={icon ? <Icon name={icon} size={18} /> : undefined}
+      busy={busy} disabled={busy || disabled} {...rest}>{children}</HfButton>
   );
 }
 
+const TAKES_A_LABEL = ['input', 'select', 'textarea'];
+const PLAIN_INPUT = (el) => el.type === 'textarea' || el.type === 'select' || !['checkbox', 'radio', 'file', 'range'].includes(el.props.type);
+
+/**
+ * A label over one control. A plain input, select or text box inside it takes the library's
+ * field look; the label is tied to it by id, so pressing the label puts the cursor in the box.
+ */
 export function Field({ label, hint, error, children, className = '' }) {
+  const auto = useId();
+  const only = Children.count(children) === 1 && isValidElement(children) ? children : null;
+  const host = only && typeof only.type === 'string' && TAKES_A_LABEL.includes(only.type);
+  const ours = only && [Select, QtyInput, Stepper, SearchBox].includes(only.type);
+  const top = (htmlFor) => (
+    <span className="inv-fld__top">
+      {htmlFor ? <label htmlFor={htmlFor} className="hf-fld__l">{label}</label> : <span className="hf-fld__l">{label}</span>}
+      {hint && <Hint text={hint} />}
+    </span>
+  );
+  if (host || ours) {
+    const id = only.props.id || auto;
+    const cls = host && PLAIN_INPUT(only)
+      ? ['hf-input', only.type === 'textarea' ? 'hf-input--area' : '', error ? 'hf-input--err' : '', only.props.className || ''].filter(Boolean).join(' ')
+      : only.props.className;
+    return (
+      <div className={`hf-fld ${className}`}>
+        {top(id)}
+        {cloneElement(only, { id, className: cls })}
+        {error && <span className="hf-fld__e">{error}</span>}
+      </div>
+    );
+  }
+  // Something of its own inside (a picker, a row of buttons): one group with a visible name.
   return (
-    <label className={`field ${className}`}>
-      <span className="field-label">{label}{hint && <Hint text={hint} />}</span>
+    <div className={`hf-fld ${className}`} role="group" aria-label={typeof label === 'string' ? label : undefined}>
+      {top(null)}
       {children}
-      {error && <span className="field-error">{error}</span>}
-    </label>
+      {error && <span className="hf-fld__e">{error}</span>}
+    </div>
   );
 }
 
-export function Select({ value, onChange, options, placeholder, ...rest }) {
+export function Select({ value, onChange, options, placeholder, className = '', ...rest }) {
   return (
-    <select value={value ?? ''} onChange={(e) => onChange(e.target.value)} {...rest}>
-      {placeholder !== undefined && <option value="">{placeholder}</option>}
-      {options.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
-    </select>
+    <span className={`hf-select ${className}`}>
+      <select className="hf-input" value={value ?? ''} onChange={(e) => onChange(e.target.value)} {...rest}>
+        {placeholder !== undefined && <option value="">{placeholder}</option>}
+        {options.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
+      </select>
+      <ChevronDown size={18} aria-hidden="true" />
+    </span>
   );
 }
 
+/** The sections of a screen, or a Show filter: chips, with a count where something is waiting. */
 export function Segmented({ value, onChange, options, label }) {
   return (
-    <div className="segmented" role="radiogroup" aria-label={label}>
+    <ChipGroup label={label}>
       {options.map((o) => (
-        <button key={o.value} type="button" role="radio" aria-checked={value === o.value}
-          className={value === o.value ? 'on' : ''} onClick={() => onChange(o.value)}>
-          {o.label}{o.n !== undefined && o.n > 0 && <span className="seg-n">{o.n}</span>}
-        </button>
+        <Chip key={o.value} pressed={value === o.value} count={o.n > 0 ? o.n : undefined} onClick={() => onChange(o.value)}>{o.label}</Chip>
       ))}
+    </ChipGroup>
+  );
+}
+
+export function Check({ checked, onChange, children, ...rest }) {
+  return <Checkbox label={children} checked={!!checked} onChange={(e) => onChange(e.target.checked)} {...rest} />;
+}
+
+export function SearchBox({ value, onChange, placeholder = 'Search', id }) {
+  return (
+    <div className="hf-search inv-search" role="search">
+      <SearchGlass size={18} aria-hidden="true" />
+      <input id={id} type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder} />
+      {value && <button type="button" className="hf-search__clear" onClick={() => onChange('')} aria-label="Clear the search"><X size={16} aria-hidden="true" /></button>}
     </div>
   );
 }
 
-export function Check({ checked, onChange, children }) {
-  return (
-    <label className="check">
-      <input type="checkbox" checked={!!checked} onChange={(e) => onChange(e.target.checked)} />
-      <span>{children}</span>
-    </label>
-  );
-}
-
-export function SearchBox({ value, onChange, placeholder = 'Search' }) {
-  return (
-    <div className="search">
-      <Icon name="search" size={18} />
-      <input type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder} />
-      {value && <button className="icon-btn sm" onClick={() => onChange('')} aria-label="Clear"><Icon name="close" size={16} /></button>}
-    </div>
-  );
-}
-
-// ── Pills and states ─────────────────────────────────────────────────────────
+// ── Status ───────────────────────────────────────────────────────────────────
 
 const STATUS_TONE = {
   OUT: 'danger', CRITICAL: 'danger', LOW: 'warn', OK: 'ok',
-  PENDING: 'warn', APPROVED: 'brand', PARTLY_ISSUED: 'brand', ISSUED: 'ok', REJECTED: 'danger', CANCELLED: 'faint',
-  DRAFT: 'faint', SUBMITTED: 'warn', PARTLY_RECEIVED: 'brand', RECEIVED: 'ok',
-  OPEN: 'brand', EXPIRED: 'danger', SOON: 'warn', UNKNOWN: 'faint', URGENT: 'danger',
+  PENDING: 'warn', APPROVED: 'plain', PARTLY_ISSUED: 'plain', ISSUED: 'ok', REJECTED: 'danger', CANCELLED: 'plain',
+  DRAFT: 'plain', SUBMITTED: 'warn', PARTLY_RECEIVED: 'plain', RECEIVED: 'ok',
+  OPEN: 'plain', EXPIRED: 'danger', SOON: 'warn', UNKNOWN: 'plain', URGENT: 'danger',
 };
 const STATUS_TEXT = {
-  OUT: 'Out', CRITICAL: 'Critical', LOW: 'Low', OK: 'In stock', PARTLY_ISSUED: 'Partly given', ISSUED: 'Given out',
+  OUT: 'Out', CRITICAL: 'Nearly out', LOW: 'Low', OK: 'In stock', PARTLY_ISSUED: 'Partly given', ISSUED: 'Given out',
   PARTLY_RECEIVED: 'Partly received', SUBMITTED: 'Waiting approval', SOON: 'Expiring soon', UNKNOWN: 'No date',
 };
+const CHIP_TONE = { ok: 'ok', warn: 'warn', danger: 'danger', brand: 'plain', faint: 'plain', plain: 'plain' };
 export const statusText = (s) => STATUS_TEXT[s] || (s ? s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ') : '');
 
+/** A status, always an icon and words: the fixed status colours only, never the palette's. */
 export function Pill({ status, children, tone }) {
-  return <span className={`pill tone-${tone || STATUS_TONE[status] || 'faint'}`}>{children || statusText(status)}</span>;
+  return <StatusChip tone={CHIP_TONE[tone] || STATUS_TONE[status] || 'plain'}>{children || statusText(status)}</StatusChip>;
 }
 
 export function ErrorNote({ error, onRetry }) {
   if (!error) return null;
   return (
-    <div className="note danger" role="alert">
-      <Icon name="alert" size={18} />
-      <span className="grow">{error.message || String(error)}</span>
-      {onRetry && <button className="btn btn-ghost sm" onClick={onRetry}>Try again</button>}
-    </div>
+    <Banner tone="danger" role="alert" action={onRetry ? { label: 'Try again', onClick: onRetry } : undefined}>
+      {error.message || String(error)}
+    </Banner>
   );
 }
 
 export function Loading({ what = 'Loading' }) {
-  return <div className="loading" aria-busy="true"><span className="spinner" />{what}…</div>;
+  return <HfLoading label={what} />;
 }
 
 // ── Toasts ───────────────────────────────────────────────────────────────────
 
+/** One short line at the foot of the screen, one at a time, in the order they were said. */
 export function useToasts() {
-  const [items, setItems] = useState([]);
-  const push = useCallback((text, tone = 'ok') => {
-    const id = Math.random().toString(36).slice(2);
-    setItems((x) => [...x, { id, text, tone }]);
-    setTimeout(() => setItems((x) => x.filter((t) => t.id !== id)), 4200);
-  }, []);
-  const view = (
-    <div className="toasts" aria-live="polite">
-      {items.map((t) => <div key={t.id} className={`toast tone-${t.tone}`}><Icon name={t.tone === 'ok' ? 'check' : 'alert'} size={18} />{t.text}</div>)}
-    </div>
-  );
+  const [queue, setQueue] = useState([]);
+  const push = useCallback((text) => setQueue((q) => (q[q.length - 1] === String(text) ? q : [...q, String(text)])), []);
+  const done = useCallback(() => setQueue((q) => q.slice(1)), []);
+  const view = <Toast text={queue[0] ?? null} onDone={done} ms={4200} />;
   return { push, view };
 }
 
 // ── Tables ───────────────────────────────────────────────────────────────────
 
 /**
- * A table on a desk, a stack of cards on a phone (CSS does the switch — each cell carries its
- * column label). Columns: { key, label, render?, align?, sort? }.
+ * A table on a desk, a card for each row on a phone. Columns: { key, label, render?, align?,
+ * sort?, sortable?, primary?, width? }. A table of more than five columns stays as cards until
+ * the screen is wide enough to read it.
  */
-export function Table({ columns, rows, onRow, empty = 'Nothing here.', rowKey = (r, i) => r.id ?? i, initialSort }) {
-  const [sort, setSort] = useState(initialSort || null);
-  const sorted = useMemo(() => {
-    if (!sort) return rows;
-    const col = columns.find((c) => c.key === sort.key);
-    const val = col?.sort || ((r) => r[sort.key]);
-    return [...rows].sort((a, b) => {
-      const x = val(a); const y = val(b);
-      const c = typeof x === 'number' && typeof y === 'number' ? x - y : String(x ?? '').localeCompare(String(y ?? ''), undefined, { numeric: true });
-      return sort.dir === 'asc' ? c : -c;
-    });
-  }, [rows, sort, columns]);
+export function Table({ columns, rows, onRow, empty = 'Nothing here.', rowKey = (r, i) => r.id ?? i, initialSort, caption = 'List' }) {
+  const index = useMemo(() => new Map(rows.map((r, i) => [r, i])), [rows]);
+  const cols = columns.map((c) => ({
+    key: c.key, label: c.label, render: c.render, lead: !!c.primary, align: c.align === 'right' ? 'end' : 'start',
+    width: c.width || (c.primary ? 'minmax(0, 1.6fr)' : undefined),
+    sortValue: c.sortable === false ? undefined : (c.sort || ((r) => r[c.key])),
+  }));
   if (!rows.length) return <Quiet icon="check">{empty}</Quiet>;
   return (
-    <div className="table-wrap">
-      <table className="table">
-        <thead>
-          <tr>
-            {columns.map((c) => (
-              <th key={c.key} className={c.align === 'right' ? 'r' : ''}>
-                {c.sortable === false ? c.label : (
-                  <button className="th-btn" onClick={() => setSort((s) => ({ key: c.key, dir: s?.key === c.key && s.dir === 'asc' ? 'desc' : 'asc' }))}>
-                    {c.label}{sort?.key === c.key ? (sort.dir === 'asc' ? ' ↑' : ' ↓') : ''}
-                  </button>
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((r, i) => (
-            <tr key={rowKey(r, i)} onClick={onRow ? () => onRow(r) : undefined} className={onRow ? 'clickable' : ''}
-              tabIndex={onRow ? 0 : undefined} onKeyDown={onRow ? (e) => { if (e.key === 'Enter') onRow(r); } : undefined}>
-              {columns.map((c) => (
-                <td key={c.key} data-label={c.label} className={`${c.align === 'right' ? 'r' : ''} ${c.primary ? 'primary' : ''}`}>
-                  {c.render ? c.render(r) : r[c.key]}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable caption={caption} hideCaption columns={cols} rows={rows} rowKey={(r) => String(rowKey(r, index.get(r)))}
+      onRowClick={onRow} initialSort={initialSort || null} wide={columns.length > 5} />
   );
 }
 
-// ── Picking items ────────────────────────────────────────────────────────────
+// ── Picking items, and how many ──────────────────────────────────────────────
 
 /**
  * Type a name, a code or scan a barcode. Shows the quantity in `storeId` beside each match, so
  * the person sees "3 left" before choosing, not after the refusal.
  */
-export function ItemPicker({ items, storeId, onPick, exclude = [], placeholder = 'Add an item — type a name, code or scan', filter }) {
-  const [q, setQ] = useState('');
-  const [open, setOpen] = useState(false);
-  const [hi, setHi] = useState(0);
-  const box = useRef(null);
-  const matches = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    const pool = items.filter((i) => i.active !== false && !exclude.includes(i.id) && (!filter || filter(i)));
-    if (!t) return pool.slice(0, 30);
-    const exact = pool.filter((i) => i.barcode === q.trim() || i.barcodes?.includes(q.trim()) || i.code.toLowerCase() === t);
-    if (exact.length) return exact;
-    return pool.filter((i) => `${i.name} ${i.code} ${i.category}`.toLowerCase().includes(t)).slice(0, 30);
-  }, [q, items, exclude, filter]);
-  useEffect(() => {
-    const out = (e) => { if (!box.current?.contains(e.target)) setOpen(false); };
-    document.addEventListener('pointerdown', out);
-    return () => document.removeEventListener('pointerdown', out);
-  }, []);
-  const choose = (it) => { onPick(it); setQ(''); setOpen(false); setHi(0); };
-  const qtyIn = (it) => it.stores?.find((s) => s.storeId === storeId);
+export function ItemPicker({ items, storeId, onPick, exclude = [], placeholder = 'Add an item: type a name or a code, or scan', filter, label = 'Item', showLabel = false }) {
+  const options = useMemo(() => items
+    .filter((i) => i.active !== false && !exclude.includes(i.id) && (!filter || filter(i)))
+    .map((it) => {
+      const s = it.stores?.find((x) => x.storeId === storeId);
+      return {
+        value: it.id, label: it.name, sub: `${it.code} · ${it.category}`, keywords: it.category,
+        codes: [it.code, it.barcode, ...(it.barcodes || [])].filter(Boolean),
+        end: s ? `${fmtQty(s.qty)} ${it.uom}` : undefined,
+        endTone: s && s.status !== 'OK' ? (s.status === 'LOW' ? 'warn' : 'danger') : undefined,
+        item: it,
+      };
+    }), [items, storeId, exclude, filter]);
   return (
-    <div className="picker" ref={box}>
-      <div className="search">
-        <Icon name="search" size={18} />
-        <input
-          value={q} placeholder={placeholder} aria-label={placeholder} role="combobox" aria-expanded={open}
-          onFocus={() => setOpen(true)}
-          onChange={(e) => { setQ(e.target.value); setOpen(true); setHi(0); }}
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowDown') { e.preventDefault(); setHi((h) => Math.min(h + 1, matches.length - 1)); }
-            if (e.key === 'ArrowUp') { e.preventDefault(); setHi((h) => Math.max(h - 1, 0)); }
-            if (e.key === 'Enter' && matches[hi]) { e.preventDefault(); choose(matches[hi]); }
-            if (e.key === 'Escape') setOpen(false);
-          }}
-        />
-      </div>
-      {open && (
-        <ul className="picker-list" role="listbox">
-          {matches.length ? matches.map((it, i) => {
-            const s = qtyIn(it);
-            return (
-              <li key={it.id} role="option" aria-selected={i === hi}>
-                <button className={i === hi ? 'hi' : ''} onPointerDown={(e) => { e.preventDefault(); choose(it); }}>
-                  <span className="min0 grow">
-                    <span className="pick-name">{it.name}</span>
-                    <span className="pick-sub"><code>{it.code}</code> · {it.category}</span>
-                  </span>
-                  {s && <span className={`pick-qty ${s.status !== 'OK' ? `tone-${s.status === 'LOW' ? 'warn' : 'danger'}` : ''}`}>{fmtQty(s.qty)} {it.uom}</span>}
-                </button>
-              </li>
-            );
-          }) : <li className="picker-empty">No item matches “{q}”.</li>}
-        </ul>
-      )}
-    </div>
+    <Picker label={label} hideLabel={!showLabel} placeholder={placeholder} options={options} onPick={(o) => onPick(o.item)}
+      empty={(typed) => `No item matches “${typed}”.`} />
   );
 }
 
-/** A number input that keeps what was typed, so "1." does not jump back to "1". */
-export function QtyInput({ value, onChange, min = 0, step = 'any', label = 'Quantity', ...rest }) {
+/** A number box that keeps what was typed, so "1." does not jump back to "1". For a table of counts. */
+export function QtyInput({ value, onChange, min = 0, step = 'any', label = 'Quantity', className = '', ...rest }) {
   return (
-    <input className="qty" type="number" inputMode="decimal" min={min} step={step} value={value ?? ''} aria-label={label}
+    <input className={`hf-input inv-num ${className}`} type="number" inputMode="decimal" min={min} step={step} value={value ?? ''} aria-label={label}
       onChange={(e) => onChange(e.target.value)} onWheel={(e) => e.currentTarget.blur()} {...rest} />
   );
 }
 
-export function Stepper({ value, onChange, max }) {
-  const n = Number(value) || 0;
-  return (
-    <div className="stepper">
-      <button type="button" className="icon-btn" aria-label="One less" onClick={() => onChange(String(Math.max(0, n - 1)))}><Icon name="minus" size={16} /></button>
-      <QtyInput value={value} onChange={onChange} max={max} />
-      <button type="button" className="icon-btn" aria-label="One more" onClick={() => onChange(String(n + 1))}><Icon name="plus" size={16} /></button>
-    </div>
-  );
+/** A quantity with one step down or up, and what it is counted in. */
+export function Stepper({ value, onChange, max, min = 0, unit, label = 'Quantity', id }) {
+  return <QuantityField id={id} label={label} hideLabel value={value} onChange={onChange} min={min} max={max} unit={unit} />;
 }

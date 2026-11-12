@@ -79,8 +79,8 @@ export default function Camera({ onCode, paused = false }) {
         {state !== 'on' && <p className="camera-say">{SAY[state]}</p>}
         {state === 'on' && paused && <p className="camera-say">Paused</p>}
       </div>
-      <form className="row" onSubmit={submit}>
-        <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Or type the code" aria-label="Type a barcode or item code" inputMode="text" autoComplete="off" />
+      <form className="row" onSubmit={submit} style={{ flexWrap: 'nowrap' }}>
+        <input className="hf-input" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Or type the code" aria-label="Type a barcode or item code" inputMode="text" autoComplete="off" />
         <Button kind="secondary" type="submit" disabled={paused}>Add</Button>
       </form>
     </div>

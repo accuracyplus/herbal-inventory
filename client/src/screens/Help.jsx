@@ -37,13 +37,13 @@ export default function Help() {
     <Page title="Help" subtitle="How HiFive Inventory works, and who may do what.">
       <div className="grid3">
         {FLOWS.map(([icon, title, text]) => (
-          <Card key={title}><div className="row"><span className="row-icon"><Icon name={icon} size={18} /></span><h2 className="grow">{title}</h2></div><p className="muted">{text}</p></Card>
+          <Card key={title}><div className="row"><span className="inv-well"><Icon name={icon} size={18} /></span><h2 className="grow">{title}</h2></div><p className="muted">{text}</p></Card>
         ))}
       </div>
       <Card title="Who may do what" hint="Somebody may never approve what they raised themselves, unless they are the only approver in the unit." pad={false}>
         <Table rows={rows} rowKey={(r) => r.a} columns={[
           { key: 'label', label: 'Action', primary: true, sortable: false },
-          ...roles.map((r) => ({ key: r, label: me.labels.roles[r].replace(' (read-only)', ''), sortable: false, render: (x) => (x[r] ? <Icon name="check" size={18} label="Yes" /> : <span className="faint">—</span>) })),
+          ...roles.map((r) => ({ key: r, label: me.labels.roles[r].replace(' (read-only)', ''), sortable: false, render: (x) => (x[r] ? <Icon name="check" size={18} label="Yes" /> : '') })),
         ]} />
       </Card>
       <Card title="Your access">

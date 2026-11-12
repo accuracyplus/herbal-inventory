@@ -70,7 +70,9 @@ export function defaultRoster() {
 
 /**
  * Options: `roster` (rows /roster answers with), `rosterFails` (a status HiFive ID answers with),
- * `rosterCalls` (an array each roster request's bearer is pushed to, to check who asked).
+ * `rosterCalls` (an array each roster request's bearer is pushed to, to check who asked),
+ * `me` (what HiFive ID's /me answers: an object, a status number, an Error to throw; read from
+ * `env.me` at the time of the call) and `meCalls`.
  */
 export function testEnv(extra = {}) {
   const DB = new TestD1(join(root, 'schema.sql'));
@@ -108,6 +110,14 @@ export function testEnv(extra = {}) {
           extra.rosterCalls?.push({ app: u.searchParams.get('app'), bearer: req.headers.get('authorization') });
           if (extra.rosterFails) return new Response(JSON.stringify({ error: 'unknown_app', message: 'Pass ?app=<key> naming the calling application' }), { status: extra.rosterFails });
           return new Response(JSON.stringify({ as_of: new Date().toISOString(), via: 'session', staff: extra.roster ?? defaultRoster() }));
+        }
+        // /me: `me` is what HiFive ID answers (a value, or a function of the request); none = an older HiFive ID.
+        if (u.pathname === '/me') {
+          extra.meCalls?.push({ aud: u.searchParams.get('aud'), bearer: req.headers.get('authorization') });
+          const me = typeof env.me === 'function' ? env.me(req) : env.me;
+          if (me instanceof Error) throw me;
+          if (typeof me === 'number') return new Response('{}', { status: me });
+          return new Response(JSON.stringify(me ?? { sub: 'x' }));
         }
         return new Response(JSON.stringify({ keys: [k.jwk] }));
       },

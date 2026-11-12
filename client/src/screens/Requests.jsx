@@ -7,7 +7,7 @@ import { fmtDateTime, fmtQty, get, post } from '../api.js';
 import Icon from '../icons.jsx';
 import LineEditor, { newLine, toPayload } from '../lines.jsx';
 import {
-  Button, Card, ErrorNote, Field, Loading, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 
 export default function Requests() {
@@ -97,7 +97,7 @@ function NewRequest({ preItem, onClose, onDone }) {
         <Field label="How soon"><Select value={urgency} onChange={setUrgency} options={[{ value: 'NORMAL', label: 'Normal' }, { value: 'URGENT', label: 'Urgent — needed today' }]} /></Field>
         <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" maxLength={500} /></Field>
       </div>
-      {me.settings['requests.approval'] === 'none' && <div className="note"><Icon name="check" size={18} />In {me.unit.name} requests go straight to the store — no approval step.</div>}
+      {me.settings['requests.approval'] === 'none' && <Note icon="check">In {me.unit.name} requests go straight to the store — no approval step.</Note>}
       {toStore && !suggestTried && <div><Button kind="ghost" icon="sparkle" onClick={fill}>Fill from this store's levels</Button></div>}
       <LineEditor mode="request" items={stock.items} storeId={fromId} lines={lines} setLines={setLines} scan="request" />
       <ErrorNote error={err} />
@@ -170,7 +170,7 @@ function RequestSheet({ id, onClose, onChanged }) {
               <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Optional" />
             </Field>
           )}
-          {canDecide && mine && <div className="note"><Icon name="alert" size={18} />You asked for this, so another manager approves it — unless you are the only one.</div>}
+          {canDecide && mine && <Note icon="alert">You asked for this, so another manager approves it — unless you are the only one.</Note>}
           {!canDecide && !canIssue && r.status === 'PENDING' && <Quiet icon="clock">Waiting for a manager.</Quiet>}
           <ErrorNote error={err} />
         </>

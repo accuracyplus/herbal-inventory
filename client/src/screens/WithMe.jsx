@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { fmtDate, fmtMoney, fmtQty, gstToday, post } from '../api.js';
 import LineEditor, { lineErrors, toPayload } from '../lines.jsx';
 import {
-  Button, Card, ErrorNote, Field, Loading, Page, Pill, Quiet, Segmented, Select, Sheet, Stepper, Table, useApp, useData,
+  Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
 import { Bars } from './Reports.jsx';
@@ -132,7 +132,7 @@ function MyUse() {
       {data?.byItem.length > 0 && (
         <>
           <Card title="Cost of what I used" hint="At the cost of the stock when it was used or taken. Only you and your managers can see this.">
-            <p className="tile-value">{fmtMoney(data.total, currency)}</p>
+            <p className="inv-number">{fmtMoney(data.total, currency)}</p>
             <Bars rows={data.byCategory} fmt={(v) => fmtMoney(v, currency, 0)} />
           </Card>
           <Card title="What I used" pad={false}>
@@ -162,7 +162,7 @@ function Take() {
   useEffect(() => { if (!storeId && stores[0]) setStoreId(stores[0].id); }, [stores, storeId]);
   const back = () => navigate('with-me');
   if (!stock) return <Page title="Take stock" back={back}><Loading /></Page>;
-  if (!stores.length) return <Page title="Take stock" back={back}><div className="note warn">You are not set up to take from any store. Ask your unit administrator.</div></Page>;
+  if (!stores.length) return <Page title="Take stock" back={back}><Note tone="warn">You are not set up to take from any store. Ask your unit administrator.</Note></Page>;
   const errors = lineErrors(lines, 'out', storeId);
   const save = async () => {
     setBusy(true); setErr(null);

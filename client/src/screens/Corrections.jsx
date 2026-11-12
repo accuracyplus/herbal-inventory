@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { fmtDateTime, fmtMoney, fmtQty, post } from '../api.js';
 import Icon from '../icons.jsx';
 import LineEditor, { lineErrors, toPayload } from '../lines.jsx';
-import { Button, Card, ErrorNote, Field, Loading, Page, Pill, Segmented, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
+import { Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, Segmented, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
 
 export default function Corrections() {
   const { route, navigate, can, currency } = useApp();
@@ -69,7 +69,7 @@ function Raise({ onClose, onDone }) {
           <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="e.g. bottle dropped in room 3; seal broken on delivery" />
         </Field>
       </div>
-      <div className="note"><Icon name={takesAway ? 'minus' : 'plus'} size={18} />{takesAway ? 'Enter how many to take away.' : reason === 'FOUND' ? 'Enter how many were found.' : 'Enter − to take away or + to add.'}</div>
+      <Note icon={takesAway ? 'minus' : 'plus'}>{takesAway ? 'Enter how many to take away.' : reason === 'FOUND' ? 'Enter how many were found.' : 'Enter − to take away or + to add.'}</Note>
       <LineEditor mode={takesAway || reason === 'FOUND' ? 'out' : 'adjust'} items={stock?.items || []} storeId={storeId} lines={lines} setLines={setLines}
         errors={takesAway ? errors : {}} pickerFilter={(i) => !i.isLinen} />
       <ErrorNote error={err} />
@@ -114,7 +114,7 @@ function AdjSheet({ id, onClose, onChanged }) {
               ...(can('cost.view') ? [{ key: 'v', label: 'Value', align: 'right', render: (l) => fmtMoney(l.qty * (l.avg_cost || 0), currency) }] : []),
             ]} />
           </Card>
-          {pending && can('adjust.decide') && mine && <div className="note"><Icon name="alert" size={18} />You raised this, so another manager approves it — unless you are the only one.</div>}
+          {pending && can('adjust.decide') && mine && <Note icon="alert">You raised this, so another manager approves it — unless you are the only one.</Note>}
           {pending && (can('adjust.decide') || mine) && <Field label="Note" hint="Required when rejecting."><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} /></Field>}
           <ErrorNote error={err} />
         </>

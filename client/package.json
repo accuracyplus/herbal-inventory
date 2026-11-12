@@ -6,11 +6,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "sync-ui": "node scripts/sync-ui.mjs",
     "deploy": "npm run build && wrangler pages deploy dist --project-name hifive-inventory"
   },
   "dependencies": {
+    "@hifive/ui": "file:vendor/hifive-ui",
     "@zxing/library": "0.23.0",
     "fflate": "0.8.2",
+    "lucide-react": "^0.468.0",
     "qrcode-generator": "2.0.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

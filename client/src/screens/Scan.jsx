@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react';
 import { fmtQty, get, post } from '../api.js';
 import Icon from '../icons.jsx';
-import { Button, Card, ErrorNote, Loading, Page, Quiet, Stepper, useApp } from '../ui.jsx';
+import { Button, Card, ErrorNote, Loading, Note, Page, Quiet, Stepper, useApp } from '../ui.jsx';
 import Camera from '../scan/Camera.jsx';
 import WhichItem from '../scan/WhichItem.jsx';
 import { giveHandoff } from '../scan/handoff.js';
@@ -47,7 +47,7 @@ function Paired({ id }) {
     <Page title="Scanning for your computer" subtitle={info ? `${FOR[info.purpose] || 'A list'} · ${info.unitName}` : undefined}
       actions={<Button kind="secondary" onClick={() => navigate('today')}>Finish</Button>}>
       <ErrorNote error={err} />
-      {ended && <div className="note warn"><Icon name="clock" size={18} />This pairing has ended. Press Scan with phone on the computer again and scan the new code.</div>}
+      {ended && <Note tone="warn" icon="clock">This pairing has ended. Press Scan with phone on the computer again and scan the new code.</Note>}
       {!info && !ended && !err && <Loading what="Connecting to your computer" />}
       {info && !ended && (
         <>
@@ -106,7 +106,7 @@ function Walk() {
       {last && (
         <Card title={last.name}>
           <p className="muted"><code>{last.code}</code> · {last.category}</p>
-          <dl className="kv">
+          <dl className="hf-kv hf-kv--3">
             {last.stores.filter((s) => s.held).map((s) => (
               <div key={s.storeId}><dt>{storeName(s.storeId)}</dt><dd>{fmtQty(s.qty)} {last.uom}</dd>{s.withPeople > 0 && <span className="row-sub">{fmtQty(s.withPeople)} with people</span>}</div>
             ))}

@@ -1,12 +1,12 @@
 /**
- * Deliveries: what has been recorded, what is waiting for approval, and each one's paperwork.
+ * Deliveries: what has been recorded, what is waiting for approval, and each one's page with its paperwork.
  * The approver sees the differences first: counted against the note, the note against the order.
  */
 
 import { useState } from 'react';
 import { fmtDate, fmtDateTime, fmtMoney, fmtQty, openFile, post, sendForm, shrinkImage } from '../api.js';
-import Icon from '../icons.jsx';
-import { Button, Card, ErrorNote, Field, Loading, Pill, Quiet, Segmented, Sheet, Table, useApp, useData } from '../ui.jsx';
+import { KeyValues, Timeline } from '@hifive/ui';
+import { Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Table, useApp, useData } from '../ui.jsx';
 import { Paperwork } from './Receive.jsx';
 
 const STATUS = { PENDING: ['warn', 'Waiting approval'], APPROVED: ['ok', 'On the shelf'], REJECTED: ['danger', 'Sent back'], CANCELLED: ['faint', 'Cancelled'] };
@@ -43,7 +43,7 @@ export function Deliveries({ initialStatus }) {
   );
 }
 
-export function ReceiptSheet({ id, onClose }) {
+export function DeliveryPage({ id, onClose }) {
   const { me, can, toast, currency, refreshStock, refreshBadges } = useApp();
   const { data: r, error, loading, reload } = useData(`/api/receipts/${id}`);
   const [note, setNote] = useState('');
@@ -61,7 +61,7 @@ export function ReceiptSheet({ id, onClose }) {
       try { await sendForm(`/api/receipts/${id}/files`, { kind: f.kind, file: await shrinkImage(f.file) }); } catch (e) { failed.push(`${f.file.name}: ${e.message}`); }
     }
     setFiles([]); setBusy(false); reload();
-    if (failed.length) setErr(new Error(`Not attached — ${failed.join('; ')}`)); else toast('Attached');
+    if (failed.length) setErr(new Error(`Not attached: ${failed.join('; ')}`)); else toast('Attached');
   };
   const view = async (f) => { setErr(null); try { await openFile(f.id, f.name); } catch (e) { setErr(e); } };
   const remove = async (f) => { setErr(null); try { await post(`/api/files/${f.id}/remove`); toast('Removed'); reload(); } catch (e) { setErr(e); } };
@@ -71,79 +71,103 @@ export function ReceiptSheet({ id, onClose }) {
   const decides = can('receipt.decide');
   const needNote = me.settings['receipts.note'] !== 'optional';
   const kinds = me.labels.fileKinds;
+  const decided = r?.decided_at && r.decided_by_name
+    ? { APPROVED: 'Approved', REJECTED: 'Sent back', CANCELLED: 'Cancelled' }[r.status] || 'Decided' : null;
+  const sendBack = () => { if (!note.trim()) { setErr(new Error('Say why it is being sent back, in the note. The receiver sees it.')); return; } act('reject', 'Sent back to the receiver'); };
   return (
-    <Sheet wide title={r ? `${r.ref}${r.supplier_name ? ` · ${r.supplier_name}` : ''}` : 'Delivery'} onClose={onClose}
-      footer={r && pending && <>
-        {(mine || decides) && <Button kind="ghost" busy={busy} onClick={() => act('cancel', 'Delivery cancelled')}>Cancel delivery</Button>}
-        {decides && <Button kind="secondary" busy={busy} onClick={() => act('reject', 'Sent back to the receiver')}>Send back</Button>}
-        {decides && <Button busy={busy} icon="check" onClick={() => act('approve', 'Approved — the stock is on the shelf')}>Approve</Button>}
+    <Page back={onClose} title={r ? `Delivery ${r.note_no || r.ref}` : 'Delivery'}
+      subtitle={r ? `${r.supplier_name ? `From ${r.supplier_name}. ` : ''}Counted by ${r.by_name}, ${fmtDateTime(r.at)}.` : undefined}
+      actions={r && pending && <>
+        {(mine || decides) && <Button kind="ghost" busy={busy} onClick={() => act('cancel', 'Delivery cancelled')}>Cancel it</Button>}
+        {decides && <Button kind="secondary" busy={busy} onClick={sendBack}>Send it back</Button>}
+        {decides && <Button busy={busy} icon="check" onClick={() => act('approve', 'Approved. The stock is on the shelf.')}>Approve</Button>}
       </>}>
-      <ErrorNote error={error} />
+      <ErrorNote error={error} onRetry={reload} />
       {loading && !r && <Loading />}
       {r && (
         <>
-          <div className="row"><DeliveryPill status={r.status} /><span className="muted">{fmtMoney(r.total, currency)} · {r.lines.length} line{r.lines.length === 1 ? '' : 's'}</span></div>
-          <dl className="dl">
-            <dt>Into</dt><dd>{r.store_name}</dd>
-            {r.po_ref && <><dt>Against</dt><dd>{r.po_ref}</dd></>}
-            {(r.note_no || r.note_date) && <><dt>Delivery note</dt><dd>{[r.note_no, r.note_date && fmtDate(r.note_date)].filter(Boolean).join(' · ')}</dd></>}
-            {(r.invoice_no || r.invoice_date) && <><dt>Invoice</dt><dd>{[r.invoice_no, r.invoice_date && fmtDate(r.invoice_date)].filter(Boolean).join(' · ')}</dd></>}
-            <dt>Received by</dt><dd>{r.by_name}, {fmtDateTime(r.at)}</dd>
-            {r.decided_at && r.decided_by_name && <><dt>{r.status === 'APPROVED' ? 'Approved by' : r.status === 'REJECTED' ? 'Sent back by' : 'Cancelled by'}</dt><dd>{r.decided_by_name}, {fmtDateTime(r.decided_at)}{r.decision_note ? ` — “${r.decision_note}”` : ''}</dd></>}
-            {r.note && <><dt>Note</dt><dd>{r.note}</dd></>}
-          </dl>
-
-          {r.flags.length > 0
-            ? (
-              <Card title="Differences to look at">
-                <ul className="tally">
-                  {r.flags.map((f) => <li key={f.text} className={f.tone === 'warn' ? 'tone-txt-LOW' : ''}><Icon name={f.tone === 'warn' ? 'alert' : 'help'} size={16} /><span className="grow">{f.text}</span></li>)}
-                </ul>
-              </Card>
-            )
-            : <Quiet>What was counted matches the note{r.po_ref ? ' and the order' : ''}.</Quiet>}
-
-          <Card pad={false}>
-            <Table rows={r.lines} columns={[
-              { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub"><code>{l.code}</code>{l.note_text ? ` · on the note: “${l.note_text}”` : ''}{l.batch_no ? ` · lot ${l.batch_no}` : ''}{l.expiry ? ` · expires ${fmtDate(l.expiry)}` : ''}</span></span> },
-              { key: 'qty', label: 'Counted', align: 'right', render: (l) => <b>{fmtQty(l.qty)} {l.uom}</b> },
-              { key: 'note_qty', label: 'On the note', align: 'right', render: (l) => (l.note_qty === null ? <span className="faint">same</span> : fmtQty(l.note_qty)) },
-              ...(r.po_ref ? [{ key: 'po_qty', label: 'Still on order', align: 'right', render: (l) => (l.po_qty === null ? '—' : fmtQty(l.po_qty)) }] : []),
-              { key: 'unit_cost', label: 'Price', align: 'right', render: (l) => fmtMoney(l.unit_cost, currency) },
-              { key: 'line', label: 'Line total', align: 'right', render: (l) => fmtMoney(l.qty * l.unit_cost, currency) },
-            ]} />
-          </Card>
-
-          <Card title="Paperwork">
-            {pending && needNote && !r.hasNote && <div className="note warn"><Icon name="alert" size={18} /><span>No delivery note is attached. It cannot be approved until one is.</span></div>}
-            {r.files.length > 0 && (
-              <ul className="lots">
-                {r.files.map((f) => (
-                  <li key={f.id} className="lot">
-                    <div className="min0"><span className="row-label">{kinds[f.kind] || f.kind} · {f.name}</span>
-                      <span className="row-sub">{f.uploaded_by_name}, {fmtDateTime(f.uploaded_at)} · {Math.max(1, Math.round(f.bytes / 1024))} KB · fingerprint {f.sha256.slice(0, 12)}</span></div>
-                    <div className="lot-actions">
-                      <Button kind="secondary" onClick={() => view(f)}>View</Button>
-                      {pending && (f.uploaded_by === me.staffId || decides) && can('receive') && <Button kind="ghost" onClick={() => remove(f)}>Remove</Button>}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {!r.files.length && <Quiet icon="help">Nothing attached yet.</Quiet>}
-            {can('receive') && ['PENDING', 'APPROVED'].includes(r.status) && me.has?.files !== false && (
-              <>
-                <Paperwork files={files} setFiles={setFiles} kinds={kinds} needNote={false} />
-                {files.length > 0 && <div className="row" style={{ justifyContent: 'flex-end' }}><Button busy={busy} onClick={attach}>Attach {files.length} file{files.length === 1 ? '' : 's'}</Button></div>}
-              </>
-            )}
-          </Card>
-
-          {pending && decides && mine && <div className="note"><Icon name="alert" size={18} />You recorded this delivery, so another manager approves it — unless you are the only one.</div>}
-          {pending && (decides || mine) && <Field label="Note" hint="Needed when sending a delivery back: the receiver sees it."><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} /></Field>}
+          <div className="row"><DeliveryPill status={r.status} /><span className="muted">{r.ref}</span></div>
           <ErrorNote error={err} />
+          {r.flags.length > 0 && (
+            <Note tone="warn" icon="alert" role="status">
+              <b>{r.flags.length === 1 ? 'One thing to look at first.' : `${r.flags.length} things to look at first.`}</b>
+              <ul className="inv-plain">{r.flags.map((f) => <li key={f.text}>{f.text}</li>)}</ul>
+            </Note>
+          )}
+          {pending && decides && mine && <Note icon="info">You recorded this delivery, so another manager approves it, unless you are the only one.</Note>}
+
+          <div className="grid2">
+            <div className="stack" style={{ gap: 18 }}>
+              <Card>
+                <KeyValues columns={3} items={[
+                  { label: 'Supplier', value: r.supplier_name },
+                  { label: 'Note number', value: r.note_no },
+                  { label: 'Date on the note', value: r.note_date && fmtDate(r.note_date) },
+                  { label: 'Goes into', value: r.store_name },
+                  { label: 'Against order', value: r.po_ref },
+                  { label: 'Invoice', value: [r.invoice_no, r.invoice_date && fmtDate(r.invoice_date)].filter(Boolean).join(', ') },
+                  { label: 'Value counted', value: fmtMoney(r.total, currency) },
+                  { label: 'Note from the receiver', value: r.note },
+                ]} />
+                {r.flags.length === 0 && <Quiet>What was counted matches the note{r.po_ref ? ' and the order' : ''}.</Quiet>}
+              </Card>
+
+              <Card title="What arrived" pad={false}>
+                <Table caption="What arrived" rows={r.lines} columns={[
+                  { key: 'name', label: 'Item', primary: true, width: 'minmax(0, 2.2fr)', render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub"><code>{l.code}</code>{l.note_text ? ` · on the note: “${l.note_text}”` : ''}{l.batch_no ? ` · lot ${l.batch_no}` : ''}{l.expiry ? ` · expires ${fmtDate(l.expiry)}` : ''}</span></span> },
+                  { key: 'note_qty', label: 'On the note', align: 'right', render: (l) => `${fmtQty(l.note_qty === null ? l.qty : l.note_qty)} ${l.uom}` },
+                  { key: 'qty', label: 'Counted', align: 'right', render: (l) => <b>{fmtQty(l.qty)} {l.uom}</b> },
+                  ...(r.po_ref ? [{ key: 'po_qty', label: 'Still on order', align: 'right', render: (l) => (l.po_qty === null ? '' : fmtQty(l.po_qty)) }] : []),
+                  { key: 'unit_cost', label: 'Unit cost', align: 'right', render: (l) => fmtMoney(l.unit_cost, currency) },
+                  { key: 'line', label: 'Value', align: 'right', sort: (l) => l.qty * l.unit_cost, render: (l) => fmtMoney(l.qty * l.unit_cost, currency) },
+                ]} />
+                <p className="inv-total"><span className="muted">Total counted</span><span className="inv-number" style={{ fontSize: 18 }}>{fmtMoney(r.total, currency)}</span></p>
+              </Card>
+            </div>
+
+            <div className="stack" style={{ gap: 18 }}>
+              <Card title="Paperwork">
+                {pending && needNote && !r.hasNote && <Note tone="warn" icon="alert">No delivery note is attached. It cannot be approved until one is.</Note>}
+                {r.files.length > 0 && (
+                  <ul className="lots">
+                    {r.files.map((f) => (
+                      <li key={f.id} className="lot">
+                        <div className="min0"><span className="row-label">{kinds[f.kind] || f.kind}</span>
+                          <span className="row-sub">{f.name} · {Math.max(1, Math.round(f.bytes / 1024))} KB · {f.uploaded_by_name}, {fmtDateTime(f.uploaded_at)}</span></div>
+                        <div className="lot-actions">
+                          <Button kind="secondary" onClick={() => view(f)}>View</Button>
+                          {pending && (f.uploaded_by === me.staffId || decides) && can('receive') && <Button kind="ghost" onClick={() => remove(f)}>Remove</Button>}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {!r.files.length && <Quiet icon="info">Nothing attached yet.</Quiet>}
+                {can('receive') && ['PENDING', 'APPROVED'].includes(r.status) && me.has?.files !== false && (
+                  <>
+                    <Paperwork files={files} setFiles={setFiles} kinds={kinds} needNote={false} />
+                    {files.length > 0 && <div className="inv-submit"><Button busy={busy} onClick={attach}>Attach {files.length} file{files.length === 1 ? '' : 's'}</Button></div>}
+                  </>
+                )}
+              </Card>
+
+              <Card title="What has happened">
+                <Timeline label="What has happened to this delivery" items={[
+                  ...(decided ? [{ key: 'decided', date: fmtDateTime(r.decided_at), title: decided, sub: `${r.decided_by_name}${r.decision_note ? `: “${r.decision_note}”` : ''}` }] : []),
+                  { key: 'counted', date: fmtDateTime(r.at), title: 'Counted and recorded', sub: r.by_name },
+                ]} />
+              </Card>
+
+              {pending && (decides || mine) && (
+                <Field label="Note (optional)" hint="Needed when sending a delivery back: the receiver sees it.">
+                  <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} />
+                </Field>
+              )}
+              {pending && <Quiet icon="info">Nothing is on the shelf until this is approved.</Quiet>}
+            </div>
+          </div>
         </>
       )}
-    </Sheet>
+    </Page>
   );
 }

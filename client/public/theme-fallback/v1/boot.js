@@ -1,3 +1,4 @@
+/* @hifive/tokens 1.2.5 — built 2026-11-12. Edit packages/tokens/src, not this file. */
 /* HiFive theme boot — served at /theme/v1/boot.js. Replaces hub-theme-hook.js.
  *
  * Load it SYNCHRONOUSLY in <head>, before the two stylesheet links, in every app:

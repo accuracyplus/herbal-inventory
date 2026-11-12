@@ -317,6 +317,27 @@ api('GET', '/api/me', async ({ env }, user) => {
   });
 });
 
+/**
+ * The colours, style and light or dark this person chose in HiFive ID (Design Guide Part J:
+ * the choice travels with the person). The page cannot ask HiFive ID itself, because it may
+ * only talk to this Worker, so this asks with the person's own session. Anything that goes
+ * wrong answers "not known" and the page keeps what it wears: appearance never fails a screen.
+ */
+api('GET', '/api/appearance', async ({ request, env }) => {
+  try {
+    const res = await hfidFetch(env, `/me?aud=${encodeURIComponent(env.HFID_AUDIENCE || 'inventory')}`, {
+      headers: { authorization: `Bearer ${bearerOf(request)}` },
+    });
+    if (!res.ok) return json({ known: false });
+    const me = await res.json();
+    if (!me || !('prefs' in me) || me.prefs === null || typeof me.prefs !== 'object') return json({ known: false });
+    const { skin = null, style = null, mode = null } = me.prefs;
+    return json({ known: true, prefs: { skin, style, mode } });
+  } catch {
+    return json({ known: false });
+  }
+});
+
 api('GET', '/api/today', async ({ request, env }, user) => json(await today(env, user, { bearer: bearerOf(request) })));
 
 // ── Stock ────────────────────────────────────────────────────────────────────

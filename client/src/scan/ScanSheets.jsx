@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { fmtDateTime, get, post } from '../api.js';
-import { Button, ErrorNote, Sheet, useApp } from '../ui.jsx';
+import { Note, Button, ErrorNote, Sheet, useApp } from '../ui.jsx';
 import Icon from '../icons.jsx';
 import Camera from './Camera.jsx';
 import WhichItem from './WhichItem.jsx';
@@ -138,7 +138,7 @@ export function PairSheet({ purpose, onItem, onClose }) {
               <span className="muted">Ends 15 minutes after the last scan{status.expiresAt ? ` (now ${fmtDateTime(status.expiresAt)})` : ''}.</span></p>
           </>
         )}
-        {session && !status.open && <div className="note warn"><Icon name="clock" size={18} />This pairing has ended. Close this and press Scan with phone again to start a new one.</div>}
+        {session && !status.open && <Note tone="warn" icon="clock">This pairing has ended. Close this and press Scan with phone again to start a new one.</Note>}
         <Tally rows={tally} />
       </div>
     </Sheet>

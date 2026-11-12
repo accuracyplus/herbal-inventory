@@ -11,7 +11,7 @@ import { fmtAgo, fmtMoney, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import LineEditor, { lineErrors, newLine, toPayload } from '../lines.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, Quiet, Segmented, Select, Sheet, StatusRows, Stepper, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, StatusRows, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
 import ServiceLink from './ServiceLink.jsx';
@@ -79,7 +79,7 @@ function Record({ services, word, onRecipes }) {
         {onRecipes && <div className="row"><Button icon="plus" onClick={onRecipes}>Set up the first one</Button></div>}</Card>
     );
   }
-  if (!stores.length) return <div className="note warn">You are not set up to record against any store. Ask your unit administrator.</div>;
+  if (!stores.length) return <Note tone="warn">You are not set up to record against any store. Ask your unit administrator.</Note>;
 
   // What differs from the recipe, in words, before it is saved.
   const used = new Map(lines.map((l) => [l.item.id, Number(l.qty) || 0]));
@@ -106,7 +106,7 @@ function Record({ services, word, onRecipes }) {
   if (done) {
     return (
       <Card>
-        <div className="row"><span className="row-icon tone-ok"><Icon name="check" /></span><h2 className="grow">{done.ref}: {done.times} × {done.name} recorded.</h2></div>
+        <div className="row"><span className="inv-done"><Icon name="check" /></span><h2 className="grow">{done.ref}: {done.times} × {done.name} recorded.</h2></div>
         <p className="muted">{done.differs ? 'What was used differs from the recipe. Both are kept, and the report shows the difference.' : 'Used exactly as the recipe says.'}</p>
         <div className="row"><Button onClick={() => setDone(null)}>Record another</Button></div>
       </Card>
@@ -137,7 +137,7 @@ function Record({ services, word, onRecipes }) {
         <Card title="What it used" hint="Laid out from the recipe. Change a quantity, remove what was not used, or add something else that was.">
           <LineEditor mode="out" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} pickerFilter={(i) => !i.isLinen} />
           {differs.length > 0 && (
-            <div className="note"><Icon name="help" size={18} /><div><b>Differs from the recipe</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{differs.map((d) => <li key={d}>{d}</li>)}</ul></div></div>
+            <Note icon="help"><div><b>Differs from the recipe</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{differs.map((d) => <li key={d}>{d}</li>)}</ul></div></Note>
           )}
         </Card>
       )}
@@ -163,7 +163,7 @@ function Recipes({ services, word, reload }) {
   const one = ONE[word];
   return (
     <>
-      <div className="note"><Icon name="help" size={18} /><span>A recipe is what one {one} normally uses. It fills in the form when a {one} is recorded, and it is what actual use is compared with. Changing it does not change what was already recorded.</span></div>
+      <Note icon="help"><span>A recipe is what one {one} normally uses. It fills in the form when a {one} is recorded, and it is what actual use is compared with. Changing it does not change what was already recorded.</span></Note>
       <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => setEditing({ code: '', name: '', items: [], active: 1 })}>New {one}</Button></div>
       <Card pad={false}>
         <Table rows={services} onRow={setEditing} empty={`No ${word.toLowerCase()} yet. Add one with what it normally uses.`} columns={[
@@ -172,7 +172,7 @@ function Recipes({ services, word, reload }) {
           ...(can('cost.view') ? [
             { key: 'stdCost', label: 'Cost of one', align: 'right', render: (s) => fmtMoney(s.stdCost, currency) },
             { key: 'price', label: 'Usual price', align: 'right', render: (s) => (s.price === null || s.price === undefined ? <span className="faint">not set</span> : fmtMoney(s.price, currency)) },
-            { key: 'margin', label: 'Margin', align: 'right', render: (s) => (s.margin === undefined ? '—' : fmtMoney(s.margin, currency)) },
+            { key: 'margin', label: 'Margin', align: 'right', render: (s) => (s.margin === undefined ? '' : fmtMoney(s.margin, currency)) },
           ] : []),
         ]} />
       </Card>
@@ -207,7 +207,7 @@ function RecipeSheet({ s, one, onClose, onSaved }) {
       <Card title={`What one ${one} normally uses`} hint="In each item's own unit. Part of a bottle is a decimal: a quarter of a bottle is 0.25.">
         <LineEditor mode="request" items={stock.items} lines={lines} setLines={setLines} pickerFilter={(i) => !i.isLinen} />
       </Card>
-      {gone.length > 0 && <div className="note warn"><Icon name="alert" size={18} /><span>{gone.map((i) => i.name).join(', ')} {gone.length === 1 ? 'has' : 'have'} been retired and {gone.length === 1 ? 'is' : 'are'} left out. Saving removes {gone.length === 1 ? 'it' : 'them'} from this recipe.</span></div>}
+      {gone.length > 0 && <Note tone="warn" icon="alert"><span>{gone.map((i) => i.name).join(', ')} {gone.length === 1 ? 'has' : 'have'} been retired and {gone.length === 1 ? 'is' : 'are'} left out. Saving removes {gone.length === 1 ? 'it' : 'them'} from this recipe.</span></Note>}
       {s.id && <Check checked={!f.active} onChange={(v) => setF({ ...f, active: !v })}>No longer offered — it cannot be recorded, and stays in the reports</Check>}
       <ErrorNote error={err} />
     </Sheet>

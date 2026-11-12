@@ -170,6 +170,33 @@ the name is HiFive ID's); with HiFive ID unreachable the typed code stands and t
 Tokens must carry `module: inventory` and `aud: hifive-inventory`. "Can access" with no seat here
 gives `HFID_GRANT_ROLE` (STAFF) in the unit matching the HiFive ID entity; never Unit admin.
 
+## 4a. The client and the HiFive design system
+
+The client was moved onto the HiFive design system on 12 November 2026 (Design Guide Part T;
+the record is `hifive-design/docs/adoption/inventory.md`).
+
+- **Theme.** `index.html` loads the tokens and their boot script from the design system's site
+  (`/theme/v1/`), with a local copy in `client/public/theme-fallback` if that site is down.
+  Until a person has chosen a look, Inventory wears Air, Lit, light: the look its screens were
+  approved in.
+- **Controls.** Every button, field, chip, table, sheet and tile is `@hifive/ui`. The library
+  is private and has no registry, so its built files are copied into `client/vendor/hifive-ui`
+  and committed (`npm run sync-ui` in `client`, after building the library in `hifive-design`).
+  `client/src/ui.jsx` fits the library to how the screens ask for things (an icon by name, a
+  status by its code); it has no look of its own. `client/src/styles.css` is the shell, the
+  page and card frame, and a few arrangements only this app has (a list of lines, the camera).
+- **Icons** are lucide, through `client/src/icons.jsx`, asked for by what they mean here.
+- **The person's choice of colours and dark mode** is made in HiFive ID. The page may only talk
+  to this Worker, so `GET /api/appearance` asks HiFive ID's `/me` with the person's own session
+  and `client/src/appearance.js` wears the answer, at sign-in and when the tab comes back into
+  view. Anything that goes wrong leaves the page as it is.
+- **Shell.** A side menu on a computer (sixteen places in four groups do not fit a top bar); a
+  top bar and five tabs on a phone, the fifth opening everything else.
+- **Still to do** from the adoption's own audit: the app logo (a lucide icon stands in until the
+  logo family has a symbol for Inventory); windows that open over another window (scanning from
+  inside a sheet), which the guide does not allow; and, on the screens that were not prototyped,
+  a few main buttons that are still disabled until the form is complete.
+
 ## 5. Things deliberately not done
 
 - **No ranking of people or units** (Design Guide rule 5). Cost per person (`cost.people`:

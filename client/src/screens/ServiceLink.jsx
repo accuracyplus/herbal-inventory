@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { API, fmtDateTime, post } from '../api.js';
 import Icon from '../icons.jsx';
-import { Button, Card, ErrorNote, Field, Loading, Pill, Quiet, Select, useApp, useData } from '../ui.jsx';
+import { Button, Card, ErrorNote, Field, Loading, Note, Pill, Quiet, Select, useApp, useData } from '../ui.jsx';
 
 const RESULT = { ready: ['ok', 'Ready'], recorded: ['ok', 'Recorded'], duplicate: ['faint', 'Already recorded'], dismissed: ['faint', 'Dismissed'], problem: ['danger', 'Problem'], failed: ['danger', 'Waiting'], refused: ['danger', 'Refused'] };
 
@@ -130,12 +130,12 @@ function Sheet({ word, onRecorded }) {
         <ErrorNote error={err} />
         {report && (
           <>
-            <dl className="kv">
+            <dl className="hf-kv hf-kv--3">
               <div><dt>{report.dryRun ? 'Ready' : 'Recorded'}</dt><dd>{report.dryRun ? report.ready : report.recorded}</dd></div>
               <div><dt>Already recorded</dt><dd>{report.duplicates}</dd></div>
               <div><dt>{report.dryRun ? 'Problems' : 'Waiting'}</dt><dd className={(report.dryRun ? report.problems : report.failed) ? 'tone-txt-CRITICAL' : ''}>{report.dryRun ? report.problems : report.failed}</dd></div>
             </dl>
-            {report.short?.length > 0 && <div className="note warn"><Icon name="alert" size={18} /><div><b>Not enough on the shelf for all of these</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{report.short.map((s) => <li key={s}>{s}</li>)}</ul>The rows that fit are recorded; the rest wait above until stock is received.</div></div>}
+            {report.short?.length > 0 && <Note tone="warn" icon="alert"><div><b>Not enough on the shelf for all of these</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{report.short.map((s) => <li key={s}>{s}</li>)}</ul>The rows that fit are recorded; the rest wait above until stock is received.</div></Note>}
             {shown.length > 0 && (
               <ul className="lots">
                 {shown.slice(0, 100).map((r) => (
@@ -193,11 +193,11 @@ function Keys() {
           </ul>
         )}
         {made && (
-          <div className="note warn"><Icon name="alert" size={18} /><div className="min0 stack" style={{ gap: 8 }}>
+          <Note tone="warn" icon="alert"><div className="min0 stack" style={{ gap: 8 }}>
             <b>The key for {made.name}. It will not be shown again.</b>
             <code style={{ overflowWrap: 'anywhere' }}>{made.key}</code>
             <div className="row"><Button kind="secondary" onClick={() => copy(made.key)}>Copy the key</Button><Button kind="ghost" onClick={() => setMade(null)}>I have stored it</Button></div>
-          </div></div>
+          </div></Note>
         )}
         <div className="form two">
           <Field label="New connection" hint="The name of the system it is for."><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Front desk billing" maxLength={60} /></Field>

@@ -1,3 +1,4 @@
+/* @hifive/tokens 1.2.5 — built 2026-11-12. Edit packages/tokens/src, not this file. */
 /* ============================================================
    HiFive design tokens — shared by HiFive ID and every app in the hub
    ------------------------------------------------------------
@@ -138,6 +139,7 @@
   --primary: rgb(var(--brand-600));
   --primary-hover: rgb(var(--brand-700));
   --primary-soft: rgb(var(--brand-50));
+  --primary-text: rgb(var(--brand-600));   /* the brand colour as text on a surface */
   --on-primary: #ffffff;
   --accent: rgb(var(--pop-600));
   --accent-soft: rgb(var(--pop-50));
@@ -157,6 +159,7 @@
   --primary: rgb(var(--brand-400));
   --primary-hover: rgb(var(--brand-300));
   --primary-soft: rgb(var(--brand-900) / .4);
+  --primary-text: rgb(var(--brand-200));
   --accent: rgb(var(--pop-400));
   --accent-soft: rgb(var(--pop-900) / .35);
   --attention: rgb(var(--coral-400));
@@ -186,6 +189,14 @@
 :root { --on-attention: #ffffff; }
 :root[data-skin="sol"] { --on-primary: rgb(var(--ink-950)); }
 :root[data-skin="fire"], :root[data-skin="aadi"] { --attention: rgb(var(--coral-700)); }
+/* --primary-text is the brand colour used as text (links, quiet buttons, the
+   selected chip). --primary is a fill and is too light to read as text in Air
+   and Sol, and in dark in most palettes (acceptance audit, 11 Nov 2026). Light:
+   brand-600, one step darker in Air, two in Sol. Dark: brand-200 everywhere. */
+:root[data-skin="air"] { --primary-text: rgb(var(--brand-700)); }
+:root[data-skin="sol"] { --primary-text: rgb(var(--brand-800)); }
+:root[data-skin="air"][data-theme="dark"], :root[data-skin="air"].dark,
+:root[data-skin="sol"][data-theme="dark"], :root[data-skin="sol"].dark { --primary-text: rgb(var(--brand-200)); }
 
 :root[data-skin="water"][data-theme="dark"], :root[data-skin="water"].dark,
 :root[data-skin="earth"][data-theme="dark"], :root[data-skin="earth"].dark,

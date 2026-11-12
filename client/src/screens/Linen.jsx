@@ -47,10 +47,10 @@ export default function Linen() {
               {r.in_wash > 0 && <p className="muted" style={{ fontSize: 13 }}>Last back from the laundry: {r.last_back ? fmtAgo(r.last_back) : 'never'}</p>}
               {can('stock.use') && (
                 <div className="row">
-                  <Button className="sm" kind="secondary" disabled={!r.available} onClick={() => setMove({ row: r, flow: 'ISSUE' })}>To room</Button>
-                  <Button className="sm" kind="secondary" disabled={!r.in_use} onClick={() => setMove({ row: r, flow: 'WASH' })}>To laundry</Button>
-                  <Button className="sm" kind="secondary" disabled={!r.in_wash} onClick={() => setMove({ row: r, flow: 'RETURN' })}>Back clean</Button>
-                  <button className="icon-btn sm" aria-label={`More for ${r.name}`} onClick={() => setMove({ row: r, flow: null })}><Icon name="more" size={18} /></button>
+                  <Button kind="secondary" disabled={!r.available} onClick={() => setMove({ row: r, flow: 'ISSUE' })}>To room</Button>
+                  <Button kind="secondary" disabled={!r.in_use} onClick={() => setMove({ row: r, flow: 'WASH' })}>To laundry</Button>
+                  <Button kind="secondary" disabled={!r.in_wash} onClick={() => setMove({ row: r, flow: 'RETURN' })}>Back clean</Button>
+                  <button className="icon-btn" aria-label={`More for ${r.name}`} onClick={() => setMove({ row: r, flow: null })}><Icon name="more" size={18} /></button>
                 </div>
               )}
             </Card>

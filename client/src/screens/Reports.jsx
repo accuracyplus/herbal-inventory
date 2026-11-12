@@ -36,23 +36,23 @@ export default function Reports() {
   const { lists } = useApp();
 
   return (
-    <Page title="Reports" subtitle="Download any table as CSV for Excel.">
+    <Page title="Reports" subtitle="What was used, bought and held, and what it cost. Any table downloads as a sheet.">
       <Segmented label="Report" value={tab} onChange={setTab} options={tabs.map(([v, l]) => ({ value: v, label: v === 'services' ? word : l }))} />
       {RANGED.includes(tab) && (
-        <Card>
-          <div className="row">
+        <div className="stack" style={{ gap: 4 }}>
+          <div className="form three" style={{ maxWidth: 760 }}>
             <Field label="From"><input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} /></Field>
             <Field label="To"><input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} /></Field>
             {BY_STORE.includes(tab) && (
               <Field label="Store"><Select value={storeId} onChange={setStoreId} placeholder="All stores" options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
             )}
-            <div className="row" style={{ alignSelf: 'flex-end' }}>
-              {[[7, '7 days'], [30, '30 days'], [90, '90 days']].map(([d, l]) => <Button key={d} kind="ghost" className="sm" onClick={() => { setFrom(gstToday(-(d - 1))); setTo(gstToday()); }}>{l}</Button>)}
-            </div>
           </div>
-        </Card>
+          <div className="row">
+            {[[7, 'Last 7 days'], [30, 'Last 30 days'], [90, 'Last 90 days']].map(([d, l]) => <Button key={d} kind="ghost" onClick={() => { setFrom(gstToday(-(d - 1))); setTo(gstToday()); }}>{l}</Button>)}
+          </div>
+        </div>
       )}
-      {tab === 'group' && <Card><div className="row"><Field label="Month"><input type="month" value={month} max={gstToday().slice(0, 7)} onChange={(e) => e.target.value && setMonth(e.target.value)} /></Field></div></Card>}
+      {tab === 'group' && <div className="form three" style={{ maxWidth: 760 }}><Field label="Month"><input type="month" value={month} max={gstToday().slice(0, 7)} onChange={(e) => e.target.value && setMonth(e.target.value)} /></Field></div>}
       <ErrorNote error={error} onRetry={reload} />
       {loading && <Loading />}
       {data && !loading && (
@@ -90,7 +90,7 @@ export function Bars({ rows, value = 'value', label = 'name', fmt }) {
   );
 }
 
-const Csv = ({ name, rows, cols }) => (rows?.length ? <Button kind="ghost" className="sm" icon="download" onClick={() => downloadCsv(`${name}.csv`, rows, cols)}>CSV</Button> : null);
+const Csv = ({ name, rows, cols }) => (rows?.length ? <Button kind="ghost" icon="download" onClick={() => downloadCsv(`${name}.csv`, rows, cols)}>Sheet</Button> : null);
 
 function Consumption({ d }) {
   const { can, currency } = useApp();
@@ -157,7 +157,7 @@ function ServiceUse({ d, word }) {
             { key: 'revenue', label: 'Charged', align: 'right', sortable: false, render: (r) => m(r.revenue) },
             { key: 'cost', label: 'Used', align: 'right', sortable: false, render: (r) => m(r.cost) },
             { key: 'margin', label: 'Margin', align: 'right', sortable: false, render: (r) => <b>{m(r.margin)}</b> },
-            { key: 'percent', label: '%', align: 'right', sortable: false, render: (r) => (r.percent === null ? '—' : `${r.percent}%`) },
+            { key: 'percent', label: '%', align: 'right', sortable: false, render: (r) => (r.percent === null ? '' : `${r.percent}%`) },
           ]} />
           {d.unpriced > 0 && <p className="muted" style={{ padding: '0 18px 14px' }}>{d.unpriced} more {d.unpriced === 1 ? 'was' : 'were'} recorded with no price, and {d.unpriced === 1 ? 'is' : 'are'} left out of the margin.</p>}
         </Card>
@@ -208,7 +208,7 @@ function Group({ d }) {
   const title = new Date(`${d.month}-01T00:00:00+04:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Asia/Dubai' });
   return (
     <>
-      <dl className="kv">
+      <dl className="hf-kv hf-kv--3">
         <div><dt>Used</dt><dd>{m(d.totals.used)}</dd></div>
         <div><dt>Received</dt><dd>{m(d.totals.received)}</dd></div>
         <div><dt>Written off</dt><dd>{m(d.totals.writtenOff)}</dd></div>
@@ -242,7 +242,7 @@ function Valuation({ d }) {
       {money && (
         <div className="grid2">
           <Card title="By category" hint="Shelves, rooms and laundry, at weighted average cost."><Bars rows={d.byCategory} fmt={(v) => fmtMoney(v, currency, 0)} /></Card>
-          <Card title="By store"><p className="tile-value">{fmtMoney(d.total, currency, 0)}</p><Bars rows={d.byStore} fmt={(v) => fmtMoney(v, currency, 0)} /></Card>
+          <Card title="By store"><p className="inv-number">{fmtMoney(d.total, currency, 0)}</p><Bars rows={d.byStore} fmt={(v) => fmtMoney(v, currency, 0)} /></Card>
         </div>
       )}
       <Card title="On hand" pad={false} actions={<Csv name={`stock-value-${gstToday()}`} rows={d.rows} />}>
@@ -250,8 +250,8 @@ function Valuation({ d }) {
           { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code> · {r.category}</span></span> },
           { key: 'store', label: 'Store' },
           { key: 'qty', label: 'Shelf', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
-          { key: 'out', label: 'Rooms / laundry', align: 'right', render: (r) => (r.in_use || r.in_wash ? `${fmtQty(r.in_use)} / ${fmtQty(r.in_wash)}` : '—') },
-          { key: 'with_people', label: 'With people', align: 'right', render: (r) => (r.with_people ? fmtQty(r.with_people) : '—') },
+          { key: 'out', label: 'Rooms / laundry', align: 'right', render: (r) => (r.in_use || r.in_wash ? `${fmtQty(r.in_use)} / ${fmtQty(r.in_wash)}` : '') },
+          { key: 'with_people', label: 'With people', align: 'right', render: (r) => (r.with_people ? fmtQty(r.with_people) : '') },
           ...(money ? [{ key: 'avg_cost', label: 'Avg cost', align: 'right', render: (r) => fmtMoney(r.avg_cost, currency) }, { key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
         ]} />
       </Card>
@@ -268,8 +268,8 @@ function Expiry({ d }) {
       <Table rows={rows} rowKey={(r, i) => `${r.code}-${r.store}-${r.batch_no}-${i}`} empty="Nothing is expired, close to expiry, or missing a date." columns={[
         { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code>{r.batch_no ? ` · lot ${r.batch_no}` : ''}</span></span> },
         { key: 'store', label: 'Store' },
-        { key: 'expiry', label: 'Expiry', sort: (r) => r.expiry || '9999', render: (r) => <span className="row">{r.expiry ? fmtDate(r.expiry) : '—'}<Pill status={r.state} /></span> },
-        { key: 'days', label: 'Days', align: 'right', render: (r) => (r.days === null ? '—' : r.days) },
+        { key: 'expiry', label: 'Expiry', sort: (r) => r.expiry || '9999', render: (r) => <span className="row">{r.expiry ? fmtDate(r.expiry) : ''}<Pill status={r.state} /></span> },
+        { key: 'days', label: 'Days', align: 'right', render: (r) => (r.days === null ? '' : r.days) },
         { key: 'qty', label: 'Qty', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
         ...(can('cost.view') ? [{ key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
       ]} />

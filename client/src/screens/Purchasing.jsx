@@ -7,9 +7,9 @@ import { fmtDate, fmtDateTime, fmtMoney, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import LineEditor, { newLine, toPayload } from '../lines.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
-import { Deliveries, DeliveryPill, ReceiptSheet } from './Deliveries.jsx';
+import { Deliveries, DeliveryPage, DeliveryPill } from './Deliveries.jsx';
 
 export default function Purchasing() {
   const { route, navigate, can } = useApp();
@@ -17,6 +17,9 @@ export default function Purchasing() {
   const [status, setStatus] = useState(route.query.get('status') || 'OPEN');
   const [editing, setEditing] = useState(null);
   const { data, error, loading, reload } = useData(tab === 'orders' ? `/api/pos${status ? `?status=${status}` : ''}` : null, [status, tab]);
+
+  // A delivery is a page of its own, not a window over the list.
+  if (route.id === 'd' && route.sub) return <DeliveryPage id={route.sub} onClose={() => navigate('purchasing?tab=deliveries')} />;
 
   return (
     <Page title="Purchasing" subtitle="Reorder suggestions, purchase orders and suppliers."
@@ -39,7 +42,7 @@ export default function Purchasing() {
               <Table rows={data} onRow={(p) => navigate(`purchasing/${p.id}`)} empty="No purchase orders here." columns={[
                 { key: 'ref', label: 'Order', primary: true, render: (p) => <span className="min0"><span className="row-label">{p.ref}</span><span className="row-sub">{p.supplier_name} · {p.line_count} line{p.line_count === 1 ? '' : 's'}</span></span> },
                 { key: 'store_name', label: 'Deliver to' },
-                { key: 'expected_date', label: 'Expected', render: (p) => (p.expected_date ? fmtDate(p.expected_date) : '—') },
+                { key: 'expected_date', label: 'Expected', render: (p) => (p.expected_date ? fmtDate(p.expected_date) : '') },
                 { key: 'total', label: 'Total', align: 'right', render: (p) => fmtMoney(p.total) },
                 { key: 'status', label: 'Status', render: (p) => <Pill status={p.status} /> },
               ]} />
@@ -49,7 +52,6 @@ export default function Purchasing() {
       )}
       {tab === 'suggest' && <Suggestions onDraft={(prefill) => { setEditing(prefill); setTab('orders'); }} />}
       {tab === 'suppliers' && <Suppliers />}
-      {route.id === 'd' && route.sub && <ReceiptSheet id={route.sub} onClose={() => navigate('purchasing?tab=deliveries')} />}
       {route.id && route.id !== 'd' && <PoSheet id={route.id} onClose={() => navigate('purchasing')} onChanged={reload} onEdit={(po) => setEditing(po)} />}
       {editing && <PoEditor po={editing} onClose={() => setEditing(null)} onSaved={(id) => { setEditing(null); reload(); navigate(`purchasing/${id}`); }} />}
     </Page>
@@ -75,7 +77,7 @@ function Suggestions({ onDraft }) {
       {loading && <Loading />}
       {data && !data.length && <Card><Quiet>Nothing needs ordering for this store.</Quiet></Card>}
       {Object.entries(bySupplier).map(([sid, g]) => (
-        <Card key={sid} title={g.name} actions={stock && <Button className="sm" icon="purchasing" onClick={() => onDraft({
+        <Card key={sid} title={g.name} actions={stock && <Button icon="purchasing" onClick={() => onDraft({
           supplier_id: sid || '', store_id: storeId,
           lines: g.rows.map((r) => ({ item_id: r.item_id, qty: r.suggest, unit_cost: r.unit_cost })),
         })}>Draft an order</Button>}>
@@ -125,7 +127,7 @@ function PoEditor({ po, onClose, onSaved }) {
         <Field label="Expected by"><input type="date" value={expected} onChange={(e) => setExpected(e.target.value)} /></Field>
         <Field label="Note to supplier"><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Optional" /></Field>
       </div>
-      {suppliers && !suppliers.length && <div className="note warn"><Icon name="alert" size={18} />Add a supplier first, on the Suppliers tab.</div>}
+      {suppliers && !suppliers.length && <Note tone="warn" icon="alert">Add a supplier first, on the Suppliers tab.</Note>}
       <LineEditor mode="po" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} showCost currency={currency} />
       <ErrorNote error={err} />
     </Sheet>
@@ -181,7 +183,7 @@ function PoSheet({ id, onClose, onChanged, onEdit }) {
               <ul className="timeline">{po.receipts.map((r) => <li key={r.id}><span><button className="link" onClick={() => navigate(`purchasing/d/${r.id}`)}><b>{r.ref}</b></button> · {fmtMoney(r.total, currency)}{r.invoice_no ? ` · invoice ${r.invoice_no}` : ''} {r.status === 'PENDING' && <DeliveryPill status={r.status} />}<span className="row-sub">{r.by_name}, {fmtDateTime(r.at)}</span></span></li>)}</ul>
             </Card>
           )}
-          {po.status === 'SUBMITTED' && can('po.decide') && mine && <div className="note"><Icon name="alert" size={18} />You raised this order, so another manager approves it — unless you are the only one.</div>}
+          {po.status === 'SUBMITTED' && can('po.decide') && mine && <Note icon="alert">You raised this order, so another manager approves it — unless you are the only one.</Note>}
           {(['SUBMITTED', 'PARTLY_RECEIVED'].includes(po.status) || ['DRAFT', 'APPROVED'].includes(po.status)) && (
             <Field label="Note" hint="Required when sending back or closing short."><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} /></Field>
           )}
@@ -232,9 +234,9 @@ function Suppliers() {
         <Card pad={false}>
           <Table rows={data} onRow={can('supplier.edit') ? setEditing : undefined} empty="No suppliers yet." columns={[
             { key: 'name', label: 'Supplier', primary: true, render: (s) => <span className="min0"><span className="row-label">{s.name} {!s.active && <Pill tone="faint">Inactive</Pill>}</span><span className="row-sub">{[s.contact, s.phone, s.email].filter(Boolean).join(' · ')}</span></span> },
-            { key: 'terms', label: 'Terms', render: (s) => s.terms || '—' },
+            { key: 'terms', label: 'Terms', render: (s) => s.terms || '' },
             { key: 'item_count', label: 'Items', align: 'right' },
-            { key: 'last_delivery', label: 'Last delivery', render: (s) => (s.last_delivery ? fmtDate(s.last_delivery) : '—') },
+            { key: 'last_delivery', label: 'Last delivery', render: (s) => (s.last_delivery ? fmtDate(s.last_delivery) : '') },
           ]} />
         </Card>
       )}

@@ -121,7 +121,9 @@ Register a new HiFive module: Inventory.
 
 - App key "inventory". Tokens for it carry module "inventory" and audience "hifive-inventory",
   issuer "hifive-id", with emp_code, name, role and entity claims — the same shape as Transport.
-- Allowed redirect: https://hifive-inventory.pages.dev/ (and http://localhost:5173/ for dev).
+- Allowed redirect: https://hifive-inventory.pages.dev/ only. (HiFive ID lets no app receive a
+  sign-in on localhost; on this PC, try changes with test/serve.mjs, which signs in with test
+  tokens and never asks HiFive ID.)
 - /login?app=inventory&provider=microsoft|google must work, and the one-time hand-off code must
   be swappable at POST /token/exchange with { code, app: "inventory" }, as for Transport. Set
   "handoff": "code" on the inventory entry in APPS_JSON from the start: Inventory's Worker swaps

@@ -204,7 +204,7 @@ function PoSheet({ id, onClose, onChanged, onEdit }) {
             <dt>Deliver to</dt><dd>{po.store_name}</dd>
             {po.expected_date && <><dt>Expected</dt><dd>{fmtDate(po.expected_date)}</dd></>}
             <dt>Raised</dt><dd>{po.created_by_name}, {fmtDateTime(po.created_at)}</dd>
-            {po.decided_at && <><dt>{po.status === 'REJECTED' ? 'Sent back' : 'Approved'}</dt><dd>{po.decided_by_name}, {fmtDateTime(po.decided_at)}{po.decision_note ? ` — “${po.decision_note}”` : ''}</dd></>}
+            {po.decided_at && <><dt>{po.status === 'REJECTED' ? 'Sent back' : 'Approved'}</dt><dd>{po.decided_by_name}, {fmtDateTime(po.decided_at)}{po.decision_note ? `: “${po.decision_note}”` : ''}</dd></>}
             {po.note && <><dt>Note</dt><dd>{po.note}</dd></>}
           </dl>
           <Card pad={false}>
@@ -237,7 +237,7 @@ function PoSheet({ id, onClose, onChanged, onEdit }) {
               <ul className="timeline">{po.emails.map((e) => <li key={e.at}><span><b>{e.status === 'SENT' ? `Emailed to ${e.to_email}` : `Not sent to ${e.to_email}`}</b>{e.cc ? `, copy to ${e.cc}` : ''}<span className="row-sub">{e.by_name}, {fmtDateTime(e.at)}{e.error ? `. ${e.error}` : ''}</span></span></li>)}</ul>
             </Card>
           )}
-          {po.status === 'SUBMITTED' && can('po.decide') && mine && <Note icon="alert">You raised this order, so another manager approves it — unless you are the only one.</Note>}
+          {po.status === 'SUBMITTED' && can('po.decide') && mine && <Note icon="alert">You raised this order, so another manager approves it, unless you are the only one.</Note>}
           {(['SUBMITTED', 'PARTLY_RECEIVED'].includes(po.status) || ['DRAFT', 'APPROVED'].includes(po.status)) && (
             <Field label="Note" hint="Required when sending back or closing short."><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} /></Field>
           )}

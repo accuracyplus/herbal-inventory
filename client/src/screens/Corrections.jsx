@@ -52,6 +52,8 @@ function Raise({ onClose, onDone }) {
   // Lines are entered as positive numbers when the reason can only take away, and signed otherwise.
   const errors = lineErrors(lines, takesAway ? 'out' : 'adjust', storeId);
   const save = async () => {
+    const missing = [...(!lines.length ? ['at least one item'] : []), ...(takesAway && Object.keys(errors).length ? ['a quantity the store has, on the marked lines'] : [])];
+    if (missing.length) { setErr(new Error(`Still needed: ${missing.join(', ')}.`)); return; }
     setBusy(true); setErr(null);
     try {
       const payload = toPayload(lines).map((l) => ({ ...l, qty: takesAway ? -Math.abs(l.qty) : reason === 'FOUND' ? Math.abs(l.qty) : l.qty }));
@@ -61,7 +63,7 @@ function Raise({ onClose, onDone }) {
   };
   return (
     <Sheet wide title="New correction" onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} disabled={!lines.length || Object.keys(errors).length > 0} onClick={save}>Send for approval</Button></>}>
+      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Send for approval</Button></>}>
       <div className="form two">
         <Field label="Store"><Select value={storeId} onChange={setStoreId} options={mine.map((s) => ({ value: s.id, label: s.name }))} /></Field>
         <Field label="Reason"><Select value={reason} onChange={setReason} options={Object.entries(me.labels.reasons).map(([k, v]) => ({ value: k, label: v }))} /></Field>
@@ -93,7 +95,7 @@ function AdjSheet({ id, onClose, onChanged }) {
     <Sheet wide title={a ? `${a.ref} · ${a.reason_label}` : 'Correction'} onClose={onClose}
       footer={a && pending && <>
         {mine && <Button kind="ghost" busy={busy} onClick={() => act('CANCEL', 'Withdrawn')}>Withdraw</Button>}
-        {can('adjust.decide') && <><Button kind="secondary" busy={busy} onClick={() => act('REJECT', 'Rejected')}>Reject</Button><Button busy={busy} onClick={() => act('APPROVE', 'Approved — stock corrected')}>Approve</Button></>}
+        {can('adjust.decide') && <><Button kind="secondary" busy={busy} onClick={() => act('REJECT', 'Rejected')}>Reject</Button><Button busy={busy} onClick={() => act('APPROVE', 'Approved. Stock corrected')}>Approve</Button></>}
       </>}>
       <ErrorNote error={error} />
       {loading && <Loading />}
@@ -104,7 +106,7 @@ function AdjSheet({ id, onClose, onChanged }) {
             <dt>Store</dt><dd>{a.store_name}</dd>
             <dt>Raised by</dt><dd>{a.requested_by_name}, {fmtDateTime(a.requested_at)}</dd>
             {a.note && <><dt>What happened</dt><dd>{a.note}</dd></>}
-            {a.decided_at && <><dt>Decided</dt><dd>{a.decided_by_name || a.requested_by_name}, {fmtDateTime(a.decided_at)}{a.decision_note ? ` — “${a.decision_note}”` : ''}</dd></>}
+            {a.decided_at && <><dt>Decided</dt><dd>{a.decided_by_name || a.requested_by_name}, {fmtDateTime(a.decided_at)}{a.decision_note ? `: “${a.decision_note}”` : ''}</dd></>}
           </dl>
           <Card pad={false}>
             <Table rows={a.lines} columns={[
@@ -114,7 +116,7 @@ function AdjSheet({ id, onClose, onChanged }) {
               ...(can('cost.view') ? [{ key: 'v', label: 'Value', align: 'right', render: (l) => fmtMoney(l.qty * (l.avg_cost || 0), currency) }] : []),
             ]} />
           </Card>
-          {pending && can('adjust.decide') && mine && <Note icon="alert">You raised this, so another manager approves it — unless you are the only one.</Note>}
+          {pending && can('adjust.decide') && mine && <Note icon="alert">You raised this, so another manager approves it, unless you are the only one.</Note>}
           {pending && (can('adjust.decide') || mine) && <Field label="Note" hint="Required when rejecting."><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} /></Field>}
           <ErrorNote error={err} />
         </>

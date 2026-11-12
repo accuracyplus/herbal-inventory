@@ -34,7 +34,7 @@ function Tally({ rows }) {
       {rows.map((r) => (
         <li key={`${r.id}-${r.ok}`} className={r.ok ? '' : 'tone-txt-CRITICAL'}>
           <Icon name={r.ok ? 'check' : 'alert'} size={16} />
-          <span className="grow">{r.name}{r.ok ? '' : ' — not on this list'}</span>
+          <span className="grow">{r.name}{r.ok ? '' : ' (not on this list)'}</span>
           <b>{r.n > 1 ? `×${r.n}` : ''}</b>
         </li>
       ))}

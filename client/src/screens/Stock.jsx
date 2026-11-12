@@ -81,8 +81,10 @@ export default function Stock() {
         </span>
       );
     } }] : []),
-    { key: 'status', label: 'Status', sort: (it) => ['OUT', 'CRITICAL', 'LOW', 'OK'].indexOf(qtyFor(it)?.status || it.status), render: (it) => <Pill status={qtyFor(it)?.status || it.status} /> },
-    { key: 'nextExpiry', label: 'Next expiry', render: (it) => (it.nextExpiry ? <Pill status={it.expiry}>{fmtDate(it.nextExpiry)}</Pill> : '') },
+    // A status chip does not wrap, so its column never narrows below the chip (it ran into
+    // the next column at 1024 wide).
+    { key: 'status', label: 'Status', width: 'minmax(min-content, 1fr)', sort: (it) => ['OUT', 'CRITICAL', 'LOW', 'OK'].indexOf(qtyFor(it)?.status || it.status), render: (it) => <Pill status={qtyFor(it)?.status || it.status} /> },
+    { key: 'nextExpiry', label: 'Next expiry', width: 'minmax(min-content, 1fr)', render: (it) => (it.nextExpiry ? <Pill status={it.expiry}>{fmtDate(it.nextExpiry)}</Pill> : '') },
     ...(can('cost.view') ? [{ key: 'value', label: 'Value', align: 'right', render: (it) => fmtMoney(it.value, currency) }] : []),
   ];
 
@@ -244,13 +246,13 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
         <Field label="Code" hint="Short and unique in this unit. Letters, numbers, dash."><input value={f.code} onChange={(e) => set('code', e.target.value.toUpperCase())} placeholder="OIL-DHAN-450" /></Field>
         <Field label="Category"><input value={f.category} onChange={(e) => set('category', e.target.value)} placeholder="Oils" list="cat-list" /></Field>
         <Field label="Counted in" hint="The unit people count and use: bottle, box, kg, pcs."><input value={f.uom} onChange={(e) => set('uom', e.target.value)} /></Field>
-        <Field label="Barcode"><input value={f.barcode} onChange={(e) => set('barcode', e.target.value)} placeholder="Optional — scan into this box" /></Field>
+        <Field label="Barcode"><input value={f.barcode} onChange={(e) => set('barcode', e.target.value)} placeholder="Optional: scan into this box" /></Field>
         <Field label="Usual supplier"><Select value={f.supplierId} onChange={(v) => set('supplierId', v)} placeholder="None" options={(suppliers || []).map((s) => ({ value: s.id, label: s.name }))} /></Field>
         {!item?.id && can('cost.view') && <Field label={`Starting cost (${currency})`} hint="Optional. Receipts set the average cost from then on."><QtyInput value={f.unitCost} onChange={(v) => set('unitCost', v)} label="Starting cost" /></Field>}
         <div className="span2 stack" style={{ gap: 6 }}>
-          <Check checked={f.tracksExpiry} onChange={(v) => set('tracksExpiry', v)}>Track batches and expiry dates <span className="muted">— oils, medicines, creams</span></Check>
-          <Check checked={f.isLinen} onChange={(v) => set('isLinen', v)}>This is linen <span className="muted">— towels and sheets go to rooms and the laundry and come back</span></Check>
-          {item?.id && <Check checked={!f.active} onChange={(v) => set('active', !v)}>Retire this item <span className="muted">— it stays in the records but cannot be used or ordered</span></Check>}
+          <Check checked={f.tracksExpiry} onChange={(v) => set('tracksExpiry', v)}>Track batches and expiry dates<span className="muted">: oils, medicines, creams</span></Check>
+          <Check checked={f.isLinen} onChange={(v) => set('isLinen', v)}>This is linen<span className="muted">: towels and sheets go to rooms and the laundry and come back</span></Check>
+          {item?.id && <Check checked={!f.active} onChange={(v) => set('active', !v)}>Retire this item<span className="muted">: it stays in the records but cannot be used or ordered</span></Check>}
         </div>
         {lab && (
           <>

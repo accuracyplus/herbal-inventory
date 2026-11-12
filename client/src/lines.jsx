@@ -89,7 +89,9 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
         const here = l.item.stores?.find((s) => s.storeId === storeId);
         const what = withNote ? 'Counted' : mode === 'adjust' ? 'Change' : 'How much';
         const packs = mode === 'in' || mode === 'po' ? buyPacks(l.item, supplierId) : [];
-        const unit = l.pack ? l.pack.label : l.item.uom;
+        // In the stepper, a pack is its first word ("carton"): "Carton of 24" pushed a phone's
+        // line past the screen at 320 wide. "Written in" beside it says the whole pack.
+        const unit = l.pack ? l.pack.label.split(/\s+/)[0].toLowerCase().slice(0, 10) : l.item.uom;
         const choosePack = (id) => {
           const pack = packs.find((p) => p.id === id) || null;
           const was = l.pack?.factor || 1;

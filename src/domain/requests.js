@@ -97,7 +97,7 @@ export async function decideRequest(env, user, id, body) {
   const now = nowIso();
   const note = text(body.note, 500);
   if (body.action === 'REJECT') {
-    if (!note) refuse('REASON_REQUIRED', 'Say why the request is being rejected — the person who asked will see it.');
+    if (!note) refuse('REASON_REQUIRED', 'Say why the request is being rejected. The person who asked will see it.');
     await commit(env, [
       env.DB.prepare(
         `UPDATE requests SET status = 'REJECTED', decided_by = ?, decided_by_name = ?, decided_at = ?, decision_note = ?, closed_at = ?

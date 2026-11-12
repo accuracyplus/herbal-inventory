@@ -98,13 +98,13 @@ function StartCount({ onClose, onDone }) {
   const cats = [...new Set((stock?.items || []).map((i) => i.category))].sort();
   const go = async () => {
     setBusy(true); setErr(null);
-    try { const r = await post('/api/counts', { storeId, category: category || null, blind }); toast(`${r.ref} started — ${r.lines} items to count`); onDone(r.id); } catch (e) { setErr(e); } finally { setBusy(false); }
+    try { const r = await post('/api/counts', { storeId, category: category || null, blind }); toast(`${r.ref} started, ${r.lines} items to count`); onDone(r.id); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
     <Sheet title="Start a count" onClose={onClose} footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={go}>Start</Button></>}>
       <Field label="Store"><Select value={storeId} onChange={setStoreId} options={mine.map((s) => ({ value: s.id, label: s.name }))} /></Field>
-      <Field label="What to count" hint="A whole store, or one category at a time — a cycle count."><Select value={category} onChange={setCategory} placeholder="Everything in the store" options={cats.map((c) => ({ value: c, label: c }))} /></Field>
-      <Check checked={blind} onChange={setBlind}>Blind count <span className="muted">— counters do not see what the system expects (recommended)</span></Check>
+      <Field label="What to count" hint="A whole store, or one category at a time: a cycle count."><Select value={category} onChange={setCategory} placeholder="Everything in the store" options={cats.map((c) => ({ value: c, label: c }))} /></Field>
+      <Check checked={blind} onChange={setBlind}>Blind count<span className="muted">: counters do not see what the system expects (recommended)</span></Check>
       <p className="muted">Stock can still be used while the count is open: the difference is worked out against the moment the count started.</p>
       <ErrorNote error={err} />
     </Sheet>
@@ -159,7 +159,7 @@ function CountSheet({ id, onClose, onChanged }) {
       footer={<>
         {['OPEN', 'SUBMITTED'].includes(c.status) && (can('count.run') || can('count.decide')) && <Button kind="ghost" busy={busy} onClick={() => act('cancel', 'Count cancelled')}>Cancel count</Button>}
         {open && can('count.run') && <Button kind="secondary" busy={busy} disabled={!dirty} onClick={save}>Save progress</Button>}
-        {open && can('count.run') && <Button busy={busy} disabled={!counted} onClick={() => act('submit', 'Submitted for review')}>Submit</Button>}
+        {open && can('count.run') && <Button busy={busy} onClick={() => (counted ? act('submit', 'Submitted for review') : toast('Count at least one item first'))}>Submit</Button>}
         {c.status === 'SUBMITTED' && can('count.decide') && <><Button kind="secondary" busy={busy} onClick={() => act('reopen', 'Sent back for recounting')}>Send back</Button><Button busy={busy} onClick={() => act('approve', 'Count approved and stock corrected')}>Approve</Button></>}
       </>}>
       <div className="row"><Pill status={c.status} /><span className="muted">{counted} of {c.lines.length} counted{c.category ? ` · ${c.category}` : ''}{c.blind && c.hidden ? ' · blind' : ''}</span></div>
@@ -199,9 +199,9 @@ function CountSheet({ id, onClose, onChanged }) {
         })}
         {!lines.length && <Quiet>Every item is counted.</Quiet>}
       </div>
-      {c.status === 'SUBMITTED' && can('count.decide') && mine && <Note icon="alert">You submitted this count, so another manager approves it — unless you are the only one.</Note>}
+      {c.status === 'SUBMITTED' && can('count.decide') && mine && <Note icon="alert">You submitted this count, so another manager approves it, unless you are the only one.</Note>}
       {['OPEN', 'SUBMITTED'].includes(c.status) && <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Optional" /></Field>}
-      {c.decided_at && <p className="muted">{c.status === 'APPROVED' ? 'Approved' : 'Closed'} by {c.decided_by_name}, {fmtDateTime(c.decided_at)}{c.decision_note ? ` — “${c.decision_note}”` : ''}</p>}
+      {c.decided_at && <p className="muted">{c.status === 'APPROVED' ? 'Approved' : 'Closed'} by {c.decided_by_name}, {fmtDateTime(c.decided_at)}{c.decision_note ? `: “${c.decision_note}”` : ''}</p>}
       <ErrorNote error={err} />
     </Sheet>
   );

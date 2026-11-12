@@ -98,7 +98,7 @@ export async function decideAdjustment(env, user, id, body) {
 
   await requireOtherApprover(env, user, a.requested_by, 'correction');
   if (body.action === 'REJECT') {
-    if (!note) refuse('REASON_REQUIRED', 'Say why — the store keeper will see it.');
+    if (!note) refuse('REASON_REQUIRED', 'Say why. The store keeper will see it.');
     await commit(env, [
       env.DB.prepare(
         `UPDATE adjustments SET status = 'REJECTED', decided_by = ?, decided_by_name = ?, decided_at = ?, decision_note = ?

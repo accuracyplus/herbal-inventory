@@ -91,7 +91,7 @@ export async function useHeld(env, user, body) {
       areaId: body.areaId || lot.area_id, requester: { id: lot.person_id, name: lot.person_name },
     });
     stmts.push(...buildCustodyUse(env, { lot, qty, actor: actorOf(user), areaId: area?.id, departmentId, reason, note, docId }).statements);
-    stmts.push(auditStmt(env, user, 'CUSTODY_USE', item.code, `${q3(qty)} × ${item.name} used by ${person.name}${area ? ` in ${area.name}` : ''}${note ? ` — ${note}` : ''}`));
+    stmts.push(auditStmt(env, user, 'CUSTODY_USE', item.code, `${q3(qty)} × ${item.name} used by ${person.name}${area ? ` in ${area.name}` : ''}${note ? `: ${note}` : ''}`));
   }
   await commit(env, stmts);
   return { ok: true, id: docId };
@@ -105,7 +105,7 @@ export async function returnHeld(env, user, body) {
     const store = await env.DB.prepare(`SELECT id, unit_id, code, name, kind, active FROM stores WHERE id = ? AND unit_id = ?`).bind(lot.store_id, user.unitId).first();
     const { statements } = await buildCustodyReturn(env, { lot, item, store, qty, actor: actorOf(user), note, docId });
     stmts.push(...statements);
-    stmts.push(auditStmt(env, user, 'CUSTODY_RETURN', item.code, `${q3(qty)} × ${item.name} back to ${store.name} from ${lot.person_name}${note ? ` — ${note}` : ''}`));
+    stmts.push(auditStmt(env, user, 'CUSTODY_RETURN', item.code, `${q3(qty)} × ${item.name} back to ${store.name} from ${lot.person_name}${note ? `: ${note}` : ''}`));
   }
   await commit(env, stmts);
   return { ok: true, id: docId };

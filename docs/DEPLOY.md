@@ -4,7 +4,8 @@ Grouped by where each step is done. Do them in order.
 
 ## A. On your PC (PowerShell)
 
-1. Get the code and check it:
+1. Get the code and check it. The tests need Node 22.5 or newer (`node --version`); they run on
+   Node's own SQLite, the same engine D1 is.
 
 ```powershell
 cd C:\GitHub
@@ -49,14 +50,16 @@ npm run seed
 npx wrangler r2 bucket create hifive-inventory-files
 ```
 
-5. Deploy the Worker and check it answers:
+5. Deploy the Worker and check it answers. `npm run deploy` runs the tests first, refuses if
+   anything is uncommitted, and stamps the commit into `/version`:
 
 ```powershell
 npm run deploy
 curl https://hifive-inventory.sinusuresh.workers.dev/version
 ```
 
-   `"ok": true` and `"schema": { "ok": true }` means it is ready. `"bindings"` should read
+   `"ok": true` and `"schema": { "ok": true }` means it is ready; `"schema"` lists any migration
+   file not yet run. `"build": { "commit": … }` is the commit now live. `"bindings"` should read
    `files: true, ai: true, hfid: true`; a `false` there is a block missing from `wrangler.toml`.
    `mail` stays `false` until step 5a is done, and that is fine: everything else works.
 
@@ -80,15 +83,25 @@ curl https://hifive-inventory.sinusuresh.workers.dev/version
    application access policy that limits the app to that one mailbox is worth adding in
    Exchange, so the secret cannot send as anybody else.
 
-6. Deploy the app:
+6. Create the app's Pages project, once, with `main` as its production branch:
 
 ```powershell
 cd client
 npm install
+npx wrangler pages project create hifive-inventory --production-branch main
+```
+
+   Then deploy it, now and after every change to the app:
+
+```powershell
 npm run deploy
 ```
 
-   It goes to `https://hifive-inventory.pages.dev`.
+   It goes to `https://hifive-inventory.pages.dev`. The script deploys as branch `main` on
+   purpose: this repository's branch is `hifive-inventory`, and Pages treats any branch other
+   than the production one as a preview, so a plain deploy from here would never go live.
+   Always use `npm run deploy` here, never a bare `wrangler pages deploy`: without
+   `--project-name` it has published over another app's site before.
 
 ## B. HiFive ID (paste into your HiFive ID coding session)
 
@@ -99,7 +112,10 @@ Register a new HiFive module: Inventory.
   issuer "hifive-id", with emp_code, name, role and entity claims — the same shape as Transport.
 - Allowed redirect: https://hifive-inventory.pages.dev/ (and http://localhost:5173/ for dev).
 - /login?app=inventory&provider=microsoft|google must work, and the one-time hand-off code must
-  be swappable at POST /token/exchange with { code, app: "inventory" }, as for Transport.
+  be swappable at POST /token/exchange with { code, app: "inventory" }, as for Transport. Set
+  "handoff": "code" on the inventory entry in APPS_JSON from the start: Inventory's Worker swaps
+  the code through its HFID service binding (POST /auth/hfid/exchange), so it never needs the
+  ?hfid_token path that is switched off on 23 Nov.
 - "Can access" for Inventory: grant it to APML131 now; others as units go live.
 - Hub tile: "Inventory", icon box/stock, URL https://hifive-inventory.pages.dev.
 - Hub health check: https://hifive-inventory.sinusuresh.workers.dev/version
@@ -243,3 +259,23 @@ answer", not 0; the morning email's unknownGroups stays empty with Inventory on.
    right. Do it again every few months, or when a season changes. Imported history counts only
    if the import brought movements with their real dates; until a store has a month of its own
    use, suggestions are marked "Little history".
+
+## E. Later: another unit (an Accuracy Plus lab department)
+
+Nothing in the code is Herbal Park's; a lab is configuration.
+
+1. **Admin → Units** (a group administrator): add the unit. Its name must be spelled exactly as
+   HiFive ID spells the entity, because that is how a first sign-in finds its unit. Give it a
+   short code for references (LAB-PO-0001). Add its stores.
+2. In HiFive ID, grant "Can access" for Inventory to its people (they arrive as Staff), or add
+   them under **Admin → People** with their roles.
+3. Switch to the unit, then **Admin → Settings**: "What this unit calls its services" to Tests;
+   **Opened packs and storage** on; under More features, usually inspection ("Only items marked
+   inspect on arrival"), returns to supplier, recall tracing and the equipment register; ABC
+   cycle counts and accounts if they are wanted there.
+4. **Departments** (Haematology, Biochemistry), then **Rooms and areas**: each bench and
+   analyser in its department. **Bulk upload** loads the items from their Excel sheet; tick
+   "Track batches and expiry dates" and "Inspect on arrival" on reagents and kits.
+5. **Services** (the unit calls them Tests): each test with what one run normally uses.
+6. If the morning email should cover the lab, nothing more is needed: HiFive ID asks Inventory
+   once for everybody, across every unit.

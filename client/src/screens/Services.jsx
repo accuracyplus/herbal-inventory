@@ -208,7 +208,7 @@ function RecipeSheet({ s, one, onClose, onSaved }) {
         <LineEditor mode="request" items={stock.items} lines={lines} setLines={setLines} pickerFilter={(i) => !i.isLinen} />
       </Card>
       {gone.length > 0 && <Note tone="warn" icon="alert"><span>{gone.map((i) => i.name).join(', ')} {gone.length === 1 ? 'has' : 'have'} been retired and {gone.length === 1 ? 'is' : 'are'} left out. Saving removes {gone.length === 1 ? 'it' : 'them'} from this recipe.</span></Note>}
-      {s.id && <Check checked={!f.active} onChange={(v) => setF({ ...f, active: !v })}>No longer offered — it cannot be recorded, and stays in the reports</Check>}
+      {s.id && <Check checked={!f.active} onChange={(v) => setF({ ...f, active: !v })}>No longer offered: it cannot be recorded, and stays in the reports</Check>}
       <ErrorNote error={err} />
     </Sheet>
   );

@@ -15,13 +15,13 @@ export const SETTINGS = {
     label: 'Deliveries need a second person\'s approval',
     hint: 'When on, the receiver records the delivery and a manager approves it before stock reaches the shelf. When off, a delivery is on the shelf as soon as it is recorded.',
     options: ['required', 'none'], default: 'required',
-    labels: { required: 'Yes — a manager approves first', none: 'No — on the shelf when recorded' },
+    labels: { required: 'Yes, a manager approves first', none: 'No, on the shelf when recorded' },
   },
   'receipts.note': {
     label: 'A delivery needs its delivery note attached',
     hint: 'A photo or PDF of the delivery note, or the invoice for a purchase with no note, before it can be approved.',
     options: ['required', 'optional'], default: 'required',
-    labels: { required: 'Yes — cannot be approved without it', optional: 'No — it can be approved without' },
+    labels: { required: 'Yes, it cannot be approved without it', optional: 'No, it can be approved without' },
   },
   'receipts.read_notes': {
     label: 'Read delivery notes from a photo',

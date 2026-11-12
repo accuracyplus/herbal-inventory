@@ -62,7 +62,7 @@ export default function Linen() {
           <Table columns={[
             { key: 'at', label: 'When', render: (m) => <span className="nowrap">{fmtDateTime(m.at)}</span> },
             { key: 'name', label: 'Item', primary: true, render: (m) => `${fmtQty(m.qty)} × ${m.name}` },
-            { key: 'move', label: 'Move', render: (m) => `${STATE[m.from_state] || m.from_state} → ${m.to_state === 'gone' ? 'discarded' : STATE[m.to_state]}${m.area_name ? ` (${m.area_name})` : ''}${m.reason ? ` — ${m.reason}` : ''}` },
+            { key: 'move', label: 'Move', render: (m) => `${STATE[m.from_state] || m.from_state} → ${m.to_state === 'gone' ? 'discarded' : STATE[m.to_state]}${m.area_name ? ` (${m.area_name})` : ''}${m.reason ? `: ${m.reason}` : ''}` },
             { key: 'actor_name', label: 'By' },
           ]} rows={data.recent} rowKey={(m, i) => `${m.at}-${i}`} />
         </Card>
@@ -84,6 +84,7 @@ function MoveSheet({ move, areas, onClose, onDone }) {
   const src = flow === 'DISCARD' ? from : FLOWS[flow].from;
   const max = r[src];
   const save = async () => {
+    if (!(Number(qty) > 0) || Number(qty) > max) { setErr(new Error(`Still needed: how many pieces, from 1 to ${max}.`)); return; }
     setBusy(true); setErr(null);
     try {
       await post('/api/linen', { storeId: r.store_id, itemId: r.id, flow, qty: Number(qty), areaId: areaId || null, from, reason });
@@ -91,8 +92,8 @@ function MoveSheet({ move, areas, onClose, onDone }) {
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <Sheet title={`${r.name} — ${r.store_name}`} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} disabled={!(Number(qty) > 0) || Number(qty) > max} onClick={save}>Save</Button></>}>
+    <Sheet title={`${r.name}, ${r.store_name}`} onClose={onClose}
+      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
       {!move.flow && (
         <Field label="What is happening">
           <Select value={flow} onChange={setFlow} options={Object.entries(FLOWS).map(([k, f]) => ({ value: k, label: f.label }))} />

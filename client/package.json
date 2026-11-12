@@ -7,7 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "sync-ui": "node scripts/sync-ui.mjs",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name hifive-inventory"
+    "deploy": "npm run build && wrangler pages deploy dist --project-name hifive-inventory --branch main"
   },
   "dependencies": {
     "@hifive/ui": "file:vendor/hifive-ui",

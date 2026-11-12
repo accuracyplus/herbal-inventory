@@ -311,7 +311,7 @@ export async function saveUnit(env, user, body, id = null) {
   requireGroupAdmin(user);
   const code = codeOf(body.code, 'unit');
   const name = text(body.name, 120);
-  if (!name) refuse('NAME_REQUIRED', 'The unit needs a name — the same name HiFive ID uses for it.');
+  if (!name) refuse('NAME_REQUIRED', 'The unit needs a name: the same name HiFive ID uses for it.');
   const clash = await env.DB.prepare(`SELECT id FROM units WHERE code = ? AND id <> ?`).bind(code, id || '').first();
   if (clash) refuse('CODE_TAKEN', `Another unit already uses the code ${code}.`, 409);
   const now = nowIso();

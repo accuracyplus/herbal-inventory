@@ -264,7 +264,7 @@ function Expiry({ d }) {
   const [show, setShow] = useState('due');
   const rows = d.rows.filter((r) => (show === 'due' ? ['EXPIRED', 'SOON', 'UNKNOWN'].includes(r.state) : true));
   return (
-    <Card title={`Batches — warning ${d.warnDays} days ahead`} pad={false} actions={<><Segmented label="Show" value={show} onChange={setShow} options={[{ value: 'due', label: 'Needs attention' }, { value: 'all', label: 'All batches' }]} /><Csv name={`expiry-${gstToday()}`} rows={rows} /></>}>
+    <Card title={`Batches, warned ${d.warnDays} days ahead`} pad={false} actions={<><Segmented label="Show" value={show} onChange={setShow} options={[{ value: 'due', label: 'Needs attention' }, { value: 'all', label: 'All batches' }]} /><Csv name={`expiry-${gstToday()}`} rows={rows} /></>}>
       <Table rows={rows} rowKey={(r, i) => `${r.code}-${r.store}-${r.batch_no}-${i}`} empty="Nothing is expired, close to expiry, or missing a date." columns={[
         { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code>{r.batch_no ? ` · lot ${r.batch_no}` : ''}</span></span> },
         { key: 'store', label: 'Store' },

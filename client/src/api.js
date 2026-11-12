@@ -100,7 +100,7 @@ export async function request(path, { method = 'GET', body, form, blob = false, 
     });
   } catch {
     throw new ApiError(navigator.onLine === false
-      ? 'You are offline. Nothing was recorded — try again when you are back online.'
+      ? 'You are offline. Nothing was recorded. Try again when you are back online.'
       : 'Could not reach HiFive Inventory. Check your connection and try again.', 0, 'NETWORK');
   }
   if (blob && res.ok) return res.blob();
@@ -164,24 +164,24 @@ export async function openPath(path, name) {
 const GST = 'Asia/Dubai';
 
 export const fmtQty = (n) => {
-  if (n === null || n === undefined || n === '') return '—';
+  if (n === null || n === undefined || n === '') return '';
   const v = Number(n);
   return Number.isInteger(v) ? v.toLocaleString('en-AE') : v.toLocaleString('en-AE', { maximumFractionDigits: 3 });
 };
 
 export const fmtMoney = (n, currency = 'AED', digits = 2) => {
-  if (n === null || n === undefined) return '—';
+  if (n === null || n === undefined) return '';
   return `${currency} ${Number(n).toLocaleString('en-AE', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 };
 
 export const fmtDate = (iso) => {
-  if (!iso) return '—';
+  if (!iso) return '';
   const d = iso.length === 10 ? new Date(`${iso}T00:00:00+04:00`) : new Date(iso);
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: GST });
 };
 
 export const fmtDateTime = (iso) => {
-  if (!iso) return '—';
+  if (!iso) return '';
   return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: GST });
 };
 

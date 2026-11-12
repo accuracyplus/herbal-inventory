@@ -62,7 +62,7 @@ function Settle({ target, onClose, onDone }) {
             <Select value={areaId} onChange={setAreaId} placeholder={needRoom ? 'Choose a room or area' : 'Not a room'} options={lists.areas.map((a) => ({ value: a.id, label: a.name }))} />
           </Field>
         )}
-        {isUse && <Field label="Purpose"><input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Optional — e.g. Abhyanga, Kizhi" maxLength={120} /></Field>}
+        {isUse && <Field label="Purpose"><input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Optional, such as Abhyanga or Kizhi" maxLength={120} /></Field>}
         {forName && <Field label={`Why you are recording this for ${forName}`}><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} /></Field>}
         <ErrorNote error={err} />
       </div>
@@ -164,7 +164,10 @@ function Take() {
   if (!stock) return <Page title="Take stock" back={back}><Loading /></Page>;
   if (!stores.length) return <Page title="Take stock" back={back}><Note tone="warn">You are not set up to take from any store. Ask your unit administrator.</Note></Page>;
   const errors = lineErrors(lines, 'out', storeId);
+  // The main button stays pressable and says what is missing (Design Guide).
+  const missing = [...(!lines.length ? ['at least one item'] : []), ...(Object.keys(errors).length ? ['a quantity the store has, on the marked lines'] : [])];
   const save = async () => {
+    if (missing.length) { setErr(new Error(`Still needed: ${missing.join(', ')}.`)); return; }
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/custody/take', { storeId, areaId: areaId || null, personId: personId || null, lines: toPayload(lines) });
@@ -191,7 +194,7 @@ function Take() {
       </Card>
       <ErrorNote error={err} />
       <div className="row" style={{ justifyContent: 'flex-end' }}>
-        <Button busy={busy} disabled={!lines.length || Object.keys(errors).length > 0} onClick={save} icon="custody">Take</Button>
+        <Button busy={busy} onClick={save} icon="custody">Take</Button>
       </div>
     </Page>
   );

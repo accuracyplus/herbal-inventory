@@ -30,7 +30,7 @@ function parseItems(raw, { allowZero }) {
   return raw.map((l, i) => {
     const itemId = String(l?.itemId || '');
     if (!itemId) refuse('BAD_LINE', `Line ${i + 1}: choose an item.`);
-    if (seen.has(itemId)) refuse('DUPLICATE_LINE', `Line ${i + 1}: that item is already listed — change its quantity instead.`);
+    if (seen.has(itemId)) refuse('DUPLICATE_LINE', `Line ${i + 1}: that item is already listed. Change its quantity instead.`);
     seen.add(itemId);
     const qty = allowZero ? nonNegative(l?.qty) : positive(l?.qty);
     if (qty === null) refuse('BAD_QTY', `Line ${i + 1}: enter a quantity${allowZero ? ', zero or more' : ' above zero'}.`);

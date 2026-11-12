@@ -113,7 +113,7 @@ function SimpleList({ path, title, kinds, empty, makeBody, fields, columns = [] 
             <Field label="Short code" hint="Letters and numbers, used in lists and exports."><input value={editing.code || ''} onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })} /></Field>
             {kinds && <Field label="Kind"><Select value={editing.kind} onChange={(v) => setEditing({ ...editing, kind: v })} options={kinds} /></Field>}
             {fields?.(editing, setEditing)}
-            {editing.id && <div className="span2"><Check checked={!editing.active} onChange={(v) => setEditing({ ...editing, active: v ? 0 : 1 })}>Closed — no longer in use</Check></div>}
+            {editing.id && <div className="span2"><Check checked={!editing.active} onChange={(v) => setEditing({ ...editing, active: v ? 0 : 1 })}>Closed: no longer in use</Check></div>}
           </div>
           <ErrorNote error={err} />
         </Sheet>
@@ -278,7 +278,7 @@ function People() {
             <div className="stack" style={{ gap: 4 }}>
               {roles.map((r) => (
                 <Check key={r} checked={editing.roles.includes(r)} onChange={() => toggleRole(r)}>
-                  <b>{me.labels.roles[r]}</b> <span className="muted">— {me.labels.hints[r]}</span>
+                  <b>{me.labels.roles[r]}:</b> <span className="muted">{me.labels.hints[r]}</span>
                 </Check>
               ))}
             </div>
@@ -291,7 +291,7 @@ function People() {
           )}
           {me.groupAdmin && (
             <Check checked={!!editing.group_summary} onChange={(v) => setEditing({ ...editing, group_summary: v ? 1 : 0 })}>
-              <b>Director</b> <span className="muted">— can see the group monthly summary: counts and totals for every unit, no names. Give them a Viewer seat so the Reports screen shows.</span>
+              <b>Director:</b> <span className="muted">can see the group monthly summary: counts and totals for every unit, no names. Give them a Viewer seat so the Reports screen shows.</span>
             </Check>
           )}
           </>)}
@@ -403,7 +403,7 @@ function Import() {
             <dt>Rooms</dt><dd>{report.rooms}</dd>
             <dt>Levels</dt><dd>{report.levels}</dd>
             <dt>Old history</dt><dd>{report.history} rows, kept for reference under Reports → Old app history</dd>
-            {report.pendingRequests > 0 && <><dt>Open requests</dt><dd>{report.pendingRequests} pending in the old app are not carried over — ask staff to raise them again here.</dd></>}
+            {report.pendingRequests > 0 && <><dt>Open requests</dt><dd>{report.pendingRequests} pending in the old app are not carried over. Ask staff to raise them again here.</dd></>}
           </dl>
           {report.problems.length > 0 && (
             <Note tone="warn" icon="alert"><div><b>Please look at these:</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{report.problems.map((p) => <li key={p}>{p}</li>)}</ul></div></Note>

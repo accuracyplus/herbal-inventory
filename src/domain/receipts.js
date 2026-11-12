@@ -197,7 +197,7 @@ export async function decideReceipt(env, user, id, action, body = {}) {
   if (!may(user, 'receipt.decide')) refuse('NOT_ALLOWED', 'Your role does not allow approving deliveries.', 403);
   await requireOtherApprover(env, user, r.by_id, 'delivery');
   if (action === 'reject') {
-    if (!note) refuse('REASON_REQUIRED', 'Say why — the person who received it will see it.');
+    if (!note) refuse('REASON_REQUIRED', 'Say why. The person who received it will see it.');
     await commit(env, [
       env.DB.prepare(`UPDATE receipts SET status = 'REJECTED', decided_by = ?, decided_by_name = ?, decided_at = ?, decision_note = ? WHERE id = ? AND status = 'PENDING'`)
         .bind(user.staffId, user.fullName, now, note, r.id),

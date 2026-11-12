@@ -72,7 +72,9 @@ function NewRequest({ preItem, onClose, onDone }) {
       setLines((cur) => [...cur, ...add.filter((a) => !cur.some((c) => c.item.id === a.item.id))]);
     } catch (e) { setErr(e); }
   };
+  const missing = [...(!dest ? ['where it is needed'] : []), ...(!lines.length ? ['at least one item'] : []), ...(lines.some((l) => !(Number(l.qty) > 0)) ? ['a quantity on every line'] : [])];
   const save = async () => {
+    if (missing.length) { setErr(new Error(`Still needed: ${missing.join(', ')}.`)); return; }
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/requests', {
@@ -90,14 +92,14 @@ function NewRequest({ preItem, onClose, onDone }) {
   ];
   return (
     <Sheet wide title="New request" onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} disabled={!lines.length || !dest || lines.some((l) => !(Number(l.qty) > 0))} onClick={save}>Send request</Button></>}>
+      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Send request</Button></>}>
       <div className="form two">
         <Field label="Ask"><Select value={fromId} onChange={setFromId} options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
         <Field label="Needed in"><Select value={dest} onChange={setDest} placeholder="Choose" options={destOptions} /></Field>
-        <Field label="How soon"><Select value={urgency} onChange={setUrgency} options={[{ value: 'NORMAL', label: 'Normal' }, { value: 'URGENT', label: 'Urgent — needed today' }]} /></Field>
+        <Field label="How soon"><Select value={urgency} onChange={setUrgency} options={[{ value: 'NORMAL', label: 'Normal' }, { value: 'URGENT', label: 'Urgent: needed today' }]} /></Field>
         <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" maxLength={500} /></Field>
       </div>
-      {me.settings['requests.approval'] === 'none' && <Note icon="check">In {me.unit.name} requests go straight to the store — no approval step.</Note>}
+      {me.settings['requests.approval'] === 'none' && <Note icon="check">In {me.unit.name} requests go straight to the store, with no approval step.</Note>}
       {toStore && !suggestTried && <div><Button kind="ghost" icon="sparkle" onClick={fill}>Fill from this store's levels</Button></div>}
       <LineEditor mode="request" items={stock.items} storeId={fromId} lines={lines} setLines={setLines} scan="request" />
       <ErrorNote error={err} />
@@ -157,7 +159,7 @@ function RequestSheet({ id, onClose, onChanged }) {
             <dt>From</dt><dd>{r.from_name}</dd>
             <dt>For</dt><dd>{r.to_name ? `Store: ${r.to_name}` : `Room: ${r.area_name}`}</dd>
             {r.note && <><dt>Note</dt><dd>{r.note}</dd></>}
-            {r.decided_at && <><dt>Decided</dt><dd>{r.decided_by_name || 'Automatically'}, {fmtDateTime(r.decided_at)}{r.decision_note ? ` — “${r.decision_note}”` : ''}</dd></>}
+            {r.decided_at && <><dt>Decided</dt><dd>{r.decided_by_name || 'Automatically'}, {fmtDateTime(r.decided_at)}{r.decision_note ? `: “${r.decision_note}”` : ''}</dd></>}
           </dl>
           <Card pad={false}><Table columns={lineCols} rows={r.lines} /></Card>
           {r.issues.length > 0 && (
@@ -170,7 +172,7 @@ function RequestSheet({ id, onClose, onChanged }) {
               <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Optional" />
             </Field>
           )}
-          {canDecide && mine && <Note icon="alert">You asked for this, so another manager approves it — unless you are the only one.</Note>}
+          {canDecide && mine && <Note icon="alert">You asked for this, so another manager approves it, unless you are the only one.</Note>}
           {!canDecide && !canIssue && r.status === 'PENDING' && <Quiet icon="clock">Waiting for a manager.</Quiet>}
           <ErrorNote error={err} />
         </>

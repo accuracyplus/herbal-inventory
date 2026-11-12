@@ -29,7 +29,7 @@ export default function WhichItem({ barcode, filter, onPicked, onCancel }) {
           <h2 className="hf-cap">Which item is this?</h2>
           <p className="muted">Nothing in this unit has the code <code>{barcode}</code>.</p>
         </div>
-        <ItemPicker items={stock?.items || []} onPick={pick} filter={filter} placeholder="Find the item — name or code" />
+        <ItemPicker items={stock?.items || []} onPick={pick} filter={filter} placeholder="Find the item by name or code" />
         {mayLink
           ? <Check checked={link} onChange={setLink}>Save this barcode to the item, so it is found next time</Check>
           : <p className="muted">It is added this time only. A store keeper can save the barcode to the item.</p>}

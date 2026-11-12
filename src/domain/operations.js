@@ -61,7 +61,7 @@ export async function recordUse(env, user, body) {
     personId: person?.id, personName: person?.name, departmentId,
   })));
   await commit(env, [...statements, auditStmt(env, user, 'USE', docId,
-    `${lines.length} line(s) from ${store.name}${area ? ` to ${area.name}` : ''}${person ? ` by ${person.name}` : ''}${purpose ? ` — ${purpose}` : ''}`)]);
+    `${lines.length} line(s) from ${store.name}${area ? ` to ${area.name}` : ''}${person ? ` by ${person.name}` : ''}${purpose ? `: ${purpose}` : ''}`)]);
   return { ok: true, id: docId, value };
 }
 

@@ -38,7 +38,7 @@ function poLines(raw) {
     if (!qty) refuse('BAD_QTY', `Line ${i + 1}: enter a quantity above zero.`);
     const cost = nonNegative(l?.unitCost ?? 0);
     if (cost === null) refuse('BAD_COST', `Line ${i + 1}: the price cannot be negative.`);
-    if (seen.has(l.itemId)) refuse('DUPLICATE_LINE', `Line ${i + 1}: that item is already on the order — change its quantity instead.`);
+    if (seen.has(l.itemId)) refuse('DUPLICATE_LINE', `Line ${i + 1}: that item is already on the order. Change its quantity instead.`);
     seen.add(l.itemId);
     return { itemId: String(l.itemId), qty, unitCost: cost };
   });

@@ -21,6 +21,23 @@ export interface TourStep {
     when?: (ctx: Record<string, unknown>) => boolean;
 }
 export declare const TOUR_STEPS: TourStep[];
+/**
+ * The tour's own words. An app whose screens are in another language (D-043) passes its own;
+ * every one left out stays as here, so the hub's tour reads exactly as before.
+ */
+export interface TourLabels {
+    /** "Step 2 of 6": {n} and {of} are filled in. */
+    step: string;
+    skip: string;
+    back: string;
+    next: string;
+    finish: string;
+    doneTitle: string;
+    doneText: string;
+    dontShow: string;
+    done: string;
+}
+export declare const TOUR_LABELS: TourLabels;
 export interface FirstLoginTourProps {
     open: boolean;
     steps?: TourStep[];
@@ -28,5 +45,9 @@ export interface FirstLoginTourProps {
     onSkip: () => void;
     /** `dontShowAgain` true → the host stores tour_done_at on the account. */
     onDone: (dontShowAgain: boolean) => void;
+    /** The tour's own words, in the screen's language. Any left out stay English (TOUR_LABELS). */
+    labels?: Partial<TourLabels>;
+    /** The language of those words, for the card's `lang` (D-041 / D-043). */
+    lang?: string;
 }
-export declare function FirstLoginTour({ open, steps, context, onSkip, onDone }: FirstLoginTourProps): import("react").JSX.Element | null;
+export declare function FirstLoginTour({ open, steps, context, onSkip, onDone, labels, lang }: FirstLoginTourProps): import("react").JSX.Element | null;

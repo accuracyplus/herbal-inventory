@@ -6,11 +6,13 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { captureSignIn, get, hfidLoginUrl, post, rememberAddress, token, unitPref } from './api.js';
+import { captureSignIn, get, hfidLoginUrl, post, put, rememberAddress, token, unitPref } from './api.js';
 import { UnitSwitch } from '@hifive/ui';
 import Icon from './icons.jsx';
 import { startFollowingAppearance, syncChromeColour } from './appearance.js';
-import { AppCtx, Button, Loading, Note, Sheet, useToasts } from './ui.jsx';
+import { AppCtx, Button, Loading, Note, Segmented, Sheet, useToasts } from './ui.jsx';
+import { chooseLang, has, lang, LANGS, setLang, t, useLang } from './i18n.js';
+import FirstTour from './tour.jsx';
 import Today from './screens/Today.jsx';
 import Stock from './screens/Stock.jsx';
 import { TransferScreen, UseScreen } from './screens/Record.jsx';
@@ -70,6 +72,16 @@ export function navigate(to) {
   if (location.hash !== next) location.hash = next;
 }
 
+/**
+ * A screen's word on the phone's bottom bar, where a slot is about 70px wide. A language may give
+ * a shorter word there under 'tab:<English>' (Malayalam does for Requests); otherwise it is the
+ * screen's own name.
+ */
+function tabWord(label) {
+  const word = label === 'Record use' ? 'Use' : label;
+  return has(`tab:${word}`) ? t(`tab:${word}`) : t(word);
+}
+
 export default function App() {
   const [me, setMe] = useState(null);
   const [checking, setChecking] = useState(true);
@@ -81,6 +93,8 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   const [badges, setBadges] = useState({});
   const toasts = useToasts();
+  const language = useLang();
+  const [touring, setTouring] = useState(false);
 
   useEffect(() => {
     const on = () => { setRoute(parseHash()); setMenu(false); window.scrollTo(0, 0); };
@@ -91,6 +105,9 @@ export default function App() {
   const loadMe = useCallback(async () => {
     try {
       const u = await get('/api/me');
+      // The interface language (D-043): Inventory's own copy or the device first, then HiFive ID's choice when it answers.
+      setLang(chooseLang({ own: u.lang }));
+      get('/api/appearance').then((a) => { if (a?.known && a.prefs?.lang) setLang(a.prefs.lang); }).catch(() => {});
       setMe(u);
       if (u.unit?.id) unitPref.set(u.unit.id);
       setError(null);
@@ -155,7 +172,7 @@ export default function App() {
   };
   const signOut = () => { token.clear(); unitPref.clear(); location.hash = ''; location.reload(); };
 
-  if (checking) return <div className="hf signin"><Loading what="Checking your sign-in" /></div>;
+  if (checking) return <div className="hf signin"><Loading what={t('Checking your sign-in')} /></div>;
   if (!me) return <SignIn error={error} />;
 
   const current = visible.find((s) => s.id === route.screen) || visible[0];
@@ -163,9 +180,14 @@ export default function App() {
   const ctx = {
     me, stock, lists, refreshStock, refreshBadges, toast: toasts.push, route, navigate,
     currency: me.settings?.currency || 'AED', can: (a) => me.can.includes(a), reloadMe: loadMe,
+    startTour: () => { setMenu(false); setTouring(true); },
+  };
+  const chooseLanguage = async (code) => {
+    setLang(code);
+    try { await put('/api/me/prefs', { lang: code }); } catch { /* the screen has changed; saving tries again next time */ }
   };
   const initials = me.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
-  const roleWords = me.roles.map((r) => me.labels.roles[r]).join(', ');
+  const roleWords = me.roles.map((r) => t(me.labels.roles[r])).join(', ');
   const phoneNav = ['today', 'stock', me.can.includes('stock.use') ? 'use' : 'requests', 'requests'].filter((v, i, a) => a.indexOf(v) === i);
   const phoneTabs = [...phoneNav.map((id) => visible.find((s) => s.id === id)).filter(Boolean)].slice(0, 4);
   const pickUnit = me.units.length > 1 ? () => { setMenu(false); setUnitSheet(true); } : undefined;
@@ -176,13 +198,13 @@ export default function App() {
         <aside className="inv-side" aria-label="Main">
           <div className="inv-brand">
             <AppLogo />
-            <span className="inv-brand__n">Inventory</span>
+            <span className="inv-brand__n">{t('Inventory')}</span>
           </div>
           <UnitSwitch name={me.unit.name} onClick={pickUnit} />
           <NavList screens={visible} current={current.id} badges={badges} />
           <div className="inv-side__foot">
-            <a className="inv-nav" href={HIFIVE_HUB}><Icon name="apps" />All HiFive apps</a>
-            <button type="button" className="inv-me" onClick={() => setMenu(true)} aria-label={`${me.name}: your menu`}>
+            <a className="inv-nav" href={HIFIVE_HUB}><Icon name="apps" />{t('All HiFive apps')}</a>
+            <button type="button" data-tour="me" className="inv-me" onClick={() => setMenu(true)} aria-label={t('{name}: your menu', { name: me.name })}>
               <span className="inv-me__av" aria-hidden="true">{initials}</span>
               <span className="inv-me__b"><span className="inv-me__n">{me.name}</span><span className="inv-me__r">{roleWords}</span></span>
               <Icon name="more" size={16} />
@@ -193,53 +215,56 @@ export default function App() {
         <header className="inv-bar">
           <AppLogo />
           <UnitSwitch name={me.unit.name} onClick={pickUnit} compact />
-          <button type="button" className="inv-bar__me" onClick={() => setMenu(true)} aria-label={`${me.name}: menu`}>{initials}</button>
+          <button type="button" className="inv-bar__me" onClick={() => setMenu(true)} aria-label={t('{name}: your menu', { name: me.name })}>{initials}</button>
         </header>
 
         <main className="inv-main" id="main">
-          <Screen key={`${me.unit.id}-${current.id}`} />
+          <Screen key={`${me.unit.id}-${current.id}-${language}`} />
         </main>
 
-        <nav className="inv-tabs" aria-label="Main">
+        <nav className="inv-tabs" aria-label={t('Main')}>
           {phoneTabs.map((s) => (
-            <a key={s.id} href={`#/${s.id}`} className={current.id === s.id ? 'inv-tab is-on' : 'inv-tab'} aria-current={current.id === s.id ? 'page' : undefined}>
-              <Icon name={s.icon} size={22} /><span>{s.label === 'Record use' ? 'Use' : s.label}</span>
-              {badges[s.id] ? <span className="inv-tab__dot" role="img" aria-label={`${badges[s.id]} waiting`} /> : null}
+            <a key={s.id} data-tour={`nav-${s.id}`} href={`#/${s.id}`} className={current.id === s.id ? 'inv-tab is-on' : 'inv-tab'} aria-current={current.id === s.id ? 'page' : undefined}>
+              <Icon name={s.icon} size={22} /><span>{tabWord(s.label)}</span>
+              {badges[s.id] ? <span className="inv-tab__dot" role="img" aria-label={t('{n} waiting', { n: badges[s.id] })} /> : null}
             </a>
           ))}
-          <button type="button" className={phoneTabs.some((t) => t.id === current.id) ? 'inv-tab' : 'inv-tab is-on'} onClick={() => setMenu(true)}>
-            <Icon name="more" size={22} /><span>More</span>
+          <button type="button" data-tour="more" className={phoneTabs.some((tab) => tab.id === current.id) ? 'inv-tab' : 'inv-tab is-on'} onClick={() => setMenu(true)}>
+            <Icon name="more" size={22} /><span>{t('More')}</span>
           </button>
         </nav>
       </div>
 
       {menu && (
         <Sheet title={me.name} onClose={() => setMenu(false)}>
-          <p className="muted">{me.code} · {roleWords} in {me.unit.name}</p>
-          <nav className="inv-menu" aria-label="Every screen">
+          <p className="muted">{t('{code} · {roles} in {unit}', { code: me.code, roles: roleWords, unit: me.unit.name })}</p>
+          <Segmented label={t('Language')} value={language} onChange={chooseLanguage} options={Object.entries(LANGS).map(([value, label]) => ({ value, label }))} />
+          <nav className="inv-menu" aria-label={t('Every screen')}>
             <NavList screens={visible} current={current.id} badges={badges} />
           </nav>
           <div className="inv-menu">
-            {pickUnit && <button type="button" className="inv-nav" onClick={pickUnit}><Icon name="unit" />Switch unit</button>}
-            <a className="inv-nav" href={HIFIVE_HUB}><Icon name="apps" />All HiFive apps</a>
-            <a className="inv-nav" href={HIFIVE_HUB}><Icon name="edit" />Colours and dark mode, in HiFive ID</a>
-            <button type="button" className="inv-nav" onClick={signOut}><Icon name="logout" />Sign out</button>
+            {pickUnit && <button type="button" className="inv-nav" onClick={pickUnit}><Icon name="unit" />{t('Switch unit')}</button>}
+            <button type="button" className="inv-nav" onClick={ctx.startTour}><Icon name="help" />{t('Show me around again')}</button>
+            <a className="inv-nav" href={HIFIVE_HUB}><Icon name="apps" />{t('All HiFive apps')}</a>
+            <a className="inv-nav" href={HIFIVE_HUB}><Icon name="edit" />{t('Colours and dark mode, in HiFive ID')}</a>
+            <button type="button" className="inv-nav" onClick={signOut}><Icon name="logout" />{t('Sign out')}</button>
           </div>
         </Sheet>
       )}
       {unitSheet && (
-        <Sheet title="Choose a unit" onClose={() => setUnitSheet(false)}>
+        <Sheet title={t('Choose a unit')} onClose={() => setUnitSheet(false)}>
           <div className="inv-menu">
             {me.units.map((u) => (
               <button type="button" key={u.id} className={u.id === me.unit.id ? 'inv-nav is-on' : 'inv-nav'} onClick={() => switchUnit(u.id)} aria-pressed={u.id === me.unit.id}>
                 <Icon name="unit" />
-                <span className="grow">{u.name}<span className="inv-nav__sub">{u.roles.map((r) => me.labels.roles[r]).join(', ')}</span></span>
+                <span className="grow">{u.name}<span className="inv-nav__sub">{u.roles.map((r) => t(me.labels.roles[r])).join(', ')}</span></span>
                 {u.id === me.unit.id && <Icon name="check" />}
               </button>
             ))}
           </div>
         </Sheet>
       )}
+      <FirstTour me={me} visible={visible} open={touring} setOpen={setTouring} />
       {toasts.view}
     </AppCtx.Provider>
   );
@@ -256,33 +281,35 @@ function AppLogo() {
 function NavList({ screens, current, badges }) {
   let last = null;
   return screens.map((s) => {
-    const head = s.group !== last && GROUPS[s.group] ? <div className="hf-cap inv-navg" key={`g-${s.group}`}>{GROUPS[s.group]}</div> : null;
+    const head = s.group !== last && GROUPS[s.group] ? <div className="hf-cap inv-navg" key={`g-${s.group}`}>{t(GROUPS[s.group])}</div> : null;
     last = s.group;
     return [
       head,
-      <a key={s.id} href={`#/${s.id}`} className={current === s.id ? 'inv-nav is-on' : 'inv-nav'} aria-current={current === s.id ? 'page' : undefined}>
-        <Icon name={s.icon} />{s.label}{badges[s.id] ? <span className="inv-badge" aria-label={`${badges[s.id]} waiting`}>{badges[s.id]}</span> : null}
+      <a key={s.id} data-tour={`nav-${s.id}`} href={`#/${s.id}`} className={current === s.id ? 'inv-nav is-on' : 'inv-nav'} aria-current={current === s.id ? 'page' : undefined}>
+        <Icon name={s.icon} />{t(s.label)}{badges[s.id] ? <span className="inv-badge" aria-label={t('{n} waiting', { n: badges[s.id] })}>{badges[s.id]}</span> : null}
       </a>,
     ];
   });
 }
 
 function SignIn({ error }) {
+  useLang();
   const go = (provider) => { rememberAddress(); location.href = hfidLoginUrl(provider); };
   return (
     <div className="hf signin">
       <section className="hf-card inv-card signin-card">
         <AppLogo />
         <div>
-          <h1 className="inv-h1">HiFive Inventory</h1>
-          <p className="inv-lede">Stock, requests, purchasing and linen for every HiFive unit.</p>
+          <h1 className="inv-h1">{t('HiFive Inventory')}</h1>
+          <p className="inv-lede">{t('Stock, requests, purchasing and linen for every HiFive unit.')}</p>
         </div>
         {error && <Note tone="danger" role="alert">{error}</Note>}
         <div className="stack" style={{ gap: 10, width: '100%' }}>
-          <Button className="block" onClick={() => go('microsoft')}>Sign in with Microsoft</Button>
-          <Button kind="secondary" className="block" onClick={() => go('google')}>Sign in with Google</Button>
+          <Button className="block" onClick={() => go('microsoft')}>{t('Sign in with Microsoft')}</Button>
+          <Button kind="secondary" className="block" onClick={() => go('google')}>{t('Sign in with Google')}</Button>
         </div>
-        <p className="muted" style={{ fontSize: 13 }}>You sign in once through HiFive ID, with the same account as Recruitment, Performance and the rest of HiFive.</p>
+        <p className="muted" style={{ fontSize: 13 }}>{t('You sign in once through HiFive ID, with the same account as Recruitment, Performance and the rest of HiFive.')}</p>
+        <Segmented label={t('Language')} value={lang()} onChange={setLang} options={Object.entries(LANGS).map(([value, label]) => ({ value, label }))} />
       </section>
     </div>
   );

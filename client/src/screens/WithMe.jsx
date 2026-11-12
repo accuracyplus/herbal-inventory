@@ -13,16 +13,17 @@ import {
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
 import { Bars } from './Reports.jsx';
+import { t, tn } from '../i18n.js';
 
-const ageText = (h) => (h < 1 ? 'under an hour' : h < 48 ? `${h} hour${h === 1 ? '' : 's'}` : `${Math.floor(h / 24)} days`);
+const ageText = (h) => (h < 1 ? t('under an hour') : h < 48 ? tn(h, '{n} hour', '{n} hours') : tn(Math.floor(h / 24), '{n} day', '{n} days'));
 
 function Lot({ lot, onSettle }) {
-  const where = [lot.store_name && `from ${lot.store_name}`, lot.area_name, lot.batch_no && `lot ${lot.batch_no}`, lot.expiry && `expires ${fmtDate(lot.expiry)}`].filter(Boolean).join(' · ');
+  const where = [lot.store_name && t('from {store}', { store: lot.store_name }), lot.area_name, lot.batch_no && t('lot {lot}', { lot: lot.batch_no }), lot.expiry && t('expires {date}', { date: fmtDate(lot.expiry) })].filter(Boolean).join(' · ');
   return (
     <li className="lot">
       <div className="min0">
         <span className="row-label">{fmtQty(lot.qty)} {lot.uom} · {lot.item_name} {lot.unaccounted && <Pill tone="warn">Unaccounted for</Pill>}</span>
-        <span className="row-sub">Held {ageText(lot.ageHours)}{where ? ` · ${where}` : ''}</span>
+        <span className="row-sub">{t('Held {age}', { age: ageText(lot.ageHours) })}{where ? ` · ${where}` : ''}</span>
       </div>
       <div className="lot-actions">
         <Button kind="secondary" onClick={() => onSettle(lot, 'return')}>Return</Button>
@@ -47,23 +48,25 @@ function Settle({ target, onClose, onDone }) {
     setBusy(true); setErr(null);
     try {
       await post(`/api/custody/${action}`, { lines: [{ custodyId: lot.id, qty: Number(qty) }], areaId: areaId || null, purpose, note });
-      toast(isUse ? 'Recorded as used' : `Returned to ${lot.store_name}`);
+      toast(isUse ? t('Recorded as used') : t('Returned to {store}', { store: lot.store_name }));
       refreshStock(); refreshBadges(); onDone();
     } catch (e) { setErr(e); setBusy(false); }
   };
   return (
     <Sheet title={lot.item_name} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>{isUse ? 'Record as used' : `Return to ${lot.store_name}`}</Button></>}>
+      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>{isUse ? t('Record as used') : t('Return to {store}', { store: lot.store_name })}</Button></>}>
       <div className="stack">
-        <p className="muted">{fmtQty(lot.qty)} {lot.uom} {forName ? `with ${forName}` : 'with you'}, held {ageText(lot.ageHours)}.</p>
-        <Field label={`How many (${lot.uom})`}><Stepper value={qty} onChange={setQty} max={lot.qty} /></Field>
+        <p className="muted">{forName
+          ? t('{qty} {uom} with {name}, held {age}.', { qty: fmtQty(lot.qty), uom: t(lot.uom), name: forName, age: ageText(lot.ageHours) })
+          : t('{qty} {uom} with you, held {age}.', { qty: fmtQty(lot.qty), uom: t(lot.uom), age: ageText(lot.ageHours) })}</p>
+        <Field label={t('How many ({uom})', { uom: t(lot.uom) })}><Stepper value={qty} onChange={setQty} max={lot.qty} /></Field>
         {isUse && (
           <Field label="Room or area" hint={needRoom ? 'Where it was used.' : 'Where it was used. Leave empty for general use.'}>
             <Select value={areaId} onChange={setAreaId} placeholder={needRoom ? 'Choose a room or area' : 'Not a room'} options={lists.areas.map((a) => ({ value: a.id, label: a.name }))} />
           </Field>
         )}
-        {isUse && <Field label="Purpose"><input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Optional, such as Abhyanga or Kizhi" maxLength={120} /></Field>}
-        {forName && <Field label={`Why you are recording this for ${forName}`}><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} /></Field>}
+        {isUse && <Field label="Purpose"><input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder={t('Optional, such as Abhyanga or Kizhi')} maxLength={120} /></Field>}
+        {forName && <Field label={t('Why you are recording this for {name}', { name: forName })}><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} /></Field>}
         <ErrorNote error={err} />
       </div>
     </Sheet>
@@ -82,7 +85,7 @@ function Mine() {
       {loading && !data && <Loading />}
       {data && !data.rows.length && <Quiet>Nothing with you. Stock you take shows here until it is used or returned.</Quiet>}
       {late.length > 0 && (
-        <Card title="To account for" hint={`Held for more than ${data.accountHours} hours. Record it as used, or return it to the store.`}>
+        <Card title="To account for" hint={t('Held for more than {n} hours. Record it as used, or return it to the store.', { n: data.accountHours })}>
           <ul className="lots">{late.map((l) => <Lot key={l.id} lot={l} onSettle={settle} />)}</ul>
         </Card>
       )}
@@ -138,7 +141,7 @@ function MyUse() {
           <Card title="What I used" pad={false}>
             <Table rows={data.byItem} rowKey={(r) => r.code} columns={[
               { key: 'name', label: 'Item', primary: true },
-              { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
+              { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${t(r.uom)}` },
               { key: 'times', label: 'Times', align: 'right' },
             ]} />
           </Card>
@@ -165,13 +168,13 @@ function Take() {
   if (!stores.length) return <Page title="Take stock" back={back}><Note tone="warn">You are not set up to take from any store. Ask your unit administrator.</Note></Page>;
   const errors = lineErrors(lines, 'out', storeId);
   // The main button stays pressable and says what is missing (Design Guide).
-  const missing = [...(!lines.length ? ['at least one item'] : []), ...(Object.keys(errors).length ? ['a quantity the store has, on the marked lines'] : [])];
+  const missing = [...(!lines.length ? [t('at least one item')] : []), ...(Object.keys(errors).length ? [t('a quantity the store has, on the marked lines')] : [])];
   const save = async () => {
-    if (missing.length) { setErr(new Error(`Still needed: ${missing.join(', ')}.`)); return; }
+    if (missing.length) { setErr(new Error(t('Still needed: {what}.', { what: missing.join(', ') }))); return; }
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/custody/take', { storeId, areaId: areaId || null, personId: personId || null, lines: toPayload(lines) });
-      toast(`Now with ${r.person}`);
+      toast(t('Now with {name}', { name: r.person }));
       refreshStock(); refreshBadges(); navigate('with-me');
     } catch (e) { setErr(e); setBusy(false); }
   };

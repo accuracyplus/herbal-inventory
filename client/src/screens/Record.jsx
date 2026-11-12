@@ -8,6 +8,7 @@ import { post } from '../api.js';
 import Icon from '../icons.jsx';
 import LineEditor, { lineErrors, newLine, toPayload } from '../lines.jsx';
 import { Button, Card, ErrorNote, Field, Loading, Note, Page, Select, useApp, useData } from '../ui.jsx';
+import { t, tn } from '../i18n.js';
 
 /** The stores this person may record against, the sub stores first for use. */
 export function useMyStores(prefer) {
@@ -21,7 +22,7 @@ export function useMyStores(prefer) {
 function Done({ text, again, children }) {
   return (
     <Card>
-      <div className="row"><span className="inv-done"><Icon name="check" /></span><h2 className="grow">{text}</h2></div>
+      <div className="row"><span className="inv-done"><Icon name="check" /></span><h2 className="grow">{t(text)}</h2></div>
       {children}
       <div className="row"><Button onClick={again}>Record another</Button></div>
     </Card>
@@ -30,16 +31,16 @@ function Done({ text, again, children }) {
 
 /** What a list of lines still needs before it can be saved, in words. */
 function linesMissing(lines, errors) {
-  if (!lines.length) return ['at least one item'];
+  if (!lines.length) return [t('at least one item')];
   const bad = lines.map((l, i) => (errors[l.key] ? i + 1 : 0)).filter(Boolean);
-  return bad.length ? [`a quantity this store holds on line ${bad.join(' and ')}`] : [];
+  return bad.length ? [t('a quantity this store holds on line {lines}', { lines: bad.join(t(' and ')) })] : [];
 }
 
 /** The main button stays enabled; pressed with something missing, it says what (Design Guide, forms). */
 function Submit({ missing, tried, busy, icon, onPress, children }) {
   return (
     <>
-      {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">Still needed: {missing.join(', ')}.</Note>}
+      {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">{t('Still needed: {what}.', { what: missing.map((m) => t(m)).join(', ') })}</Note>}
       <div className="inv-submit"><Button busy={busy} onClick={onPress} icon={icon}>{children}</Button></div>
     </>
   );
@@ -71,7 +72,7 @@ export function UseScreen() {
   if (!stock) return <Page title="Record use"><Loading /></Page>;
   if (!stores.length) return <Page title="Record use"><Note tone="warn">You are not set up to record against any store. Ask your unit administrator.</Note></Page>;
   const errors = lineErrors(lines, 'out', storeId);
-  const missing = [...(needRoom && !areaId ? ['the room or area'] : []), ...linesMissing(lines, errors)];
+  const missing = [...(needRoom && !areaId ? [t('the room or area')] : []), ...linesMissing(lines, errors)];
   const save = async () => {
     if (missing.length) { setTried(true); return; }
     setBusy(true); setErr(null);
@@ -87,7 +88,14 @@ export function UseScreen() {
       refreshStock(); refreshBadges();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
-  if (done) return <Page title="Record use"><Done text={`Recorded ${done.n} item${done.n > 1 ? 's' : ''} from ${done.store}${done.area ? ` for ${done.area}` : ''}${done.person ? `, used by ${done.person}` : ''}.`} again={() => setDone(null)} /></Page>;
+  if (done) {
+    const said = [
+      tn(done.n, 'Recorded {n} item from {store}', 'Recorded {n} items from {store}', { store: done.store }),
+      done.area ? t('for {area}', { area: done.area }) : null,
+      done.person ? t('used by {person}', { person: done.person }) : null,
+    ].filter(Boolean).join(', ') + '.';
+    return <Page title="Record use"><Done text={said} again={() => setDone(null)} /></Page>;
+  }
   return (
     <Page title="Record use" subtitle="What was used, where, and by whom.">
       <Card>
@@ -100,7 +108,7 @@ export function UseScreen() {
           {needPerson && (
             <Field label="Used by" hint={forOthers ? 'The person who used this stock. Left as it is, it is recorded under your name.' : 'Recorded under your name. To record for somebody else, ask the store keeper.'}>
               {forOthers
-                ? <Select value={personId} onChange={setPersonId} placeholder={`${me.name} (you)`} options={(people || []).map((p) => ({ value: p.id, label: p.name }))} />
+                ? <Select value={personId} onChange={setPersonId} placeholder={t('{name} (you)', { name: me.name })} options={(people || []).map((p) => ({ value: p.id, label: p.name }))} />
                 : <input value={me.name} disabled />}
             </Field>
           )}
@@ -111,7 +119,7 @@ export function UseScreen() {
       <Card title="Items">
         <LineEditor mode="out" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} pickerFilter={(i) => !i.isLinen} scan="use" />
       </Card>
-      <Field label="What it was for (optional)"><input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Abhyanga, cleaning, a tester" maxLength={120} /></Field>
+      <Field label="What it was for (optional)"><input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder={t('Abhyanga, cleaning, a tester')} maxLength={120} /></Field>
       <ErrorNote error={err} />
       <Submit missing={missing} tried={tried} busy={busy} icon="check" onPress={save}>Record use</Submit>
     </Page>
@@ -141,10 +149,10 @@ export function TransferScreen() {
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/transfers', { fromStoreId: fromId, toStoreId: toId, note, lines: toPayload(lines) });
-      setDone(r.ref); toast(`${r.ref} recorded`); setLines([]); setNote(''); setTried(false); refreshStock();
+      setDone(r.ref); toast(t('{ref} recorded', { ref: r.ref })); setLines([]); setNote(''); setTried(false); refreshStock();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
-  if (done) return <Page title="Transfer"><Done text={`Transfer ${done} recorded.`} again={() => setDone(null)} /></Page>;
+  if (done) return <Page title="Transfer"><Done text={t('Transfer {ref} recorded.', { ref: done })} again={() => setDone(null)} /></Page>;
   return (
     <Page title="Transfer" subtitle="Move stock from one store to another. Batches keep their expiry dates.">
       <Card>

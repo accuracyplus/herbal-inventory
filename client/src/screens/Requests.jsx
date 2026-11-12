@@ -9,6 +9,7 @@ import LineEditor, { newLine, toPayload } from '../lines.jsx';
 import {
   Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
+import { t } from '../i18n.js';
 
 export default function Requests() {
   const { route, navigate, can, stock } = useApp();
@@ -72,23 +73,23 @@ function NewRequest({ preItem, onClose, onDone }) {
       setLines((cur) => [...cur, ...add.filter((a) => !cur.some((c) => c.item.id === a.item.id))]);
     } catch (e) { setErr(e); }
   };
-  const missing = [...(!dest ? ['where it is needed'] : []), ...(!lines.length ? ['at least one item'] : []), ...(lines.some((l) => !(Number(l.qty) > 0)) ? ['a quantity on every line'] : [])];
+  const missing = [...(!dest ? [t('where it is needed')] : []), ...(!lines.length ? [t('at least one item')] : []), ...(lines.some((l) => !(Number(l.qty) > 0)) ? [t('a quantity on every line')] : [])];
   const save = async () => {
-    if (missing.length) { setErr(new Error(`Still needed: ${missing.join(', ')}.`)); return; }
+    if (missing.length) { setErr(new Error(t('Still needed: {what}.', { what: missing.join(', ') }))); return; }
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/requests', {
         fromStoreId: fromId, toStoreId: toStore, areaId: dest.startsWith('a:') ? dest.slice(2) : null,
         urgency, note, lines: toPayload(lines),
       });
-      toast(r.status === 'APPROVED' ? `${r.ref} sent to the store` : `${r.ref} sent for approval`);
+      toast(t(r.status === 'APPROVED' ? '{ref} sent to the store' : '{ref} sent for approval', { ref: r.ref }));
       refreshBadges();
       onDone(r);
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   const destOptions = [
-    ...lists.stores.filter((s) => s.id !== fromId).map((s) => ({ value: `s:${s.id}`, label: `Store: ${s.name}` })),
-    ...lists.areas.map((a) => ({ value: `a:${a.id}`, label: `Room: ${a.name}` })),
+    ...lists.stores.filter((s) => s.id !== fromId).map((s) => ({ value: `s:${s.id}`, label: t('Store: {name}', { name: s.name }) })),
+    ...lists.areas.map((a) => ({ value: `a:${a.id}`, label: t('Room: {name}', { name: a.name }) })),
   ];
   return (
     <Sheet wide title="New request" onClose={onClose}
@@ -99,7 +100,7 @@ function NewRequest({ preItem, onClose, onDone }) {
         <Field label="How soon"><Select value={urgency} onChange={setUrgency} options={[{ value: 'NORMAL', label: 'Normal' }, { value: 'URGENT', label: 'Urgent: needed today' }]} /></Field>
         <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" maxLength={500} /></Field>
       </div>
-      {me.settings['requests.approval'] === 'none' && <Note icon="check">In {me.unit.name} requests go straight to the store, with no approval step.</Note>}
+      {me.settings['requests.approval'] === 'none' && <Note icon="check">{t('In {unit} requests go straight to the store, with no approval step.', { unit: me.unit.name })}</Note>}
       {toStore && !suggestTried && <div><Button kind="ghost" icon="sparkle" onClick={fill}>Fill from this store's levels</Button></div>}
       <LineEditor mode="request" items={stock.items} storeId={fromId} lines={lines} setLines={setLines} scan="request" />
       <ErrorNote error={err} />
@@ -131,13 +132,13 @@ function RequestSheet({ id, onClose, onChanged }) {
   const canIssue = r && ['APPROVED', 'PARTLY_ISSUED'].includes(r.status) && can('request.fulfil');
   const canCancel = r && ['PENDING', 'APPROVED'].includes(r.status) && !r.lines.some((l) => l.issued_qty > 0) && (mine || can('request.decide'));
   const lineCols = useMemo(() => [
-    { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub">{l.location ? <><b>Shelf {l.location}</b> · </> : null}<code>{l.code}</code> · {fmtQty(l.available)} {l.uom} in {r?.from_name}</span></span> },
+    { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub">{l.location ? <><b>{t('Shelf {shelf}', { shelf: l.location })}</b> · </> : null}<code>{l.code}</code> · {t('{qty} {uom} in {store}', { qty: fmtQty(l.available), uom: t(l.uom), store: r?.from_name })}</span></span> },
     { key: 'qty', label: 'Asked', align: 'right', render: (l) => fmtQty(l.qty) },
     { key: 'approved_qty', label: 'Approved', align: 'right', render: (l) => (canDecide
-      ? <QtyInput value={qty[l.id]} onChange={(v) => setQty((x) => ({ ...x, [l.id]: v }))} style={{ width: 96 }} label={`Approve ${l.name}`} />
+      ? <QtyInput value={qty[l.id]} onChange={(v) => setQty((x) => ({ ...x, [l.id]: v }))} style={{ width: 96 }} label={t('Approve {name}', { name: l.name })} />
       : fmtQty(l.approved_qty)) },
     { key: 'issued_qty', label: 'Given', align: 'right', render: (l) => (canIssue && (l.approved_qty ?? 0) > l.issued_qty
-      ? <span style={{ display: 'grid', justifyItems: 'end', gap: 2 }}><QtyInput value={qty[l.id]} onChange={(v) => setQty((x) => ({ ...x, [l.id]: v }))} style={{ width: 96 }} label={`Give ${l.name}`} /><span className="row-sub">{fmtQty(l.issued_qty)} given so far</span></span>
+      ? <span style={{ display: 'grid', justifyItems: 'end', gap: 2 }}><QtyInput value={qty[l.id]} onChange={(v) => setQty((x) => ({ ...x, [l.id]: v }))} style={{ width: 96 }} label={t('Give {name}', { name: l.name })} /><span className="row-sub">{t('{n} given so far', { n: fmtQty(l.issued_qty) })}</span></span>
       : fmtQty(l.issued_qty)) },
   ], [r, qty, canDecide, canIssue]);
   return (
@@ -155,16 +156,16 @@ function RequestSheet({ id, onClose, onChanged }) {
         <>
           <div className="row"><Pill status={r.status} />{r.urgency === 'URGENT' && <Pill tone="danger">Urgent</Pill>}</div>
           <dl className="dl">
-            <dt>Asked by</dt><dd>{r.requested_by_name}, {fmtDateTime(r.requested_at)}</dd>
-            <dt>From</dt><dd>{r.from_name}</dd>
-            <dt>For</dt><dd>{r.to_name ? `Store: ${r.to_name}` : `Room: ${r.area_name}`}</dd>
-            {r.note && <><dt>Note</dt><dd>{r.note}</dd></>}
-            {r.decided_at && <><dt>Decided</dt><dd>{r.decided_by_name || 'Automatically'}, {fmtDateTime(r.decided_at)}{r.decision_note ? `: “${r.decision_note}”` : ''}</dd></>}
+            <dt>{t('Asked by')}</dt><dd>{r.requested_by_name}, {fmtDateTime(r.requested_at)}</dd>
+            <dt>{t('From')}</dt><dd>{r.from_name}</dd>
+            <dt>{t('For')}</dt><dd>{r.to_name ? t('Store: {name}', { name: r.to_name }) : t('Room: {name}', { name: r.area_name })}</dd>
+            {r.note && <><dt>{t('Note')}</dt><dd>{r.note}</dd></>}
+            {r.decided_at && <><dt>{t('Decided')}</dt><dd>{r.decided_by_name || t('Automatically')}, {fmtDateTime(r.decided_at)}{r.decision_note ? `: “${r.decision_note}”` : ''}</dd></>}
           </dl>
           <Card pad={false}><Table columns={lineCols} rows={r.lines} /></Card>
           {r.issues.length > 0 && (
             <Card title="Given out">
-              <ul className="timeline">{r.issues.map((t) => <li key={t.ref}><span><b>{t.ref}</b> by {t.by_name}<span className="row-sub">{fmtDateTime(t.at)}</span></span></li>)}</ul>
+              <ul className="timeline">{r.issues.map((x) => <li key={x.ref}><span><b>{x.ref}</b> {t('by {name}', { name: x.by_name })}<span className="row-sub">{fmtDateTime(x.at)}</span></span></li>)}</ul>
             </Card>
           )}
           {(canDecide || canIssue || canCancel) && (

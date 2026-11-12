@@ -53,6 +53,9 @@ import { findHeld, PICK_ROLES, roleOptions, seatsFor, unitFor } from './domain/n
 import { LINEN_FLOWS } from './domain/stock.js';
 import { approvesAnyAmount, limitFor } from './domain/limits.js';
 import { closedMonths, closeMonth, reopenMonth } from './domain/periods.js';
+
+/** Interface languages Inventory has (D-043). English is the default and needs no choosing. */
+const LANGS = ['en', 'ml'];
 import { decideInspection, getReturn, listInspections, listReturns, raiseReturn, RETURN_REASONS, returnAction, returnOptions } from './domain/quality.js';
 import { findLots, traceLot } from './domain/recall.js';
 import { accountsExport, CHARGE_KINDS, EXPORTS } from './domain/accounts.js';
@@ -337,8 +340,11 @@ on('PUT', '/api/roles/:empId', async ({ request, env, params }) => {
 
 api('GET', '/api/me', async ({ env }, user) => {
   const settings = await allSettings(env, user.unitId);
+  const own = await env.DB.prepare(`SELECT lang, tour_done_at FROM staff WHERE id = ?`).bind(user.staffId).first();
   return json({
     staffId: user.staffId, code: user.code, name: user.fullName, groupAdmin: user.groupAdmin, groupSummary: user.groupSummary,
+    // Inventory's own copy of the interface language (D-043); HiFive ID's choice, when it has one, wins.
+    lang: own?.lang ?? null, tourDoneAt: own?.tour_done_at ?? null,
     unit: user.unit, units: user.units, roles: user.roles, stores: user.stores,
     can: abilities(user),
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
@@ -368,10 +374,46 @@ api('GET', '/api/appearance', async ({ request, env }) => {
     const me = await res.json();
     if (!me || !('prefs' in me) || me.prefs === null || typeof me.prefs !== 'object') return json({ known: false });
     const { skin = null, style = null, mode = null } = me.prefs;
-    return json({ known: true, prefs: { skin, style, mode } });
+    // The interface language, when HiFive ID stores one (D-043). Anything but a language Inventory has is "not chosen".
+    const lang = LANGS.includes(me.prefs.lang) ? me.prefs.lang : null;
+    return json({ known: true, prefs: { skin, style, mode, lang } });
   } catch {
     return json({ known: false });
   }
+});
+
+/**
+ * The person's own choices here: the interface language (D-043) and that the first-login
+ * walkthrough is done. The language is also handed to HiFive ID, where it is meant to live, so
+ * every app follows it; until HiFive ID stores languages that hand-over is refused, and this copy
+ * is what Inventory uses. A failed hand-over never fails the save.
+ */
+api('PUT', '/api/me/prefs', async ({ request, env }, user) => {
+  const b = await body(request);
+  const sets = [];
+  const args = [];
+  let lang;
+  if (Object.prototype.hasOwnProperty.call(b, 'lang')) {
+    lang = b.lang === null || b.lang === '' ? null : String(b.lang);
+    if (lang !== null && !LANGS.includes(lang)) return fail(400, 'BAD_LANG', 'Choose English or Malayalam.');
+    sets.push('lang = ?'); args.push(lang);
+  }
+  if (b.tourDone === true) { sets.push('tour_done_at = ?'); args.push(nowIso()); }
+  if (b.tourDone === false) { sets.push('tour_done_at = NULL'); }
+  if (!sets.length) return fail(400, 'NOTHING', 'Nothing to save.');
+  await env.DB.prepare(`UPDATE staff SET ${sets.join(', ')} WHERE id = ?`).bind(...args, user.staffId).run();
+  let hfid = null;
+  if (lang !== undefined) {
+    try {
+      const res = await hfidFetch(env, `/me/prefs?aud=${encodeURIComponent(env.HFID_AUDIENCE || 'inventory')}`, {
+        method: 'PATCH', headers: { authorization: `Bearer ${bearerOf(request)}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ lang }),
+      });
+      hfid = res.ok;
+    } catch { hfid = false; }
+  }
+  const own = await env.DB.prepare(`SELECT lang, tour_done_at FROM staff WHERE id = ?`).bind(user.staffId).first();
+  return json({ ok: true, lang: own.lang, tourDoneAt: own.tour_done_at, savedInHfid: hfid });
 });
 
 api('GET', '/api/today', async ({ request, env }, user) => json(await today(env, user, { bearer: bearerOf(request) })));

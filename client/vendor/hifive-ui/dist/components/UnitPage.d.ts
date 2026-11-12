@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import type { StockState } from '../lib/stock';
 import { type UnitCrumb, type UnitGlance, type UnitMonth, type UnitChild, type UnitPerson } from '../lib/units';
 /**
  * C16 · Drill-down pages. One template at every level: Group, facility,
@@ -80,5 +81,12 @@ export interface PersonPageProps {
     };
     waiting: UnitMonth | null;
     direction?: 'down' | 'up';
+    /**
+     * Stock in hand from Inventory (0.18.0). Leave it off when Inventory does not
+     * know the person: no card at all. 'loading' while asking, 'down' when it did
+     * not answer (never shown as 0). The link into Inventory shows only when `self`.
+     */
+    stock?: StockState;
+    onStockRetry?: () => void;
 }
-export declare function PersonPage({ crumbs, onCrumb, self, person, line, onOpenPerson, probation, waiting, direction }: PersonPageProps): import("react").JSX.Element;
+export declare function PersonPage({ crumbs, onCrumb, self, person, line, onOpenPerson, probation, waiting, direction, stock, onStockRetry }: PersonPageProps): import("react").JSX.Element;

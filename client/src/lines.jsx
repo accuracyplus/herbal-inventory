@@ -15,6 +15,7 @@ import { fmtMoney, fmtQty, get } from './api.js';
 import { QuantityField } from '@hifive/ui';
 import { Button, Field, ItemPicker, Pill, QtyInput, Select } from './ui.jsx';
 import { isDesk, PairSheet, ScanSheet } from './scan/ScanSheets.jsx';
+import { t } from './i18n.js';
 import { takeHandoff } from './scan/handoff.js';
 
 export const newLine = (item, extra = {}) => ({ key: `${item.id}-${Math.random().toString(36).slice(2, 7)}`, item, qty: '1', ...extra });
@@ -24,12 +25,12 @@ export function lineErrors(lines, mode, storeId) {
   const used = {};
   for (const l of lines) {
     const q = Number(l.qty);
-    if (mode === 'adjust' ? !q : !(q > 0)) errs[l.key] = 'Enter a quantity';
+    if (mode === 'adjust' ? !q : !(q > 0)) errs[l.key] = t('Enter a quantity');
     else if (mode === 'out') {
       used[l.item.id] = (used[l.item.id] || 0) + q;
       const s = l.item.stores?.find((x) => x.storeId === storeId);
-      if (s && used[l.item.id] > s.qty) errs[l.key] = `Only ${fmtQty(s.qty)} ${l.item.uom} here`;
-    } else if (mode === 'in' && l.item.tracksExpiry && !l.expiry) errs[l.key] = 'Enter the expiry date';
+      if (s && used[l.item.id] > s.qty) errs[l.key] = t('Only {qty} {uom} here', { qty: fmtQty(s.qty), uom: t(l.item.uom) });
+    } else if (mode === 'in' && l.item.tracksExpiry && !l.expiry) errs[l.key] = t('Enter the expiry date');
   }
   return errs;
 }
@@ -87,7 +88,7 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
     <div className="inv-lines">
       {lines.map((l) => {
         const here = l.item.stores?.find((s) => s.storeId === storeId);
-        const what = withNote ? 'Counted' : mode === 'adjust' ? 'Change' : 'How much';
+        const what = t(withNote ? 'Counted' : mode === 'adjust' ? 'Change' : 'How much');
         const packs = mode === 'in' || mode === 'po' ? buyPacks(l.item, supplierId) : [];
         // In the stepper, a pack is its first word ("carton"): "Carton of 24" pushed a phone's
         // line past the screen at 320 wide. "Written in" beside it says the whole pack.
@@ -105,13 +106,13 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
                 <span className="row-label">{l.item.name}</span>
                 <span className="row-sub">
                   <code>{l.item.code}</code>
-                  {here && mode !== 'in' && mode !== 'po' && <> · {fmtQty(here.qty)} {l.item.uom} in this store</>}
-                  {mode === 'adjust' && <> · enter − to take away, + to add</>}
+                  {here && mode !== 'in' && mode !== 'po' && <> · {t('{qty} {uom} in this store', { qty: fmtQty(here.qty), uom: t(l.item.uom) })}</>}
+                  {mode === 'adjust' && <> · {t('enter − to take away, + to add')}</>}
                 </span>
                 {l.noteText && <span className="row-sub">On the note: “{l.noteText}”{l.factor > 1 ? ` · 1 on the note = ${fmtQty(l.factor)} ${l.item.uom}` : ''}</span>}
                 {notes[l.item.id] && <span className="row-sub">{notes[l.item.id]}</span>}
               </div>
-              <button type="button" className="icon-btn" onClick={() => drop(l.key)} aria-label={`Remove ${l.item.name}`}><Icon name="close" size={20} /></button>
+              <button type="button" className="icon-btn" onClick={() => drop(l.key)} aria-label={t('Remove {name}', { name: l.item.name })}><Icon name="close" size={20} /></button>
             </div>
             <div className="inv-line__fields">
               {mode === 'adjust'
@@ -145,11 +146,11 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
         );
       })}
       {(mode === 'in' || mode === 'po') && showCost && lines.length > 0 && (
-        <p className="r"><span className="muted">Total </span><b>{fmtMoney(total, currency)}</b></p>
+        <p className="r"><span className="muted">{t('Total')} </span><b>{fmtMoney(total, currency)}</b></p>
       )}
       <div className={lines.length ? 'inv-line inv-line--add' : 'inv-line--add'}>
         <ItemPicker items={items} storeId={storeId} onPick={add} filter={pickerFilter} label={lines.length ? 'Add another item' : 'Add an item'} showLabel
-          placeholder="Type a name or a code" exclude={mode === 'in' ? [] : lines.map((l) => l.item.id)} />
+          placeholder={t('Type a name or a code')} exclude={mode === 'in' ? [] : lines.map((l) => l.item.id)} />
         {scan && (
           <div className="scan-row">
             <Button kind="ghost" icon="scan" onClick={() => setScanning('camera')}>Scan</Button>

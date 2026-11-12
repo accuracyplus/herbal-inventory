@@ -15,6 +15,13 @@ import {
 } from '@hifive/ui';
 import Icon from './icons.jsx';
 import { fmtQty, get } from './api.js';
+import { t, useLang } from './i18n.js';
+
+/**
+ * Plain English given to a piece is said in the screen's language (D-043). Only exact phrases in
+ * the word list change; anything else (an item's name, a store, a person) is data and stays.
+ */
+export const tx = (v) => (typeof v === 'string' ? t(v) : v);
 
 // ── App context ──────────────────────────────────────────────────────────────
 
@@ -42,14 +49,15 @@ export function useData(path, deps = []) {
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 
-export function Page({ title, subtitle, actions, children, back }) {
+export function Page({ title, subtitle, actions, children, back, tour }) {
+  useLang();
   return (
     <div className="page">
-      {back && <button type="button" className="hf-btn hf-btn--quiet inv-back" onClick={back}><Icon name="back" size={18} />Back</button>}
-      <header className="page-head">
+      {back && <button type="button" className="hf-btn hf-btn--quiet inv-back" onClick={back}><Icon name="back" size={18} />{t('Back')}</button>}
+      <header className="page-head" data-tour={tour}>
         <div className="min0">
-          <h1 className="inv-h1">{title}</h1>
-          {subtitle && <p className="inv-lede">{subtitle}</p>}
+          <h1 className="inv-h1">{tx(title)}</h1>
+          {subtitle && <p className="inv-lede">{tx(subtitle)}</p>}
         </div>
         {actions && <div className="page-actions">{actions}</div>}
       </header>
@@ -59,12 +67,12 @@ export function Page({ title, subtitle, actions, children, back }) {
 }
 
 /** A card that holds a form or facts has a heading; one that holds a list or a table has a caption. */
-export function Card({ title, hint, actions, children, className = '', pad = true }) {
+export function Card({ title, hint, actions, children, className = '', pad = true, tour }) {
   return (
-    <section className={`hf-card inv-card ${pad ? '' : 'nopad'} ${className}`}>
+    <section className={`hf-card inv-card ${pad ? '' : 'nopad'} ${className}`} data-tour={tour}>
       {(title || actions) && (
         <div className="inv-card__h">
-          <h2 className={pad ? 'inv-h2' : 'hf-cap inv-cap'}>{title}{hint && <Hint text={hint} />}</h2>
+          <h2 className={pad ? 'inv-h2' : 'hf-cap inv-cap'}>{tx(title)}{hint && <Hint text={hint} />}</h2>
           {actions}
         </div>
       )}
@@ -77,7 +85,7 @@ const TILE_TONE = { brand: 'brand', accent: 'pop', danger: 'danger', warn: 'warn
 
 /** C4 · Tile: one live number with its label. A tile is never shown for zero: the screen leaves it out. */
 export function Tile({ icon, value, label, tone = 'brand', onClick, hint }) {
-  return <HfTile tone={TILE_TONE[tone] || 'brand'} icon={<Icon name={icon} size={18} />} value={value} label={label} hint={hint} onClick={onClick} />;
+  return <HfTile tone={TILE_TONE[tone] || 'brand'} icon={<Icon name={icon} size={18} />} value={value} label={tx(label)} hint={tx(hint)} onClick={onClick} />;
 }
 
 /** Rows in a card: icon, what it is, a line under it, and where it goes. A flag is said as a status chip. */
@@ -85,8 +93,8 @@ export function StatusRows({ rows }) {
   return (
     <div className="hf-listcard__rows inv-rows">
       {rows.map((r) => (
-        <ListRow key={r.key} icon={r.icon ? <Icon name={r.icon} size={20} /> : undefined} title={r.label} sub={r.sub} onClick={r.onClick}
-          trailing={r.flag ? <StatusChip tone={r.tone === 'warn' ? 'warn' : 'danger'}>{r.flag}</StatusChip> : r.end} />
+        <ListRow key={r.key} icon={r.icon ? <Icon name={r.icon} size={20} /> : undefined} title={tx(r.label)} sub={tx(r.sub)} onClick={r.onClick}
+          trailing={r.flag ? <StatusChip tone={r.tone === 'warn' ? 'warn' : 'danger'}>{tx(r.flag)}</StatusChip> : r.end} />
       ))}
     </div>
   );
@@ -94,18 +102,18 @@ export function StatusRows({ rows }) {
 
 /** An empty section collapses to one line, never an empty box. */
 export function Quiet({ children, icon = 'check' }) {
-  return <HfQuiet icon={<Icon name={icon} size={16} />}>{children}</HfQuiet>;
+  return <HfQuiet icon={<Icon name={icon} size={16} />}>{tx(children)}</HfQuiet>;
 }
 
 /** C8 · Hint: a "?" that opens one to three sentences. */
 export function Hint({ text }) {
-  return <HfHint text={text} />;
+  return <HfHint text={tx(text)} />;
 }
 
 /** C9 · Sheet: bottom sheet on a phone, centred dialog on a desk. The footer stays in view. */
 export function Sheet({ title, onClose, children, footer, wide = false }) {
   return (
-    <HfSheet open title={title} onClose={onClose} wide={wide}>
+    <HfSheet open title={tx(title)} onClose={onClose} wide={wide}>
       <div className="inv-sheet__body">{children}</div>
       {footer && <div className="inv-sheet__foot">{footer}</div>}
     </HfSheet>
@@ -114,7 +122,7 @@ export function Sheet({ title, onClose, children, footer, wide = false }) {
 
 /** A note inside a screen: something to know (plain), to look at (warn), or that stopped it (danger). */
 export function Note({ tone = 'plain', icon, children, role }) {
-  return <Banner tone={tone} role={role} icon={icon ? <Icon name={icon} size={18} /> : undefined}>{children}</Banner>;
+  return <Banner tone={tone} role={role} icon={icon ? <Icon name={icon} size={18} /> : undefined}>{tx(children)}</Banner>;
 }
 
 // ── Controls ─────────────────────────────────────────────────────────────────
@@ -127,7 +135,7 @@ export function Button({ kind = 'primary', icon, children, busy, className = '',
   const block = /\bblock\b/.test(className);
   return (
     <HfButton variant={VARIANT[kind] || 'secondary'} fit={!block} icon={icon ? <Icon name={icon} size={18} /> : undefined}
-      busy={busy} disabled={busy || disabled} {...rest}>{children}</HfButton>
+      busy={busy} disabled={busy || disabled} {...rest}>{tx(children)}</HfButton>
   );
 }
 
@@ -143,6 +151,7 @@ export function Field({ label, hint, error, children, className = '' }) {
   const only = Children.count(children) === 1 && isValidElement(children) ? children : null;
   const host = only && typeof only.type === 'string' && TAKES_A_LABEL.includes(only.type);
   const ours = only && [Select, QtyInput, Stepper, SearchBox].includes(only.type);
+  label = tx(label); hint = tx(hint); error = tx(error);
   const top = (htmlFor) => (
     <span className="inv-fld__top">
       {htmlFor ? <label htmlFor={htmlFor} className="hf-fld__l">{label}</label> : <span className="hf-fld__l">{label}</span>}
@@ -176,8 +185,8 @@ export function Select({ value, onChange, options, placeholder, className = '', 
   return (
     <span className={`hf-select ${className}`}>
       <select className="hf-input" value={value ?? ''} onChange={(e) => onChange(e.target.value)} {...rest}>
-        {placeholder !== undefined && <option value="">{placeholder}</option>}
-        {options.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
+        {placeholder !== undefined && <option value="">{tx(placeholder)}</option>}
+        {options.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{tx(o.label)}</option>)}
       </select>
       <ChevronDown size={18} aria-hidden="true" />
     </span>
@@ -187,24 +196,25 @@ export function Select({ value, onChange, options, placeholder, className = '', 
 /** The sections of a screen, or a Show filter: chips, with a count where something is waiting. */
 export function Segmented({ value, onChange, options, label }) {
   return (
-    <ChipGroup label={label}>
+    <ChipGroup label={tx(label)}>
       {options.map((o) => (
-        <Chip key={o.value} pressed={value === o.value} count={o.n > 0 ? o.n : undefined} onClick={() => onChange(o.value)}>{o.label}</Chip>
+        <Chip key={o.value} pressed={value === o.value} count={o.n > 0 ? o.n : undefined} onClick={() => onChange(o.value)}>{tx(o.label)}</Chip>
       ))}
     </ChipGroup>
   );
 }
 
 export function Check({ checked, onChange, children, ...rest }) {
-  return <Checkbox label={children} checked={!!checked} onChange={(e) => onChange(e.target.checked)} {...rest} />;
+  return <Checkbox label={tx(children)} checked={!!checked} onChange={(e) => onChange(e.target.checked)} {...rest} />;
 }
 
 export function SearchBox({ value, onChange, placeholder = 'Search', id }) {
+  placeholder = tx(placeholder);
   return (
     <div className="hf-search inv-search" role="search">
       <SearchGlass size={18} aria-hidden="true" />
       <input id={id} type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder} />
-      {value && <button type="button" className="hf-search__clear" onClick={() => onChange('')} aria-label="Clear the search"><X size={16} aria-hidden="true" /></button>}
+      {value && <button type="button" className="hf-search__clear" onClick={() => onChange('')} aria-label={t('Clear the search')}><X size={16} aria-hidden="true" /></button>}
     </div>
   );
 }
@@ -222,24 +232,24 @@ const STATUS_TEXT = {
   PARTLY_RECEIVED: 'Partly received', SUBMITTED: 'Waiting approval', SOON: 'Expiring soon', UNKNOWN: 'No date',
 };
 const CHIP_TONE = { ok: 'ok', warn: 'warn', danger: 'danger', brand: 'plain', faint: 'plain', plain: 'plain' };
-export const statusText = (s) => STATUS_TEXT[s] || (s ? s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ') : '');
+export const statusText = (s) => t(STATUS_TEXT[s] || (s ? s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ') : ''));
 
 /** A status, always an icon and words: the fixed status colours only, never the palette's. */
 export function Pill({ status, children, tone }) {
-  return <StatusChip tone={CHIP_TONE[tone] || STATUS_TONE[status] || 'plain'}>{children || statusText(status)}</StatusChip>;
+  return <StatusChip tone={CHIP_TONE[tone] || STATUS_TONE[status] || 'plain'}>{tx(children) || statusText(status)}</StatusChip>;
 }
 
 export function ErrorNote({ error, onRetry }) {
   if (!error) return null;
   return (
-    <Banner tone="danger" role="alert" action={onRetry ? { label: 'Try again', onClick: onRetry } : undefined}>
-      {error.message || String(error)}
+    <Banner tone="danger" role="alert" action={onRetry ? { label: t('Try again'), onClick: onRetry } : undefined}>
+      {tx(error.message || String(error))}
     </Banner>
   );
 }
 
 export function Loading({ what = 'Loading' }) {
-  return <HfLoading label={what} />;
+  return <HfLoading label={tx(what)} />;
 }
 
 // ── Toasts ───────────────────────────────────────────────────────────────────
@@ -247,7 +257,7 @@ export function Loading({ what = 'Loading' }) {
 /** One short line at the foot of the screen, one at a time, in the order they were said. */
 export function useToasts() {
   const [queue, setQueue] = useState([]);
-  const push = useCallback((text) => setQueue((q) => (q[q.length - 1] === String(text) ? q : [...q, String(text)])), []);
+  const push = useCallback((text) => setQueue((q) => { const said = tx(String(text)); return q[q.length - 1] === said ? q : [...q, said]; }), []);
   const done = useCallback(() => setQueue((q) => q.slice(1)), []);
   const view = <Toast text={queue[0] ?? null} onDone={done} ms={4200} />;
   return { push, view };
@@ -263,13 +273,13 @@ export function useToasts() {
 export function Table({ columns, rows, onRow, empty = 'Nothing here.', rowKey = (r, i) => r.id ?? i, initialSort, caption = 'List' }) {
   const index = useMemo(() => new Map(rows.map((r, i) => [r, i])), [rows]);
   const cols = columns.map((c) => ({
-    key: c.key, label: c.label, render: c.render, lead: !!c.primary, align: c.align === 'right' ? 'end' : 'start',
+    key: c.key, label: tx(c.label), render: c.render, lead: !!c.primary, align: c.align === 'right' ? 'end' : 'start',
     width: c.width || (c.primary ? 'minmax(0, 1.6fr)' : undefined),
     sortValue: c.sortable === false ? undefined : (c.sort || ((r) => r[c.key])),
   }));
   if (!rows.length) return <Quiet icon="check">{empty}</Quiet>;
   return (
-    <DataTable caption={caption} hideCaption columns={cols} rows={rows} rowKey={(r) => String(rowKey(r, index.get(r)))}
+    <DataTable caption={tx(caption)} hideCaption columns={cols} rows={rows} rowKey={(r) => String(rowKey(r, index.get(r)))}
       onRowClick={onRow} initialSort={initialSort || null} wide={columns.length > 5} />
   );
 }
@@ -294,20 +304,20 @@ export function ItemPicker({ items, storeId, onPick, exclude = [], placeholder =
       };
     }), [items, storeId, exclude, filter]);
   return (
-    <Picker label={label} hideLabel={!showLabel} placeholder={placeholder} options={options} onPick={(o) => onPick(o.item)}
-      empty={(typed) => `No item matches “${typed}”.`} />
+    <Picker label={tx(label)} hideLabel={!showLabel} placeholder={tx(placeholder)} options={options} onPick={(o) => onPick(o.item)}
+      empty={(typed) => t('No item matches “{typed}”.', { typed })} />
   );
 }
 
 /** A number box that keeps what was typed, so "1." does not jump back to "1". For a table of counts. */
 export function QtyInput({ value, onChange, min = 0, step = 'any', label = 'Quantity', className = '', ...rest }) {
   return (
-    <input className={`hf-input inv-num ${className}`} type="number" inputMode="decimal" min={min} step={step} value={value ?? ''} aria-label={label}
+    <input className={`hf-input inv-num ${className}`} type="number" inputMode="decimal" min={min} step={step} value={value ?? ''} aria-label={tx(label)}
       onChange={(e) => onChange(e.target.value)} onWheel={(e) => e.currentTarget.blur()} {...rest} />
   );
 }
 
 /** A quantity with one step down or up, and what it is counted in. */
 export function Stepper({ value, onChange, max, min = 0, unit, label = 'Quantity', id }) {
-  return <QuantityField id={id} label={label} hideLabel value={value} onChange={onChange} min={min} max={max} unit={unit} />;
+  return <QuantityField id={id} label={tx(label)} hideLabel value={value} onChange={onChange} min={min} max={max} unit={unit} />;
 }

@@ -7,6 +7,8 @@
  * token (the page may only talk to that Worker). The older `?hfid_token=` is still read.
  */
 
+import { dateLocale, has, t } from './i18n.js';
+
 export const API = import.meta.env.VITE_API || '';
 const HFID_ORIGIN = import.meta.env.VITE_HFID_ORIGIN || 'https://hifive-id.sinusuresh.workers.dev';
 const TOKEN_KEY = 'hifive-inventory.token';
@@ -100,13 +102,17 @@ export async function request(path, { method = 'GET', body, form, blob = false, 
     });
   } catch {
     throw new ApiError(navigator.onLine === false
-      ? 'You are offline. Nothing was recorded. Try again when you are back online.'
-      : 'Could not reach HiFive Inventory. Check your connection and try again.', 0, 'NETWORK');
+      ? t('You are offline. Nothing was recorded. Try again when you are back online.')
+      : t('Could not reach HiFive Inventory. Check your connection and try again.'), 0, 'NETWORK');
   }
   if (blob && res.ok) return res.blob();
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new ApiError(data?.error?.message || 'Something went wrong.', res.status, data?.error?.code, data?.error?.details);
+    // The server explains in English. Where the word list has that refusal by its code, it is said in
+    // the screen's language; otherwise the English stays, which is still a full sentence.
+    const code = data?.error?.code;
+    const said = code && has(`error:${code}`) ? t(`error:${code}`) : t(data?.error?.message || 'Something went wrong.');
+    throw new ApiError(said, res.status, code, data?.error?.details);
   }
   return data;
 }
@@ -163,6 +169,8 @@ export async function openPath(path, name) {
 
 const GST = 'Asia/Dubai';
 
+// Dates take the language; numbers stay 0 to 9 everywhere (D-043).
+
 export const fmtQty = (n) => {
   if (n === null || n === undefined || n === '') return '';
   const v = Number(n);
@@ -177,22 +185,22 @@ export const fmtMoney = (n, currency = 'AED', digits = 2) => {
 export const fmtDate = (iso) => {
   if (!iso) return '';
   const d = iso.length === 10 ? new Date(`${iso}T00:00:00+04:00`) : new Date(iso);
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: GST });
+  return d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric', timeZone: GST });
 };
 
 export const fmtDateTime = (iso) => {
   if (!iso) return '';
-  return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: GST });
+  return new Date(iso).toLocaleString(dateLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: GST });
 };
 
 export const fmtAgo = (iso) => {
   if (!iso) return '';
   const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 60) return 'just now';
-  if (s < 3600) return `${Math.round(s / 60)} min ago`;
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  if (s < 60) return t('just now');
+  if (s < 3600) return t('{n} min ago', { n: Math.round(s / 60) });
+  if (s < 86400) return t('{n} h ago', { n: Math.round(s / 3600) });
   const d = Math.round(s / 86400);
-  return d === 1 ? 'yesterday' : `${d} days ago`;
+  return d === 1 ? t('yesterday') : t('{n} days ago', { n: d });
 };
 
 export const gstToday = (offsetDays = 0) => new Date(Date.now() + offsetDays * 864e5 + 4 * 3600e3).toISOString().slice(0, 10);

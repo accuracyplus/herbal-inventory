@@ -1,0 +1,21 @@
+/* Malayalam screens (Design Guide 1.13, D-043; typefaces approved 12 Nov 2026 in Part B, Type:
+   Baloo Chettan 2 for headings, Noto Sans Malayalam for body). Loaded only when the interface is
+   Malayalam (src/i18n.js). Google serves each family split by script with unicode-range, so these
+   fonts fetch only Malayalam letters; Inter and Baloo 2 stay first, so Latin letters and digits
+   keep the house typefaces. */
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Chettan+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap');
+
+:root[lang="ml"] {
+  --font-display: 'Baloo 2', 'Baloo Chettan 2', 'Noto Sans Malayalam', 'Nunito', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: Inter, 'Noto Sans Malayalam', 'Nunito', -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Malayalam letters stack above and below the line more than Latin ones do; a little more room
+   between lines keeps two lines of a button or a row from touching. */
+:root[lang="ml"] body { line-height: 1.6; }
+
+/* The walkthrough's buttons are longer in Malayalam: at phone width Skip, Back and Next do not fit
+   on one line. Let the row wrap: Back and Next stay together on the right, Skip drops below them.
+   When they fit, nothing changes. (Raised with the design chat for the library itself.) */
+:root[lang="ml"] .hf-tour__acts { flex-wrap: wrap-reverse; row-gap: 6px; }
+:root[lang="ml"] .hf-tour__acts > span { margin-left: auto; }

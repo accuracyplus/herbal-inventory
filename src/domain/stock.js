@@ -19,7 +19,7 @@
 import { DomainError, refuse } from '../lib/errors.js';
 import { gstDate, m2, nowIso, q3, uuid } from '../lib/data.js';
 
-export const KINDS = ['RECEIPT', 'ISSUE', 'TRANSFER_OUT', 'TRANSFER_IN', 'ADJUST', 'COUNT', 'OPENING', 'LINEN', 'TAKE', 'RETURN'];
+export const KINDS = ['RECEIPT', 'ISSUE', 'TRANSFER_OUT', 'TRANSFER_IN', 'ADJUST', 'COUNT', 'OPENING', 'LINEN', 'TAKE', 'RETURN', 'RELEASE', 'SUPPLIER_RETURN'];
 export const LINEN_STATES = { available: 'qty', in_use: 'in_use', in_wash: 'in_wash' };
 
 /** Kinds that hand stock to somebody: expired stock is never given out. */
@@ -31,7 +31,7 @@ export async function loadItems(env, unitId, ids) {
   if (!unique.length) return new Map();
   const marks = unique.map(() => '?').join(',');
   const { results } = await env.DB.prepare(
-    `SELECT id, unit_id, code, name, category, uom, tracks_expiry, is_linen, avg_cost, last_cost, active, open_life_days
+    `SELECT id, unit_id, code, name, category, uom, tracks_expiry, is_linen, avg_cost, last_cost, active, open_life_days, inspect
        FROM items WHERE unit_id = ? AND id IN (${marks})`,
   ).bind(unitId, ...unique).all();
   const map = new Map((results || []).map((r) => [r.id, r]));
@@ -177,10 +177,18 @@ export async function buildPosting(env, posting, lines) {
   const stmts = [];
   const moved = [];
   for (const p of parts) {
+    // A held receipt (quarantine) goes into on_hold, where nothing that hands stock out can
+    // reach it, until it is released or sent back.
+    const held = kind === 'RECEIPT' && p.qty > 0 && !!p.hold;
     // SQLite checks CHECK (qty >= 0) on the row an upsert would INSERT before it resolves the
     // conflict, so a negative delta must be a plain UPDATE. The pre-check above means the row
     // exists (balance rows are never deleted), and the CHECK still guards the result.
-    stmts.push(p.qty > 0
+    stmts.push(held
+      ? env.DB.prepare(
+        `INSERT INTO balances (store_id, item_id, qty, on_hold) VALUES (?,?,0,?)
+         ON CONFLICT(store_id, item_id) DO UPDATE SET on_hold = round(on_hold + excluded.on_hold, 3)`,
+      ).bind(p.store.id, p.item.id, p.qty)
+      : p.qty > 0
       ? env.DB.prepare(
         `INSERT INTO balances (store_id, item_id, qty) VALUES (?,?,?)
          ON CONFLICT(store_id, item_id) DO UPDATE SET qty = round(qty + excluded.qty, 3)`,
@@ -192,10 +200,15 @@ export async function buildPosting(env, posting, lines) {
     let batchSql = null;
     if (p.item.tracks_expiry) {
       if (p.qty > 0) {
-        stmts.push(env.DB.prepare(
-          `INSERT INTO batches (id, store_id, item_id, batch_no, expiry, qty, received_at) VALUES (?,?,?,?,?,?,?)
-           ON CONFLICT(store_id, item_id, batch_no, expiry) DO UPDATE SET qty = round(qty + excluded.qty, 3)`,
-        ).bind(uuid(), p.store.id, p.item.id, p.batchNo || '', p.expiry || '', p.qty, at));
+        stmts.push(held
+          ? env.DB.prepare(
+            `INSERT INTO batches (id, store_id, item_id, batch_no, expiry, qty, on_hold, received_at) VALUES (?,?,?,?,?,0,?,?)
+             ON CONFLICT(store_id, item_id, batch_no, expiry) DO UPDATE SET on_hold = round(on_hold + excluded.on_hold, 3)`,
+          ).bind(uuid(), p.store.id, p.item.id, p.batchNo || '', p.expiry || '', p.qty, at)
+          : env.DB.prepare(
+            `INSERT INTO batches (id, store_id, item_id, batch_no, expiry, qty, received_at) VALUES (?,?,?,?,?,?,?)
+             ON CONFLICT(store_id, item_id, batch_no, expiry) DO UPDATE SET qty = round(qty + excluded.qty, 3)`,
+          ).bind(uuid(), p.store.id, p.item.id, p.batchNo || '', p.expiry || '', p.qty, at));
         batchSql = { sql: `(SELECT id FROM batches WHERE store_id = ? AND item_id = ? AND batch_no = ? AND expiry = ?)`,
                      args: [p.store.id, p.item.id, p.batchNo || '', p.expiry || ''] };
       } else {
@@ -209,14 +222,14 @@ export async function buildPosting(env, posting, lines) {
     const unitCost = (kind === 'RECEIPT' || kind === 'OPENING') && p.unitCost != null ? p.unitCost : (p.item.avg_cost || 0);
     const id = uuid();
     stmts.push(env.DB.prepare(
-      `INSERT INTO movements (id, unit_id, at, kind, item_id, store_id, batch_id, qty, balance_after,
+      `INSERT INTO movements (id, unit_id, at, kind, item_id, store_id, batch_id, qty, balance_after, to_state,
                               unit_cost, value, doc_type, doc_id, doc_ref, area_id, counterpart_store_id,
                               reason, note, actor_id, actor_name, person_id, person_name, department_id)
        VALUES (?,?,?,?,?,?, ${batchSql ? batchSql.sql : 'NULL'}, ?,
-               (SELECT qty FROM balances WHERE store_id = ? AND item_id = ?),
+               (SELECT qty FROM balances WHERE store_id = ? AND item_id = ?), ?,
                ?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     ).bind(id, unitId, at, kind, p.item.id, p.store.id, ...(batchSql ? batchSql.args : []), p.qty,
-           p.store.id, p.item.id,
+           p.store.id, p.item.id, held ? 'held' : null,
            unitCost, m2(p.qty * unitCost), doc.type ?? null, doc.id ?? null, doc.ref ?? null,
            p.areaId ?? null, p.counterpartStoreId ?? null, p.reason ?? null, p.note ?? null,
            actor?.id ?? null, actor?.name ?? null,
@@ -238,7 +251,7 @@ export async function buildPosting(env, posting, lines) {
 /** Everything of an item the unit holds: shelves, rooms, laundry and people. Used for average cost. */
 async function onHandInUnit(env, unitId, itemId) {
   const row = await env.DB.prepare(
-    `SELECT COALESCE((SELECT SUM(b.qty + b.in_use + b.in_wash)
+    `SELECT COALESCE((SELECT SUM(b.qty + b.in_use + b.in_wash + b.on_hold)
                         FROM balances b JOIN stores s ON s.id = b.store_id
                        WHERE s.unit_id = ?1 AND b.item_id = ?2), 0)
           + COALESCE((SELECT SUM(c.qty) FROM custody c WHERE c.unit_id = ?1 AND c.item_id = ?2), 0) AS n`,
@@ -300,6 +313,56 @@ export async function buildCustodyReturn(env, { lot, item, store, qty, actor, no
     item, store, qty, batchId: lot.batch_id, areaId: lot.area_id, note, personId: lot.person_id, personName: lot.person_name,
   }]);
   return { statements: [lessHeld(env, lot, qty), ...statements] };
+}
+
+// ── Quarantine: held stock released to the shelf, or sent out of hold ──────────────────
+
+const holdRow = (env, store, item, batchNo, expiry) => (item.tracks_expiry
+  ? env.DB.prepare(`SELECT id, on_hold FROM batches WHERE store_id = ? AND item_id = ? AND batch_no = ? AND expiry = ?`)
+    .bind(store.id, item.id, batchNo || '', expiry || '').first()
+  : null);
+
+/**
+ * Held stock released to the shelf after inspection. The value was counted when it was received,
+ * so this moves no value: on_hold down, qty up, one RELEASE movement saying so.
+ */
+export async function buildRelease(env, { unitId, actor, store, item, qty, batchNo, expiry, doc, note }) {
+  const bal = await balanceOf(env, store.id, item.id);
+  const onHold = (await env.DB.prepare(`SELECT on_hold FROM balances WHERE store_id = ? AND item_id = ?`).bind(store.id, item.id).first())?.on_hold || 0;
+  if (onHold < qty) refuse('NOT_ENOUGH', `Only ${fmt(onHold)} ${item.uom} of ${item.name} is held in ${store.name}.`, 409);
+  const b = await holdRow(env, store, item, batchNo, expiry);
+  if (item.tracks_expiry && (!b || b.on_hold < qty)) refuse('NOT_ENOUGH', `That lot of ${item.name} is no longer held in ${store.name}.`, 409);
+  return [
+    env.DB.prepare(`UPDATE balances SET on_hold = round(on_hold - ?1, 3), qty = round(qty + ?1, 3) WHERE store_id = ?2 AND item_id = ?3`).bind(qty, store.id, item.id),
+    ...(b ? [env.DB.prepare(`UPDATE batches SET on_hold = round(on_hold - ?1, 3), qty = round(qty + ?1, 3) WHERE id = ?2`).bind(qty, b.id)] : []),
+    env.DB.prepare(
+      `INSERT INTO movements (id, unit_id, at, kind, item_id, store_id, batch_id, qty, balance_after, from_state, to_state,
+                              unit_cost, value, doc_type, doc_id, doc_ref, note, actor_id, actor_name)
+       VALUES (?,?,?,'RELEASE',?,?,?,?,?, 'held', 'available', ?, 0, ?,?,?,?,?,?)`,
+    ).bind(uuid(), unitId, nowIso(), item.id, store.id, b?.id ?? null, qty, q3(bal.qty + qty), item.avg_cost || 0,
+           doc.type, doc.id, doc.ref ?? null, note ?? null, actor.id, actor.name),
+  ];
+}
+
+/**
+ * Held stock that leaves without reaching the shelf: sent back to the supplier, or written off
+ * as failed inspection. Its value leaves with it, at the price it came in at.
+ */
+export async function buildHoldOut(env, { unitId, actor, store, item, qty, batchNo, expiry, unitCost, kind, doc, reason, note }) {
+  const onHold = (await env.DB.prepare(`SELECT on_hold FROM balances WHERE store_id = ? AND item_id = ?`).bind(store.id, item.id).first())?.on_hold || 0;
+  if (onHold < qty) refuse('NOT_ENOUGH', `Only ${fmt(onHold)} ${item.uom} of ${item.name} is held in ${store.name}.`, 409);
+  const b = await holdRow(env, store, item, batchNo, expiry);
+  const bal = await balanceOf(env, store.id, item.id);
+  return [
+    env.DB.prepare(`UPDATE balances SET on_hold = round(on_hold - ?, 3) WHERE store_id = ? AND item_id = ?`).bind(qty, store.id, item.id),
+    ...(b ? [env.DB.prepare(`UPDATE batches SET on_hold = round(on_hold - ?, 3) WHERE id = ?`).bind(qty, b.id)] : []),
+    env.DB.prepare(
+      `INSERT INTO movements (id, unit_id, at, kind, item_id, store_id, batch_id, qty, balance_after, from_state, to_state,
+                              unit_cost, value, doc_type, doc_id, doc_ref, reason, note, actor_id, actor_name)
+       VALUES (?,?,?,?,?,?,?,?,?, 'held', 'gone', ?,?,?,?,?,?,?,?,?)`,
+    ).bind(uuid(), unitId, nowIso(), kind, item.id, store.id, b?.id ?? null, -qty, bal.qty, unitCost, m2(-qty * unitCost),
+           doc.type, doc.id, doc.ref ?? null, reason ?? null, note ?? null, actor.id, actor.name),
+  ];
 }
 
 /**

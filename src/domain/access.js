@@ -56,6 +56,12 @@ export const RULES = {
   'services.edit':     DECIDE,                             // services and what each normally uses
   'barcode.link':      ['STOREKEEPER', 'PURCHASER', ...DECIDE], // say which item an unknown barcode is
   'reports':           ['STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],
+  // Feature 14, each used only where the unit has switched the feature on.
+  'inspect':           DECIDE,                             // release held stock, or reject it
+  'return.raise':      [...OPS, 'PURCHASER'],              // send goods back against a delivery
+  'return.decide':     DECIDE,
+  'assets.edit':       OPS,                                // the equipment register and its services
+  'accounts':          ['PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],  // exports for the accounts system
   'admin':             ['UNIT_ADMIN'],
 };
 

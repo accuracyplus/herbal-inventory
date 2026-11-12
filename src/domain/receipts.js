@@ -67,15 +67,27 @@ async function againstOrder(env, user, poId, store, lines, items) {
   return { po, byItem, updates };
 }
 
-/** The statements that put a delivery on the shelf. The first one is what makes it happen once. */
+/**
+ * The statements that put a delivery on the shelf. The first one is what makes it happen once.
+ *
+ * With inspection on (`quarantine.on`: every delivery, or items marked "inspect on arrival"), a
+ * line goes into hold instead: owned and valued, but not usable until it is released.
+ */
 async function postingStatements(env, user, receipt, store, lines, items) {
   const order = receipt.po_id ? await againstOrder(env, user, receipt.po_id, store, lines, items) : null;
+  const mode = await setting(env, user.unitId, 'quarantine.on');
+  const holds = (l) => mode === 'all' || (mode === 'flagged' && !!items.get(l.itemId).inspect);
   const posting = await buildPosting(env, {
     kind: 'RECEIPT', unitId: user.unitId, actor: actorOf(user), doc: { type: 'RECEIPT', id: receipt.id, ref: receipt.ref },
-  }, lines.map((l) => ({ item: items.get(l.itemId), store, qty: l.qty, batchNo: l.batchNo, expiry: l.expiry, unitCost: l.unitCost, note: l.note })));
+  }, lines.map((l) => ({ item: items.get(l.itemId), store, qty: l.qty, batchNo: l.batchNo, expiry: l.expiry, unitCost: l.unitCost, note: l.note, hold: holds(l) })));
+  const now = nowIso();
   return [
-    env.DB.prepare(`INSERT INTO receipt_posted (receipt_id, at) VALUES (?,?)`).bind(receipt.id, nowIso()),
+    env.DB.prepare(`INSERT INTO receipt_posted (receipt_id, at) VALUES (?,?)`).bind(receipt.id, now),
     ...posting.statements,
+    ...lines.filter(holds).map((l) => env.DB.prepare(
+      `INSERT INTO inspections (id, unit_id, receipt_id, receipt_line_id, store_id, item_id, batch_no, expiry, qty, unit_cost, held_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+    ).bind(uuid(), user.unitId, receipt.id, l.lineId ?? null, store.id, l.itemId, String(l.batchNo || '').trim().slice(0, 60), l.expiry || '', l.qty, l.unitCost ?? 0, now)),
     ...(order ? order.updates : []),
   ];
 }
@@ -108,6 +120,7 @@ export async function recordReceipt(env, user, body) {
   const order = body.poId ? await againstOrder(env, user, body.poId, store, lines, items) : null;
   if (order) supplier = supplier || await env.DB.prepare(`SELECT id, name FROM suppliers WHERE id = ?`).bind(order.po.supplier_id).first();
   for (const l of lines) {
+    l.lineId = uuid();
     const it = items.get(l.itemId);
     const pl = order?.byItem.get(l.itemId);
     l.poQty = pl ? q3(pl.qty - pl.received_qty) : null;
@@ -137,7 +150,7 @@ export async function recordReceipt(env, user, body) {
       `INSERT INTO receipt_lines (id, receipt_id, item_id, qty, note_qty, unit_cost, batch_no, expiry, note_text, po_qty, po_cost, note,
                                   pack_label, pack_qty, pack_cost)
        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    ).bind(uuid(), id, l.itemId, l.qty, l.noteQty, l.unitCost, l.batchNo, l.expiry, l.noteText, l.poQty, l.poCost, l.note,
+    ).bind(l.lineId, id, l.itemId, l.qty, l.noteQty, l.unitCost, l.batchNo, l.expiry, l.noteText, l.poQty, l.poCost, l.note,
            l.pack?.label ?? null, l.pack?.qty ?? null, l.pack?.cost ?? null)),
     ...(supplier ? mappingStatements(env, user, supplier.id, lines) : []),
     ...(direct ? await postingStatements(env, user, receipt, store, lines, items) : []),
@@ -193,7 +206,7 @@ export async function decideReceipt(env, user, id, action, body = {}) {
   const store = await storeFor(env, user, r.store_id, { forWrite: false });
   if (!store.active) refuse('STORE_CLOSED', `${store.name} is closed.`);
   const rows = await linesOf(env, r.id);
-  const lines = rows.map((l) => ({ itemId: l.item_id, qty: l.qty, batchNo: l.batch_no, expiry: l.expiry, unitCost: l.unit_cost, note: l.note }));
+  const lines = rows.map((l) => ({ lineId: l.id, itemId: l.item_id, qty: l.qty, batchNo: l.batch_no, expiry: l.expiry, unitCost: l.unit_cost, note: l.note }));
   const items = await loadItems(env, user.unitId, lines.map((l) => l.itemId));
   await commit(env, [
     ...await postingStatements(env, user, r, store, lines, items),

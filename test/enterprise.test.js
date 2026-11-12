@@ -158,6 +158,143 @@ test('shelf locations: set per store on the item, shown on the stock list, the c
   assert.equal((await stockItem(env, oil)).stores.find((s) => s.storeId === S.main).location, null);
 });
 
+// ── Quarantine / inspection ──────────────────────────────────────────────────────────────
+
+const holdOf = (env, store, item) => env.DB.db.prepare(`SELECT qty, on_hold FROM balances WHERE store_id = ? AND item_id = ?`).get(store, item);
+const held = async (env, as = 'manager') => (await call(env, 'GET', '/api/inspections', { as })).body;
+
+test('inspection: every delivery held until released; nothing held can be used', async () => {
+  const env = testEnv();
+  const oil = await makeItem(env);
+  await settings(env, { 'quarantine.on': 'all' });
+  await receive(env, oil, 10, { unitCost: 20 });
+  assert.deepEqual({ ...holdOf(env, S.main, oil) }, { qty: 0, on_hold: 10 });
+  const use = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, areaId: 'ar-r1', personId: PEOPLE.keeper.id, lines: [{ itemId: oil, qty: 1 }] } });
+  assert.equal(use.body.error.code, 'NOT_ENOUGH', 'held stock is not on the shelf');
+  const valued = (await call(env, 'GET', '/api/stock', { as: 'manager' })).body.items.find((i) => i.id === oil);
+  assert.equal(valued.stores.find((s) => s.storeId === S.main).onHold, 10);
+
+  const list = await held(env);
+  assert.equal(list.length, 1);
+  assert.ok((await call(env, 'GET', '/api/today', { as: 'manager' })).body.waiting.some((w) => w.key === 'inspect'));
+  assert.equal((await call(env, 'POST', `/api/inspections/${list[0].id}/release`, { as: 'keeper' })).status, 403, 'a store keeper does not release');
+  assert.equal((await call(env, 'POST', `/api/inspections/${list[0].id}/release`, { as: 'manager' })).status, 200);
+  assert.deepEqual({ ...holdOf(env, S.main, oil) }, { qty: 10, on_hold: 0 });
+  assert.equal((await call(env, 'POST', `/api/inspections/${list[0].id}/release`, { as: 'manager' })).body.error.code, 'ALREADY_DECIDED');
+  const m = env.DB.db.prepare(`SELECT kind, qty, value FROM movements WHERE item_id = ? ORDER BY at`).all(oil).map((x) => [x.kind, x.qty, x.value]);
+  assert.deepEqual(m, [['RECEIPT', 10, 200], ['RELEASE', 10, 0]], 'valued once, when received');
+});
+
+test('inspection: only items marked "inspect on arrival", and a lot is released into its own batch', async () => {
+  const env = testEnv();
+  await settings(env, { 'quarantine.on': 'flagged' });
+  const reagent = await makeItem(env, { name: 'Glucose reagent', tracksExpiry: true });
+  const gloves = await makeItem(env, { name: 'Gloves' });
+  env.DB.db.prepare(`UPDATE items SET inspect = 1 WHERE id = ?`).run(reagent);
+  await receive(env, reagent, 5, { expiry: '2027-03-01', batchNo: 'G-1' });
+  await receive(env, gloves, 50);
+  assert.equal(holdOf(env, S.main, gloves).qty, 50, 'not marked: straight to the shelf');
+  assert.equal(holdOf(env, S.main, reagent).on_hold, 5);
+  const [ins] = await held(env);
+  assert.equal(ins.batch_no, 'G-1');
+  await call(env, 'POST', `/api/inspections/${ins.id}/release`, { as: 'manager' });
+  const b = env.DB.db.prepare(`SELECT qty, on_hold FROM batches WHERE item_id = ?`).get(reagent);
+  assert.deepEqual({ ...b }, { qty: 5, on_hold: 0 });
+});
+
+test('inspection: rejected stock goes back to the supplier waiting for its credit, or is written off', async () => {
+  const env = testEnv();
+  const oil = await makeItem(env);
+  await settings(env, { 'quarantine.on': 'all', 'returns.on': 'on' });
+  await receive(env, oil, 4, { unitCost: 25 });
+  const [ins] = await held(env);
+  assert.equal((await call(env, 'POST', `/api/inspections/${ins.id}/reject`, { as: 'manager' })).body.error.code, 'REASON_REQUIRED');
+  const r = await call(env, 'POST', `/api/inspections/${ins.id}/reject`, { as: 'manager', body: { note: 'Seal broken' } });
+  assert.equal(r.status, 200);
+  assert.deepEqual({ ...holdOf(env, S.main, oil) }, { qty: 0, on_hold: 0 });
+  const ret = (await call(env, 'GET', `/api/returns/${r.body.returnId}`, { as: 'manager' })).body;
+  assert.equal(ret.status, 'SENT');
+  assert.equal(ret.value, 100);
+  assert.equal(ret.lines[0].from_hold, 1);
+  const mv = env.DB.db.prepare(`SELECT kind, qty, value FROM movements WHERE item_id = ? AND kind = 'SUPPLIER_RETURN'`).get(oil);
+  assert.deepEqual({ ...mv }, { kind: 'SUPPLIER_RETURN', qty: -4, value: -100 });
+
+  const credit = await call(env, 'POST', `/api/returns/${ret.id}/credit`, { as: 'buyer', body: { creditNo: 'CN-77', creditDate: '2026-11-10', amount: 100 } });
+  assert.equal(credit.status, 200, JSON.stringify(credit.body));
+  assert.equal((await call(env, 'GET', `/api/returns/${ret.id}`, { as: 'buyer' })).body.status, 'CREDITED');
+
+  // Returns off: a rejection is a write-off at the price it came in at.
+  const env2 = testEnv();
+  const oil2 = await makeItem(env2);
+  await settings(env2, { 'quarantine.on': 'all' });
+  await receive(env2, oil2, 2, { unitCost: 30 });
+  const [ins2] = await held(env2);
+  await call(env2, 'POST', `/api/inspections/${ins2.id}/reject`, { as: 'manager', body: { note: 'Wrong colour' } });
+  const w = env2.DB.db.prepare(`SELECT kind, reason, value FROM movements WHERE item_id = ? AND kind = 'ADJUST'`).get(oil2);
+  assert.deepEqual({ ...w }, { kind: 'ADJUST', reason: 'FAILED_INSPECTION', value: -60 });
+});
+
+// ── Returns to supplier ──────────────────────────────────────────────────────────────────
+
+test('returns: against a delivery, never more than it brought, approved by somebody else, then the credit', async () => {
+  const env = testEnv();
+  const oil = await makeItem(env);
+  const raise = (b) => call(env, 'POST', '/api/returns', { as: 'keeper', body: b });
+  const off = await raise({ receiptId: 'x', reason: 'DAMAGED', lines: [] });
+  assert.equal(off.body.error.code, 'FEATURE_OFF');
+  await settings(env, { 'returns.on': 'on', 'accounting.on': 'on' });
+  const rec = await receive(env, oil, 10, { unitCost: 12 });
+  const opts = (await call(env, 'GET', `/api/returns/options/${rec.id}`, { as: 'keeper' })).body;
+  const line = opts.lines[0];
+  assert.equal(line.left, 10);
+  assert.equal((await raise({ receiptId: rec.id, reason: 'DAMAGED', lines: [{ receiptLineId: line.id, qty: 11 }] })).body.error.code, 'MORE_THAN_RECEIVED');
+  const ok = await raise({ receiptId: rec.id, reason: 'DAMAGED', note: 'Two leaking', lines: [{ receiptLineId: line.id, qty: 6 }] });
+  assert.equal(ok.status, 201);
+  assert.equal(ok.body.value, 72);
+  assert.equal((await raise({ receiptId: rec.id, reason: 'DAMAGED', lines: [{ receiptLineId: line.id, qty: 5 }] })).body.error.code, 'MORE_THAN_RECEIVED', '6 already on the way back');
+  assert.equal(bal(env, S.main, oil).qty, 10, 'nothing leaves until it is approved');
+
+  assert.equal((await call(env, 'POST', `/api/returns/${ok.body.id}/approve`, { as: 'keeper' })).status, 403);
+  assert.equal((await call(env, 'POST', `/api/returns/${ok.body.id}/approve`, { as: 'manager' })).status, 200);
+  assert.equal(bal(env, S.main, oil).qty, 4);
+  const waiting = (await call(env, 'GET', '/api/today', { as: 'buyer' })).body.waiting;
+  assert.ok(waiting.some((w) => w.key === 'returns-credit'), 'purchasing is told a credit is owed');
+
+  await close(env, '2026-01');
+  const early = await call(env, 'POST', `/api/returns/${ok.body.id}/credit`, { as: 'buyer', body: { creditNo: 'CN-1', creditDate: '2026-01-20', amount: 72 } });
+  assert.equal(early.body.error.code, 'PERIOD_CLOSED', 'a credit note cannot be dated in a closed month');
+  assert.equal((await call(env, 'POST', `/api/returns/${ok.body.id}/close`, { as: 'manager' })).body.error.code, 'REASON_REQUIRED');
+  assert.equal((await call(env, 'POST', `/api/returns/${ok.body.id}/close`, { as: 'manager', body: { note: 'Replaced instead' } })).status, 200);
+});
+
+// ── Recall tracing ───────────────────────────────────────────────────────────────────────
+
+test('recall: a lot traced from the supplier to every store, room and person, and what is left', async () => {
+  const env = testEnv();
+  await settings(env, { 'recall.on': 'on' });
+  const oil = await makeItem(env, { name: 'Nasya oil', tracksExpiry: true });
+  await receive(env, oil, 10, { expiry: '2027-01-31', batchNo: 'N-0912' });
+  await receive(env, oil, 5, { expiry: '2027-06-30', batchNo: 'N-1001' });
+  const t = await call(env, 'POST', '/api/transfers', { as: 'keeper', body: { fromStoreId: S.main, toStoreId: S.sub, lines: [{ itemId: oil, qty: 4 }] } });
+  assert.equal(t.status, 201, JSON.stringify(t.body));
+  const u = await call(env, 'POST', '/api/use', { as: 'staff', body: { storeId: S.sub, areaId: 'ar-r1', lines: [{ itemId: oil, qty: 2 }] } });
+  assert.equal(u.status, 201, JSON.stringify(u.body));
+
+  const found = (await call(env, 'GET', '/api/recall?q=0912', { as: 'manager' })).body;
+  assert.deepEqual(found.map((l) => l.batch_no), ['N-0912']);
+  const trace = (await call(env, 'GET', `/api/recall?item=${oil}&lot=N-0912`, { as: 'manager' })).body;
+  assert.equal(trace.cameIn.length, 1);
+  assert.deepEqual(trace.totals, { received: 10, used: 2, left: 8, withPeople: 0 });
+  assert.deepEqual(trace.left.map((l) => [l.store, l.qty]).sort(), [['Main store', 6], ['Spa sub store', 2]]);
+  const used = trace.went.find((m) => m.kind === 'ISSUE');
+  assert.equal(used.person, PEOPLE.staff.name);
+  assert.match(used.where, /Treatment room 1/);
+  assert.ok(!trace.went.some((m) => m.ref && /N-1001/.test(m.ref)), 'the other lot is not in it');
+
+  const keeper = (await call(env, 'GET', `/api/recall?item=${oil}&lot=N-0912`, { as: 'keeper' })).body;
+  assert.equal(keeper.went.find((m) => m.kind === 'ISSUE').person, undefined, 'names only for those who see use by person');
+});
+
 // ── Month close ──────────────────────────────────────────────────────────────────────────
 
 const close = (env, month, as = 'admin') => call(env, 'POST', '/api/periods/close', { as, body: { month } });

@@ -53,6 +53,8 @@ import { findHeld, PICK_ROLES, roleOptions, seatsFor, unitFor } from './domain/n
 import { LINEN_FLOWS } from './domain/stock.js';
 import { approvesAnyAmount, limitFor } from './domain/limits.js';
 import { closedMonths, closeMonth, reopenMonth } from './domain/periods.js';
+import { decideInspection, getReturn, listInspections, listReturns, raiseReturn, RETURN_REASONS, returnAction, returnOptions } from './domain/quality.js';
+import { findLots, traceLot } from './domain/recall.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const json = (body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...JSON_HEADERS, ...extra } });
@@ -337,7 +339,7 @@ api('GET', '/api/me', async ({ env }, user) => {
     unit: user.unit, units: user.units, roles: user.roles, stores: user.stores,
     can: abilities(user),
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
-    labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: FILE_KINDS },
+    labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: FILE_KINDS, returnReasons: RETURN_REASONS },
     // What this deployment has switched on, so a screen can say "not set up" before it is tried.
     has: { files: !!env.FILES, reading: !!env.AI?.run, mail: mailStatus(env).ready },
     // Approval limits in force (feature 14), so a screen can say who approves before it is tried.
@@ -716,6 +718,24 @@ api('POST', '/api/periods/:action', async ({ request, env, params }, user) => {
   if (params.action === 'close') return json(await closeMonth(env, user, b));
   if (params.action === 'reopen') return json(await reopenMonth(env, user, b));
   return fail(404, 'NOT_FOUND', 'Close or reopen.');
+});
+
+api('GET', '/api/inspections', async ({ env, url }, user) => {
+  requireMay(user, 'stock.view');
+  return json(await listInspections(env, user, { status: ['HELD', 'RELEASED', 'REJECTED'].includes(url.searchParams.get('status')) ? url.searchParams.get('status') : 'HELD' }));
+});
+api('POST', '/api/inspections/:id/:action', async ({ request, env, params }, user) => json(await decideInspection(env, user, params.id, params.action, await body(request))));
+
+api('GET', '/api/returns', async ({ env, url }, user) => { requireMay(user, 'stock.view'); return json(await listReturns(env, user, { status: text(url.searchParams.get('status'), 20) })); });
+api('GET', '/api/returns/options/:receiptId', async ({ env, params }, user) => { requireMay(user, 'return.raise'); return json(await returnOptions(env, user, params.receiptId)); });
+api('POST', '/api/returns', async ({ request, env }, user) => { requireMay(user, 'return.raise'); return json(await raiseReturn(env, user, await body(request)), 201); });
+api('GET', '/api/returns/:id', async ({ env, params }, user) => { requireMay(user, 'stock.view'); return json(await getReturn(env, user, params.id)); });
+api('POST', '/api/returns/:id/:action', async ({ request, env, params }, user) => json(await returnAction(env, user, params.id, params.action, await body(request))));
+
+api('GET', '/api/recall', async ({ env, url }, user) => {
+  requireMay(user, 'reports');
+  const item = url.searchParams.get('item');
+  return json(item ? await traceLot(env, user, { itemId: item, lot: url.searchParams.get('lot') }) : await findLots(env, user, url.searchParams.get('q')));
 });
 
 api('GET', '/api/units', async ({ env }, user) => { requireGroupAdmin(user); return json(await listUnits(env)); });

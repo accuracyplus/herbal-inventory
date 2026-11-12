@@ -54,6 +54,71 @@ ALTER TABLE balances ADD COLUMN on_hold REAL NOT NULL DEFAULT 0 CHECK (on_hold >
 ALTER TABLE batches ADD COLUMN on_hold REAL NOT NULL DEFAULT 0 CHECK (on_hold >= 0);
 ALTER TABLE items ADD COLUMN inspect INTEGER NOT NULL DEFAULT 0;   -- "inspect on arrival"
 
+-- One row per part of a delivery that went into hold: what, how much, and how it ended.
+CREATE TABLE IF NOT EXISTS inspections (
+  id               TEXT PRIMARY KEY,
+  unit_id          TEXT NOT NULL REFERENCES units(id),
+  receipt_id       TEXT NOT NULL REFERENCES receipts(id),
+  receipt_line_id  TEXT REFERENCES receipt_lines(id),
+  store_id         TEXT NOT NULL REFERENCES stores(id),
+  item_id          TEXT NOT NULL REFERENCES items(id),
+  batch_no         TEXT NOT NULL DEFAULT '',
+  expiry           TEXT NOT NULL DEFAULT '',
+  qty              REAL NOT NULL CHECK (qty > 0),
+  unit_cost        REAL NOT NULL DEFAULT 0,
+  status           TEXT NOT NULL DEFAULT 'HELD' CHECK (status IN ('HELD','RELEASED','REJECTED')),
+  held_at          TEXT NOT NULL,
+  decided_by       TEXT,
+  decided_by_name  TEXT,
+  decided_at       TEXT,
+  note             TEXT,
+  return_id        TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_inspections ON inspections (unit_id, status, held_at);
+
+-- ── Returns to supplier ────────────────────────────────────────────────────────────────
+--   PENDING ──approve──▶ SENT (stock leaves) ──credit──▶ CREDITED
+--      └──reject / cancel            └──close without credit, with a reason──▶ CLOSED
+CREATE TABLE IF NOT EXISTS supplier_returns (
+  id                TEXT PRIMARY KEY,
+  unit_id           TEXT NOT NULL REFERENCES units(id),
+  ref               TEXT NOT NULL,
+  receipt_id        TEXT NOT NULL REFERENCES receipts(id),
+  supplier_id       TEXT REFERENCES suppliers(id),
+  store_id          TEXT NOT NULL REFERENCES stores(id),
+  status            TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING','SENT','CREDITED','CLOSED','REJECTED','CANCELLED')),
+  reason            TEXT NOT NULL,
+  note              TEXT,
+  value             REAL NOT NULL DEFAULT 0,       -- the credit expected: qty at the delivery's price
+  raised_by         TEXT NOT NULL,
+  raised_by_name    TEXT NOT NULL,
+  raised_at         TEXT NOT NULL,
+  decided_by        TEXT,
+  decided_by_name   TEXT,
+  decided_at        TEXT,
+  decision_note     TEXT,
+  credit_no         TEXT,
+  credit_date       TEXT,
+  credit_amount     REAL,
+  credited_by_name  TEXT,
+  credited_at       TEXT,
+  UNIQUE (unit_id, ref)
+);
+CREATE INDEX IF NOT EXISTS ix_returns ON supplier_returns (unit_id, status, raised_at DESC);
+
+CREATE TABLE IF NOT EXISTS supplier_return_lines (
+  id               TEXT PRIMARY KEY,
+  return_id        TEXT NOT NULL REFERENCES supplier_returns(id),
+  receipt_line_id  TEXT NOT NULL REFERENCES receipt_lines(id),
+  item_id          TEXT NOT NULL REFERENCES items(id),
+  batch_no         TEXT NOT NULL DEFAULT '',
+  expiry           TEXT NOT NULL DEFAULT '',
+  qty              REAL NOT NULL CHECK (qty > 0),
+  unit_cost        REAL NOT NULL DEFAULT 0,
+  from_hold        INTEGER NOT NULL DEFAULT 0      -- rejected at inspection: it never reached the shelf
+);
+CREATE INDEX IF NOT EXISTS ix_return_lines ON supplier_return_lines (return_id);
+
 -- ── Shelf locations ────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS item_locations (
   store_id    TEXT NOT NULL REFERENCES stores(id),

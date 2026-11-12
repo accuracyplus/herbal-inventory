@@ -37,6 +37,7 @@ export async function unitFacts(env, unitId, now = Date.now()) {
   const weekAgo = new Date(now - 7 * DAY).toISOString();
   const lots = set('lots.opened') === 'on';
   const dueDays = Number(set('lots.due_days')) || 0;
+  const on = (k) => { const v = set(k); return v !== null && v !== 'off'; };
 
   const [requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs] = await Promise.all([
     all(`SELECT requested_by AS by, COUNT(*) AS n, SUM(urgency = 'URGENT') AS urgent, MIN(requested_at) AS oldest
@@ -65,7 +66,13 @@ export async function unitFacts(env, unitId, now = Date.now()) {
         today, today, gstDate(Date.parse(`${today}T00:00:00Z`) - 4 * 36e5 + dueDays * DAY), today, unitId)
       : null,
   ]);
-  return { unitId, today, hours, dueDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs };
+  // Feature 14: read only where the unit has the feature on.
+  const [inspection, returns, credits] = await Promise.all([
+    on('quarantine.on') ? one(`SELECT COUNT(*) AS n, MIN(held_at) AS oldest FROM inspections WHERE unit_id = ? AND status = 'HELD'`, unitId) : null,
+    on('returns.on') ? all(`SELECT raised_by AS by, COUNT(*) AS n, MIN(raised_at) AS oldest FROM supplier_returns WHERE unit_id = ? AND status = 'PENDING' GROUP BY raised_by`, unitId) : null,
+    on('returns.on') ? one(`SELECT COUNT(*) AS n, MIN(decided_at) AS oldest FROM supplier_returns WHERE unit_id = ? AND status = 'SENT'`, unitId) : null,
+  ]);
+  return { unitId, today, hours, dueDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits };
 }
 
 /** Rows grouped by who raised them, without the person's own. */
@@ -140,6 +147,21 @@ export function waitingList(f, user) {
   if (may(user, 'custody.team')) {
     const r = others(f.held, user.staffId);
     if (r.n) add({ key: 'custody-team', screen: 'with-me', filter: 'TEAM', n: r.n, due: 'overdue', days: since(t, lateFrom(r.oldest)), action: 'See who', text: `${plural(r.n, 'item')} unaccounted for, with ${r.people} ${r.people > 1 ? 'people' : 'person'}` });
+  }
+
+  if (f.inspection?.n && may(user, 'inspect')) {
+    const n = f.inspection.n;
+    add({ key: 'inspect', screen: 'returns', to: 'returns?tab=inspect', n, days: since(t, f.inspection.oldest), action: 'Inspect', text: `${plural(n, 'delivery line')} held for inspection` });
+  }
+  if (f.returns && may(user, 'return.decide')) {
+    const r = others(f.returns, user.staffId);
+    if (r.n) add({ key: 'returns-approve', screen: 'returns', filter: 'PENDING', n: r.n, days: since(t, r.oldest), action: 'Approve', text: `${plural(r.n, 'return')} to the supplier to approve` });
+  }
+  if (f.credits?.n && may(user, 'po.edit')) {
+    // A credit note takes a while: chased by email only once it is a month late.
+    const n = f.credits.n;
+    const late = f.credits.oldest ? diff(dayOf(f.credits.oldest), t) - 30 : null;
+    add({ key: 'returns-credit', screen: 'returns', filter: 'SENT', n, days: late !== null && late > 0 ? -late : null, quiet: !(late > 0), action: 'Record the credit', text: `${plural(n, 'return')} waiting for a credit note` });
   }
 
   if (f.packs && may(user, 'stock.use')) {

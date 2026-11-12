@@ -27,6 +27,8 @@ import Reports from './screens/Reports.jsx';
 import Admin from './screens/Admin.jsx';
 import Help from './screens/Help.jsx';
 import InUse from './screens/InUse.jsx';
+import Returns from './screens/Returns.jsx';
+import Recall from './screens/Recall.jsx';
 
 /** Every screen, who sees it, and where it sits. `any` lists abilities; one is enough. `when`, a unit setting that must be on. */
 const SCREENS = [
@@ -44,7 +46,9 @@ const SCREENS = [
   { id: 'purchasing', label: 'Purchasing', icon: 'purchasing', group: 'store', any: ['po.edit', 'po.decide', 'receive', 'reports'], el: Purchasing },
   { id: 'counts', label: 'Stock counts', icon: 'counts', group: 'store', any: ['count.run', 'count.decide', 'reports'], el: Counts },
   { id: 'corrections', label: 'Corrections', icon: 'corrections', group: 'store', any: ['adjust.raise', 'adjust.decide', 'reports'], el: Corrections },
+  { id: 'returns', label: 'Returns and inspection', icon: 'returns', group: 'store', any: ['inspect', 'return.raise', 'return.decide', 'po.edit'], when: ['quarantine.on', 'returns.on'], el: Returns },
   { id: 'reports', label: 'Reports', icon: 'reports', group: 'manage', any: ['reports'], el: Reports },
+  { id: 'recall', label: 'Trace a lot', icon: 'trace', group: 'manage', any: ['reports'], when: 'recall.on', el: Recall },
   { id: 'admin', label: 'Admin', icon: 'admin', group: 'manage', any: ['admin', 'items.edit', 'supplier.edit'], el: Admin },
   { id: 'help', label: 'Help', icon: 'help', group: 'manage', any: ['stock.view'], el: Help },
 ];
@@ -133,7 +137,9 @@ export default function App() {
   useEffect(() => { syncChromeColour(); return signedIn ? startFollowingAppearance() : undefined; }, [signedIn]);
 
   // The unit's own word for its services (treatments, tests) is what the menu says.
-  const visible = useMemo(() => (me ? SCREENS.filter((s) => s.any.some((a) => me.can.includes(a)) && (!s.when || me.settings?.[s.when] === 'on'))
+  // `when` is a setting, or several (any one on is enough); "on" is anything but off.
+  const switchedOn = (k) => !!me?.settings?.[k] && me.settings[k] !== 'off';
+  const visible = useMemo(() => (me ? SCREENS.filter((s) => s.any.some((a) => me.can.includes(a)) && (!s.when || [].concat(s.when).some(switchedOn)))
     .map((s) => (s.id === 'services' ? { ...s, label: me.settings?.['services.word'] || s.label } : s)) : []), [me]);
 
   const switchUnit = async (id) => {

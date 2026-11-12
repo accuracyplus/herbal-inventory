@@ -8,6 +8,7 @@ import { fmtDate, fmtDateTime, fmtMoney, fmtQty, openFile, post, sendForm, shrin
 import { KeyValues, Timeline } from '@hifive/ui';
 import { Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Table, useApp, useData } from '../ui.jsx';
 import { Paperwork } from './Receive.jsx';
+import { RaiseReturn } from './Returns.jsx';
 
 const STATUS = { PENDING: ['warn', 'Waiting approval'], APPROVED: ['ok', 'On the shelf'], REJECTED: ['danger', 'Sent back'], CANCELLED: ['faint', 'Cancelled'] };
 export const DeliveryPill = ({ status }) => <Pill tone={STATUS[status]?.[0]}>{STATUS[status]?.[1] || status}</Pill>;
@@ -50,6 +51,8 @@ export function DeliveryPage({ id, onClose }) {
   const [files, setFiles] = useState([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [returning, setReturning] = useState(false);
+  const { navigate } = useApp();
   const act = async (action, msg) => {
     setBusy(true); setErr(null);
     try { await post(`/api/receipts/${id}/${action}`, { note }); toast(msg); setNote(''); reload(); refreshBadges(); if (action === 'approve') refreshStock(); } catch (e) { setErr(e); } finally { setBusy(false); }
@@ -77,11 +80,13 @@ export function DeliveryPage({ id, onClose }) {
   return (
     <Page back={onClose} title={r ? `Delivery ${r.note_no || r.ref}` : 'Delivery'}
       subtitle={r ? `${r.supplier_name ? `From ${r.supplier_name}. ` : ''}Counted by ${r.by_name}, ${fmtDateTime(r.at)}.` : undefined}
-      actions={r && pending && <>
+      actions={r && (pending ? <>
         {(mine || decides) && <Button kind="ghost" busy={busy} onClick={() => act('cancel', 'Delivery cancelled')}>Cancel it</Button>}
         {decides && <Button kind="secondary" busy={busy} onClick={sendBack}>Send it back</Button>}
         {decides && <Button busy={busy} icon="check" onClick={() => act('approve', 'Approved. The stock is on the shelf.')}>Approve</Button>}
-      </>}>
+      </> : r.status === 'APPROVED' && me.settings['returns.on'] === 'on' && can('return.raise') && (
+        <Button kind="secondary" icon="returns" onClick={() => setReturning(true)}>Return goods to the supplier</Button>
+      ))}>
       <ErrorNote error={error} onRetry={reload} />
       {loading && !r && <Loading />}
       {r && (
@@ -164,6 +169,7 @@ export function DeliveryPage({ id, onClose }) {
                 </Field>
               )}
               {pending && <Quiet icon="info">Nothing is on the shelf until this is approved.</Quiet>}
+              {returning && <RaiseReturn receiptId={r.id} onClose={() => setReturning(false)} onDone={(x) => { setReturning(false); navigate(`returns/${x.id}?tab=returns`); }} />}
             </div>
           </div>
         </>

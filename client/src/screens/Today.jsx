@@ -13,7 +13,7 @@ const greeting = () => {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 };
 
-const ICON = { requests: 'requests', purchasing: 'purchasing', corrections: 'corrections', counts: 'counts', 'with-me': 'custody', admin: 'unit', services: 'sparkle', 'in-use': 'lab' };
+const ICON = { requests: 'requests', purchasing: 'purchasing', corrections: 'corrections', counts: 'counts', 'with-me': 'custody', admin: 'unit', services: 'sparkle', 'in-use': 'lab', returns: 'returns', assets: 'asset' };
 const lines = (n) => `${n} line${n === 1 ? '' : 's'}`;
 
 /** What is left, said the way a person would: "None left." or "2 kg left, reorder at 10." */

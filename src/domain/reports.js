@@ -42,13 +42,13 @@ export function hideCostPerPerson(user, m) {
 
 export async function valuation(env, user) {
   const { results } = await env.DB.prepare(
-    `SELECT code, name, category, uom, store, qty, in_use, in_wash, with_people, avg_cost,
-            round((qty + in_use + in_wash + with_people) * avg_cost, 2) AS value
-       FROM (SELECT i.code, i.name, i.category, i.uom, s.name AS store, b.qty, b.in_use, b.in_wash, i.avg_cost,
+    `SELECT code, name, category, uom, store, qty, in_use, in_wash, on_hold, with_people, avg_cost,
+            round((qty + in_use + in_wash + on_hold + with_people) * avg_cost, 2) AS value
+       FROM (SELECT i.code, i.name, i.category, i.uom, s.name AS store, b.qty, b.in_use, b.in_wash, b.on_hold, i.avg_cost,
                     COALESCE((SELECT SUM(c.qty) FROM custody c WHERE c.store_id = b.store_id AND c.item_id = b.item_id), 0) AS with_people
                FROM balances b JOIN items i ON i.id = b.item_id JOIN stores s ON s.id = b.store_id
               WHERE s.unit_id = ?)
-      WHERE qty > 0 OR in_use > 0 OR in_wash > 0 OR with_people > 0
+      WHERE qty > 0 OR in_use > 0 OR in_wash > 0 OR on_hold > 0 OR with_people > 0
       ORDER BY category, name, store`,
   ).bind(user.unitId).all();
   const rows = results || [];
@@ -191,7 +191,7 @@ export async function groupMonthly(env, monthParam) {
     ).bind(fromAt, toAt).all(),
     env.DB.prepare(`SELECT unit_id, COUNT(*) AS n, COALESCE(SUM(total), 0) AS value FROM receipts WHERE status = 'APPROVED' AND at >= ? AND at < ? GROUP BY unit_id`).bind(fromAt, toAt).all(),
     env.DB.prepare(
-      `SELECT s.unit_id, SUM((b.qty + b.in_use + b.in_wash) * i.avg_cost) AS value
+      `SELECT s.unit_id, SUM((b.qty + b.in_use + b.in_wash + b.on_hold) * i.avg_cost) AS value
          FROM balances b JOIN stores s ON s.id = b.store_id JOIN items i ON i.id = b.item_id GROUP BY s.unit_id`,
     ).all(),
     env.DB.prepare(`SELECT c.unit_id, SUM(c.qty * i.avg_cost) AS value FROM custody c JOIN items i ON i.id = c.item_id WHERE c.qty > 0 GROUP BY c.unit_id`).all(),

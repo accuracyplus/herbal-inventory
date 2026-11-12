@@ -109,7 +109,7 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
         held: !!b || !!lv,
       };
     });
-    const total = q3(per.reduce((s, p) => s + p.qty + p.inUse + p.inWash + p.withPeople, 0));
+    const total = q3(per.reduce((s, p) => s + p.qty + p.inUse + p.inWash + p.onHold + p.withPeople, 0));
     const expiries = per.map((p) => p.nextExpiry).filter(Boolean).sort();
     const next = expiries[0] || null;
     const worst = ['OUT', 'CRITICAL', 'LOW', 'OK'].find((st) => per.some((p) => p.held && p.status === st)) || 'OK';
@@ -217,6 +217,11 @@ function labStatement(env, itemId, body) {
   return env.DB.prepare(`UPDATE items SET ${sets.join(', ')} WHERE id = ?`).bind(...args, itemId);
 }
 
+/** "Inspect on arrival", only when the form sent it. */
+const inspectStatement = (env, itemId, body) => (Object.prototype.hasOwnProperty.call(body, 'inspect')
+  ? env.DB.prepare(`UPDATE items SET inspect = ? WHERE id = ?`).bind(body.inspect ? 1 : 0, itemId)
+  : null);
+
 export async function saveItem(env, user, body, id = null) {
   const f = itemFields(body);
   if (f.supplier_id) {
@@ -264,7 +269,7 @@ export async function saveItem(env, user, body, id = null) {
       ).bind(f.code, f.name, f.category, f.uom, f.barcode, f.tracks_expiry, f.is_linen, f.supplier_id, f.notes,
              body.active === false ? 0 : 1, now, user.fullName, id),
       ...levelStatements(env, id, body.levels),
-      ...[labStatement(env, id, body)].filter(Boolean),
+      ...[labStatement(env, id, body), inspectStatement(env, id, body)].filter(Boolean),
       ...await packStatements(env, user, id, body),
       ...await locationStatements(env, user, id, body.levels),
       auditStmt(env, user, 'ITEM_EDIT', f.code, f.name),
@@ -280,7 +285,7 @@ export async function saveItem(env, user, body, id = null) {
     ).bind(newId, user.unitId, f.code, f.name, f.category, f.uom, f.barcode, f.tracks_expiry, f.is_linen,
            nonNegative(body.unitCost) ?? 0, nonNegative(body.unitCost), f.supplier_id, f.notes, now, user.fullName),
     ...levelStatements(env, newId, body.levels),
-    ...[labStatement(env, newId, body)].filter(Boolean),
+    ...[labStatement(env, newId, body), inspectStatement(env, newId, body)].filter(Boolean),
     ...await packStatements(env, user, newId, body),
     ...await locationStatements(env, user, newId, body.levels),
     auditStmt(env, user, 'ITEM_CREATE', f.code, f.name),

@@ -8,7 +8,7 @@ import {
   AlertTriangle, ArrowDownToLine, ArrowLeft, ArrowLeftRight, BarChart3, Building2, Camera, Check, ChevronRight,
   ClipboardList, Clock, Download, FileText, Filter, HelpCircle, Home, Inbox, Info, LayoutGrid, LogOut, Minus,
   MoreHorizontal, Package, Pencil, Plus, ScanLine, Search, Settings, ShieldCheck, Shirt, ShoppingCart, Smartphone,
-  Sparkles, Trash2, Truck, X, FlaskConical, Snowflake,
+  Sparkles, Trash2, Truck, X, FlaskConical, Snowflake, Undo2, Route, Wrench, Landmark,
 } from 'lucide-react';
 
 const ICONS = {
@@ -19,6 +19,7 @@ const ICONS = {
   alert: AlertTriangle, clock: Clock, logout: LogOut, more: MoreHorizontal, download: Download, trash: Trash2,
   unit: Building2, filter: Filter, edit: Pencil, sparkle: Sparkles, apps: LayoutGrid, camera: Camera,
   file: FileText, info: Info, lab: FlaskConical, cold: Snowflake,
+  returns: Undo2, trace: Route, asset: Wrench, accounts: Landmark,
 };
 
 export default function Icon({ name, size = 20, className = '', label }) {

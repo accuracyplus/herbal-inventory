@@ -119,6 +119,25 @@ CREATE TABLE IF NOT EXISTS supplier_return_lines (
 );
 CREATE INDEX IF NOT EXISTS ix_return_lines ON supplier_return_lines (return_id);
 
+-- ── Landed cost and VAT on deliveries ─────────────────────────────────────────────────
+-- Charges (freight, customs, insurance) are spread over a delivery's lines by value when it is
+-- posted; landed_cost is what each unit then cost to get here, and is what the stock is valued
+-- at. unit_cost stays the supplier's price, which price history and supplier comparison read.
+-- VAT is kept beside the net: recoverable, so it is never part of the stock's cost.
+CREATE TABLE IF NOT EXISTS receipt_charges (
+  id          TEXT PRIMARY KEY,
+  receipt_id  TEXT NOT NULL REFERENCES receipts(id),
+  kind        TEXT NOT NULL CHECK (kind IN ('FREIGHT','CUSTOMS','INSURANCE','HANDLING','OTHER')),
+  amount      REAL NOT NULL CHECK (amount >= 0),
+  note        TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_receipt_charges ON receipt_charges (receipt_id);
+ALTER TABLE receipts ADD COLUMN charges_total REAL NOT NULL DEFAULT 0;
+ALTER TABLE receipts ADD COLUMN vat_total REAL NOT NULL DEFAULT 0;
+ALTER TABLE receipt_lines ADD COLUMN landed_cost REAL;
+ALTER TABLE receipt_lines ADD COLUMN vat_rate REAL;
+ALTER TABLE receipt_lines ADD COLUMN vat REAL NOT NULL DEFAULT 0;
+
 -- ── Shelf locations ────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS item_locations (
   store_id    TEXT NOT NULL REFERENCES stores(id),

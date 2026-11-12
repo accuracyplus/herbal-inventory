@@ -5,7 +5,8 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { HP, PEOPLE, S, bal, call, makeItem, receive, testEnv } from './helpers/http.js';
+import { HP, PEOPLE, S, bal, call, makeItem, receive, testEnv, upload } from './helpers/http.js';
+import { spreadCharges } from '../src/domain/accounts.js';
 
 export const settings = (env, values, as = 'admin') => call(env, 'PUT', '/api/settings', { as, body: values });
 
@@ -293,6 +294,72 @@ test('recall: a lot traced from the supplier to every store, room and person, an
 
   const keeper = (await call(env, 'GET', `/api/recall?item=${oil}&lot=N-0912`, { as: 'keeper' })).body;
   assert.equal(keeper.went.find((m) => m.kind === 'ISSUE').person, undefined, 'names only for those who see use by person');
+});
+
+// ── Landed cost, VAT, exports ────────────────────────────────────────────────────────────
+
+test('landed cost: charges spread by value, the rounding on the largest line, by quantity when nothing has a price', () => {
+  assert.deepEqual(spreadCharges([{ qty: 10, unitCost: 10 }, { qty: 5, unitCost: 20 }], 30), [{ share: 15, landed: 11.5 }, { share: 15, landed: 23 }]);
+  const three = spreadCharges([{ qty: 1, unitCost: 5 }, { qty: 1, unitCost: 5 }, { qty: 1, unitCost: 5 }], 10);
+  assert.equal(three.reduce((s, x) => s + x.share, 0).toFixed(2), '10.00', 'the shares add up to the charges');
+  assert.deepEqual(spreadCharges([{ qty: 3, unitCost: 0 }, { qty: 1, unitCost: 0 }], 8).map((x) => x.share), [6, 2]);
+});
+
+test('landed cost: the stock is valued at it; the supplier\'s price stays for price history', async () => {
+  const env = testEnv();
+  const oil = await makeItem(env);
+  const soap = await makeItem(env, { name: 'Soap' });
+  const rec = (body) => call(env, 'POST', '/api/receipts', { as: 'keeper', body: { storeId: S.main, lines: [{ itemId: oil, qty: 10, unitCost: 10 }, { itemId: soap, qty: 5, unitCost: 20 }], ...body } });
+  assert.equal((await rec({ charges: [{ kind: 'FREIGHT', amount: 30 }] })).body.error.code, 'FEATURE_OFF');
+  await settings(env, { 'landed.on': 'on' });
+  const r = await rec({ charges: [{ kind: 'FREIGHT', amount: 20 }, { kind: 'CUSTOMS', amount: 10 }] });
+  assert.equal(r.status, 201, JSON.stringify(r.body));
+  const before = (await call(env, 'GET', `/api/receipts/${r.body.id}`, { as: 'manager' })).body;
+  assert.equal(before.charges_total, 30);
+  assert.deepEqual(before.lines.map((l) => [l.name, l.landed_cost]).sort(), [['Massage oil', 11.5], ['Soap', 23]], 'the approver sees it before posting');
+  await upload(env, `/api/receipts/${r.body.id}/files`, { kind: 'NOTE' });
+  assert.equal((await call(env, 'POST', `/api/receipts/${r.body.id}/approve`, { as: 'manager' })).status, 200);
+  const it = env.DB.db.prepare(`SELECT avg_cost FROM items WHERE id = ?`).get(oil);
+  assert.equal(it.avg_cost, 11.5);
+  const line = env.DB.db.prepare(`SELECT unit_cost, landed_cost FROM receipt_lines WHERE receipt_id = ? AND item_id = ?`).get(r.body.id, oil);
+  assert.deepEqual({ ...line }, { unit_cost: 10, landed_cost: 11.5 });
+  const value = env.DB.db.prepare(`SELECT SUM(value) AS v FROM movements WHERE doc_id = ?`).get(r.body.id).v;
+  assert.equal(value, 230, 'AED 200 of goods and AED 30 of getting them here');
+});
+
+test('VAT on deliveries and the exports for the accounts system', async () => {
+  const env = testEnv();
+  env.DB.db.prepare(`INSERT INTO suppliers (id, unit_id, name, trn, active) VALUES ('sp-1', ?, 'Kerala Oils', '100123456700003', 1)`).run(HP);
+  const oil = await makeItem(env);
+  const today = new Date(Date.now() + 4 * 36e5).toISOString().slice(0, 10);
+  const ex = (kind, as = 'manager') => call(env, 'GET', `/api/accounts/export?kind=${kind}&from=2026-01-01&to=${today}`, { as });
+  assert.equal((await ex('purchases')).body.error.code, 'FEATURE_OFF');
+  await settings(env, { 'accounting.on': 'on' });
+  assert.equal((await ex('purchases', 'keeper')).status, 403, 'a store keeper does not export the accounts');
+
+  const rec = await call(env, 'POST', '/api/receipts', { as: 'keeper', body: { storeId: S.main, supplierId: 'sp-1', invoiceNo: 'INV-9', lines: [{ itemId: oil, qty: 10, unitCost: 10 }, { itemId: oil, qty: 2, unitCost: 10, vatRate: 0 }] } });
+  assert.equal(rec.status, 201, JSON.stringify(rec.body));
+  await upload(env, `/api/receipts/${rec.body.id}/files`, { kind: 'NOTE' });
+  await call(env, 'POST', `/api/receipts/${rec.body.id}/approve`, { as: 'manager' });
+  assert.equal(env.DB.db.prepare(`SELECT vat_total FROM receipts WHERE id = ?`).get(rec.body.id).vat_total, 5);
+  assert.equal(env.DB.db.prepare(`SELECT avg_cost FROM items WHERE id = ?`).get(oil).avg_cost, 10, 'VAT is never part of the cost');
+
+  const purchases = (await ex('purchases')).body;
+  assert.equal(purchases.length, 2);
+  const p = purchases.find((x) => x.vat_rate === 5);
+  assert.deepEqual([p.supplier, p.trn, p.invoice, p.net, p.vat, p.gross], ['Kerala Oils', '100123456700003', 'INV-9', 100, 5, 105]);
+
+  await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId: S.main, areaId: 'ar-r1', personId: PEOPLE.keeper.id, lines: [{ itemId: oil, qty: 3 }] } });
+  const use = (await ex('consumption')).body;
+  assert.equal(use.length, 1);
+  assert.equal(use[0].value, 30);
+  assert.equal(use[0].category, 'Oils');
+
+  const adj = await call(env, 'POST', '/api/adjustments', { as: 'keeper', body: { storeId: S.main, reason: 'DAMAGED', lines: [{ itemId: oil, qty: -1 }] } });
+  await call(env, 'POST', `/api/adjustments/${adj.body.id}/decide`, { as: 'manager', body: { action: 'APPROVE' } });
+  const off = (await ex('writeoffs')).body;
+  assert.deepEqual(off.map((x) => [x.what, x.qty, x.value]), [['Correction', -1, -10]]);
+  assert.equal((await ex('nothing')).body.error.code, 'BAD_EXPORT');
 });
 
 // ── Month close ──────────────────────────────────────────────────────────────────────────

@@ -117,6 +117,10 @@ export default function ReceiveScreen() {
   const [err, setErr] = useState(null);
   const [tried, setTried] = useState(false);
   const [done, setDone] = useState(null);
+  const landedOn = me.settings['landed.on'] === 'on';
+  const vatOn = me.settings['accounting.on'] === 'on';
+  const [charges, setCharges] = useState([]);
+  const [vatRate, setVatRate] = useState(me.settings['accounting.vat_rate'] ?? '5');
   const showCost = can('cost.view') || can('receive');
   const twoStep = me.settings['receipts.approval'] !== 'none';
   const needNote = twoStep && me.settings['receipts.note'] !== 'optional';
@@ -191,7 +195,11 @@ export default function ReceiveScreen() {
       const r = await post('/api/receipts', {
         storeId, supplierId: supplierId || null, poId: poId || null, noteNo, noteDate: noteDate || null, invoiceNo, invoiceDate: invoiceDate || null, note,
         // A line counted in packs has its note quantity in the same packs.
-        lines: toPayload(lines, (l) => ({ noteQty: l.noteQty === '' || l.noteQty === undefined || l.noteQty === null ? null : +(Number(l.noteQty) * (l.pack?.factor || 1)).toFixed(3), noteText: l.noteText || null, factor: l.factor || 1 })),
+        lines: toPayload(lines, (l) => ({
+          noteQty: l.noteQty === '' || l.noteQty === undefined || l.noteQty === null ? null : +(Number(l.noteQty) * (l.pack?.factor || 1)).toFixed(3),
+          noteText: l.noteText || null, factor: l.factor || 1, ...(vatOn ? { vatRate: Number(vatRate) || 0 } : {}),
+        })),
+        ...(landedOn ? { charges: charges.filter((c) => Number(c.amount) > 0).map((c) => ({ kind: c.kind, amount: Number(c.amount), note: c.note })) } : {}),
       });
       // The delivery is recorded; a file that fails to send is said, and can be added afterwards.
       const failed = [];
@@ -200,7 +208,7 @@ export default function ReceiveScreen() {
       }
       setDone({ ...r, failed, attached: files.length - failed.length, hasNote: files.some((f) => ['NOTE', 'INVOICE'].includes(f.kind) && !failed.some((x) => x.startsWith(f.file.name))) });
       toast(`${r.ref} recorded`);
-      setLines([]); setFiles([]); setRead(null); setNoteNo(''); setNoteDate(''); setInvoiceNo(''); setInvoiceDate(''); setNote(''); setPoId(''); setTried(false);
+      setLines([]); setFiles([]); setRead(null); setCharges([]); setNoteNo(''); setNoteDate(''); setInvoiceNo(''); setInvoiceDate(''); setNote(''); setPoId(''); setTried(false);
       refreshStock(); refreshBadges();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
@@ -260,7 +268,31 @@ export default function ReceiveScreen() {
       </Card>
       <Card title="What arrived">
         <LineEditor mode="in" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} warnings={warnings} showCost={showCost} currency={currency} scan="receive" withNote supplierId={supplierId || null} />
+        {vatOn && showCost && (
+          <div className="form two">
+            <Field label="VAT rate on this delivery (%)" hint="Kept beside the cost, never added to it. Zero for a delivery that is zero-rated or exempt.">
+              <QtyInput value={vatRate} onChange={setVatRate} label="VAT rate" />
+            </Field>
+          </div>
+        )}
       </Card>
+      {landedOn && showCost && (
+        <Card title="Charges on this delivery" hint="Freight, customs, insurance or handling paid to get it here. Spread over the items by value, so their cost includes it.">
+          <div className="stack">
+            {charges.map((c) => (
+              <div key={c.key} className="line" style={{ gridTemplateColumns: '1fr' }}>
+                <div className="line-fields">
+                  <Field label="Charge"><Select value={c.kind} onChange={(v) => setCharges(charges.map((x) => (x.key === c.key ? { ...x, kind: v } : x)))} options={Object.entries(me.labels.chargeKinds || {}).map(([value, label]) => ({ value, label }))} /></Field>
+                  <Field label={`Amount (${currency})`}><QtyInput value={c.amount} onChange={(v) => setCharges(charges.map((x) => (x.key === c.key ? { ...x, amount: v } : x)))} label="Charge amount" /></Field>
+                  <Field label="Note (optional)"><input value={c.note} onChange={(e) => setCharges(charges.map((x) => (x.key === c.key ? { ...x, note: e.target.value } : x)))} maxLength={200} /></Field>
+                  <Button kind="ghost" icon="close" onClick={() => setCharges(charges.filter((x) => x.key !== c.key))}>Remove</Button>
+                </div>
+              </div>
+            ))}
+            <div><Button kind="secondary" icon="plus" onClick={() => setCharges([...charges, { key: Math.random().toString(36).slice(2), kind: 'FREIGHT', amount: '', note: '' }])}>Add a charge</Button></div>
+          </div>
+        </Card>
+      )}
       <Card title="Paperwork" hint="Photos or PDFs of the delivery note, the supplier's invoice and the LPO. Each is kept with who attached it and when.">
         {me.has?.files === false
           ? <Note tone="warn" icon="alert"><span>File storage is not set up for this app yet, so nothing can be attached. Tell your administrator.</span></Note>

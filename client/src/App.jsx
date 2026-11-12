@@ -29,6 +29,7 @@ import Help from './screens/Help.jsx';
 import InUse from './screens/InUse.jsx';
 import Returns from './screens/Returns.jsx';
 import Recall from './screens/Recall.jsx';
+import Accounts from './screens/Accounts.jsx';
 
 /** Every screen, who sees it, and where it sits. `any` lists abilities; one is enough. `when`, a unit setting that must be on. */
 const SCREENS = [
@@ -49,6 +50,7 @@ const SCREENS = [
   { id: 'returns', label: 'Returns and inspection', icon: 'returns', group: 'store', any: ['inspect', 'return.raise', 'return.decide', 'po.edit'], when: ['quarantine.on', 'returns.on'], el: Returns },
   { id: 'reports', label: 'Reports', icon: 'reports', group: 'manage', any: ['reports'], el: Reports },
   { id: 'recall', label: 'Trace a lot', icon: 'trace', group: 'manage', any: ['reports'], when: 'recall.on', el: Recall },
+  { id: 'accounts', label: 'Accounts', icon: 'accounts', group: 'manage', any: ['accounts'], when: 'accounting.on', el: Accounts },
   { id: 'admin', label: 'Admin', icon: 'admin', group: 'manage', any: ['admin', 'items.edit', 'supplier.edit'], el: Admin },
   { id: 'help', label: 'Help', icon: 'help', group: 'manage', any: ['stock.view'], el: Help },
 ];

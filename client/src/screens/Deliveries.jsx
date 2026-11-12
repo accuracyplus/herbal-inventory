@@ -112,6 +112,8 @@ export function DeliveryPage({ id, onClose }) {
                   { label: 'Against order', value: r.po_ref },
                   { label: 'Invoice', value: [r.invoice_no, r.invoice_date && fmtDate(r.invoice_date)].filter(Boolean).join(', ') },
                   { label: 'Value counted', value: fmtMoney(r.total, currency) },
+                  ...(r.charges_total > 0 ? [{ label: 'Charges', value: `${fmtMoney(r.charges_total, currency)}: ${r.charges.map((c) => c.label).join(', ')}` }] : []),
+                  ...(r.vat_total > 0 ? [{ label: 'VAT', value: `${fmtMoney(r.vat_total, currency)}, ${fmtMoney(r.total + r.vat_total, currency)} with VAT` }] : []),
                   { label: 'Note from the receiver', value: r.note },
                 ]} />
                 {r.flags.length === 0 && <Quiet>What was counted matches the note{r.po_ref ? ' and the order' : ''}.</Quiet>}
@@ -123,7 +125,8 @@ export function DeliveryPage({ id, onClose }) {
                   { key: 'note_qty', label: 'On the note', align: 'right', render: (l) => `${fmtQty(l.note_qty === null ? l.qty : l.note_qty)} ${l.uom}` },
                   { key: 'qty', label: 'Counted', align: 'right', render: (l) => <b>{fmtQty(l.qty)} {l.uom}</b> },
                   ...(r.po_ref ? [{ key: 'po_qty', label: 'Still on order', align: 'right', render: (l) => (l.po_qty === null ? '' : fmtQty(l.po_qty)) }] : []),
-                  { key: 'unit_cost', label: 'Unit cost', align: 'right', render: (l) => fmtMoney(l.unit_cost, currency) },
+                  { key: 'unit_cost', label: 'Unit cost', align: 'right', render: (l) => <span className="min0"><span>{fmtMoney(l.unit_cost, currency)}</span>{l.pack_label ? <span className="row-sub">{fmtQty(l.pack_qty)} × {l.pack_label}</span> : null}</span> },
+                  ...(r.charges_total > 0 ? [{ key: 'landed_cost', label: 'Landed', align: 'right', render: (l) => fmtMoney(l.landed_cost, currency) }] : []),
                   { key: 'line', label: 'Value', align: 'right', sort: (l) => l.qty * l.unit_cost, render: (l) => fmtMoney(l.qty * l.unit_cost, currency) },
                 ]} />
                 <p className="inv-total"><span className="muted">Total counted</span><span className="inv-number" style={{ fontSize: 18 }}>{fmtMoney(r.total, currency)}</span></p>

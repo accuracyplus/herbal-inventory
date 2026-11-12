@@ -24,6 +24,7 @@ import { filesFor } from '../lib/files.js';
 import { may, requireOtherApprover, storeFor } from './access.js';
 import { mappingStatements } from './notes.js';
 import { applyPacks } from './packs.js';
+import { applyVat, CHARGE_KINDS, parseCharges, spreadCharges } from './accounts.js';
 import { parseLines } from './operations.js';
 import { setting } from './settings.js';
 import { buildPosting, commit, loadItems } from './stock.js';
@@ -77,17 +78,21 @@ async function postingStatements(env, user, receipt, store, lines, items) {
   const order = receipt.po_id ? await againstOrder(env, user, receipt.po_id, store, lines, items) : null;
   const mode = await setting(env, user.unitId, 'quarantine.on');
   const holds = (l) => mode === 'all' || (mode === 'flagged' && !!items.get(l.itemId).inspect);
+  // Landed cost: the delivery's charges spread over its lines; the stock is valued at it.
+  const landed = receipt.charges_total > 0 ? spreadCharges(lines, receipt.charges_total) : null;
+  const costOf = (l, i) => (landed ? landed[i].landed : l.unitCost);
   const posting = await buildPosting(env, {
     kind: 'RECEIPT', unitId: user.unitId, actor: actorOf(user), doc: { type: 'RECEIPT', id: receipt.id, ref: receipt.ref },
-  }, lines.map((l) => ({ item: items.get(l.itemId), store, qty: l.qty, batchNo: l.batchNo, expiry: l.expiry, unitCost: l.unitCost, note: l.note, hold: holds(l) })));
+  }, lines.map((l, i) => ({ item: items.get(l.itemId), store, qty: l.qty, batchNo: l.batchNo, expiry: l.expiry, unitCost: costOf(l, i), note: l.note, hold: holds(l) })));
   const now = nowIso();
   return [
     env.DB.prepare(`INSERT INTO receipt_posted (receipt_id, at) VALUES (?,?)`).bind(receipt.id, now),
     ...posting.statements,
-    ...lines.filter(holds).map((l) => env.DB.prepare(
+    ...(landed ? lines.map((l, i) => env.DB.prepare(`UPDATE receipt_lines SET landed_cost = ? WHERE id = ?`).bind(landed[i].landed, l.lineId)) : []),
+    ...lines.map((l, i) => ({ l, i })).filter(({ l }) => holds(l)).map(({ l, i }) => env.DB.prepare(
       `INSERT INTO inspections (id, unit_id, receipt_id, receipt_line_id, store_id, item_id, batch_no, expiry, qty, unit_cost, held_at)
        VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-    ).bind(uuid(), user.unitId, receipt.id, l.lineId ?? null, store.id, l.itemId, String(l.batchNo || '').trim().slice(0, 60), l.expiry || '', l.qty, l.unitCost ?? 0, now)),
+    ).bind(uuid(), user.unitId, receipt.id, l.lineId ?? null, store.id, l.itemId, String(l.batchNo || '').trim().slice(0, 60), l.expiry || '', l.qty, costOf(l, i) ?? 0, now)),
     ...(order ? order.updates : []),
   ];
 }
@@ -135,23 +140,28 @@ export async function recordReceipt(env, user, body) {
   const ref = await nextRef(env, user.unitId, user.unit.code, 'GRN');
   const now = nowIso();
   const total = m2(lines.reduce((s, l) => s + l.qty * l.unitCost, 0));
-  const receipt = { id, ref, po_id: order?.po.id ?? null };
-  const about = `${lines.length} line(s) into ${store.name}${supplier ? ` from ${supplier.name}` : ''}${order ? ` against ${order.po.ref}` : ''}, AED ${total}`;
+  const vatTotal = await applyVat(env, user.unitId, lines, body.lines);
+  const charges = await parseCharges(env, user.unitId, body.charges);
+  const chargesTotal = m2(charges.reduce((s, c) => s + c.amount, 0));
+  const receipt = { id, ref, po_id: order?.po.id ?? null, charges_total: chargesTotal };
+  const about = `${lines.length} line(s) into ${store.name}${supplier ? ` from ${supplier.name}` : ''}${order ? ` against ${order.po.ref}` : ''}, AED ${total}${chargesTotal ? ` plus AED ${chargesTotal} charges` : ''}`;
 
   await commit(env, [
     env.DB.prepare(
       `INSERT INTO receipts (id, unit_id, ref, store_id, supplier_id, po_id, invoice_no, invoice_date, note_no, note_date, note, total,
-                             by_id, by_name, at, status, decided_at, decision_note)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                             by_id, by_name, at, status, decided_at, decision_note, charges_total, vat_total)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     ).bind(id, user.unitId, ref, store.id, supplier?.id ?? null, receipt.po_id, text(body.invoiceNo, 60),
            body.invoiceDate ? isoDate(body.invoiceDate) : null, text(body.noteNo, 60), noteDate, text(body.note, 300), total,
-           user.staffId, user.fullName, now, direct ? 'APPROVED' : 'PENDING', direct ? now : null, direct ? 'No approval step in this unit' : null),
+           user.staffId, user.fullName, now, direct ? 'APPROVED' : 'PENDING', direct ? now : null, direct ? 'No approval step in this unit' : null,
+           chargesTotal, vatTotal),
     ...lines.map((l) => env.DB.prepare(
       `INSERT INTO receipt_lines (id, receipt_id, item_id, qty, note_qty, unit_cost, batch_no, expiry, note_text, po_qty, po_cost, note,
-                                  pack_label, pack_qty, pack_cost)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                                  pack_label, pack_qty, pack_cost, vat_rate, vat)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     ).bind(l.lineId, id, l.itemId, l.qty, l.noteQty, l.unitCost, l.batchNo, l.expiry, l.noteText, l.poQty, l.poCost, l.note,
-           l.pack?.label ?? null, l.pack?.qty ?? null, l.pack?.cost ?? null)),
+           l.pack?.label ?? null, l.pack?.qty ?? null, l.pack?.cost ?? null, l.vatRate ?? null, l.vat ?? 0)),
+    ...charges.map((c) => env.DB.prepare(`INSERT INTO receipt_charges (id, receipt_id, kind, amount, note) VALUES (?,?,?,?,?)`).bind(c.id, id, c.kind, c.amount, c.note)),
     ...(supplier ? mappingStatements(env, user, supplier.id, lines) : []),
     ...(direct ? await postingStatements(env, user, receipt, store, lines, items) : []),
     auditStmt(env, user, direct ? 'RECEIVE' : 'RECEIPT_RECORD', ref, about),
@@ -241,14 +251,20 @@ export function receiptFlags(lines, { poRef = null, missing = [] } = {}) {
 
 export async function getReceipt(env, user, id) {
   const r = await load(env, user, id);
-  const [lines, files, names] = await Promise.all([
+  const [lines, files, names, charges] = await Promise.all([
     linesOf(env, r.id),
     filesFor(env, 'RECEIPT', r.id),
     env.DB.prepare(
       `SELECT st.name AS store_name, s.name AS supplier_name, p.ref AS po_ref FROM stores st
          LEFT JOIN suppliers s ON s.id = ?2 LEFT JOIN purchase_orders p ON p.id = ?3 WHERE st.id = ?1`,
     ).bind(r.store_id, r.supplier_id, r.po_id).first(),
+    env.DB.prepare(`SELECT kind, amount, note FROM receipt_charges WHERE receipt_id = ? ORDER BY kind`).bind(r.id).all().then((x) => (x.results || []).map((c) => ({ ...c, label: CHARGE_KINDS[c.kind] }))),
   ]);
+  // Before it is posted, the approver sees what each unit would cost landed.
+  if (r.charges_total > 0 && lines.some((l) => l.landed_cost == null)) {
+    const spread = spreadCharges(lines.map((l) => ({ qty: l.qty, unitCost: l.unit_cost })), r.charges_total);
+    lines.forEach((l, i) => { if (l.landed_cost == null) l.landed_cost = spread[i].landed; });
+  }
   let missing = [];
   if (r.po_id && r.status === 'PENDING') {
     const { results } = await env.DB.prepare(
@@ -257,7 +273,7 @@ export async function getReceipt(env, user, id) {
     const here = new Set(lines.map((l) => l.name));
     missing = (results || []).map((x) => x.name).filter((n) => !here.has(n));
   }
-  return { ...r, ...names, lines, files, flags: receiptFlags(lines, { poRef: names?.po_ref, missing }), hasNote: files.some((f) => f.kind === 'NOTE' || f.kind === 'INVOICE') };
+  return { ...r, ...names, lines, files, charges, flags: receiptFlags(lines, { poRef: names?.po_ref, missing }), hasNote: files.some((f) => f.kind === 'NOTE' || f.kind === 'INVOICE') };
 }
 
 export async function listReceipts(env, user, { status, limit = 200 }) {

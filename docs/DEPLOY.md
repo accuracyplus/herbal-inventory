@@ -25,7 +25,15 @@ npm test
 npx wrangler d1 create hifive-inventory
 ```
 
-3. Create the tables and seed Herbal Park with you as administrator:
+3. Create the tables and seed Herbal Park with you as administrator. On a new, empty database,
+   one command runs all of it in order (schema.sql, every migration, the seed) and stops at the
+   first failure, naming the file:
+
+```powershell
+npm run setup:db
+```
+
+   It is the same as these, one at a time:
 
 ```powershell
 npm run migrate

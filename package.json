@@ -8,6 +8,7 @@
     "dev": "wrangler dev",
     "predeploy": "npm test",
     "deploy": "node scripts/deploy.mjs",
+    "setup:db": "node scripts/d1-setup.mjs",
     "migrate": "wrangler d1 execute hifive-inventory --remote --yes --file=schema.sql",
     "migrate:local": "wrangler d1 execute hifive-inventory --local --file=schema.sql",
     "seed": "wrangler d1 execute hifive-inventory --remote --yes --file=seed/0001-herbal-park.sql"

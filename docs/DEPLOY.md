@@ -17,7 +17,9 @@ npm test
 ```
 
 2. Create the database, then paste the `database_id` it prints into `wrangler.toml`
-   (replace `PASTE-THE-DATABASE-ID-HERE`):
+   (replace `PASTE-THE-DATABASE-ID-HERE`) and commit it. If wrangler offers to add it to the
+   configuration on your behalf, answer **no**: it adds a second block instead of filling the
+   one that is there.
 
 ```powershell
 npx wrangler d1 create hifive-inventory
@@ -27,16 +29,16 @@ npx wrangler d1 create hifive-inventory
 
 ```powershell
 npm run migrate
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0001_departments_and_people.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0002_custody.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0003_group_summary.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0004_scanning.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0005_deliveries.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0006_services.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0007_service_link.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0008_supplier_depth.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0009_lab_lots.sql
-npx wrangler d1 execute hifive-inventory --remote --file=migrations/0010_enterprise.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0001_departments_and_people.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0002_custody.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0003_group_summary.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0004_scanning.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0005_deliveries.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0006_services.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0007_service_link.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0008_supplier_depth.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0009_lab_lots.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0010_enterprise.sql
 npm run seed
 ```
 
@@ -44,7 +46,8 @@ npm run seed
    that are missing.
 
 4. Create the private file store for delivery notes, invoices and LPOs. Once only, and before
-   the deploy, which fails without it:
+   the deploy, which fails without it. (On 12 Nov 2026 it already existed on the account; if
+   wrangler says it already exists, carry on.)
 
 ```powershell
 npx wrangler r2 bucket create hifive-inventory-files

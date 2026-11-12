@@ -31,7 +31,7 @@ export async function loadItems(env, unitId, ids) {
   if (!unique.length) return new Map();
   const marks = unique.map(() => '?').join(',');
   const { results } = await env.DB.prepare(
-    `SELECT id, unit_id, code, name, category, uom, tracks_expiry, is_linen, avg_cost, last_cost, active
+    `SELECT id, unit_id, code, name, category, uom, tracks_expiry, is_linen, avg_cost, last_cost, active, open_life_days
        FROM items WHERE unit_id = ? AND id IN (${marks})`,
   ).bind(unitId, ...unique).all();
   const map = new Map((results || []).map((r) => [r.id, r]));

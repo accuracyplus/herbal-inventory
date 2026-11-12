@@ -34,6 +34,7 @@ npx wrangler d1 execute hifive-inventory --remote --file=migrations/0005_deliver
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0006_services.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0007_service_link.sql
 npx wrangler d1 execute hifive-inventory --remote --file=migrations/0008_supplier_depth.sql
+npx wrangler d1 execute hifive-inventory --remote --file=migrations/0009_lab_lots.sql
 npm run seed
 ```
 
@@ -140,6 +141,9 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
    Also there: the unit's word for its services (Treatments at Herbal Park), and four numbers
    for suggested levels: days a delivery takes when the supplier has none set (7), days to
    restock a sub store (2), days of use kept to spare (3), and days one order should last (14).
+   **Opened packs and storage** stays off at Herbal Park. For a laboratory unit: switch it on,
+   add each bench and analyser under Rooms and areas (in its department), and give each reagent
+   and kit its storage and days usable once opened on the item.
 7. **Treatments → Recipes**: add each treatment with what one normally uses. Part of a bottle is a
    decimal, so check each oil's unit first: an item counted in bottles takes 0.25 for a quarter.
    Add the usual price if the margin report is wanted.

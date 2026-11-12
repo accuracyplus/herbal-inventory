@@ -76,7 +76,8 @@ export function UseScreen() {
     if (missing.length) { setTried(true); return; }
     setBusy(true); setErr(null);
     try {
-      await post('/api/use', { storeId, areaId: areaId || null, personId: personId || null, purpose, lines: toPayload(lines) });
+      // "Used by" left as it is means the person recording it, as the box says.
+      await post('/api/use', { storeId, areaId: areaId || null, personId: personId || (needPerson ? me.staffId : null), purpose, lines: toPayload(lines) });
       setDone({
         n: lines.length, store: stores.find((s) => s.id === storeId)?.name, area: lists.areas.find((a) => a.id === areaId)?.name,
         person: personId ? people?.find((p) => p.id === personId)?.name : (needPerson ? me.name : null),

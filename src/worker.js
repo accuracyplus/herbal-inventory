@@ -28,6 +28,7 @@ import { cancelRequest, createRequest, decideRequest, fulfilRequest, getRequest,
 import { emailPo, getPo, listPos, poAction, poPdfFor, savePo, suggestions } from './domain/purchasing.js';
 import { itemPrices, priceGuide, supplierPage, suppliersRecord } from './domain/suppliers.js';
 import { acceptLevels, forecast } from './domain/forecast.js';
+import { closeOpening, openings, openPack } from './domain/lots.js';
 import { mailStatus } from './lib/mail.js';
 import { decideAdjustment, getAdjustment, listAdjustments, raiseAdjustment, REASONS } from './domain/adjustments.js';
 import { countAction, getCount, listCounts, saveCountLines, startCount } from './domain/counts.js';
@@ -393,6 +394,10 @@ api('GET', '/api/batches', async ({ env, url }, user) => {
 // ── Everyday actions ─────────────────────────────────────────────────────────
 
 api('POST', '/api/use', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await recordUse(env, user, await body(request)), 201); });
+// Opened packs (lab readiness): open one at a bench or analyser, see what is in use, finish or discard.
+api('GET', '/api/openings', async ({ env, url }, user) => { requireMay(user, 'stock.view'); return json(await openings(env, user, { closed: url.searchParams.get('closed') === '1', q: url.searchParams.get('q') || '' })); });
+api('POST', '/api/openings', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await openPack(env, user, await body(request)), 201); });
+api('POST', '/api/openings/:id/:action', async ({ request, env, params }, user) => { requireMay(user, 'stock.use'); return json(await closeOpening(env, user, params.id, params.action, await body(request))); });
 api('POST', '/api/transfers', async ({ request, env }, user) => { requireMay(user, 'transfer'); return json(await recordTransfer(env, user, await body(request)), 201); });
 // ── Deliveries, their paperwork, and reading the note ────────────────────────
 

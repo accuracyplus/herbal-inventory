@@ -26,8 +26,9 @@ import Corrections from './screens/Corrections.jsx';
 import Reports from './screens/Reports.jsx';
 import Admin from './screens/Admin.jsx';
 import Help from './screens/Help.jsx';
+import InUse from './screens/InUse.jsx';
 
-/** Every screen, who sees it, and where it sits. `any` lists abilities; one is enough. */
+/** Every screen, who sees it, and where it sits. `any` lists abilities; one is enough. `when`, a unit setting that must be on. */
 const SCREENS = [
   { id: 'today', label: 'Today', icon: 'today', group: 'main', any: ['stock.view'], el: Today },
   { id: 'stock', label: 'Stock', icon: 'stock', group: 'main', any: ['stock.view'], el: Stock },
@@ -35,6 +36,7 @@ const SCREENS = [
   { id: 'services', label: 'Services', icon: 'sparkle', group: 'do', any: ['stock.use', 'services.edit'], el: Services },
   { id: 'scan', label: 'Scan', icon: 'scan', group: 'do', any: ['stock.view'], el: Scan },
   { id: 'with-me', label: 'With me', icon: 'custody', group: 'do', any: ['stock.use'], el: WithMe },
+  { id: 'in-use', label: 'In use', icon: 'lab', group: 'do', any: ['stock.view'], when: 'lots.opened', el: InUse },
   { id: 'linen', label: 'Linen', icon: 'linen', group: 'do', any: ['stock.view'], el: Linen },
   { id: 'requests', label: 'Requests', icon: 'requests', group: 'do', any: ['request.create', 'request.decide', 'request.fulfil', 'reports'], el: Requests },
   { id: 'receive', label: 'Receive', icon: 'receive', group: 'store', any: ['receive'], el: ReceiveScreen },
@@ -131,7 +133,7 @@ export default function App() {
   useEffect(() => { syncChromeColour(); return signedIn ? startFollowingAppearance() : undefined; }, [signedIn]);
 
   // The unit's own word for its services (treatments, tests) is what the menu says.
-  const visible = useMemo(() => (me ? SCREENS.filter((s) => s.any.some((a) => me.can.includes(a)))
+  const visible = useMemo(() => (me ? SCREENS.filter((s) => s.any.some((a) => me.can.includes(a)) && (!s.when || me.settings?.[s.when] === 'on'))
     .map((s) => (s.id === 'services' ? { ...s, label: me.settings?.['services.word'] || s.label } : s)) : []), [me]);
 
   const switchUnit = async (id) => {

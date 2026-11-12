@@ -37,6 +37,9 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
   key and the stock comes off by itself, once per reference; what cannot be recorded waits with
   its reason for a manager. Until something is connected, the same list uploads as a sheet. With
   prices, a report shows charged against used for each service.
+- **Lab readiness** (a unit switches it on): items say where they are kept and how long they
+  last once opened; an In use screen follows each opened kit or reagent to its bench or analyser,
+  with its in-use date, until it is finished or thrown away, and finds every pack of a lot.
 - **Suggested levels**: reorder, critical and top-up levels for each store worked out from the
   last 30 and 90 days of real use and how long an order takes; a manager ticks the ones to take,
   changes any number, and sets them in one go. What to buy follows them.

@@ -9,6 +9,7 @@ import {
   Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 import { ItemPrices, priceViewer } from './Suppliers.jsx';
+import { STORAGE } from './InUse.jsx';
 
 const KIND = {
   RECEIPT: 'Received', ISSUE: 'Used', TRANSFER_OUT: 'Sent', TRANSFER_IN: 'Arrived', ADJUST: 'Correction',
@@ -119,7 +120,7 @@ function ItemSheet({ id, onClose, onEdit }) {
       {loading && <Loading />}
       {it && (
         <>
-          <p className="muted"><code>{it.code}</code> · {it.category} · counted in {it.uom}{it.barcode ? <> · barcode <code>{it.barcode}</code></> : ''}{it.supplier ? ` · usual supplier ${it.supplier.name}` : ''}</p>
+          <p className="muted"><code>{it.code}</code> · {it.category} · counted in {it.uom}{it.barcode ? <> · barcode <code>{it.barcode}</code></> : ''}{it.supplier ? ` · usual supplier ${it.supplier.name}` : ''}{it.storage ? ` · ${STORAGE[it.storage] || it.storage}` : ''}{it.open_life_days ? ` · usable ${it.open_life_days} days once opened` : ''}</p>
           {!it.active && <Note tone="warn" icon="alert">This item has been retired. It stays in the records but cannot be used or ordered.</Note>}
           <dl className="hf-kv hf-kv--3">
             {it.balances.map((b) => (
@@ -172,7 +173,8 @@ function ItemSheet({ id, onClose, onEdit }) {
 
 /** Create or edit an item, with its levels in every store. Exported for Admin. */
 export function ItemForm({ item, stores, onClose, onSaved }) {
-  const { refreshStock, toast, currency, can, stock } = useApp();
+  const { refreshStock, toast, currency, can, stock, me } = useApp();
+  const lab = me.settings?.['lots.opened'] === 'on';
   const { data: suppliers } = useData('/api/suppliers');
   const cats = [...new Set((stock?.items || []).map((i) => i.category))].sort();
   const levelOf = (sid) => item?.levels?.find((l) => l.store_id === sid) || item?.stores?.find((s) => s.storeId === sid)?.level || {};
@@ -180,6 +182,7 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
     code: item?.code || '', name: item?.name || '', category: item?.category || '', uom: item?.uom || 'pcs', barcode: item?.barcode || '',
     tracksExpiry: !!(item?.tracks_expiry ?? item?.tracksExpiry), isLinen: !!(item?.is_linen ?? item?.isLinen),
     supplierId: item?.supplier_id ?? item?.supplierId ?? '', notes: item?.notes || '', active: item ? !!item.active : true, unitCost: '',
+    storage: item?.storage || '', openLifeDays: item?.open_life_days ?? item?.openLifeDays ?? '',
     levels: stores.map((s) => ({ storeId: s.id, name: s.name, reorder: levelOf(s.id).reorder ?? '', critical: levelOf(s.id).critical ?? '', par: levelOf(s.id).par ?? '' })),
   });
   const [busy, setBusy] = useState(false);
@@ -189,7 +192,9 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
   const save = async () => {
     setBusy(true); setErr(null);
     try {
-      const body = { ...f, supplierId: f.supplierId || null, levels: f.levels.map((l) => ({ storeId: l.storeId, reorder: l.reorder || 0, critical: l.critical || 0, par: l.par || 0 })) };
+      const { storage, openLifeDays, ...rest } = f;
+      // Storage and life once opened go only where the unit uses them, so a form without them never clears them.
+      const body = { ...rest, ...(lab ? { storage, openLifeDays } : {}), supplierId: f.supplierId || null, levels: f.levels.map((l) => ({ storeId: l.storeId, reorder: l.reorder || 0, critical: l.critical || 0, par: l.par || 0 })) };
       if (item?.id) await put(`/api/items/${item.id}`, body); else await post('/api/items', body);
       toast(item?.id ? 'Item saved' : 'Item added');
       await refreshStock();
@@ -215,6 +220,14 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
           <Check checked={f.isLinen} onChange={(v) => set('isLinen', v)}>This is linen <span className="muted">— towels and sheets go to rooms and the laundry and come back</span></Check>
           {item?.id && <Check checked={!f.active} onChange={(v) => set('active', !v)}>Retire this item <span className="muted">— it stays in the records but cannot be used or ordered</span></Check>}
         </div>
+        {lab && (
+          <>
+            <Field label="Kept in (optional)"><Select value={f.storage} onChange={(v) => set('storage', v)} placeholder="Not said" options={Object.entries(STORAGE).map(([value, label]) => ({ value, label }))} /></Field>
+            <Field label="Days usable once opened (optional)" hint="An opened pack's in-use date is this many days after opening, or its printed expiry if that comes first.">
+              <input type="number" min="1" max="3650" inputMode="numeric" value={f.openLifeDays} onChange={(e) => set('openLifeDays', e.target.value)} />
+            </Field>
+          </>
+        )}
         <Field label="Notes" className="span2"><textarea value={f.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
       </div>
       <Card title="Levels per store" hint="Leave a store at zero if the item is not kept there.">

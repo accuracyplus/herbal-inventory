@@ -60,6 +60,17 @@ export const SETTINGS = {
     hint: 'Used by the slow-moving report.',
     number: [14, 365], default: '90',
   },
+  'lots.opened': {
+    label: 'Opened packs and storage',
+    hint: 'For a laboratory: items say where they are kept and how long they last once opened, and an In use screen follows each opened kit or reagent to its bench or analyser until it is finished. Off, none of it shows.',
+    options: ['off', 'on'], default: 'off',
+    labels: { off: 'Off', on: 'On: show storage, opened packs and the In use screen' },
+  },
+  'lots.due_days': {
+    label: 'Warn about an opened pack this many days before its in-use date',
+    hint: 'Opened packs due within this many days show on Today, beside those already past their date.',
+    number: [0, 30], default: '2',
+  },
   'forecast.lead_days': {
     label: 'Days a delivery usually takes, when the supplier has none set',
     hint: 'Used for suggested levels in a main store. A supplier\'s own usual delivery time, set on the supplier, comes first.',

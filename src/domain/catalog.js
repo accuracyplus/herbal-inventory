@@ -43,7 +43,8 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
   const showCost = may(user, 'cost.view');
   const [{ results: items }, { results: bals }, { results: levels }, { results: exp }, { results: heldRows }] = await Promise.all([
     env.DB.prepare(
-      `SELECT id, code, name, category, uom, barcode, tracks_expiry, is_linen, avg_cost, last_cost, supplier_id, active, notes
+      `SELECT id, code, name, category, uom, barcode, tracks_expiry, is_linen, avg_cost, last_cost, supplier_id, active, notes,
+              storage, open_life_days
          FROM items WHERE unit_id = ? ${includeInactive ? '' : 'AND active = 1'} ORDER BY category, name`,
     ).bind(user.unitId).all(),
     env.DB.prepare(
@@ -110,7 +111,7 @@ export async function stockList(env, user, { includeInactive = false } = {}) {
     return {
       id: it.id, code: it.code, name: it.name, category: it.category, uom: it.uom, barcode: it.barcode, barcodes: codesOf.get(it.id) || [],
       tracksExpiry: !!it.tracks_expiry, isLinen: !!it.is_linen, active: !!it.active, notes: it.notes,
-      supplierId: it.supplier_id,
+      supplierId: it.supplier_id, storage: it.storage || null, openLifeDays: it.open_life_days ?? null,
       avgCost: showCost ? it.avg_cost : undefined,
       lastCost: showCost ? it.last_cost : undefined,
       value: showCost ? Math.round(total * (it.avg_cost || 0) * 100) / 100 : undefined,
@@ -184,6 +185,28 @@ function itemFields(body) {
   };
 }
 
+export const STORAGE = { ROOM: 'Room temperature', FRIDGE: 'Fridge, 2 to 8 °C', FREEZER: 'Freezer' };
+
+/**
+ * Storage and life once opened, only when the form sent them: a form or a sheet that does not
+ * know about them leaves what is set alone. Returns the statement, or null.
+ */
+function labStatement(env, itemId, body) {
+  const hasStorage = Object.prototype.hasOwnProperty.call(body, 'storage');
+  const hasLife = Object.prototype.hasOwnProperty.call(body, 'openLifeDays');
+  if (!hasStorage && !hasLife) return null;
+  const storage = body.storage ? String(body.storage).toUpperCase() : null;
+  if (storage && !STORAGE[storage]) refuse('BAD_STORAGE', 'Choose room temperature, fridge or freezer.');
+  const raw = body.openLifeDays;
+  const life = raw === '' || raw === null || raw === undefined ? null : Number(raw);
+  if (life !== null && !(Number.isInteger(life) && life >= 1 && life <= 3650)) refuse('BAD_OPEN_LIFE', 'Days usable once opened: a whole number from 1 to 3650, or leave it empty.');
+  const sets = [];
+  const args = [];
+  if (hasStorage) { sets.push('storage = ?'); args.push(storage); }
+  if (hasLife) { sets.push('open_life_days = ?'); args.push(life); }
+  return env.DB.prepare(`UPDATE items SET ${sets.join(', ')} WHERE id = ?`).bind(...args, itemId);
+}
+
 export async function saveItem(env, user, body, id = null) {
   const f = itemFields(body);
   if (f.supplier_id) {
@@ -231,6 +254,7 @@ export async function saveItem(env, user, body, id = null) {
       ).bind(f.code, f.name, f.category, f.uom, f.barcode, f.tracks_expiry, f.is_linen, f.supplier_id, f.notes,
              body.active === false ? 0 : 1, now, user.fullName, id),
       ...levelStatements(env, id, body.levels),
+      ...[labStatement(env, id, body)].filter(Boolean),
       auditStmt(env, user, 'ITEM_EDIT', f.code, f.name),
     ]);
     return { ok: true, id };
@@ -244,6 +268,7 @@ export async function saveItem(env, user, body, id = null) {
     ).bind(newId, user.unitId, f.code, f.name, f.category, f.uom, f.barcode, f.tracks_expiry, f.is_linen,
            nonNegative(body.unitCost) ?? 0, nonNegative(body.unitCost), f.supplier_id, f.notes, now, user.fullName),
     ...levelStatements(env, newId, body.levels),
+    ...[labStatement(env, newId, body)].filter(Boolean),
     auditStmt(env, user, 'ITEM_CREATE', f.code, f.name),
   ]);
   return { ok: true, id: newId };

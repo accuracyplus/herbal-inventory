@@ -170,6 +170,23 @@ the name is HiFive ID's); with HiFive ID unreachable the typed code stands and t
 Tokens must carry `module: inventory` and `aud: hifive-inventory`. "Can access" with no seat here
 gives `HFID_GRANT_ROLE` (STAFF) in the unit matching the HiFive ID entity; never Unit admin.
 
+## 3h. Lab readiness: storage and opened packs
+
+- Off unless the unit sets `lots.opened` to `on`: the In use screen, the item fields and the
+  Today line all hide, and `POST /api/openings` refuses with `LOTS_OFF`. Nothing is lab-specific
+  in code: a spa can switch it on for oils that must be used within months of opening.
+- `items.storage` (ROOM, FRIDGE, FREEZER) and `items.open_life_days` are set only when a form
+  sends them, so the bulk upload and a form without them never clear them.
+- `src/domain/lots.js`. **Opening is a use**: an ISSUE through the stock engine (FEFO, expired
+  never, doc type OPEN) in the same batch as one `lot_openings` row per batch it came from, so
+  cost by department and the forecast count it like any other use. The in-use date is the
+  earlier of the printed expiry and the day opened plus `open_life_days` (`useBy`, tested alone).
+- Finishing or discarding (with a reason) moves no stock: it left the shelf when opened. The
+  opener, or anyone with `adjust.raise`, may do it. A bench or analyser is an area in a
+  department, so every opening says where a lot went; `GET /api/openings?closed=1&q=<lot>`
+  traces a lot to the benches that used it.
+- Today shows those past their in-use date (urgent) and those due within `lots.due_days`.
+
 ## 3g. Suggested levels (forecasting)
 
 - `src/domain/forecast.js`. Use is what left a store's shelf for use or for another store over

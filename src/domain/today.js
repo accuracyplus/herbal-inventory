@@ -10,6 +10,7 @@ import { gstDate, q3 } from '../lib/data.js';
 import { may } from './access.js';
 import { stockList } from './catalog.js';
 import { custodyWaiting } from './custody.js';
+import { openingsWaiting } from './lots.js';
 import { reviewCount } from './people.js';
 import { inboxWaiting } from './servicelink.js';
 import { setting } from './settings.js';
@@ -61,6 +62,7 @@ export async function today(env, user, { bearer } = {}) {
   }
 
   waiting.push(...await custodyWaiting(env, user));
+  waiting.push(...await openingsWaiting(env, user));
   if (may(user, 'admin')) {
     const n = await reviewCount(env, user, bearer);
     if (n) waiting.push({ key: 'people-review', screen: 'admin', to: 'admin?tab=people', n, text: `${n} change${n > 1 ? 's' : ''} from HiFive ID to review: joiners, leavers, names` });

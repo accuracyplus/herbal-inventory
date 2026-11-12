@@ -5,8 +5,9 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { HP, PEOPLE, S, bal, call, makeItem, receive, testEnv, upload } from './helpers/http.js';
+import { HP, PEOPLE, S, bal, call, hfidToken, makeItem, receive, testEnv, upload } from './helpers/http.js';
 import { spreadCharges } from '../src/domain/accounts.js';
+import { addMonths } from '../src/domain/assets.js';
 
 export const settings = (env, values, as = 'admin') => call(env, 'PUT', '/api/settings', { as, body: values });
 
@@ -360,6 +361,48 @@ test('VAT on deliveries and the exports for the accounts system', async () => {
   const off = (await ex('writeoffs')).body;
   assert.deepEqual(off.map((x) => [x.what, x.qty, x.value]), [['Correction', -1, -10]]);
   assert.equal((await ex('nothing')).body.error.code, 'BAD_EXPORT');
+});
+
+// ── Equipment register ───────────────────────────────────────────────────────────────────
+
+test('equipment: dates move on by whole months, clamped to the month\'s end', () => {
+  assert.equal(addMonths('2026-01-31', 1), '2026-02-28');
+  assert.equal(addMonths('2026-11-12', 6), '2027-05-12');
+  assert.equal(addMonths('2028-02-29', 12), '2029-02-28');
+});
+
+test('equipment: registered where it is, serviced, and flagged on Today when its service is due', async () => {
+  const env = testEnv();
+  const save = (b, as = 'keeper') => call(env, 'POST', '/api/assets', { as, body: { tag: 'eq-001', name: 'Steam chamber', areaId: 'ar-r1', serialNo: 'SC-99812', ...b } });
+  assert.equal((await save({})).body.error.code, 'FEATURE_OFF');
+  await settings(env, { 'assets.on': 'on' });
+  assert.equal((await save({}, 'staff')).status, 403);
+  const r = await save({ purchasedOn: '2026-01-15', serviceEveryMonths: 6, warrantyUntil: '2027-01-15' });
+  assert.equal(r.status, 201, JSON.stringify(r.body));
+  assert.equal((await save({})).body.error.code, 'TAG_TAKEN', 'tags are unique, whatever the case');
+  const a = (await call(env, 'GET', `/api/assets/${r.body.id}`, { as: 'staff' })).body;
+  assert.equal(a.tag, 'EQ-001');
+  assert.equal(a.next_service_on, '2026-07-15', 'six months after it was bought');
+  assert.equal(a.standing, 'PAST');
+  assert.equal(a.area_name, 'Treatment room 1');
+
+  const waiting = (await call(env, 'GET', '/api/today', { as: 'keeper' })).body.waiting.find((w) => w.key === 'assets-due');
+  assert.equal(waiting.text, 'Equipment: 1 past its service date');
+  const hub = (await call(env, 'POST', '/pending/service', { token: hfidToken({ svc: 'pending', emp_code: PEOPLE.keeper.code }) })).body.items;
+  assert.ok(hub.some((i) => i.kind === 'inventory_assets_due' && i.due === 'overdue'));
+
+  const today = new Date(Date.now() + 4 * 36e5).toISOString().slice(0, 10);
+  const s = await call(env, 'POST', `/api/assets/${r.body.id}/services`, { as: 'keeper', body: { kind: 'SERVICE', onDate: today, doneBy: 'Gulf Medical Services', cost: 350 } });
+  assert.equal(s.status, 201, JSON.stringify(s.body));
+  assert.equal(s.body.nextServiceOn, addMonths(today, 6));
+  const after = (await call(env, 'GET', `/api/assets/${r.body.id}`, { as: 'keeper' })).body;
+  assert.equal(after.standing, 'OK');
+  assert.equal(after.services.length, 1);
+  assert.ok(!(await call(env, 'GET', '/api/today', { as: 'keeper' })).body.waiting.some((w) => w.key === 'assets-due'));
+
+  const repair = await call(env, 'POST', `/api/assets/${r.body.id}/services`, { as: 'keeper', body: { kind: 'REPAIR', onDate: today } });
+  assert.equal(repair.body.nextServiceOn, addMonths(today, 6), 'a repair does not move the service date');
+  assert.equal((await call(env, 'POST', `/api/assets/${r.body.id}/services`, { as: 'keeper', body: { kind: 'SERVICE', onDate: '2099-01-01' } })).body.error.code, 'FUTURE');
 });
 
 // ── Month close ──────────────────────────────────────────────────────────────────────────

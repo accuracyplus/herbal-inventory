@@ -56,6 +56,7 @@ import { closedMonths, closeMonth, reopenMonth } from './domain/periods.js';
 import { decideInspection, getReturn, listInspections, listReturns, raiseReturn, RETURN_REASONS, returnAction, returnOptions } from './domain/quality.js';
 import { findLots, traceLot } from './domain/recall.js';
 import { accountsExport, CHARGE_KINDS, EXPORTS } from './domain/accounts.js';
+import { ASSET_STATUS, getAsset, listAssets, recordService as recordAssetService, saveAsset, SERVICE_KINDS } from './domain/assets.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const json = (body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...JSON_HEADERS, ...extra } });
@@ -340,7 +341,7 @@ api('GET', '/api/me', async ({ env }, user) => {
     unit: user.unit, units: user.units, roles: user.roles, stores: user.stores,
     can: abilities(user),
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
-    labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: FILE_KINDS, returnReasons: RETURN_REASONS, chargeKinds: CHARGE_KINDS, exports: EXPORTS },
+    labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: FILE_KINDS, returnReasons: RETURN_REASONS, chargeKinds: CHARGE_KINDS, exports: EXPORTS, serviceKinds: SERVICE_KINDS, assetStatus: ASSET_STATUS },
     // What this deployment has switched on, so a screen can say "not set up" before it is tried.
     has: { files: !!env.FILES, reading: !!env.AI?.run, mail: mailStatus(env).ready },
     // Approval limits in force (feature 14), so a screen can say who approves before it is tried.
@@ -738,6 +739,15 @@ api('GET', '/api/recall', async ({ env, url }, user) => {
   const item = url.searchParams.get('item');
   return json(item ? await traceLot(env, user, { itemId: item, lot: url.searchParams.get('lot') }) : await findLots(env, user, url.searchParams.get('q')));
 });
+
+api('GET', '/api/assets', async ({ env, url }, user) => {
+  requireMay(user, 'stock.view');
+  return json(await listAssets(env, user, { q: text(url.searchParams.get('q'), 60), show: text(url.searchParams.get('show'), 20) }));
+});
+api('GET', '/api/assets/:id', async ({ env, params }, user) => { requireMay(user, 'stock.view'); return json(await getAsset(env, user, params.id)); });
+api('POST', '/api/assets', async ({ request, env }, user) => { requireMay(user, 'assets.edit'); return json(await saveAsset(env, user, await body(request)), 201); });
+api('PUT', '/api/assets/:id', async ({ request, env, params }, user) => { requireMay(user, 'assets.edit'); return json(await saveAsset(env, user, await body(request), params.id)); });
+api('POST', '/api/assets/:id/services', async ({ request, env, params }, user) => { requireMay(user, 'assets.edit'); return json(await recordAssetService(env, user, params.id, await body(request)), 201); });
 
 api('GET', '/api/accounts/export', async ({ env, url }, user) => {
   requireMay(user, 'accounts');

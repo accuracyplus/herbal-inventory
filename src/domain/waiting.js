@@ -67,12 +67,18 @@ export async function unitFacts(env, unitId, now = Date.now()) {
       : null,
   ]);
   // Feature 14: read only where the unit has the feature on.
-  const [inspection, returns, credits] = await Promise.all([
+  const warnDays = Number(set('assets.warn_days')) || 14;
+  const soonDay = new Date(Date.parse(`${today}T00:00:00Z`) + warnDays * DAY).toISOString().slice(0, 10);
+  const [inspection, returns, credits, equipment] = await Promise.all([
     on('quarantine.on') ? one(`SELECT COUNT(*) AS n, MIN(held_at) AS oldest FROM inspections WHERE unit_id = ? AND status = 'HELD'`, unitId) : null,
     on('returns.on') ? all(`SELECT raised_by AS by, COUNT(*) AS n, MIN(raised_at) AS oldest FROM supplier_returns WHERE unit_id = ? AND status = 'PENDING' GROUP BY raised_by`, unitId) : null,
     on('returns.on') ? one(`SELECT COUNT(*) AS n, MIN(decided_at) AS oldest FROM supplier_returns WHERE unit_id = ? AND status = 'SENT'`, unitId) : null,
+    on('assets.on') ? one(
+      `SELECT SUM(next_service_on < ?1) AS past, SUM(next_service_on >= ?1 AND next_service_on <= ?2) AS due,
+              MIN(next_service_on) AS first, SUM(warranty_until >= ?1 AND warranty_until <= ?2) AS warranty
+         FROM assets WHERE unit_id = ?3 AND status <> 'RETIRED'`, today, soonDay, unitId) : null,
   ]);
-  return { unitId, today, hours, dueDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits };
+  return { unitId, today, hours, dueDays, warnDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits, equipment };
 }
 
 /** Rows grouped by who raised them, without the person's own. */
@@ -162,6 +168,15 @@ export function waitingList(f, user) {
     const n = f.credits.n;
     const late = f.credits.oldest ? diff(dayOf(f.credits.oldest), t) - 30 : null;
     add({ key: 'returns-credit', screen: 'returns', filter: 'SENT', n, days: late !== null && late > 0 ? -late : null, quiet: !(late > 0), action: 'Record the credit', text: `${plural(n, 'return')} waiting for a credit note` });
+  }
+
+  if (f.equipment && may(user, 'assets.edit')) {
+    const { past = 0, due = 0, warranty = 0, first } = f.equipment;
+    if (past || due) {
+      const words = [past && `${past} past ${past === 1 ? 'its' : 'their'} service date`, due && `${due} due within ${plural(f.warnDays, 'day')}`].filter(Boolean).join(', ');
+      add({ key: 'assets-due', screen: 'assets', filter: 'due', to: 'assets?show=due', n: past + due, urgent: past, due: past ? 'overdue' : null, days: past ? (first ? diff(t, first) : null) : diff(t, first), action: 'See the equipment', text: `Equipment: ${words}` });
+    }
+    if (warranty) add({ key: 'assets-warranty', screen: 'assets', n: warranty, days: null, quiet: true, text: `${plural(warranty, 'warranty', 'warranties')} ending within ${plural(f.warnDays, 'day')}` });
   }
 
   if (f.packs && may(user, 'stock.use')) {

@@ -138,6 +138,52 @@ ALTER TABLE receipt_lines ADD COLUMN landed_cost REAL;
 ALTER TABLE receipt_lines ADD COLUMN vat_rate REAL;
 ALTER TABLE receipt_lines ADD COLUMN vat REAL NOT NULL DEFAULT 0;
 
+-- ── Equipment register ─────────────────────────────────────────────────────────────────
+-- Equipment is not stock: it is not used up, so it never moves through the ledger. Each piece
+-- has where it is, its warranty and when it is next due for service; each service is kept.
+CREATE TABLE IF NOT EXISTS assets (
+  id                    TEXT PRIMARY KEY,
+  unit_id               TEXT NOT NULL REFERENCES units(id),
+  tag                   TEXT NOT NULL,              -- the unit's own asset number, on the sticker
+  name                  TEXT NOT NULL,
+  category              TEXT,
+  make                  TEXT,
+  model                 TEXT,
+  serial_no             TEXT,
+  area_id               TEXT REFERENCES areas(id),
+  department_id         TEXT REFERENCES departments(id),
+  location              TEXT,                       -- where, when it is not one of the unit's areas
+  supplier_id           TEXT REFERENCES suppliers(id),
+  purchased_on          TEXT,
+  cost                  REAL,
+  warranty_until        TEXT,
+  service_every_months  INTEGER,
+  last_service_on       TEXT,
+  next_service_on       TEXT,
+  status                TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','IN_REPAIR','RETIRED')),
+  notes                 TEXT,
+  created_at            TEXT NOT NULL,
+  updated_at            TEXT,
+  updated_by            TEXT,
+  UNIQUE (unit_id, tag)
+);
+CREATE INDEX IF NOT EXISTS ix_assets_due ON assets (unit_id, status, next_service_on);
+
+CREATE TABLE IF NOT EXISTS asset_services (
+  id                TEXT PRIMARY KEY,
+  unit_id           TEXT NOT NULL REFERENCES units(id),
+  asset_id          TEXT NOT NULL REFERENCES assets(id),
+  on_date           TEXT NOT NULL,
+  kind              TEXT NOT NULL CHECK (kind IN ('SERVICE','REPAIR','CALIBRATION','INSPECTION')),
+  done_by           TEXT,
+  cost              REAL,
+  note              TEXT,
+  next_due          TEXT,
+  recorded_by_name  TEXT NOT NULL,
+  recorded_at       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_asset_services ON asset_services (asset_id, on_date DESC);
+
 -- ── Shelf locations ────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS item_locations (
   store_id    TEXT NOT NULL REFERENCES stores(id),

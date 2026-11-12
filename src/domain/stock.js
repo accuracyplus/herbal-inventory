@@ -375,6 +375,9 @@ export async function commit(env, statements) {
     return await env.DB.batch(statements);
   } catch (e) {
     const msg = String(e?.message || e);
+    if (/PERIOD_CLOSED/.test(msg)) {
+      throw new DomainError('PERIOD_CLOSED', 'That month is closed for the accounts, so nothing dated in it can change. The unit administrator can reopen it, with a reason.', 409);
+    }
     if (/CHECK constraint/i.test(msg)) {
       throw new DomainError('STOCK_CHANGED', 'Stock changed while you were recording this. Refresh and try again.', 409);
     }

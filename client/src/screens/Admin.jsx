@@ -310,27 +310,35 @@ function Settings() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const save = async () => {
+    if (!Object.keys(vals).length) { toast('Change a setting first'); return; }
     setBusy(true); setErr(null);
     try { await put('/api/settings', vals); toast('Settings saved'); setVals({}); reload(); reloadMe(); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
+  // A detail setting shows only once the feature it belongs to is on (as chosen, saved or not).
+  const now = (key) => vals[key] ?? data?.find((x) => x.key === key)?.value;
+  const field = (s) => (
+    <Field key={s.key} label={<>{s.label}<Hint text={s.hint} /></>}>
+      {s.options
+        ? <Select value={vals[s.key] ?? s.value} onChange={(v) => setVals({ ...vals, [s.key]: v })} options={s.options.map((o) => ({ value: o, label: s.labels?.[o] ? s.labels[o] : o === 'none' ? 'No, straight to the store' : o === 'required' ? 'Yes, a manager approves first' : o }))} />
+        : <input type="number" min={s.number[0]} max={s.number[1]} value={vals[s.key] ?? s.value} onChange={(e) => setVals({ ...vals, [s.key]: e.target.value })} />}
+    </Field>
+  );
+  const shown = (data || []).filter((s) => !s.when || (now(s.when) && now(s.when) !== 'off'));
   return (
-    <Card>
+    <>
       <ErrorNote error={error} />
       {loading && <Loading />}
       {data && (
-        <div className="stack">
-          {data.map((s) => (
-            <Field key={s.key} label={<>{s.label}<Hint text={s.hint} /></>}>
-              {s.options
-                ? <Select value={vals[s.key] ?? s.value} onChange={(v) => setVals({ ...vals, [s.key]: v })} options={s.options.map((o) => ({ value: o, label: s.labels?.[o] ? s.labels[o] : o === 'none' ? 'No — straight to the store' : o === 'required' ? 'Yes — a manager approves first' : o }))} />
-                : <input type="number" min={s.number[0]} max={s.number[1]} value={vals[s.key] ?? s.value} onChange={(e) => setVals({ ...vals, [s.key]: e.target.value })} />}
-            </Field>
-          ))}
+        <>
+          <Card title="How this unit works"><div className="stack">{shown.filter((s) => !s.group).map(field)}</div></Card>
+          <Card title="More features" hint="Each is off until switched on here, and only this unit sees it. Switching one off hides it again; nothing recorded is lost.">
+            <div className="stack">{shown.filter((s) => s.group === 'more').map(field)}</div>
+          </Card>
           <ErrorNote error={err} />
-          <div className="row" style={{ justifyContent: 'flex-end' }}><Button busy={busy} disabled={!Object.keys(vals).length} onClick={save}>Save settings</Button></div>
-        </div>
+          <div className="row" style={{ justifyContent: 'flex-end' }}><Button busy={busy} onClick={save}>{Object.keys(vals).length ? 'Save settings' : 'Nothing changed yet'}</Button></div>
+        </>
       )}
-    </Card>
+    </>
   );
 }
 

@@ -10,6 +10,7 @@ import { refuse } from '../lib/errors.js';
 import { m2, nextRef, nowIso, q3, text, uuid } from '../lib/data.js';
 import { actorOf, auditStmt } from '../lib/audit.js';
 import { requireOtherApprover, storeFor } from './access.js';
+import { grossOf, requireLimit } from './limits.js';
 import { balanceOf, buildPosting, commit, loadItems } from './stock.js';
 
 export const REASONS = {
@@ -118,6 +119,7 @@ export async function decideAdjustment(env, user, id, body) {
   }, (lines || []).map((l) => ({
     item: items.get(l.item_id), store, qty: l.qty, batchId: l.batch_id, reason: a.reason, note: a.note,
   })));
+  await requireLimit(env, user, 'writeoff', grossOf(posting.moved));
   await commit(env, [
     env.DB.prepare(
       `UPDATE adjustments SET status = 'APPROVED', decided_by = ?, decided_by_name = ?, decided_at = ?, decision_note = ?, value = ?

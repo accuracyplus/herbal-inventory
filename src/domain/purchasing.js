@@ -16,6 +16,7 @@ import { digestHex } from '../lib/files.js';
 import { escapeHtml, isEmail, MailError, mailStatus, sendMail } from '../lib/mail.js';
 import { poPdf } from '../lib/pdf.js';
 import { requireOtherApprover, storeFor } from './access.js';
+import { requireLimit } from './limits.js';
 import { commit, loadItems } from './stock.js';
 import { setting } from './settings.js';
 import { priceGuide } from './suppliers.js';
@@ -109,6 +110,7 @@ export async function poAction(env, user, id, action, body = {}) {
     if (po.status !== 'SUBMITTED') refuse('BAD_STATE', `${po.ref} is not waiting for approval.`, 409);
     await requireOtherApprover(env, user, po.created_by, 'purchase order');
     if (action === 'reject' && !note) refuse('REASON_REQUIRED', 'Say why the order is being sent back.');
+    if (action === 'approve') await requireLimit(env, user, 'po', po.total);
     const status = action === 'approve' ? 'APPROVED' : 'REJECTED';
     await go(
       `UPDATE purchase_orders SET status = ?, decided_by = ?, decided_by_name = ?, decided_at = ?, decision_note = ?

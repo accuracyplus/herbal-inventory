@@ -16,6 +16,7 @@ import { refuse } from '../lib/errors.js';
 import { nextRef, nonNegative, nowIso, q3, text, uuid } from '../lib/data.js';
 import { actorOf, auditStmt } from '../lib/audit.js';
 import { may, requireOtherApprover, storeFor } from './access.js';
+import { grossOf, requireLimit } from './limits.js';
 import { balanceOf, buildPosting, commit, loadItems } from './stock.js';
 
 export async function startCount(env, user, body) {
@@ -173,7 +174,8 @@ export async function countAction(env, user, id, action, body = {}) {
     ? await buildPosting(env, {
       kind: 'COUNT', unitId: user.unitId, actor: actorOf(user), doc: { type: 'COUNT', id: c.id, ref: c.ref }, preferExpired: true,
     }, lines)
-    : { statements: [], value: 0 };
+    : { statements: [], value: 0, moved: [] };
+  await requireLimit(env, user, 'count', grossOf(posting.moved));
   await commit(env, [
     env.DB.prepare(`UPDATE counts SET status = 'APPROVED', decided_by = ?, decided_by_name = ?, decided_at = ?, decision_note = ? WHERE id = ? AND status = 'SUBMITTED'`)
       .bind(user.staffId, user.fullName, now, note, c.id),

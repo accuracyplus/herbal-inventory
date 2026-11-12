@@ -42,7 +42,7 @@ import {
 import { BULK_KINDS, bulkTemplate, bulkUpload } from './domain/bulk.js';
 import { addScan, closeSession, linkBarcode, openSession, pairSession, sessionEvents } from './domain/scanning.js';
 import { today } from './domain/today.js';
-import { allSettings } from './domain/settings.js';
+import { allSettings, requireFeature } from './domain/settings.js';
 import {
   auditLog, listDepartments, listPeople, listPeopleToPick, listSuppliers, listUnits, requireGroupAdmin, saveArea,
   saveDepartment, savePerson, saveSettings, saveStore, saveSupplier, saveUnit,
@@ -51,6 +51,8 @@ import { runImport } from './domain/importer.js';
 import { accountabilityFor, accountabilityForAll, pendingForAll, pendingForStaff } from './domain/pending.js';
 import { findHeld, PICK_ROLES, roleOptions, seatsFor, unitFor } from './domain/nativerole.js';
 import { LINEN_FLOWS } from './domain/stock.js';
+import { approvesAnyAmount, limitFor } from './domain/limits.js';
+import { closedMonths, closeMonth, reopenMonth } from './domain/periods.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const json = (body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...JSON_HEADERS, ...extra } });
@@ -338,6 +340,11 @@ api('GET', '/api/me', async ({ env }, user) => {
     labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: FILE_KINDS },
     // What this deployment has switched on, so a screen can say "not set up" before it is tried.
     has: { files: !!env.FILES, reading: !!env.AI?.run, mail: mailStatus(env).ready },
+    // Approval limits in force (feature 14), so a screen can say who approves before it is tried.
+    limits: {
+      po: await limitFor(env, user.unitId, 'po'), writeoff: await limitFor(env, user.unitId, 'writeoff'),
+      count: await limitFor(env, user.unitId, 'count'), anyAmount: approvesAnyAmount(user),
+    },
   });
 });
 
@@ -694,6 +701,22 @@ api('POST', '/api/bulk/:kind', async ({ request, env, params }, user) => {
   return kind ? json(await bulkUpload(env, user, kind, await body(request))) : fail(404, 'NOT_FOUND', 'There is no bulk upload for that.');
 });
 api('POST', '/api/import', async ({ request, env }, user) => { requireMay(user, 'admin'); return json(await runImport(env, user, await body(request))); });
+
+// ── Enterprise features (feature 14): each refused while the unit has it switched off ───────
+
+api('GET', '/api/periods', async ({ env }, user) => {
+  requireMay(user, 'cost.view');
+  await requireFeature(env, user.unitId, 'accounting.on');
+  return json(await closedMonths(env, user.unitId));
+});
+api('POST', '/api/periods/:action', async ({ request, env, params }, user) => {
+  requireMay(user, 'admin');
+  await requireFeature(env, user.unitId, 'accounting.on');
+  const b = await body(request);
+  if (params.action === 'close') return json(await closeMonth(env, user, b));
+  if (params.action === 'reopen') return json(await reopenMonth(env, user, b));
+  return fail(404, 'NOT_FOUND', 'Close or reopen.');
+});
 
 api('GET', '/api/units', async ({ env }, user) => { requireGroupAdmin(user); return json(await listUnits(env)); });
 api('POST', '/api/units', async ({ request, env }, user) => json(await saveUnit(env, user, await body(request)), 201));

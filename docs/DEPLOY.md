@@ -47,6 +47,7 @@ npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0007_s
 npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0008_supplier_depth.sql
 npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0009_lab_lots.sql
 npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0010_enterprise.sql
+npx wrangler d1 execute hifive-inventory --remote --yes --file=migrations/0011_language_and_tour.sql
 npm run seed
 ```
 

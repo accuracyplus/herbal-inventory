@@ -15,8 +15,9 @@ import { get } from './api.js';
 
 const CACHE_KEY = 'hifive-prefs'; // the key boot.js reads before first paint
 const SKINS = ['water', 'air', 'earth', 'fire', 'luna', 'sol', 'aami', 'aadi'];
-// What Inventory wears until a person has chosen: the look its screens were approved in.
-export const DEFAULTS = { skin: 'air', style: 'lit', mode: 'light' };
+// What every HiFive app opens in until a person has chosen (Design Guide D-005). The same
+// three words are in public/theme-defaults.js, which runs before first paint.
+export const DEFAULTS = { skin: 'water', style: 'soft', mode: 'light' };
 
 /** The cache after the account's answer: a choice replaces what was kept, and a choice the
  *  person cleared is removed, so the default comes back. An unknown value is dropped. */
@@ -32,13 +33,15 @@ export const shownFor = (cache) => ({
   skin: cache?.skin || DEFAULTS.skin, style: cache?.style || DEFAULTS.style, mode: cache?.mode || DEFAULTS.mode,
 });
 
-/** Give the phone's own bars the colour of the bar they sit against, in this palette and mode. */
+/** Give the phone's own bars the colour of the page they sit against, in this palette and mode.
+ *  The page ground is read, not the card colour: under Soft a card is a gradient, which a
+ *  browser bar cannot wear. */
 export function syncChromeColour() {
   try {
     const meta = document.querySelector('meta[name=theme-color]');
     if (!meta) return;
     const probe = document.createElement('span');
-    probe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;background:var(--surface-1)';
+    probe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;background-color:var(--surface-0)';
     document.documentElement.appendChild(probe);
     const colour = getComputedStyle(probe).backgroundColor;
     probe.remove();

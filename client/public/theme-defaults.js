@@ -1,6 +1,7 @@
 /*
  * Defaults for this app. boot.js applies nothing until the person has chosen a look; until then
- * Inventory wears Air (teal), Lit, light — the Design Guide's in-app style.
+ * Inventory wears what every HiFive app opens in: Water, Soft, light (Design Guide D-005;
+ * Sinu's decision for Inventory, 12 Nov 2026). src/appearance.js holds the same three words.
  *
  * Also the stylesheet fallback: if the design system's theme.css never arrived, the tokens are
  * missing and every colour would be unset, so the local copy is added.
@@ -8,8 +9,8 @@
 (function () {
   try {
     var r = document.documentElement;
-    if (!r.hasAttribute('data-skin')) r.setAttribute('data-skin', 'air');
-    if (!r.hasAttribute('data-style')) r.setAttribute('data-style', 'lit');
+    if (!r.hasAttribute('data-skin')) r.setAttribute('data-skin', 'water');
+    if (!r.hasAttribute('data-style')) r.setAttribute('data-style', 'soft');
     if (!r.hasAttribute('data-theme')) r.setAttribute('data-theme', 'light');
   } catch (e) {}
   function check() {

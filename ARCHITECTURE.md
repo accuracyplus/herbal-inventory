@@ -177,8 +177,8 @@ the record is `hifive-design/docs/adoption/inventory.md`).
 
 - **Theme.** `index.html` loads the tokens and their boot script from the design system's site
   (`/theme/v1/`), with a local copy in `client/public/theme-fallback` if that site is down.
-  Until a person has chosen a look, Inventory wears Air, Lit, light: the look its screens were
-  approved in.
+  Until a person has chosen a look, Inventory wears what every HiFive app opens in: Water,
+  Soft, light (Design Guide D-005; `public/theme-defaults.js` and `src/appearance.js`).
 - **Controls.** Every button, field, chip, table, sheet and tile is `@hifive/ui`. The library
   is private and has no registry, so its built files are copied into `client/vendor/hifive-ui`
   and committed (`npm run sync-ui` in `client`, after building the library in `hifive-design`).

@@ -64,6 +64,10 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .inv-me__n { font-weight: 600; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inv-me__r { font-size: 12px; color: var(--text-muted); }
 .inv-menu { display: flex; flex-direction: column; gap: 2px; }
+/* Under Soft a card's colour is a see-through gradient. A bar that content scrolls behind
+   wears it over the solid page ground, so nothing shows through. */
+[data-style="soft"] .inv-bar, [data-style="soft"] .inv-tabs, [data-style="soft"] .inv-side,
+[data-style="soft"] .inv-sheet__foot, [data-style="soft"] .camera.on .camera-say { background: var(--surface-1), var(--surface-0); }
 @media (min-width: 1024px) {
   .inv-shell { flex-direction: row; }
   .inv-side { position: sticky; top: 0; flex: none; width: 264px; height: 100dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 20px 12px 12px; background: var(--surface-1); border-right: 1px solid var(--line); }

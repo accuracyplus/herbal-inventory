@@ -128,15 +128,18 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
 5. **Purchasing → Suppliers**: add the suppliers, or **Admin → Bulk upload → Suppliers** to load
    them from a sheet. Give each one its email address if orders are to be emailed, and its usual
    delivery time. Prices and each supplier's delivery record build up by themselves from
-   approved deliveries; give each order an expected date, or it cannot be judged for time. The same tab loads new items, levels and rooms; after the import (D2) it
-   is the quick way to set barcodes, suppliers and levels for many items at once.
+   approved deliveries; give each order an expected date, or it cannot be judged for time.
+   The bulk upload also loads new items, levels and rooms; after the import (D2) it is the quick
+   way to set barcodes, suppliers and levels for many items at once.
 6. **Admin → Settings**: decide whether requests need a manager's approval at Herbal Park, and
    whether use is recorded against the room, the person, or both (both unless you change it), and
    after how many hours taken stock counts as unaccounted for (24 unless you change it).
    Deliveries: whether a manager approves each one before it is on the shelf, whether the
    delivery note must be attached first, and whether notes are read from a photo (all on unless
    you change them).
-   Also there: the unit's word for its services (Treatments at Herbal Park).
+   Also there: the unit's word for its services (Treatments at Herbal Park), and four numbers
+   for suggested levels: days a delivery takes when the supplier has none set (7), days to
+   restock a sub store (2), days of use kept to spare (3), and days one order should last (14).
 7. **Treatments → Recipes**: add each treatment with what one normally uses. Part of a bottle is a
    decimal, so check each oil's unit first: an item counted in bottles takes 0.25 for a quarter.
    Add the usual price if the margin report is wanted.
@@ -157,3 +160,8 @@ Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed where
    shelf shows as "no date" until the first count or delivery puts real dates in.
 5. Tell staff: open `hifive-inventory.pages.dev`, sign in with HiFive ID, add it to the home screen.
 6. Leave the old Google Sheet as read-only for a month, then archive it.
+7. After a month of real use, **Purchasing → Suggested levels** for each store: compare what
+   real use suggests with the levels set by hand at switch-over, and take the ones that look
+   right. Do it again every few months, or when a season changes. Imported history counts only
+   if the import brought movements with their real dates; until a store has a month of its own
+   use, suggestions are marked "Little history".

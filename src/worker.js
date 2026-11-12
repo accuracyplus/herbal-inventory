@@ -27,6 +27,7 @@ import { attachFile, bytesOf, FILE_KINDS, fileRow, readFile, removeFile } from '
 import { cancelRequest, createRequest, decideRequest, fulfilRequest, getRequest, listRequests } from './domain/requests.js';
 import { emailPo, getPo, listPos, poAction, poPdfFor, savePo, suggestions } from './domain/purchasing.js';
 import { itemPrices, priceGuide, supplierPage, suppliersRecord } from './domain/suppliers.js';
+import { acceptLevels, forecast } from './domain/forecast.js';
 import { mailStatus } from './lib/mail.js';
 import { decideAdjustment, getAdjustment, listAdjustments, raiseAdjustment, REASONS } from './domain/adjustments.js';
 import { countAction, getCount, listCounts, saveCountLines, startCount } from './domain/counts.js';
@@ -541,6 +542,14 @@ api('GET', '/api/pos/suggestions', async ({ env, url }, user) => {
   return json(await suggestions(env, user, url.searchParams.get('store')));
 });
 api('POST', '/api/pos', async ({ request, env }, user) => { requireMay(user, 'po.edit'); return json(await savePo(env, user, await body(request)), 201); });
+
+// Suggested levels from real use: seen by whoever keeps levels or writes orders, accepted only
+// by whoever may keep the item list (a manager).
+api('GET', '/api/forecast', async ({ env, url }, user) => {
+  if (!(may(user, 'items.edit') || may(user, 'po.edit'))) return fail(403, 'AUTH', 'Your role does not allow this.');
+  return json(await forecast(env, user, url.searchParams.get('store')));
+});
+api('POST', '/api/forecast/accept', async ({ request, env }, user) => { requireMay(user, 'items.edit'); return json(await acceptLevels(env, user, await body(request))); });
 api('GET', '/api/pos/:id', async ({ env, params }, user) => {
   if (!PO_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
   return json(await getPo(env, user, params.id, { prices: PRICE_VIEW(user) }));

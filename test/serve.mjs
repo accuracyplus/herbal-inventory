@@ -99,6 +99,21 @@ await step('price history', async () => {
   return call(env, 'POST', `/api/pos/${waiting.body.id}/submit`, { as: 'buyer' });
 });
 
+// Use spread over the last two months, for suggested levels. The ledger refuses edits, so this
+// throwaway copy switches that guard off to back-date its own made-up history.
+await step('usage history', async () => {
+  env.DB.db.exec('DROP TRIGGER IF EXISTS movements_no_update');
+  const FOR = { areaId: 'ar-r1', personId: 'p-staff' };
+  const plan = [[seeded[0], S.sub, 0.5], [seeded[1], S.sub, 1.5], [cloth, S.main, 3], [paper, S.main, 0.5]];
+  for (let d = 58; d >= 1; d -= 3) {
+    for (const [itemId, storeId, qty] of plan) {
+      const r = await call(env, 'POST', '/api/use', { as: 'keeper', body: { storeId, ...FOR, lines: [{ itemId, qty: qty * (d < 20 ? 1.5 : 1) }] } });
+      if (r.status === 201) env.DB.db.prepare(`UPDATE movements SET at = ? WHERE doc_id = ?`).run(new Date(Date.now() - d * 864e5).toISOString(), r.body.id);
+    }
+  }
+  return null;
+});
+
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 const isApi = (path) => /^\/(api|auth|pending|hooks|version|health)(\/|$)/.test(path);
 

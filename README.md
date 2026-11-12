@@ -37,6 +37,9 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
   key and the stock comes off by itself, once per reference; what cannot be recorded waits with
   its reason for a manager. Until something is connected, the same list uploads as a sheet. With
   prices, a report shows charged against used for each service.
+- **Suggested levels**: reorder, critical and top-up levels for each store worked out from the
+  last 30 and 90 days of real use and how long an order takes; a manager ticks the ones to take,
+  changes any number, and sets them in one go. What to buy follows them.
 - **Suppliers**: what each supplier charged for every item, side by side, with the lowest marked;
   the last price paid shown while an order is written and approved; each supplier's record (on
   time, late, closed short, lines short of the note). An approved order downloads as a PDF and,

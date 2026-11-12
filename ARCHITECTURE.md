@@ -170,6 +170,25 @@ the name is HiFive ID's); with HiFive ID unreachable the typed code stands and t
 Tokens must carry `module: inventory` and `aud: hifive-inventory`. "Can access" with no seat here
 gives `HFID_GRANT_ROLE` (STAFF) in the unit matching the HiFive ID entity; never Unit admin.
 
+## 3g. Suggested levels (forecasting)
+
+- `src/domain/forecast.js`. Use is what left a store's shelf for use or for another store over
+  the last 90 days: ISSUE (not the shelf-free ISSUE written when held stock is used, which TAKE
+  already counted), TAKE less RETURN, and TRANSFER_OUT. ADJUST and COUNT are not use.
+- Daily use is the average of the 30-day and 90-day rates; an item seen in the store for fewer
+  than 90 days has its longer rate taken over the days it has been there (at least 30).
+  critical = use × days to restock; reorder = use × (restock + spare); top up = reorder + use ×
+  days one order lasts, rounded up, reorder at least 1, top up above reorder (`suggest`, tested
+  alone). Days to restock: a main store takes the item's usual supplier's delivery time, else
+  `forecast.lead_days`; a sub store takes `forecast.restock_days`. Spare and cover days are
+  `forecast.safety_days` and `forecast.cover_days`. All four are unit settings.
+- Nothing changes by itself. `POST /api/forecast/accept` (`items.edit`, a manager) writes the
+  levels a manager ticked, as suggested or changed, in one batch with one audit row, refused
+  whole if any line is wrong. Seen by `items.edit` and `po.edit`. Linen, retired items and
+  items not used in 90 days get no suggestion; existing levels on unused items are left alone.
+- The levels are the same `item_levels` everything else reads, so What to buy follows at once;
+  it also says how many items used lately have no levels yet.
+
 ## 3f. Suppliers: prices, delivery record, and orders sent to them
 
 - `src/domain/suppliers.js`. Nothing is typed: a **price** is the unit cost on an approved

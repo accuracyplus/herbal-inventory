@@ -10,12 +10,14 @@ import {
 } from '../ui.jsx';
 import { Deliveries, DeliveryPage, DeliveryPill } from './Deliveries.jsx';
 import { priceViewer, SupplierList, SupplierPage } from './Suppliers.jsx';
+import Levels, { MissingLevels } from './Levels.jsx';
 
 export default function Purchasing() {
   const { route, navigate, can } = useApp();
   const [tab, setTab] = useState(route.query.get('tab') || (route.id === 'd' ? 'deliveries' : route.id === 's' ? 'suppliers' : 'orders'));
   const [status, setStatus] = useState(route.query.get('status') || 'OPEN');
   const [editing, setEditing] = useState(null);
+  const [levelsStart, setLevelsStart] = useState('');
   const { data, error, loading, reload } = useData(tab === 'orders' ? `/api/pos${status ? `?status=${status}` : ''}` : null, [status, tab]);
 
   // A delivery is a page of its own, not a window over the list.
@@ -27,7 +29,8 @@ export default function Purchasing() {
       actions={can('po.edit') && tab === 'orders' && <Button icon="plus" onClick={() => setEditing({})}>New order</Button>}>
       <Segmented label="Section" value={tab} onChange={setTab} options={[
         { value: 'orders', label: 'Orders' }, { value: 'deliveries', label: 'Deliveries' },
-        ...(can('po.edit') ? [{ value: 'suggest', label: 'What to buy' }] : []), { value: 'suppliers', label: 'Suppliers' },
+        ...(can('po.edit') ? [{ value: 'suggest', label: 'What to buy' }] : []),
+        ...(can('po.edit') || can('items.edit') ? [{ value: 'levels', label: 'Suggested levels' }] : []), { value: 'suppliers', label: 'Suppliers' },
       ]} />
       {tab === 'deliveries' && <Deliveries initialStatus={route.query.get('tab') === 'deliveries' ? route.query.get('status') : undefined} />}
       {tab === 'orders' && (
@@ -51,7 +54,8 @@ export default function Purchasing() {
           )}
         </>
       )}
-      {tab === 'suggest' && <Suggestions onDraft={(prefill) => { setEditing(prefill); setTab('orders'); }} />}
+      {tab === 'suggest' && <Suggestions onDraft={(prefill) => { setEditing(prefill); setTab('orders'); }} onLevels={(storeId) => { setLevelsStart(storeId); setTab('levels'); }} />}
+      {tab === 'levels' && <Levels key={levelsStart} start={levelsStart} />}
       {tab === 'suppliers' && <SupplierList />}
       {route.id && !['d', 's'].includes(route.id) && <PoSheet id={route.id} onClose={() => navigate('purchasing')} onChanged={reload} onEdit={(po) => setEditing(po)} />}
       {editing && <PoEditor po={editing} onClose={() => setEditing(null)} onSaved={(id) => { setEditing(null); reload(); navigate(`purchasing/${id}`); }} />}
@@ -59,7 +63,7 @@ export default function Purchasing() {
   );
 }
 
-function Suggestions({ onDraft }) {
+function Suggestions({ onDraft, onLevels }) {
   const { lists, stock, currency } = useApp();
   const mains = lists.stores.filter((s) => s.kind === 'MAIN');
   const [chosen, setStoreId] = useState('');
@@ -74,6 +78,7 @@ function Suggestions({ onDraft }) {
           <Select value={storeId} onChange={setStoreId} options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} />
         </Field>
       </Card>
+      <MissingLevels storeId={storeId} onOpen={onLevels} />
       <ErrorNote error={error} />
       {loading && <Loading />}
       {data && !data.length && <Card><Quiet>Nothing needs ordering for this store.</Quiet></Card>}

@@ -60,6 +60,26 @@ export const SETTINGS = {
     hint: 'Used by the slow-moving report.',
     number: [14, 365], default: '90',
   },
+  'forecast.lead_days': {
+    label: 'Days a delivery usually takes, when the supplier has none set',
+    hint: 'Used for suggested levels in a main store. A supplier\'s own usual delivery time, set on the supplier, comes first.',
+    number: [1, 120], default: '7',
+  },
+  'forecast.restock_days': {
+    label: 'Days to restock a sub store from the main store',
+    hint: 'Used for suggested levels in a sub store, which is filled from the main store rather than by a supplier.',
+    number: [1, 30], default: '2',
+  },
+  'forecast.safety_days': {
+    label: 'Days of use to keep to spare',
+    hint: 'Suggested reorder levels leave this many days of use on the shelf when the order arrives, for a busy week or a late delivery.',
+    number: [0, 60], default: '3',
+  },
+  'forecast.cover_days': {
+    label: 'Days one order should last',
+    hint: 'Suggested top-up levels hold this many days of use above the reorder level. More days, fewer and larger orders.',
+    number: [1, 180], default: '14',
+  },
   'currency': {
     label: 'Currency', hint: 'Shown beside every cost and value.', options: ['AED'], default: 'AED',
   },

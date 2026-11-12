@@ -13,9 +13,3 @@
 /* Malayalam letters stack above and below the line more than Latin ones do; a little more room
    between lines keeps two lines of a button or a row from touching. */
 :root[lang="ml"] body { line-height: 1.6; }
-
-/* The walkthrough's buttons are longer in Malayalam: at phone width Skip, Back and Next do not fit
-   on one line. Let the row wrap: Back and Next stay together on the right, Skip drops below them.
-   When they fit, nothing changes. (Raised with the design chat for the library itself.) */
-:root[lang="ml"] .hf-tour__acts { flex-wrap: wrap-reverse; row-gap: 6px; }
-:root[lang="ml"] .hf-tour__acts > span { margin-left: auto; }

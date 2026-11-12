@@ -1141,7 +1141,7 @@ function ht({ open: n, steps: a = aa, context: t = {}, onSkip: s, onDone: l, lab
       /* @__PURE__ */ e("p", { id: "hf-tour-text", className: "hf-tour__text", children: p.text }),
       /* @__PURE__ */ i("div", { className: "hf-tour__acts", children: [
         /* @__PURE__ */ e("button", { type: "button", className: "hf-btn hf-btn--quiet", onClick: s, children: c.skip }),
-        /* @__PURE__ */ i("span", { style: { display: "flex", gap: 8 }, children: [
+        /* @__PURE__ */ i("span", { className: "hf-tour__nav", children: [
           d > 0 && /* @__PURE__ */ e("button", { type: "button", className: "hf-btn hf-btn--secondary", style: { minHeight: 44 }, onClick: y, children: c.back }),
           /* @__PURE__ */ e("button", { type: "button", className: "hf-btn hf-btn--primary", style: { width: "auto", minHeight: 44 }, onClick: x, children: d + 1 >= h.length ? c.finish : c.next })
         ] })

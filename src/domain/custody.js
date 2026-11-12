@@ -153,24 +153,4 @@ export async function unaccountedInUnit(env, user) {
   return { accountHours: hours, people };
 }
 
-/** The two lines Today needs: this person's own, and, for managers, everybody else's. */
-export async function custodyWaiting(env, user) {
-  const cutoff = cutoffFor(await accountHours(env, user.unitId));
-  const out = [];
-  const mine = await env.DB.prepare(
-    `SELECT COUNT(*) AS n FROM custody WHERE unit_id = ? AND person_id = ? AND qty > 0 AND taken_at < ?`,
-  ).bind(user.unitId, user.staffId, cutoff).first();
-  if (mine.n) out.push({ key: 'custody-mine', screen: 'with-me', n: mine.n, text: `${mine.n} item${mine.n > 1 ? 's' : ''} with you to account for` });
-  if (may(user, 'custody.team')) {
-    const team = await env.DB.prepare(
-      `SELECT COUNT(*) AS n, COUNT(DISTINCT person_id) AS people FROM custody WHERE unit_id = ? AND person_id <> ? AND qty > 0 AND taken_at < ?`,
-    ).bind(user.unitId, user.staffId, cutoff).first();
-    if (team.n) {
-      out.push({
-        key: 'custody-team', screen: 'with-me', filter: 'TEAM', n: team.n,
-        text: `${team.n} item${team.n > 1 ? 's' : ''} unaccounted for, with ${team.people} ${team.people > 1 ? 'people' : 'person'}`,
-      });
-    }
-  }
-  return out;
-}
+// Today's lines for held stock are in waiting.js, with the rest of the waiting list.

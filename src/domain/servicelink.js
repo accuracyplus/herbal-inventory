@@ -341,6 +341,4 @@ export async function dismissInbox(env, user, id, body) {
   return { ok: true };
 }
 
-export async function inboxWaiting(env, unitId) {
-  return (await env.DB.prepare(`SELECT COUNT(*) AS n FROM service_inbox WHERE unit_id = ? AND status = 'FAILED'`).bind(unitId).first())?.n || 0;
-}
+// Today's line for services that could not be recorded is in waiting.js.

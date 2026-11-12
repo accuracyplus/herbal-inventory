@@ -16,8 +16,8 @@ the import, and then retired.
 | Design | HiFive design tokens from `hifive-design.pages.dev/theme/v1`, local fallback copy | Design Guide Part J |
 | Config | `wrangler.toml` is the single source of truth | all |
 
-No cron trigger: the account is at the free plan's five. Alerts are computed when Today opens,
-and HiFive ID's hub asks `/pending/service` itself.
+No cron trigger, because nothing needs one: alerts are computed when Today opens, and HiFive ID
+asks for its hub, morning email and profile itself (section 4).
 
 ## 2. Units and access
 
@@ -157,8 +157,33 @@ without its stock, nor stock without its receipt.
 | `POST /auth/hfid/exchange` | this app's page, with `?hfid_code=` | the one-time code; swapped through the `HFID` binding, app `inventory` |
 | `POST /auth/hfid/arrived` | this app's page, once per sign-in | the user's token; recorded once per token digest, links `hfid_sub` |
 | `POST /pending/service` | the hub's "Waiting for you" | assertion with `svc: pending`; answers for the named emp_code only |
+| `POST /pending/service/all` | the combined morning email (`digest.ts`), once a morning | `svc: pending-all` only; `{ people: [{ emp_code, name, items }] }` |
+| `POST /accountability/service` | the person's HiFive ID profile | `svc: accountability`, the named emp_code only; `{ person }`, null if unknown here |
+| `POST /accountability/service/all` | HiFive ID's nightly copy | `svc: accountability-all` only; `{ people: [...] }`, holding 0 included |
 | `GET /api/roster` | weekly reconciliation | admin/hr assertion for this audience |
 | `GET/PUT /api/roles/:empId` | the HiFive ID admin console | console session (`aud`/`module` = `hifive-id`), admin/hr |
+
+**One waiting list** (`src/domain/waiting.js`). Today, the hub and the morning email are all made
+from it, so they never disagree. The queries are per unit, grouped by who raised each thing
+(`unitFacts`), and each person's list is worked out from those facts (`waitingList`, pure), so
+everybody's list costs about a dozen reads per unit. Each item carries `days` (negative = days
+late; 0 = today) and, for held stock and packs past their date, `due: 'overdue'`:
+
+- an approval is due the day it was raised, a day late for each day after, by its oldest;
+- held stock is late from the moment the unit's window (`custody.account_hours`) ran out;
+- orders expected are as late as the first late one, or as far off as the next one due.
+
+An item with no day (an order with no expected date, a count in progress) stays on Today but is
+not sent: HiFive ID's email files an undated item under "due today", every day. Links are
+`/#/<screen>?…&unit=<id>`; the app switches to that unit on arrival. Somebody with seats in two
+units reads "… at Herbal Park" in the text; the unit is always in `detail`. A group administrator
+is listed only for the units they hold a seat in. The administrator's "changes from HiFive ID to
+review" line stays on Today only: it needs the administrator's own session.
+
+**Stock in hand** for the profile is counts and dates only: lines held, lines past the unit's
+window, the day the oldest of those was taken, per unit, with a link to With me. Never item
+names, never money; who may see a person's profile is HiFive ID's decision, and the detail stays
+behind Inventory's own sign-in.
 
 Inventory also reads HiFive ID: `GET /roster?app=inventory` (`src/lib/roster.js`, the shape of
 Transport's), with the administrator's own session, when Admin → People or Today opens. It is

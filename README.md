@@ -66,5 +66,7 @@ Sheet). **That file is untouched and still live** until the switch-over in `docs
   for managers, person; value, expiry, movements, variances, slow-moving, purchases) with CSV, a
   **monthly summary across units** for directors, an **activity log**, and a one-time **import** of the old app.
 - HiFive ID integration: sign-in, people picked from HiFive ID's staff list with joiners and
-  leavers put to an administrator (never removed automatically), "Can access" grants, the hub's "Waiting for you", the weekly
+  leavers put to an administrator (never removed automatically), "Can access" grants, the hub's
+  "Waiting for you" and the combined morning email (both the same list as Today), each person's
+  stock in hand for their HiFive ID profile, the weekly
   roster reconciliation and the admin console's role dropdown.

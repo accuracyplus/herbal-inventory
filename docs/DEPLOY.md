@@ -102,9 +102,7 @@ Register a new HiFive module: Inventory.
 - "Can access" for Inventory: grant it to APML131 now; others as units go live.
 - Hub tile: "Inventory", icon box/stock, URL https://hifive-inventory.pages.dev.
 - Hub health check: https://hifive-inventory.sinusuresh.workers.dev/version
-- "Waiting for you": POST https://hifive-inventory.sinusuresh.workers.dev/pending/service with a
-  service assertion { svc: "pending", emp_code, aud: "hifive-inventory" } — same contract as
-  Transport's /pending/service; it returns { items: [{ text, days }] }.
+- "Waiting for you" and the morning email: see the second block below (B2).
 - Weekly reconciliation: GET /api/roster on the same Worker, admin/hr assertion, same shape as
   Transport's.
 - Inventory reads GET /roster?app=inventory with the signed-in administrator's own Inventory
@@ -113,6 +111,74 @@ Register a new HiFive module: Inventory.
 - Admin console role dropdown: GET/PUT /api/roles/:empId on the same Worker, same contract as
   Transport's. Roles offered: STAFF, STOREKEEPER, PURCHASER, MANAGER, VIEWER.
 Check the Worker origin hifive-inventory.sinusuresh.workers.dev is allowed wherever Transport's is.
+```
+
+### B2. Suite links: hub, morning email, profile (paste after Inventory's Worker is deployed)
+
+The service binding below names the `hifive-inventory` Worker, so HiFive ID's deploy fails until
+step A5 has run. The morning email switch starts **off**: switch it on in the console once a few
+days of previews read right.
+
+```text
+Inventory now answers HiFive ID the way Performance and Recruitment do. Please wire it in.
+Nothing in Inventory needs changing for this; every route below is live on its Worker.
+
+1. wrangler.toml: a service binding (same zone, so a plain fetch would be refused with 1042):
+     [[services]]
+     binding = "SVC_INVENTORY"
+     service = "hifive-inventory"
+
+2. pending.ts TARGETS, for the hub's "Waiting for you":
+     inventory: { path: 'https://hifive-inventory.sinusuresh.workers.dev/pending/service',
+                  binding: 'SVC_INVENTORY', label: 'Inventory' }
+   Same svc 'pending' assertion as today. Answer: { items: [PendingItem] }, with kind, text,
+   detail (the unit's name), days, due (only 'overdue', on held stock and opened packs), href
+   (a path, "/#/requests?status=PENDING&unit=u-hp") and action. No quick types.
+
+3. digest.ts, for the combined morning email:
+   SOURCES: { app: 'inventory', label: 'Inventory', binding: 'SVC_INVENTORY',
+              path: 'https://hifive-inventory.sinusuresh.workers.dev/pending/service/all' }
+   SWITCHES: { key: 'inventory', label: 'Inventory', on: false,
+     detail: 'Requests, orders, deliveries, corrections and counts to approve; stock held too long; opened packs past their date. Off until previews have been read.' }
+   Same svc 'pending-all' assertion. Answer: { people: [{ emp_code, name, items: [DigestItem] }] },
+   each person once, nobody with nothing. No email field: match on emp_code (Inventory holds
+   no addresses). Every item has a day: undated ones stay in the app, since bucketOf files an
+   undated item under "due today" every morning. Items carry no `group`; switchOf maps them to
+   the one 'inventory' switch. APP_TONE: give it a pastel of its own if wanted, otherwise it
+   falls back to the teal 'other' tone. snapshot.ts then counts it on unit and person pages by
+   the same switch, so it stays off those pages while the switch is off.
+
+4. jwt.ts, two new verbs, modelled on monthAssertion / monthAllAssertion:
+     accountabilityAssertion(env, app, empCode): svc 'accountability', role 'employee',
+       emp_code = the person, sub 'service:accountability:<code>', 60 s.
+     accountabilityAllAssertion(env, app): svc 'accountability-all', role 'hr', emp_code null,
+       sub 'service:accountability-all', 60 s. Only if you want a nightly copy (point 6).
+   Inventory refuses each route to any other verb.
+
+5. The person page (routes/units.ts GET /person/:code) and the person's own profile on /hub:
+   after the existing canView check, POST
+     https://hifive-inventory.sinusuresh.workers.dev/accountability/service
+   through SVC_INVENTORY with accountabilityAssertion for that person, 5 s timeout. Answer:
+     { person: null }  Inventory does not know them: leave the row off, never show 0.
+     { person: { emp_code, name, holding, unaccounted, since,
+                 units: [{ unit, holding, unaccounted, since, hours, href }] } }
+   holding = lines of stock they have taken and not yet recorded as used or returned;
+   unaccounted = those held past the unit's window (`hours`, 24 unless the unit changed it);
+   since = the day (YYYY-MM-DD) the oldest unaccounted line was taken. Counts and dates only:
+   no item names, no money.
+   Show one "Stock in hand" line, for example "Holding 3 items, 1 to account for since 3 Nov",
+   or "Nothing held" when holding is 0. A timeout or error says "Inventory did not answer",
+   never 0. Link with the unit's href (into the person's With me screen) only when the viewer IS
+   the person; managers see the team in Inventory itself, behind its own roles.
+   Who may open someone's person page stays exactly as visibility.ts decides; nothing new.
+
+6. Optional, only if unit pages should count people holding stock past the window:
+   POST /accountability/service/all with accountabilityAllAssertion from the nightly snapshot.
+   Answer: { people: [same shape as above] }, everyone with a seat, holding 0 included. Part A
+   rule 5 applies (under 5 people, counts only).
+
+Tests worth adding on your side: person null leaves the row off; a timeout reads as "did not
+answer", not 0; the morning email's unknownGroups stays empty with Inventory on.
 ```
 
 ## C. In the Inventory app (signed in as yourself)

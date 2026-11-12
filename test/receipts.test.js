@@ -401,7 +401,7 @@ test('today and the hub: approvers are told what waits, a receiver is told what 
   assert.equal((await waiting('manager')).find((w) => w.key === 'receipts-approve').n, 1);
   assert.ok(!(await waiting('keeper')).some((w) => w.key === 'receipts-approve'));
   const hub = await call(env, 'POST', '/pending/service', { token: hfidToken({ svc: 'pending', emp_code: PEOPLE.manager.code }) });
-  assert.ok(hub.body.items.some((i) => i.text === '1 delivery to approve — Herbal Park'));
+  assert.ok(hub.body.items.some((i) => i.text === '1 delivery to approve' && i.detail === 'Herbal Park'));
   const report = async () => (await call(env, 'GET', '/api/reports/purchases', { as: 'manager' })).body.receipts.length;
   assert.equal(await report(), 0);
   await act(env, a.body.id, 'reject', 'manager', { note: 'Wrong store' });

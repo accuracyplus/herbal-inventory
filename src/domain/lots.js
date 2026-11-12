@@ -133,19 +133,4 @@ export async function closeOpening(env, user, id, action, body = {}) {
   return { ok: true, status };
 }
 
-/** For Today: open packs past their in-use date, and those due soon. Only where switched on. */
-export async function openingsWaiting(env, user) {
-  if (!may(user, 'stock.use')) return [];
-  if ((await setting(env, user.unitId, 'lots.opened')) !== 'on') return [];
-  const dueDays = Number(await setting(env, user.unitId, 'lots.due_days'));
-  const today = gstDate();
-  const soon = gstDate(Date.parse(`${today}T00:00:00Z`) - 4 * 3600e3 + dueDays * DAY);
-  const r = await env.DB.prepare(
-    `SELECT SUM(use_by < ?) AS past, SUM(use_by >= ? AND use_by <= ?) AS due FROM lot_openings WHERE unit_id = ? AND status = 'OPEN' AND use_by IS NOT NULL`,
-  ).bind(today, today, soon, user.unitId).first();
-  const past = r?.past || 0;
-  const due = r?.due || 0;
-  if (!past && !due) return [];
-  const words = [past && `${past} past ${past === 1 ? 'its' : 'their'} in-use date`, due && `${due} due within ${dueDays} day${dueDays === 1 ? '' : 's'}`].filter(Boolean).join(', ');
-  return [{ key: 'packs-due', screen: 'in-use', n: past + due, urgent: past, text: `Opened packs: ${words}` }];
-}
+// Today's line for packs past or near their in-use date is in waiting.js.

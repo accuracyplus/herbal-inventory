@@ -9,60 +9,16 @@
 import { gstDate, q3 } from '../lib/data.js';
 import { may } from './access.js';
 import { stockList } from './catalog.js';
-import { custodyWaiting } from './custody.js';
-import { openingsWaiting } from './lots.js';
 import { reviewCount } from './people.js';
-import { inboxWaiting } from './servicelink.js';
 import { setting } from './settings.js';
+import { unitFacts, waitingList } from './waiting.js';
 
 export async function today(env, user, { bearer } = {}) {
   const u = user.unitId;
-  const waiting = [];
   const one = (sql, ...args) => env.DB.prepare(sql).bind(...args).first();
 
-  if (may(user, 'request.decide')) {
-    const r = await one(`SELECT COUNT(*) AS n, SUM(urgency = 'URGENT') AS urgent FROM requests WHERE unit_id = ? AND status = 'PENDING' AND requested_by <> ?`, u, user.staffId);
-    if (r.n) waiting.push({ key: 'requests-approve', screen: 'requests', filter: 'PENDING', n: r.n, urgent: r.urgent || 0, text: `${r.n} request${r.n > 1 ? 's' : ''} to approve` });
-  }
-  if (may(user, 'request.fulfil')) {
-    const r = await one(`SELECT COUNT(*) AS n, SUM(urgency = 'URGENT') AS urgent FROM requests WHERE unit_id = ? AND status IN ('APPROVED','PARTLY_ISSUED')`, u);
-    if (r.n) waiting.push({ key: 'requests-issue', screen: 'requests', filter: 'APPROVED', n: r.n, urgent: r.urgent || 0, text: `${r.n} approved request${r.n > 1 ? 's' : ''} to give out` });
-  }
-  if (may(user, 'po.decide')) {
-    const r = await one(`SELECT COUNT(*) AS n, COALESCE(SUM(total),0) AS v FROM purchase_orders WHERE unit_id = ? AND status = 'SUBMITTED' AND created_by <> ?`, u, user.staffId);
-    if (r.n) waiting.push({ key: 'po-approve', screen: 'purchasing', filter: 'SUBMITTED', n: r.n, text: `${r.n} purchase order${r.n > 1 ? 's' : ''} to approve` });
-  }
-  if (may(user, 'receive')) {
-    const r = await one(`SELECT COUNT(*) AS n, SUM(expected_date IS NOT NULL AND expected_date < ?) AS late FROM purchase_orders WHERE unit_id = ? AND status IN ('APPROVED','PARTLY_RECEIVED')`, gstDate(), u);
-    if (r.n) waiting.push({ key: 'po-receive', screen: 'purchasing', filter: 'APPROVED', n: r.n, urgent: r.late || 0, text: `${r.n} order${r.n > 1 ? 's' : ''} expected${r.late ? `, ${r.late} late` : ''}` });
-  }
-  if (may(user, 'receipt.decide')) {
-    const r = await one(`SELECT COUNT(*) AS n FROM receipts WHERE unit_id = ? AND status = 'PENDING' AND by_id <> ?`, u, user.staffId);
-    if (r.n) waiting.push({ key: 'receipts-approve', screen: 'purchasing', to: 'purchasing?tab=deliveries&status=PENDING', n: r.n, text: `${r.n} deliver${r.n > 1 ? 'ies' : 'y'} to approve` });
-  }
-  if (may(user, 'receive')) {
-    const r = await one(`SELECT COUNT(*) AS n FROM receipts WHERE unit_id = ? AND status = 'REJECTED' AND by_id = ? AND decided_at > datetime('now', '-7 days')`, u, user.staffId);
-    if (r.n) waiting.push({ key: 'receipts-back', screen: 'purchasing', to: 'purchasing?tab=deliveries&status=REJECTED', n: r.n, urgent: r.n, text: `${r.n} deliver${r.n > 1 ? 'ies' : 'y'} you recorded ${r.n > 1 ? 'were' : 'was'} sent back` });
-  }
-  if (may(user, 'services.edit')) {
-    const n = await inboxWaiting(env, u);
-    if (n) waiting.push({ key: 'link-inbox', screen: 'services', to: 'services?tab=link', n, urgent: n, text: `${n} service${n > 1 ? 's' : ''} from bookings or billing could not be recorded` });
-  }
-  if (may(user, 'adjust.decide')) {
-    const r = await one(`SELECT COUNT(*) AS n FROM adjustments WHERE unit_id = ? AND status = 'PENDING' AND requested_by <> ?`, u, user.staffId);
-    if (r.n) waiting.push({ key: 'adj-approve', screen: 'corrections', filter: 'PENDING', n: r.n, text: `${r.n} correction${r.n > 1 ? 's' : ''} to approve` });
-  }
-  if (may(user, 'count.decide')) {
-    const r = await one(`SELECT COUNT(*) AS n FROM counts WHERE unit_id = ? AND status = 'SUBMITTED' AND submitted_by <> ?`, u, user.staffId);
-    if (r.n) waiting.push({ key: 'count-approve', screen: 'counts', n: r.n, text: `${r.n} stock count${r.n > 1 ? 's' : ''} to review` });
-  }
-  if (may(user, 'count.run')) {
-    const r = await one(`SELECT COUNT(*) AS n FROM counts WHERE unit_id = ? AND status = 'OPEN'`, u);
-    if (r.n) waiting.push({ key: 'count-open', screen: 'counts', n: r.n, text: `${r.n} stock count${r.n > 1 ? 's' : ''} in progress` });
-  }
-
-  waiting.push(...await custodyWaiting(env, user));
-  waiting.push(...await openingsWaiting(env, user));
+  // The same list HiFive ID's hub and morning email are given (waiting.js).
+  const waiting = waitingList(await unitFacts(env, u), user);
   if (may(user, 'admin')) {
     const n = await reviewCount(env, user, bearer);
     if (n) waiting.push({ key: 'people-review', screen: 'admin', to: 'admin?tab=people', n, text: `${n} change${n > 1 ? 's' : ''} from HiFive ID to review: joiners, leavers, names` });

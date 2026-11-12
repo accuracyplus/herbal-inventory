@@ -277,7 +277,7 @@ test('HiFive ID hub: /pending/service answers for the named person, with the pen
   assert.equal(wrong.status, 403);
   const res = await call(env, 'POST', '/pending/service', { token: hfidToken({ svc: 'pending', emp_code: 'HPM001' }) });
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body.items.map((i) => i.text), ['1 stock request to approve — Herbal Park']);
+  assert.deepEqual(res.body.items.map((i) => [i.text, i.detail]), [['1 request to approve', 'Herbal Park']]);
 });
 
 test('HiFive ID console: a single role can be read and set; unit administrator cannot be given from there', async () => {

@@ -48,7 +48,7 @@ import {
   saveDepartment, savePerson, saveSettings, saveStore, saveSupplier, saveUnit,
 } from './domain/admin.js';
 import { runImport } from './domain/importer.js';
-import { pendingForStaff } from './domain/pending.js';
+import { accountabilityFor, accountabilityForAll, pendingForAll, pendingForStaff } from './domain/pending.js';
 import { findHeld, PICK_ROLES, roleOptions, seatsFor, unitFor } from './domain/nativerole.js';
 import { LINEN_FLOWS } from './domain/stock.js';
 
@@ -217,6 +217,26 @@ on('POST', '/pending/service', async ({ request, env }) => {
   const emp = String(claims.emp_code || '').trim();
   if (!emp) return fail(400, 'NO_SUBJECT', 'The assertion names nobody.');
   return json({ items: await pendingForStaff(env, emp) });
+});
+
+/** Everybody's list, once a morning, for HiFive ID's combined email. Its own verb only. */
+on('POST', '/pending/service/all', async ({ request, env }) => {
+  await requireAssertion(request, env, 'pending-all');
+  return json({ people: await pendingForAll(env) });
+});
+
+/** One person's stock in hand, for their HiFive ID profile. Counts and dates, never the items. */
+on('POST', '/accountability/service', async ({ request, env }) => {
+  const claims = await requireAssertion(request, env, 'accountability');
+  const emp = String(claims.emp_code || '').trim();
+  if (!emp) return fail(400, 'NO_SUBJECT', 'The assertion names nobody.');
+  // Somebody Inventory does not know is "not here", which the profile leaves out; never a zero.
+  return json({ person: await accountabilityFor(env, emp) });
+});
+
+on('POST', '/accountability/service/all', async ({ request, env }) => {
+  await requireAssertion(request, env, 'accountability-all');
+  return json({ people: await accountabilityForAll(env) });
 });
 
 /** Who this app holds, for HiFive ID's weekly reconciliation. Identity and status only. */

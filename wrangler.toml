@@ -38,8 +38,9 @@ binding = "AI"
 binding = "HFID"
 service = "hifive-id"
 
-# No cron trigger: the account is at the free plan's limit of five. Nothing here needs one —
-# alerts are computed when Today is opened, and HiFive ID's hub asks /pending/service itself.
+# No cron trigger, because nothing here needs one: alerts are computed when Today is opened, and
+# HiFive ID asks for the hub, the morning email and the profile itself (/pending/service,
+# /pending/service/all, /accountability/service[/all]).
 
 [vars]
 APP_ORIGIN = "https://hifive-inventory.pages.dev"

@@ -161,7 +161,7 @@ Nothing in Inventory needs changing for this; every route below is live on its W
                   binding: 'SVC_INVENTORY', label: 'Inventory' }
    Same svc 'pending' assertion as today. Answer: { items: [PendingItem] }, with kind, text,
    detail (the unit's name), days, due (only 'overdue', on held stock and opened packs), href
-   (a path, "/#/requests?status=PENDING&unit=u-hp") and action. No quick types.
+   (a path, "/#/requests?status=PENDING&unit=u-herbal-park") and action. No quick types.
 
 3. digest.ts, for the combined morning email:
    SOURCES: { app: 'inventory', label: 'Inventory', binding: 'SVC_INVENTORY',

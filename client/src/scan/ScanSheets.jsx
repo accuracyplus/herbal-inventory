@@ -7,9 +7,9 @@
  * and the sheet says so.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { fmtDateTime, get, post } from '../api.js';
-import { Note, Button, ErrorNote, Sheet, useApp } from '../ui.jsx';
+import { Note, Button, ErrorNote, InSheet, Sheet, useApp } from '../ui.jsx';
 import Icon from '../icons.jsx';
 import Camera from './Camera.jsx';
 import WhichItem from './WhichItem.jsx';
@@ -17,6 +17,22 @@ import { t } from '../i18n.js';
 
 /** Desks get "Scan with phone" as well; a phone just uses its own camera. */
 export const isDesk = () => typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches;
+
+/**
+ * Where the scanner shows: its own sheet when opened from a page, or a panel in place when opened
+ * from inside a sheet (new request, order, correction, recipe, a count), so no window opens over
+ * another (Design Guide Part O). Done closes the panel and leaves the sheet as it was.
+ */
+function Frame({ title, onClose, children }) {
+  const inside = useContext(InSheet);
+  if (!inside) return <Sheet title={title} onClose={onClose} footer={<Button onClick={onClose}>Done</Button>}>{children}</Sheet>;
+  return (
+    <section className="inv-scanpanel" aria-label={t(title)}>
+      <div className="row"><h3 className="grow inv-scanpanel__t">{t(title)}</h3><Button kind="secondary" onClick={onClose}>Done</Button></div>
+      {children}
+    </section>
+  );
+}
 
 function useTally() {
   const [tally, setTally] = useState([]);
@@ -59,14 +75,14 @@ export function ScanSheet({ onItem, onClose, filter }) {
     }
   };
   return (
-    <Sheet title="Scan" onClose={onClose} footer={<Button onClick={onClose}>Done</Button>}>
+    <Frame title="Scan" onClose={onClose}>
       <div className="stack">
         <Camera onCode={onCode} paused={!!unknown} />
         {unknown && <WhichItem barcode={unknown} filter={filter} onCancel={() => setUnknown(null)} onPicked={(item) => { setUnknown(null); give(item); }} />}
         <ErrorNote error={err} />
         <Tally rows={tally} />
       </div>
-    </Sheet>
+    </Frame>
   );
 }
 
@@ -129,7 +145,7 @@ export function PairSheet({ purpose, onItem, onClose }) {
   // The person's name is shown in bold inside the sentence, so the sentence is split at its slot.
   const signInAs = t("Point your phone's camera at this code and open the link. Sign in as {name} if it asks. Each item you scan appears in the list here.").split('{name}');
   return (
-    <Sheet title="Scan with phone" onClose={onClose} footer={<Button onClick={onClose}>Done</Button>}>
+    <Frame title="Scan with phone" onClose={onClose}>
       <div className="stack">
         <ErrorNote error={err} />
         {session && status.open && (
@@ -144,6 +160,6 @@ export function PairSheet({ purpose, onItem, onClose }) {
         {session && !status.open && <Note tone="warn" icon="clock">This pairing has ended. Close this and press Scan with phone again to start a new one.</Note>}
         <Tally rows={tally} />
       </div>
-    </Sheet>
+    </Frame>
   );
 }

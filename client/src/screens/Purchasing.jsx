@@ -58,7 +58,8 @@ export default function Purchasing() {
       {tab === 'suggest' && <Suggestions onDraft={(prefill) => { setEditing(prefill); setTab('orders'); }} onLevels={(storeId) => { setLevelsStart(storeId); setTab('levels'); }} />}
       {tab === 'levels' && <Levels key={levelsStart} start={levelsStart} />}
       {tab === 'suppliers' && <SupplierList />}
-      {route.id && !['d', 's'].includes(route.id) && <PoSheet id={route.id} onClose={() => navigate('purchasing')} onChanged={reload} onEdit={(po) => setEditing(po)} />}
+      {/* One window at a time: while the order is edited, its window steps aside (Part O). */}
+      {route.id && !['d', 's'].includes(route.id) && !editing && <PoSheet id={route.id} onClose={() => navigate('purchasing')} onChanged={reload} onEdit={(po) => setEditing(po)} />}
       {editing && <PoEditor po={editing} onClose={() => setEditing(null)} onSaved={(id) => { setEditing(null); reload(); navigate(`purchasing/${id}`); }} />}
     </Page>
   );

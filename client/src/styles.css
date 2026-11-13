@@ -264,3 +264,7 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .inv-side::-webkit-scrollbar-track { background: transparent; }
 .inv-side::-webkit-scrollbar-thumb { background: transparent; border-radius: 8px; }
 .inv-side:hover::-webkit-scrollbar-thumb, .inv-side:focus-within::-webkit-scrollbar-thumb { background: var(--line-strong, var(--line)); }
+
+/* The scanner as a panel inside the sheet it was opened from (no window over a window, Part O). */
+.inv-scanpanel { display: flex; flex-direction: column; gap: 10px; padding: 14px; margin: 6px 0; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
+.inv-scanpanel__t { margin: 0; font: 600 16px var(--font-display); }

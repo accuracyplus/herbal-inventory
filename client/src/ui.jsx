@@ -118,10 +118,16 @@ export function Hint({ text }) {
 }
 
 /** C9 · Sheet: bottom sheet on a phone, centred dialog on a desk. The footer stays in view. */
+/**
+ * True inside a sheet. Something that would open a sheet of its own (the scanner) asks this and
+ * shows itself inside this one instead: there is never a window over a window (Part O, C9).
+ */
+export const InSheet = createContext(false);
+
 export function Sheet({ title, onClose, children, footer, wide = false }) {
   return (
     <HfSheet open title={tx(title)} onClose={onClose} wide={wide}>
-      <div className="inv-sheet__body">{children}</div>
+      <div className="inv-sheet__body"><InSheet.Provider value={true}>{children}</InSheet.Provider></div>
       {footer && <div className="inv-sheet__foot">{footer}</div>}
     </HfSheet>
   );

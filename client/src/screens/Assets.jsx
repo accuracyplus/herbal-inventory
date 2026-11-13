@@ -49,6 +49,8 @@ function AssetSheet({ id, onClose, onEdit, onChanged }) {
   const { me, can, currency } = useApp();
   const { data: a, error, loading, reload } = useData(`/api/assets/${id}`, [id]);
   const [servicing, setServicing] = useState(false);
+  // One window at a time: recording a service takes the place of this window, which comes back after.
+  if (servicing && a) return <ServiceSheet asset={a} onClose={() => setServicing(false)} onDone={() => { setServicing(false); reload(); onChanged(); }} />;
   return (
     <Sheet wide title={a ? a.name : 'Equipment'} onClose={onClose}
       footer={a && can('assets.edit') && <>
@@ -82,7 +84,6 @@ function AssetSheet({ id, onClose, onEdit, onChanged }) {
           </Card>
         </>
       )}
-      {servicing && a && <ServiceSheet asset={a} onClose={() => setServicing(false)} onDone={() => { setServicing(false); reload(); onChanged(); }} />}
     </Sheet>
   );
 }

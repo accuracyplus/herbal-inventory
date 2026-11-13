@@ -117,7 +117,8 @@ export default function Stock() {
         <Table columns={columns} rows={rows} onRow={(it) => navigate(`stock/${it.id}`)}
           empty={q || filter !== 'all' || category ? 'No item matches these filters.' : 'No items yet. An administrator can add them, or import the old app\'s list.'} />
       </Card>
-      {route.id && <ItemSheet id={route.id} onClose={() => navigate('stock')} onEdit={(it) => setEditing(it)} />}
+      {/* One window at a time: while the item is edited, its window steps aside (Part O). */}
+      {route.id && !editing && <ItemSheet id={route.id} onClose={() => navigate('stock')} onEdit={(it) => setEditing(it)} />}
       {editing && <ItemForm item={editing.id ? editing : null} stores={lists.stores} onClose={() => setEditing(null)} />}
     </Page>
   );

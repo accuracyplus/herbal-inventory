@@ -39,18 +39,8 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 
 /* ── Shell: a side menu on a computer, a top bar and five tabs on a phone ───── */
 
-.inv-shell { min-height: 100dvh; display: flex; flex-direction: column; }
-.inv-side { display: none; }
-.inv-mark { flex: none; width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: rgb(255 255 255); border: 1px solid var(--line); box-shadow: var(--shadow-card); color: rgb(var(--brand-600)); }
 .inv-bar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 10px 24px; padding-top: max(10px, env(safe-area-inset-top)); background: var(--surface-1); border-bottom: 1px solid var(--line); }
-.inv-bar .inv-mark { width: 36px; height: 36px; border-radius: 11px; }
 .inv-bar__me { margin-left: auto; flex: none; width: 44px; height: 44px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: var(--primary); color: var(--on-primary); font-weight: 700; font-size: 14px; }
-.inv-main { flex: 1 1 auto; min-width: 0; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
-.inv-tabs { position: fixed; inset: auto 0 0 0; z-index: 30; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 4px 8px calc(6px + env(safe-area-inset-bottom)); background: var(--surface-1); border-top: 1px solid var(--line); }
-.inv-tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 12px; font-weight: 600; color: var(--text-muted); text-decoration: none; }
-.inv-tab > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.inv-tab.is-on { color: var(--primary-text, var(--primary)); }
-.inv-tab__dot { position: absolute; top: 8px; left: calc(50% + 8px); width: 8px; height: 8px; border-radius: 50%; background: var(--attention); }
 .inv-navg { padding: 14px 12px 4px; }
 .inv-nav { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 0 12px; border-radius: var(--r-sm); font-weight: 500; color: var(--text); text-align: left; text-decoration: none; }
 .inv-nav:hover { background: var(--surface-2); }
@@ -66,17 +56,11 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .inv-menu { display: flex; flex-direction: column; gap: 2px; }
 /* Under Soft a card's colour is a see-through gradient. A bar that content scrolls behind
    wears it over the solid page ground, so nothing shows through. */
-[data-style="soft"] .inv-bar, [data-style="soft"] .inv-tabs, [data-style="soft"] .inv-side,
+[data-style="soft"] .inv-bar,
 [data-style="soft"] .inv-sheet__foot, [data-style="soft"] .camera.on .camera-say { background: var(--surface-1), var(--surface-0); }
 @media (min-width: 1024px) {
-  .inv-shell { flex-direction: row; }
-  .inv-side { position: sticky; top: 0; flex: none; width: 264px; height: 100dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 20px 12px 12px; background: var(--surface-1); border-right: 1px solid var(--line); }
-  .inv-brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 14px; }
   .inv-brand__n { font-family: var(--font-display); font-weight: 800; font-size: 19px; line-height: 1.1; color: var(--text-strong); }
-  .inv-side .hf-unit { margin-bottom: 8px; }
-  .inv-side__foot { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
-  .inv-bar, .inv-tabs { display: none; }
-  .inv-main { padding-bottom: 0; }
+  .inv-bar { display: none; }
 }
 
 /* ── Page and card ──────────────────────────────────────────────────────────── */
@@ -221,9 +205,6 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 /* ── Sign-in ────────────────────────────────────────────────────────────────── */
 
 .signin { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
-.signin-card { width: min(420px, 100%); padding: 32px 26px; gap: 18px; text-align: center; justify-items: center; }
-.signin-card .inv-mark { width: 64px; height: 64px; border-radius: 20px; }
-.signin-card .hf-btn { width: 100%; }
 
 /* The phone's More menu (approved prototype, 13 Nov 2026): the screens not on the bar as a grid
    of two, then the person's own settings. The wide screen keeps its full list. The breakpoint is
@@ -248,23 +229,17 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
   .inv-submit--dock { position: sticky; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 5; padding: 10px 0 4px; background: linear-gradient(180deg, transparent, var(--surface-0) 35%); }
 }
 
-/* A tab takes the width its word needs before the bar shares out the rest: on a 320px phone a
-   longer Malayalam word is not cut while a short one leaves room (13 Nov 2026). */
-.inv-tabs { grid-template-columns: repeat(5, minmax(min-content, 1fr)); column-gap: 2px; }
 
 /* A newer build is live (src/update.js): the note and its Reload button, at the top of the page. */
 .inv-update { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
 .inv-update > :first-child { flex: 1 1 220px; margin: 0; }
 
-/* The side menu's scrollbar: hidden until the pointer is over the menu or a link in it has focus,
-   then a thin one in the line colour, never the grey native bar (HiFive ID polish check, 13 Nov). */
-.inv-side { scrollbar-width: thin; scrollbar-color: transparent transparent; }
-.inv-side:hover, .inv-side:focus-within { scrollbar-color: var(--line-strong, var(--line)) transparent; }
-.inv-side::-webkit-scrollbar { width: 8px; }
-.inv-side::-webkit-scrollbar-track { background: transparent; }
-.inv-side::-webkit-scrollbar-thumb { background: transparent; border-radius: 8px; }
-.inv-side:hover::-webkit-scrollbar-thumb, .inv-side:focus-within::-webkit-scrollbar-thumb { background: var(--line-strong, var(--line)); }
 
 /* The scanner as a panel inside the sheet it was opened from (no window over a window, Part O). */
 .inv-scanpanel { display: flex; flex-direction: column; gap: 10px; padding: 14px; margin: 6px 0; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
 .inv-scanpanel__t { margin: 0; font: 600 16px var(--font-display); }
+
+/* Inside the shared side menu: the brand's name, and a count pushed to the right of its screen. */
+.inv-brand__n { font-family: var(--font-display); font-weight: 800; font-size: 19px; line-height: 1.1; color: var(--text-strong); }
+.hf-side .hf-unit { margin-bottom: 8px; }
+.hf-side__t { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; }

@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { captureSignIn, get, hfidLoginUrl, post, put, rememberAddress, token, unitPref } from './api.js';
-import { UnitSwitch } from '@hifive/ui';
+import { AppFrame, AppLogo as HfAppLogo, SideMenu, SignIn as HfSignIn, TabBar, UnitSwitch } from '@hifive/ui';
 import Icon from './icons.jsx';
 import { startFollowingAppearance, syncChromeColour } from './appearance.js';
 import { AppCtx, Button, Loading, Note, Segmented, Sheet, useToasts } from './ui.jsx';
@@ -219,54 +219,67 @@ export default function App() {
   const phoneTabs = barFor(ctx.can, visible);
   const moreScreens = visible.filter((s) => !phoneTabs.includes(s));
   const pickUnit = me.units.length > 1 ? () => { setMenu(false); setUnitSheet(true); } : undefined;
+  const sideGroups = [];
+  for (const s of visible) {
+    let g = sideGroups[sideGroups.length - 1];
+    if (!g || g.key !== s.group) { g = { key: s.group, label: GROUPS[s.group] ? t(GROUPS[s.group]) : undefined, items: [] }; sideGroups.push(g); }
+    g.items.push({
+      key: s.id, icon: <Icon name={s.icon} />, href: `#/${s.id}`, current: current.id === s.id, attrs: { 'data-tour': `nav-${s.id}` },
+      label: <>{t(s.label)}{badges[s.id] ? <span className="inv-badge" aria-label={t('{n} waiting', { n: badges[s.id] })}>{badges[s.id]}</span> : null}</>,
+    });
+  }
 
   return (
     <AppCtx.Provider value={ctx}>
+      {/* The shared frame (Design Guide 2.2, D-049): the side menu inside the rounded panel from
+          1024px, the top bar and the phone bar (D-048) below it. Inventory fills them with its own
+          screens, unit switch and menu; the walkthrough finds them by their data-tour marks. */}
       <div className="hf inv-shell">
-        <aside className="inv-side" aria-label="Main">
-          <div className="inv-brand">
-            <AppLogo />
-            <span className="inv-brand__n">{t('Inventory')}</span>
-          </div>
-          <UnitSwitch name={me.unit.name} onClick={pickUnit} />
-          <NavList screens={visible} current={current.id} badges={badges} />
-          <div className="inv-side__foot">
-            <a className="inv-nav" href={HIFIVE_HUB}><Icon name="apps" />{t('All HiFive apps')}</a>
-            <button type="button" data-tour="me" className="inv-me" onClick={() => setMenu(true)} aria-label={t('{name}: your menu', { name: me.name })}>
-              <span className="inv-me__av" aria-hidden="true">{initials}</span>
-              <span className="inv-me__b"><span className="inv-me__n">{me.name}</span><span className="inv-me__r">{roleWords}</span></span>
-              <Icon name="more" size={16} />
-            </button>
-          </div>
-        </aside>
-
-        <header className="inv-bar">
-          <AppLogo />
-          <UnitSwitch name={me.unit.name} onClick={pickUnit} compact />
-          <button type="button" className="inv-bar__me" onClick={() => setMenu(true)} aria-label={t('{name}: your menu', { name: me.name })}>{initials}</button>
-        </header>
-
-        <main className="inv-main" id="main">
-          {fresh && (
-            <div className="inv-update" role="status">
-              <Note icon="alert">{t('A new version of HiFive Inventory is ready.')}</Note>
-              <Button kind="secondary" onClick={() => location.reload()}>{t('Reload')}</Button>
-            </div>
+        <AppFrame
+          side={(
+            <SideMenu label={t('Main')}
+              brand={<><HfAppLogo app="inventory" size={36} /><span className="inv-brand__n">{t('Inventory')}</span></>}
+              head={<UnitSwitch name={me.unit.name} onClick={pickUnit} />}
+              groups={sideGroups}
+              foot={(
+                <>
+                  <a className="inv-nav" href={HIFIVE_HUB}><Icon name="apps" />{t('All HiFive apps')}</a>
+                  <button type="button" data-tour="me" className="inv-me" onClick={() => setMenu(true)} aria-label={t('{name}: your menu', { name: me.name })}>
+                    <span className="inv-me__av" aria-hidden="true">{initials}</span>
+                    <span className="inv-me__b"><span className="inv-me__n">{me.name}</span><span className="inv-me__r">{roleWords}</span></span>
+                    <Icon name="more" size={16} />
+                  </button>
+                </>
+              )}
+            />
           )}
-          <Screen key={`${me.unit.id}-${current.id}-${language}`} />
-        </main>
-
-        <nav className="inv-tabs" aria-label={t('Main')}>
-          {phoneTabs.map((s) => (
-            <a key={s.id} data-tour={`nav-${s.id}`} href={`#/${s.id}`} className={current.id === s.id ? 'inv-tab is-on' : 'inv-tab'} aria-current={current.id === s.id ? 'page' : undefined}>
-              <Icon name={s.icon} size={22} /><span>{tabWord(s.label)}</span>
-              {badges[s.id] ? <span className="inv-tab__dot" role="img" aria-label={t('{n} waiting', { n: badges[s.id] })} /> : null}
-            </a>
-          ))}
-          <button type="button" data-tour="more" className={phoneTabs.some((tab) => tab.id === current.id) ? 'inv-tab' : 'inv-tab is-on'} onClick={() => setMenu(true)}>
-            <Icon name="more" size={22} /><span>{t('More')}</span>
-          </button>
-        </nav>
+          top={(
+            <header className="inv-bar">
+              <HfAppLogo app="inventory" size={36} />
+              <UnitSwitch name={me.unit.name} onClick={pickUnit} compact />
+              <button type="button" className="inv-bar__me" onClick={() => setMenu(true)} aria-label={t('{name}: your menu', { name: me.name })}>{initials}</button>
+            </header>
+          )}
+          tabs={(
+            <TabBar label={t('Main')}
+              items={phoneTabs.map((s) => ({
+                key: s.id, label: tabWord(s.label), icon: <Icon name={s.icon} size={22} />, href: `#/${s.id}`,
+                current: current.id === s.id, attrs: { 'data-tour': `nav-${s.id}` },
+              }))}
+              more={{ label: t('More'), icon: <Icon name="more" size={22} />, onClick: () => setMenu(true), current: !phoneTabs.some((tab) => tab.id === current.id), attrs: { 'data-tour': 'more' } }}
+            />
+          )}
+        >
+          <div className="inv-main" id="main">
+            {fresh && (
+              <div className="inv-update" role="status">
+                <Note icon="alert">{t('A new version of HiFive Inventory is ready.')}</Note>
+                <Button kind="secondary" onClick={() => location.reload()}>{t('Reload')}</Button>
+              </div>
+            )}
+            <Screen key={`${me.unit.id}-${current.id}-${language}`} />
+          </div>
+        </AppFrame>
       </div>
 
       {menu && (
@@ -317,11 +330,6 @@ export default function App() {
 /** Where every HiFive app is reached from: the person's own page in HiFive ID. */
 const HIFIVE_HUB = import.meta.env.VITE_HFID_HUB || 'https://hifive-id-portal.pages.dev/';
 
-/** Until Inventory has its own symbol in the logo family, its icon on the white squircle (Design Guide Part Q). */
-function AppLogo() {
-  return <span className="inv-mark" aria-hidden="true"><Icon name="stock" size={22} /></span>;
-}
-
 function NavList({ screens, current, badges }) {
   let last = null;
   return screens.map((s) => {
@@ -336,25 +344,29 @@ function NavList({ screens, current, badges }) {
   });
 }
 
+/**
+ * Signing in: the shared screen (C18, D-047). One button: HiFive ID's own page then offers
+ * Microsoft or Google. The language chosen here stays on this device until sign-in, when the
+ * person's own choice takes over (D-043).
+ */
 function SignIn({ error }) {
-  useLang();
-  const go = (provider) => { rememberAddress(); location.href = hfidLoginUrl(provider); };
+  const language = useLang();
+  const [busy, setBusy] = useState(false);
+  const go = () => { setBusy(true); rememberAddress(); location.href = hfidLoginUrl(); };
   return (
-    <div className="hf signin">
-      <section className="hf-card inv-card signin-card">
-        <AppLogo />
-        <div>
-          <h1 className="inv-h1">{t('HiFive Inventory')}</h1>
-          <p className="inv-lede">{t('Stock, requests, purchasing and linen for every HiFive unit.')}</p>
-        </div>
-        {error && <Note tone="danger" role="alert">{error}</Note>}
-        <div className="stack" style={{ gap: 10, width: '100%' }}>
-          <Button className="block" onClick={() => go('microsoft')}>{t('Sign in with Microsoft')}</Button>
-          <Button kind="secondary" className="block" onClick={() => go('google')}>{t('Sign in with Google')}</Button>
-        </div>
-        <p className="muted" style={{ fontSize: 13 }}>{t('You sign in once through HiFive ID, with the same account as Recruitment, Performance and the rest of HiFive.')}</p>
-        <Segmented label={t('Language')} value={lang()} onChange={setLang} options={Object.entries(LANGS).map(([value, label]) => ({ value, label }))} />
-      </section>
-    </div>
+    <HfSignIn app="inventory" name={t('HiFive Inventory')} short={t('Inventory')} lang={language}
+      lede={t('Stock, requests, purchasing and linen for every HiFive unit.')}
+      note={t('HR gives access to Inventory.')}
+      help={t('Cannot sign in? Ask HR, with your employee code.')}
+      error={error} busy={busy} onContinue={go}
+      languages={Object.entries(LANGS).map(([value, label]) => ({ value, label, lang: value }))}
+      language={language} onLanguage={setLang}
+      words={{
+        title: t('Sign in to Inventory'), sub: t('With your HiFive ID.'), button: t('Continue with HiFive ID'), busy: t('Opening HiFive ID…'),
+        hint: t('Use the Microsoft or Google account linked to your HiFive ID.'), oneTitle: t('One sign-in for every HiFive app'),
+        ticks: [t('The same account for every HiFive app you use'), t('Your colours and language follow you from app to app'), t('HR decides which apps you can open')],
+        language: t('Language'), about: t('About Inventory'),
+      }}
+    />
   );
 }

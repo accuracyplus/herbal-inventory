@@ -93,6 +93,28 @@ export interface ChoiceCardsProps<V extends string> {
  * next opens directly under it. Use Segmented when a word is enough.
  */
 export declare function ChoiceCards<V extends string>({ label, options, value, onChange, hint, error, hideLabel }: ChoiceCardsProps<V>): import("react").JSX.Element;
+export interface MarkOption<V extends string> {
+    value: V;
+    label: ReactNode;
+    icon?: ReactNode;
+    /** Shown under the group only while this mark is chosen: the reason it needs, say. */
+    detail?: ReactNode;
+}
+export interface MarkGroupProps<V extends string> {
+    label: string;
+    options: readonly MarkOption<V>[];
+    value: V | '' | null | undefined;
+    onChange: (v: V) => void;
+    /** Pressing the chosen mark again clears it, when given. */
+    onClear?: () => void;
+    hint?: ReactNode;
+    hideLabel?: boolean;
+    disabled?: boolean;
+}
+/** Up to three marked actions side by side, an icon over plain words: the decision on
+ *  a CV (Call them, Maybe, Not for this role). Each is 64px tall, wider than a chip,
+ *  so it reads as the decision and never as a filter. Neither mark is red (C9). */
+export declare function MarkGroup<V extends string>({ label, options, value, onChange, onClear, hint, hideLabel, disabled }: MarkGroupProps<V>): import("react").JSX.Element;
 export interface ScoreGroupProps {
     label: ReactNode;
     value: number | null | undefined;
@@ -146,9 +168,11 @@ export interface ListRowProps {
     href?: string;
     onClick?: () => void;
     chevron?: boolean;
+    /** The row whose item is open beside the list (SplitView). */
+    current?: boolean;
 }
 /** icon · title · subtitle · trailing value or chevron; 52px; divider --line. */
-export declare function ListRow({ title, sub, icon, trailing, below, href, onClick, chevron }: ListRowProps): import("react").JSX.Element;
+export declare function ListRow({ title, sub, icon, trailing, below, href, onClick, chevron, current }: ListRowProps): import("react").JSX.Element;
 export declare function ListCard({ caption, children, action }: {
     caption?: ReactNode;
     children: ReactNode;

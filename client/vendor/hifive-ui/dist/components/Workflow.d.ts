@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { type MonthState, type StepState } from '../lib/controls';
 /**
  * Shared workflow pieces added for Performance Hub (Part J, approved with the
@@ -19,6 +19,14 @@ export declare function MonthStrip({ months, label }: {
 /** The key for the strip, with its hint. Shown once per screen, not per row. */
 export declare function MonthKey({ hint }: {
     hint?: string;
+}): import("react").JSX.Element;
+/** Where someone is on a journey of many stages (Recruitment stage 2, 13 Nov 2026): one
+ *  segment per stage, the ones reached filled, and the same sentence written under it, so
+ *  the colour is never the only carrier (Part F). An unknown stage fills nothing and says so. */
+export declare function StageBar({ stages, current, label }: {
+    stages: readonly string[];
+    current: string;
+    label?: string;
 }): import("react").JSX.Element;
 export interface Step {
     key: string;
@@ -62,3 +70,25 @@ export declare function DocumentList({ docs, onAdd, addLabel, accept, empty, bus
     empty?: string;
     busy?: boolean;
 }): import("react").JSX.Element;
+export interface SplitViewProps {
+    /** The list: rows that call `onOpen`, usually a ListCard of ListRows with `current`. */
+    list: ReactNode;
+    /** The item that is open. */
+    children: ReactNode;
+    /** The list's keys in the order shown, for Previous and Next. */
+    keys: readonly string[];
+    current: string | null;
+    onOpen: (key: string) => void;
+    /** One item's name, for the phone's bar: "CV 3 of 10". */
+    word?: string;
+    /** Names the list for a screen reader: "CVs to decide". */
+    listLabel: string;
+}
+/**
+ * A list beside the item it opens: the list on the left and the open item on the
+ * right from 1024px, the item staying in view while the list scrolls (and scrolling
+ * on its own when it is taller than the window). Below that,
+ * one item at a time with Previous and Next, and "The list" to see them all; picking
+ * one there opens it. Used for CV review; any one-at-a-time reading fits it.
+ */
+export declare function SplitView({ list, children, keys, current, onOpen, word, listLabel }: SplitViewProps): import("react").JSX.Element;

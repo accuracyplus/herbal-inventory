@@ -22,8 +22,8 @@ const isPhone = () => window.innerWidth < 1024;
 
 /** Where a screen's link is: its tab on a phone, else the side menu; on a phone without a tab, the More button. */
 function navSpot(id) {
-  if (!isPhone()) return `.inv-side [data-tour="nav-${id}"]`;
-  return document.querySelector(`.inv-tabs [data-tour="nav-${id}"]`) ? `.inv-tabs [data-tour="nav-${id}"]` : '.inv-tabs [data-tour="more"]';
+  if (!isPhone()) return `.hf-side [data-tour="nav-${id}"]`;
+  return document.querySelector(`.hf-tabbar [data-tour="nav-${id}"]`) ? `.hf-tabbar [data-tour="nav-${id}"]` : '.hf-tabbar [data-tour="more"]';
 }
 
 /** Staff: they record use and run no store (Today.jsx shows them only what is theirs). */
@@ -49,7 +49,7 @@ export function tourSteps(me, visible) {
     const spot = document.querySelector('[data-tour="waiting"]') ? '[data-tour="waiting"]' : '[data-tour="today"]';
     steps.push({ selector: spot, title: t('Approvals wait here'), text: t('Requests, orders and deliveries that need your approval are listed first on Today, oldest first.') });
   }
-  steps.push({ selector: isPhone() ? '.inv-tabs [data-tour="more"]' : '.inv-side [data-tour="me"]', title: t('Everything else, and your language'), text: t('The menu has every screen, English or Malayalam, and this walkthrough again whenever you want it.') });
+  steps.push({ selector: isPhone() ? '.hf-tabbar [data-tour="more"]' : '.hf-side [data-tour="me"]', title: t('Everything else, and your language'), text: t('The menu has every screen, English or Malayalam, and this walkthrough again whenever you want it.') });
   return steps;
 }
 

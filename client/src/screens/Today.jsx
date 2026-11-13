@@ -70,6 +70,11 @@ export default function Today() {
     : waiting === 0 ? t('Nothing is waiting on you at {unit}.', { unit: me.unit.name })
       : tn(waiting, '{n} thing is waiting on you at {unit}.', '{n} things are waiting on you at {unit}.', { unit: me.unit.name });
 
+  // Which side of the page has anything to show, so an empty one is not drawn (Part S: no holes).
+  const dayCard = !!data && (data.day.issues > 0 || data.day.receipts > 0 || data.day.transfers > 0 || data.month?.writtenOff > 0);
+  const leftHas = !!data && (data.waiting.length > 0 || data.mine.length > 0);
+  const rightHas = !!data && (data.short.length > 0 || data.expiring.length > 0 || data.laundryLate.length > 0 || dayCard);
+
   const tiles = [];
   if (data) {
     const gone = data.shortCounts.out + data.shortCounts.critical;
@@ -99,8 +104,9 @@ export default function Today() {
         <>
           {tiles.length > 0 && <div className="inv-tiles" role="group" aria-label={t('{unit} now', { unit: me.unit.name })}>{tiles}</div>}
 
-          <div className="grid2">
-            <div className="stack" style={{ gap: 18 }}>
+          {/* Two columns only when both hold something: an empty column leaves a hole (Part S). */}
+          <div className={leftHas && rightHas ? 'grid2' : 'stack'} style={leftHas && rightHas ? undefined : { gap: 18 }}>
+            {leftHas && <div className="stack" style={{ gap: 18 }}>
               <Waiting rows={data.waiting} />
 
               {data.mine.length > 0 && (
@@ -112,9 +118,9 @@ export default function Today() {
                   }))} />
                 </Card>
               )}
-            </div>
+            </div>}
 
-            <div className="stack" style={{ gap: 18 }}>
+            {rightHas && <div className="stack" style={{ gap: 18 }}>
               {data.short.length > 0 && (
                 <Card title="Short now" pad={false} actions={data.short.length > 5 ? <a className="hf-btn hf-btn--quiet" href="#/stock?filter=short">{t('All {n}', { n: data.short.length })}</a> : null}>
                   <StatusRows rows={data.short.slice(0, 5).map((s) => ({
@@ -154,7 +160,7 @@ export default function Today() {
                   ]} />
                 </Card>
               )}
-            </div>
+            </div>}
           </div>
         </>
       )}

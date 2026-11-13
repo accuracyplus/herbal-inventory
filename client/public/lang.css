@@ -1,13 +1,21 @@
-/* Malayalam screens (Design Guide 1.13, D-043; typefaces approved 12 Nov 2026 in Part B, Type:
-   Baloo Chettan 2 for headings, Noto Sans Malayalam for body). Loaded only when the interface is
-   Malayalam (src/i18n.js). Google serves each family split by script with unicode-range, so these
-   fonts fetch only Malayalam letters; Inter and Baloo 2 stay first, so Latin letters and digits
-   keep the house typefaces. */
-@import url('https://fonts.googleapis.com/css2?family=Baloo+Chettan+2:wght@600;700;800&family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap');
+/* Malayalam screens (Design Guide D-043, D-045). Loaded only when the interface is Malayalam
+   (src/i18n.js). One Malayalam typeface, Noto Sans Malayalam, for body and headings alike: Sinu,
+   13 Nov 2026, chose it over Baloo Chettan 2 for headings, which ran heavy and drew "ന്റ" in its
+   split form (D-045). Google serves the family split by script with unicode-range, so it fetches
+   only Malayalam letters; Inter and Baloo 2 stay first, so Latin letters and digits keep the house
+   typefaces. */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap');
 
 :root[lang="ml"] {
-  --font-display: 'Baloo 2', 'Baloo Chettan 2', 'Noto Sans Malayalam', 'Nunito', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Baloo 2', 'Noto Sans Malayalam', 'Nunito', -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-body: Inter, 'Noto Sans Malayalam', 'Nunito', -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Headings in Malayalam at semibold: the display weights (700–800) were drawn for Baloo, and make
+   Malayalam heavy and long. Numbers (tiles, figures) keep their weight: digits stay in Baloo 2. */
+:root[lang="ml"] :is(h1, h2, h3, .inv-h1, .inv-h2, .hf-display, .hf-sec, .hf-sheet__title, .hf-tour__title, .hf-stock__lead, .inv-brand__n) {
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 /* Malayalam letters stack above and below the line more than Latin ones do; a little more room

@@ -47,8 +47,9 @@ function Submit({ missing, tried, busy, icon, onPress, children, dock = false })
   );
 }
 
-/** Rooms shown as buttons up to this many; a longer list stays a select. */
-const ROOM_CHIPS = 8;
+/** Rooms shown as buttons up to this many; a longer list stays a select. Twelve: Herbal Park's rooms,
+ * as one tap each (Sinu, 13 Nov 2026). */
+const ROOM_CHIPS = 12;
 
 /**
  * Record use, asking only what it must (approved prototype, 13 Nov 2026): one store is said, not

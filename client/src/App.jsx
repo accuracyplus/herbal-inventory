@@ -161,7 +161,9 @@ export default function App() {
     try {
       const [s, stores, areas] = await Promise.all([get('/api/stock'), get('/api/stores'), get('/api/areas')]);
       setStock(s);
-      setLists({ stores, areas });
+      // Rooms in number order, so R2 comes before R10 (Herbal Park's R1 to R12, 13 Nov 2026).
+      const byNumber = (a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true, sensitivity: 'base' });
+      setLists({ stores, areas: [...areas].sort(byNumber) });
     } catch (e) { toasts.push(e.message, 'danger'); }
   }, [toasts.push]); // eslint-disable-line react-hooks/exhaustive-deps
 

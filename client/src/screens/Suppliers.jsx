@@ -10,20 +10,22 @@ import { useState } from 'react';
 import { KeyValues } from '@hifive/ui';
 import { fmtDate, fmtMoney, post, put } from '../api.js';
 import { Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, Quiet, Sheet, Table, useApp, useData } from '../ui.jsx';
+import { t, tn } from '../i18n.js';
 
+// Each verdict's words are made when the pill is drawn, so they follow the language.
 const VERDICT = {
-  ON_TIME: ['ok', () => 'On time'],
-  LATE: ['warn', (o) => `${o.daysLate} day${o.daysLate === 1 ? '' : 's'} late`],
-  OVERDUE: ['danger', (o) => `Overdue, ${o.daysLate} day${o.daysLate === 1 ? '' : 's'}`],
-  WAITING: ['plain', () => 'Not due yet'],
-  CLOSED_SHORT: ['warn', () => 'Closed short'],
-  NO_DATE: ['plain', () => 'No date given'],
+  ON_TIME: ['ok', () => t('On time')],
+  LATE: ['warn', (o) => tn(o.daysLate, '{n} day late', '{n} days late')],
+  OVERDUE: ['danger', (o) => tn(o.daysLate, 'Overdue, {n} day', 'Overdue, {n} days')],
+  WAITING: ['plain', () => t('Not due yet')],
+  CLOSED_SHORT: ['warn', () => t('Closed short')],
+  NO_DATE: ['plain', () => t('No date given')],
 };
 export const Verdict = ({ o }) => <Pill tone={VERDICT[o.verdict]?.[0]}>{VERDICT[o.verdict]?.[1](o) || o.verdict}</Pill>;
 
 /** "4 of 5", or nothing when no order can yet be judged for time. */
-const onTimeWords = (r) => (r && r.judged > 0 ? `${r.onTime} of ${r.judged}` : '');
-const change = (n, currency) => (n === null || n === undefined || n === 0 ? '' : `${n > 0 ? 'up' : 'down'} ${fmtMoney(Math.abs(n), currency)}`);
+const onTimeWords = (r) => (r && r.judged > 0 ? t('{a} of {b}', { a: r.onTime, b: r.judged }) : '');
+const change = (n, currency) => (n === null || n === undefined || n === 0 ? '' : t(n > 0 ? 'up {amount}' : 'down {amount}', { amount: fmtMoney(Math.abs(n), currency) }));
 
 export const priceViewer = (can) => can('cost.view') || can('po.edit') || can('receive');
 
@@ -46,7 +48,7 @@ export function SupplierList() {
           <Table caption="Suppliers" rows={data} onRow={(s) => navigate(`purchasing/s/${s.id}`)} empty="No suppliers yet." columns={[
             { key: 'name', label: 'Supplier', primary: true, render: (s) => <span className="min0"><span className="row-label">{s.name} {!s.active && <Pill tone="plain">No longer used</Pill>}</span><span className="row-sub">{[s.contact, s.phone, s.email].filter(Boolean).join(' · ')}</span></span> },
             { key: 'on_time', label: 'On time, last 12 months', sortable: false, render: (s) => onTimeWords(record?.[s.id]) },
-            { key: 'item_count', label: 'Usual supplier of', align: 'right', render: (s) => (s.item_count ? `${s.item_count} item${s.item_count === 1 ? '' : 's'}` : '') },
+            { key: 'item_count', label: 'Usual supplier of', align: 'right', render: (s) => (s.item_count ? tn(s.item_count, '{n} item', '{n} items') : '') },
             { key: 'last_delivery', label: 'Last delivery', render: (s) => (s.last_delivery ? fmtDate(s.last_delivery) : '') },
           ]} />
         </Card>
@@ -72,18 +74,18 @@ export function SupplierPage({ id, onClose }) {
           {!s.active && <Quiet icon="info">This supplier is no longer used. Its history stays.</Quiet>}
           <div className="grid2">
             <div className="stack" style={{ gap: 18 }}>
-              <Card title="How their orders went" hint="The last twelve months of this unit's orders. On time means everything on the order had arrived by its expected date. An order with no expected date cannot be judged for time.">
+              <Card title="How their orders went" hint={`The last twelve months of this unit's orders. On time means everything on the order had arrived by its expected date. An order with no expected date cannot be judged for time.`}>
                 {r.orders === 0
                   ? <Quiet icon="info">No orders to them in the last twelve months.</Quiet>
                   : (
                     <KeyValues columns={3} items={[
-                      { label: 'On time', value: onTimeWords(r) || 'None judged yet' },
-                      { label: 'Late', value: r.late > 0 && `${r.late}${r.usualDaysLate ? `, usually by ${r.usualDaysLate} day${r.usualDaysLate === 1 ? '' : 's'}` : ''}` },
-                      { label: 'Overdue now', value: r.overdue > 0 && r.overdue },
-                      { label: 'Closed short', value: r.closedShort > 0 && r.closedShort },
-                      { label: 'Not due yet', value: r.waiting > 0 && r.waiting },
-                      { label: 'First delivery', value: r.usualWaitDays !== null && (r.usualWaitDays === 0 ? 'usually the day it is approved' : `usually ${r.usualWaitDays} day${r.usualWaitDays === 1 ? '' : 's'} after approval`) },
-                      { label: 'Lines short of the note', value: data.againstNote.lines > 0 && `${data.againstNote.short} of ${data.againstNote.lines}` },
+                      { label: t('On time'), value: onTimeWords(r) || t('None judged yet') },
+                      { label: t('Late'), value: r.late > 0 && `${r.late}${r.usualDaysLate ? `, ${tn(r.usualDaysLate, 'usually by {n} day', 'usually by {n} days')}` : ''}` },
+                      { label: t('Overdue now'), value: r.overdue > 0 && r.overdue },
+                      { label: t('Closed short'), value: r.closedShort > 0 && r.closedShort },
+                      { label: t('Not due yet'), value: r.waiting > 0 && r.waiting },
+                      { label: t('First delivery'), value: r.usualWaitDays !== null && (r.usualWaitDays === 0 ? t('usually the day it is approved') : tn(r.usualWaitDays, 'usually {n} day after approval', 'usually {n} days after approval')) },
+                      { label: t('Lines short of the note'), value: data.againstNote.lines > 0 && t('{a} of {b}', { a: data.againstNote.short, b: data.againstNote.lines }) },
                     ]} />
                   )}
               </Card>
@@ -104,9 +106,9 @@ export function SupplierPage({ id, onClose }) {
             <div className="stack" style={{ gap: 18 }}>
               <Card title="Details">
                 <KeyValues items={[
-                  { label: 'Contact', value: s.contact }, { label: 'Phone', value: s.phone }, { label: 'Email', value: s.email },
-                  { label: 'TRN', value: s.trn }, { label: 'Payment terms', value: s.terms },
-                  { label: 'Usual delivery time', value: s.lead_days !== null && s.lead_days !== undefined && `${s.lead_days} day${s.lead_days === 1 ? '' : 's'}` },
+                  { label: t('Contact'), value: s.contact }, { label: t('Phone'), value: s.phone }, { label: t('Email'), value: s.email },
+                  { label: t('TRN'), value: s.trn }, { label: t('Payment terms'), value: s.terms },
+                  { label: t('Usual delivery time'), value: s.lead_days !== null && s.lead_days !== undefined && tn(s.lead_days, '{n} day', '{n} days') },
                 ]} />
                 {!s.email && <Quiet icon="info">No email address, so orders cannot be emailed to them.</Quiet>}
                 {s.notes && <p className="muted">{s.notes}</p>}
@@ -116,7 +118,7 @@ export function SupplierPage({ id, onClose }) {
                 <Card title="What they charge" pad={false} hint="The price on their last approved delivery of each item, and the change from the one before.">
                   {data.prices.length
                     ? <Table caption="What they charge" rows={data.prices} columns={[
-                      { key: 'name', label: 'Item', primary: true, render: (p) => <span className="min0"><span className="row-label">{p.name}</span><span className="row-sub"><code>{p.code}</code> · last {fmtDate(p.lastDay)}</span></span> },
+                      { key: 'name', label: 'Item', primary: true, render: (p) => <span className="min0"><span className="row-label">{p.name}</span><span className="row-sub"><code>{p.code}</code> · {t('last {date}', { date: fmtDate(p.lastDay) })}</span></span> },
                       { key: 'last', label: 'Last paid', align: 'right', render: (p) => <b>{fmtMoney(p.last, currency)}</b> },
                       { key: 'change', label: 'Since before', align: 'right', sort: (p) => p.change ?? 0, render: (p) => change(p.change, currency) },
                     ]} />
@@ -142,10 +144,10 @@ export function ItemPrices({ id }) {
     <Card title="Prices" pad={false} hint="From approved deliveries. The lowest is marked when more than one supplier still in use has a price.">
       {data.suppliers.length
         ? <Table caption="Prices by supplier" rows={data.suppliers} rowKey={(s) => s.supplierId} onRow={(s) => navigate(`purchasing/s/${s.supplierId}`)} columns={[
-          { key: 'name', label: 'Supplier', primary: true, render: (s) => <span className="min0"><span className="row-label">{s.name} {s.lowest && <Pill tone="ok">Lowest</Pill>} {!s.active && <Pill tone="plain">No longer used</Pill>}</span><span className="row-sub">last {fmtDate(s.lastDay)} · {s.deliveries} deliver{s.deliveries === 1 ? 'y' : 'ies'}</span></span> },
+          { key: 'name', label: 'Supplier', primary: true, render: (s) => <span className="min0"><span className="row-label">{s.name} {s.lowest && <Pill tone="ok">Lowest</Pill>} {!s.active && <Pill tone="plain">No longer used</Pill>}</span><span className="row-sub">{t('last {date}', { date: fmtDate(s.lastDay) })} · {tn(s.deliveries, '{n} delivery', '{n} deliveries')}</span></span> },
           { key: 'last', label: 'Last paid', align: 'right', render: (s) => <b>{fmtMoney(s.last, currency)}</b> },
           { key: 'change', label: 'Since before', align: 'right', sort: (s) => s.change ?? 0, render: (s) => change(s.change, currency) },
-          { key: 'range', label: 'Last 12 months', align: 'right', sortable: false, render: (s) => (s.low === null ? '' : s.low === s.high ? fmtMoney(s.low, currency) : `${fmtMoney(s.low, currency)} to ${fmtMoney(s.high, currency)}`) },
+          { key: 'range', label: 'Last 12 months', align: 'right', sortable: false, render: (s) => (s.low === null ? '' : s.low === s.high ? fmtMoney(s.low, currency) : t('{low} to {high}', { low: fmtMoney(s.low, currency), high: fmtMoney(s.high, currency) })) },
         ]} />
         : <Quiet icon="info">Not bought yet, so there is no price to show.</Quiet>}
     </Card>
@@ -173,7 +175,7 @@ export function SupplierForm({ s, onClose, onSaved }) {
         <Field label="Phone (optional)"><input value={f.phone} onChange={(e) => set('phone', e.target.value)} inputMode="tel" /></Field>
         <Field label="Email (optional)" hint="Approved orders are emailed here."><input value={f.email} onChange={(e) => set('email', e.target.value)} inputMode="email" /></Field>
         <Field label="TRN (optional)" hint="UAE VAT registration number, printed on the purchase order."><input value={f.trn} onChange={(e) => set('trn', e.target.value)} /></Field>
-        <Field label="Payment terms (optional)"><input value={f.terms} onChange={(e) => set('terms', e.target.value)} placeholder="30 days, cash on delivery" /></Field>
+        <Field label="Payment terms (optional)"><input value={f.terms} onChange={(e) => set('terms', e.target.value)} placeholder={t('30 days, cash on delivery')} /></Field>
         <Field label="Usual delivery time in days (optional)"><input type="number" min="0" value={f.leadDays} onChange={(e) => set('leadDays', e.target.value)} /></Field>
         <Field label="Notes (optional)" className="span2"><textarea value={f.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
         {s.id && <div className="span2"><Check checked={!f.active} onChange={(v) => set('active', !v)}>No longer used</Check></div>}

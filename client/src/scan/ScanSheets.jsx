@@ -13,16 +13,17 @@ import { Note, Button, ErrorNote, Sheet, useApp } from '../ui.jsx';
 import Icon from '../icons.jsx';
 import Camera from './Camera.jsx';
 import WhichItem from './WhichItem.jsx';
+import { t } from '../i18n.js';
 
 /** Desks get "Scan with phone" as well; a phone just uses its own camera. */
 export const isDesk = () => typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches;
 
 function useTally() {
   const [tally, setTally] = useState([]);
-  const add = (item, ok) => setTally((t) => {
-    const i = t.findIndex((x) => x.id === item.id && x.ok === ok);
-    if (i < 0) return [{ id: item.id, name: item.name, n: 1, ok }, ...t].slice(0, 6);
-    return t.map((x, j) => (j === i ? { ...x, n: x.n + 1 } : x));
+  const add = (item, ok) => setTally((rows) => {
+    const i = rows.findIndex((x) => x.id === item.id && x.ok === ok);
+    if (i < 0) return [{ id: item.id, name: item.name, n: 1, ok }, ...rows].slice(0, 6);
+    return rows.map((x, j) => (j === i ? { ...x, n: x.n + 1 } : x));
   });
   return [tally, add];
 }
@@ -34,7 +35,7 @@ function Tally({ rows }) {
       {rows.map((r) => (
         <li key={`${r.id}-${r.ok}`} className={r.ok ? '' : 'tone-txt-CRITICAL'}>
           <Icon name={r.ok ? 'check' : 'alert'} size={16} />
-          <span className="grow">{r.name}{r.ok ? '' : ' (not on this list)'}</span>
+          <span className="grow">{r.name}{r.ok ? '' : ` (${t('not on this list')})`}</span>
           <b>{r.n > 1 ? `×${r.n}` : ''}</b>
         </li>
       ))}
@@ -125,17 +126,19 @@ export function PairSheet({ purpose, onItem, onClose }) {
       setSvg(q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }));
     }).catch((e) => setErr(e));
   }, [link]);
+  // The person's name is shown in bold inside the sentence, so the sentence is split at its slot.
+  const signInAs = t("Point your phone's camera at this code and open the link. Sign in as {name} if it asks. Each item you scan appears in the list here.").split('{name}');
   return (
     <Sheet title="Scan with phone" onClose={onClose} footer={<Button onClick={onClose}>Done</Button>}>
       <div className="stack">
         <ErrorNote error={err} />
         {session && status.open && (
           <>
-            <p>Point your phone's camera at this code and open the link. Sign in as <b>{me.name}</b> if it asks. Each item you scan appears in the list here.</p>
+            <p>{signInAs[0]}<b>{me.name}</b>{signInAs[1]}</p>
             {/* Black on white whatever the theme: a phone cannot read a QR code in dark mode colours. */}
-            <div className="qr" role="img" aria-label="QR code to open the scanner on your phone" dangerouslySetInnerHTML={{ __html: svg }} />
-            <p className="row"><span className={`pill tone-${status.paired ? 'ok' : 'warn'}`}>{status.paired ? 'Phone connected' : 'Waiting for your phone'}</span>
-              <span className="muted">Ends 15 minutes after the last scan{status.expiresAt ? ` (now ${fmtDateTime(status.expiresAt)})` : ''}.</span></p>
+            <div className="qr" role="img" aria-label={t('QR code to open the scanner on your phone')} dangerouslySetInnerHTML={{ __html: svg }} />
+            <p className="row"><span className={`pill tone-${status.paired ? 'ok' : 'warn'}`}>{status.paired ? t('Phone connected') : t('Waiting for your phone')}</span>
+              <span className="muted">{status.expiresAt ? t('Ends 15 minutes after the last scan (now {time}).', { time: fmtDateTime(status.expiresAt) }) : t('Ends 15 minutes after the last scan.')}</span></p>
           </>
         )}
         {session && !status.open && <Note tone="warn" icon="clock">This pairing has ended. Close this and press Scan with phone again to start a new one.</Note>}

@@ -8,6 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { fmtAgo, fmtMoney, fmtQty, post, put } from '../api.js';
+import { t, tn } from '../i18n.js';
 import Icon from '../icons.jsx';
 import LineEditor, { lineErrors, newLine, toPayload } from '../lines.jsx';
 import {
@@ -28,9 +29,9 @@ export default function Services() {
   const [tab, setTab] = useState(edits && ['recipes', 'link'].includes(asked) ? asked : records ? 'record' : 'recipes');
   const { data, error, loading, reload } = useData(`/api/services${edits ? '?all=1' : ''}`);
   return (
-    <Page title={word} subtitle={`Record a ${ONE[word]} and what it normally uses comes off the shelf together.`}>
+    <Page title={word} subtitle={t('Record a {one} and what it normally uses comes off the shelf together.', { one: t(ONE[word]) })}>
       {edits && <Segmented label="Section" value={tab} onChange={setTab} options={[
-        ...(records ? [{ value: 'record', label: `Record a ${ONE[word]}` }] : []), { value: 'recipes', label: 'Recipes' }, { value: 'link', label: 'From bookings or billing' },
+        ...(records ? [{ value: 'record', label: t('Record a {one}', { one: t(ONE[word]) }) }] : []), { value: 'recipes', label: 'Recipes' }, { value: 'link', label: 'From bookings or billing' },
       ]} />}
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}
@@ -75,7 +76,7 @@ function Record({ services, word, onRecipes }) {
   if (!stock) return <Loading />;
   if (!services.length) {
     return (
-      <Card><Quiet icon="help">No {word.toLowerCase()} are set up yet.{onRecipes ? '' : ' A manager adds them, with what each normally uses.'}</Quiet>
+      <Card><Quiet icon="help">{t('No {word} are set up yet.', { word: t(word.toLowerCase()) }) + (onRecipes ? '' : ` ${t('A manager adds them, with what each normally uses.')}`)}</Quiet>
         {onRecipes && <div className="row"><Button icon="plus" onClick={onRecipes}>Set up the first one</Button></div>}</Card>
     );
   }
@@ -86,18 +87,20 @@ function Record({ services, word, onRecipes }) {
   const differs = [
     ...[...standard].filter(([id, q]) => (used.get(id) || 0) !== q).map(([id, q]) => {
       const it = stock.items.find((i) => i.id === id);
-      return used.get(id) ? `${it?.name}: ${fmtQty(used.get(id))} ${it?.uom}, the recipe says ${fmtQty(q)}` : `${it?.name}: not used (the recipe says ${fmtQty(q)} ${it?.uom})`;
+      return used.get(id)
+        ? t('{name}: {qty} {uom}, the recipe says {std}', { name: it?.name, qty: fmtQty(used.get(id)), uom: t(it?.uom), std: fmtQty(q) })
+        : t('{name}: not used (the recipe says {std} {uom})', { name: it?.name, std: fmtQty(q), uom: t(it?.uom) });
     }),
-    ...lines.filter((l) => !standard.has(l.item.id) && Number(l.qty) > 0).map((l) => `${l.item.name}: ${fmtQty(l.qty)} ${l.item.uom}, not in the recipe`),
+    ...lines.filter((l) => !standard.has(l.item.id) && Number(l.qty) > 0).map((l) => t('{name}: {qty} {uom}, not in the recipe', { name: l.item.name, qty: fmtQty(l.qty), uom: t(l.item.uom) })),
   ];
   const errors = lineErrors(lines, 'out', storeId);
   const save = async () => {
-    if (!svc) { setErr(new Error(`Choose the ${one} that was done.`)); return; }
+    if (!svc) { setErr(new Error(t('Choose the {one} that was done.', { one: t(one) }))); return; }
     if (Object.keys(errors).length) { setErr(new Error('Some lines need attention: see the lines marked below.')); return; }
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/service-records', { serviceId, times: n, storeId, areaId: areaId || null, personId: personId || null, note, lines: toPayload(lines) });
-      setDone(r); toast(`${r.ref} recorded`);
+      setDone(r); toast(t('{ref} recorded', { ref: r.ref }));
       setServiceId(''); setTimes('1'); setNote(''); setPersonId('');
       refreshStock(); refreshBadges(); recent.reload();
     } catch (e) { setErr(e); } finally { setBusy(false); }
@@ -106,8 +109,8 @@ function Record({ services, word, onRecipes }) {
   if (done) {
     return (
       <Card>
-        <div className="row"><span className="inv-done"><Icon name="check" /></span><h2 className="grow">{done.ref}: {done.times} × {done.name} recorded.</h2></div>
-        <p className="muted">{done.differs ? 'What was used differs from the recipe. Both are kept, and the report shows the difference.' : 'Used exactly as the recipe says.'}</p>
+        <div className="row"><span className="inv-done"><Icon name="check" /></span><h2 className="grow">{t('{ref}: {times} × {name} recorded.', { ref: done.ref, times: done.times, name: done.name })}</h2></div>
+        <p className="muted">{t(done.differs ? 'What was used differs from the recipe. Both are kept, and the report shows the difference.' : 'Used exactly as the recipe says.')}</p>
         <div className="row"><Button onClick={() => setDone(null)}>Record another</Button></div>
       </Card>
     );
@@ -116,7 +119,7 @@ function Record({ services, word, onRecipes }) {
     <>
       <Card>
         <div className="form two">
-          <Field label={`Which ${one}`}><Select value={serviceId} onChange={setServiceId} placeholder="Choose" options={services.map((s) => ({ value: s.id, label: s.name }))} /></Field>
+          <Field label={t('Which {one}', { one: t(one) })}><Select value={serviceId} onChange={setServiceId} placeholder="Choose" options={services.map((s) => ({ value: s.id, label: s.name }))} /></Field>
           <Field label="How many were done"><Stepper value={times} onChange={setTimes} /></Field>
           <Field label="From store"><Select value={storeId} onChange={setStoreId} options={stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
           <Field label="Room or area" hint={needRoom ? 'Where it was done.' : 'Where it was done. Leave empty if it does not apply.'}>
@@ -129,7 +132,7 @@ function Record({ services, word, onRecipes }) {
                 : <input value={me.name} disabled />}
             </Field>
           )}
-          <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" maxLength={300} /></Field>
+          <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('Optional')} maxLength={300} /></Field>
         </div>
         <ErrorNote error={peopleError} />
       </Card>
@@ -137,7 +140,7 @@ function Record({ services, word, onRecipes }) {
         <Card title="What it used" hint="Laid out from the recipe. Change a quantity, remove what was not used, or add something else that was.">
           <LineEditor mode="out" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} errors={errors} pickerFilter={(i) => !i.isLinen} />
           {differs.length > 0 && (
-            <Note icon="help"><div><b>Differs from the recipe</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{differs.map((d) => <li key={d}>{d}</li>)}</ul></div></Note>
+            <Note icon="help"><div><b>{t('Differs from the recipe')}</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{differs.map((d) => <li key={d}>{d}</li>)}</ul></div></Note>
           )}
         </Card>
       )}
@@ -163,15 +166,15 @@ function Recipes({ services, word, reload }) {
   const one = ONE[word];
   return (
     <>
-      <Note icon="help"><span>A recipe is what one {one} normally uses. It fills in the form when a {one} is recorded, and it is what actual use is compared with. Changing it does not change what was already recorded.</span></Note>
-      <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => setEditing({ code: '', name: '', items: [], active: 1 })}>New {one}</Button></div>
+      <Note icon="help"><span>{t('A recipe is what one {one} normally uses. It fills in the form when a {one} is recorded, and it is what actual use is compared with. Changing it does not change what was already recorded.', { one: t(one) })}</span></Note>
+      <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => setEditing({ code: '', name: '', items: [], active: 1 })}>{t('New {one}', { one: t(one) })}</Button></div>
       <Card pad={false}>
-        <Table rows={services} onRow={setEditing} empty={`No ${word.toLowerCase()} yet. Add one with what it normally uses.`} columns={[
+        <Table rows={services} onRow={setEditing} empty={t('No {word} yet. Add one with what it normally uses.', { word: t(word.toLowerCase()) })} columns={[
           { key: 'name', label: word.replace(/s$/, ''), primary: true, render: (s) => <span className="min0"><span className="row-label">{s.name} {!s.active && <Pill tone="faint">No longer offered</Pill>}</span><span className="row-sub"><code>{s.code}</code></span></span> },
-          { key: 'items', label: 'Normally uses', sortable: false, render: (s) => s.items.map((i) => `${fmtQty(i.qty)} ${i.uom} ${i.name}`).join(', ') },
+          { key: 'items', label: 'Normally uses', sortable: false, render: (s) => s.items.map((i) => `${fmtQty(i.qty)} ${t(i.uom)} ${i.name}`).join(', ') },
           ...(can('cost.view') ? [
             { key: 'stdCost', label: 'Cost of one', align: 'right', render: (s) => fmtMoney(s.stdCost, currency) },
-            { key: 'price', label: 'Usual price', align: 'right', render: (s) => (s.price === null || s.price === undefined ? <span className="faint">not set</span> : fmtMoney(s.price, currency)) },
+            { key: 'price', label: 'Usual price', align: 'right', render: (s) => (s.price === null || s.price === undefined ? <span className="faint">{t('not set')}</span> : fmtMoney(s.price, currency)) },
             { key: 'margin', label: 'Margin', align: 'right', render: (s) => (s.margin === undefined ? '' : fmtMoney(s.margin, currency)) },
           ] : []),
         ]} />
@@ -197,17 +200,17 @@ function RecipeSheet({ s, one, onClose, onSaved }) {
     } catch (e) { setErr(e); setBusy(false); }
   };
   return (
-    <Sheet wide title={s.id ? s.name : `New ${one}`} onClose={onClose}
+    <Sheet wide title={s.id ? s.name : t('New {one}', { one: t(one) })} onClose={onClose}
       footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
       <div className="form two">
-        <Field label="Name"><input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Abhyanga" maxLength={80} /></Field>
+        <Field label="Name"><input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t('Abhyanga')} maxLength={80} /></Field>
         <Field label="Short code" hint="Letters and numbers, used in lists and exports. A booking or billing system names the service by this."><input value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} placeholder="ABH" maxLength={20} /></Field>
         <Field label="Usual price (optional)" hint="What one is charged at. Used for the margin when a service is recorded with no price of its own."><input type="number" min="0" step="any" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></Field>
       </div>
-      <Card title={`What one ${one} normally uses`} hint="In each item's own unit. Part of a bottle is a decimal: a quarter of a bottle is 0.25.">
+      <Card title={t('What one {one} normally uses', { one: t(one) })} hint="In each item's own unit. Part of a bottle is a decimal: a quarter of a bottle is 0.25.">
         <LineEditor mode="request" items={stock.items} lines={lines} setLines={setLines} pickerFilter={(i) => !i.isLinen} />
       </Card>
-      {gone.length > 0 && <Note tone="warn" icon="alert"><span>{gone.map((i) => i.name).join(', ')} {gone.length === 1 ? 'has' : 'have'} been retired and {gone.length === 1 ? 'is' : 'are'} left out. Saving removes {gone.length === 1 ? 'it' : 'them'} from this recipe.</span></Note>}
+      {gone.length > 0 && <Note tone="warn" icon="alert"><span>{tn(gone.length, '{names} has been retired and is left out. Saving removes it from this recipe.', '{names} have been retired and are left out. Saving removes them from this recipe.', { names: gone.map((i) => i.name).join(', ') })}</span></Note>}
       {s.id && <Check checked={!f.active} onChange={(v) => setF({ ...f, active: !v })}>No longer offered: it cannot be recorded, and stays in the reports</Check>}
       <ErrorNote error={err} />
     </Sheet>

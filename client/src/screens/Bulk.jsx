@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { post } from '../api.js';
 import Icon from '../icons.jsx';
 import { Button, Card, ErrorNote, Field, Loading, Note, Pill, Quiet, Segmented, useApp, useData } from '../ui.jsx';
+import { t, tn } from '../i18n.js';
 
 const ACTION = { add: ['ok', 'Add'], change: ['brand', 'Change'], same: ['faint', 'No change'], problem: ['danger', 'Problem'] };
 const SHOWN = 200;
@@ -42,11 +43,11 @@ export default function Bulk() {
   const download = async (format) => {
     setErr(null);
     try {
-      const t = tpl.data;
+      const sheet = tpl.data;
       const { writeXlsx, toCsv } = await import('../sheet.js');
       saveFile(format === 'xlsx'
-        ? new Blob([writeXlsx({ sheet: t.sheet, columns: t.columns, rows: t.rows })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-        : new Blob([toCsv(t.columns, t.rows)], { type: 'text/csv;charset=utf-8' }), `${t.fileName}.${format}`);
+        ? new Blob([writeXlsx({ sheet: sheet.sheet, columns: sheet.columns, rows: sheet.rows })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        : new Blob([toCsv(sheet.columns, sheet.rows)], { type: 'text/csv;charset=utf-8' }), `${sheet.fileName}.${format}`);
     } catch (e) { setErr(e); }
   };
 
@@ -67,7 +68,7 @@ export default function Bulk() {
     try {
       const r = await post(`/api/bulk/${kind}`, { ...file.table, dryRun: false });
       setReport(r);
-      toast(`Saved: ${r.summary.add} added, ${r.summary.change} changed`);
+      toast(t('Saved: {add} added, {change} changed', { add: r.summary.add, change: r.summary.change }));
       refreshStock(); tpl.reload();
     } catch (e) {
       setErr(e);
@@ -80,7 +81,7 @@ export default function Bulk() {
   const todo = s ? s.add + s.change : 0;
   const rows = !report ? [] : report.rows.filter((r) => (
     show === 'all' ? true : show === 'changes' ? ['add', 'change'].includes(r.action) : r.action === 'problem' || r.notes.length > 0));
-  const what = kinds.find((k) => k.value === kind)?.label.toLowerCase();
+  const what = t(kinds.find((k) => k.value === kind)?.label)?.toLowerCase();
 
   return (
     <div className="stack">
@@ -94,12 +95,12 @@ export default function Bulk() {
             <div className="scan-row">
               <Button icon="download" onClick={() => download('xlsx')}>Excel sheet</Button>
               <Button kind="ghost" icon="download" onClick={() => download('csv')}>CSV</Button>
-              <span className="muted" style={{ alignSelf: 'center' }}>{tpl.data.rows.length} {what} in it now</span>
+              <span className="muted" style={{ alignSelf: 'center' }}>{t('{n} {what} in it now', { n: tpl.data.rows.length, what })}</span>
             </div>
-            <p className="muted">A blank cell leaves that detail as it is. A row whose {tpl.data.columns.find((c) => c.required)?.header.toLowerCase()} is not here yet is added as new. Nothing is ever deleted by an upload.</p>
+            <p className="muted">{t('A blank cell leaves that detail as it is. A row whose {column} is not here yet is added as new. Nothing is ever deleted by an upload.', { column: tpl.data.columns.find((c) => c.required)?.header.toLowerCase() })}</p>
             <ul className="lots">
               {tpl.data.columns.filter((c) => c.hint).map((c) => (
-                <li key={c.header} className="lot"><div className="min0"><span className="row-label">{c.header}</span><span className="row-sub">{c.hint}</span></div></li>
+                <li key={c.header} className="lot"><div className="min0"><span className="row-label">{c.header}</span><span className="row-sub">{t(c.hint)}</span></div></li>
               ))}
             </ul>
           </div>
@@ -117,14 +118,14 @@ export default function Bulk() {
         <Card title={report.applied ? '3 · Saved' : '3 · What this file would do'} actions={file && <span className="muted">{file.name}</span>}>
           <div className="stack">
             <dl className="hf-kv hf-kv--3">
-              <div><dt>{report.applied ? 'Added' : 'To add'}</dt><dd>{s.add}</dd></div>
-              <div><dt>{report.applied ? 'Changed' : 'To change'}</dt><dd>{s.change}</dd></div>
-              <div><dt>No change</dt><dd>{s.same}</dd></div>
-              <div><dt>Problems</dt><dd className={s.problems ? 'tone-txt-CRITICAL' : ''}>{s.problems}</dd></div>
+              <div><dt>{t(report.applied ? 'Added' : 'To add')}</dt><dd>{s.add}</dd></div>
+              <div><dt>{t(report.applied ? 'Changed' : 'To change')}</dt><dd>{s.change}</dd></div>
+              <div><dt>{t('No change')}</dt><dd>{s.same}</dd></div>
+              <div><dt>{t('Problems')}</dt><dd className={s.problems ? 'tone-txt-CRITICAL' : ''}>{s.problems}</dd></div>
             </dl>
-            {report.ignored.length > 0 && <Note tone="warn" icon="alert"><span>These columns are not part of this sheet and were ignored: <b>{report.ignored.join(', ')}</b>. If one is a misspelt heading, fix it and choose the file again.</span></Note>}
+            {report.ignored.length > 0 && <Note tone="warn" icon="alert"><span>{t('These columns are not part of this sheet and were ignored:')} <b>{report.ignored.join(', ')}</b>. {t('If one is a misspelt heading, fix it and choose the file again.')}</span></Note>}
             {report.applied && <Quiet>Saved. Download the sheet again before the next round of changes, so it starts from what is here now.</Quiet>}
-            {!report.applied && s.problems > 0 && <Note tone="danger" icon="alert" role="alert"><span>Nothing can be saved until the {s.problems === 1 ? 'row' : `${s.problems} rows`} below {s.problems === 1 ? 'is' : 'are'} fixed in the file. Then choose it again.</span></Note>}
+            {!report.applied && s.problems > 0 && <Note tone="danger" icon="alert" role="alert"><span>{tn(s.problems, 'Nothing can be saved until the row below is fixed in the file. Then choose it again.', 'Nothing can be saved until the {n} rows below are fixed in the file. Then choose it again.')}</span></Note>}
             {!report.applied && !s.problems && !todo && <Quiet>The file matches what is already here. There is nothing to save.</Quiet>}
 
             <Segmented label="Show" value={show} onChange={setShow} options={[
@@ -137,20 +138,20 @@ export default function Bulk() {
               {rows.slice(0, SHOWN).map((r) => (
                 <li key={r.row} className="lot">
                   <div className="min0">
-                    <span className="row-label">Row {r.row} · {r.key || 'no code'}{r.name && r.name !== r.key ? ` · ${r.name}` : ''} <Pill tone={ACTION[r.action][0]}>{ACTION[r.action][1]}</Pill></span>
-                    {r.problems.map((p) => <span key={p} className="row-sub tone-txt-CRITICAL">{p}</span>)}
-                    {r.notes.map((n) => <span key={n} className="row-sub">Check: {n}</span>)}
+                    <span className="row-label">{t('Row {n}', { n: r.row })} · {r.key || t('no code')}{r.name && r.name !== r.key ? ` · ${r.name}` : ''} <Pill tone={ACTION[r.action][0]}>{ACTION[r.action][1]}</Pill></span>
+                    {r.problems.map((p) => <span key={p} className="row-sub tone-txt-CRITICAL">{t(p)}</span>)}
+                    {r.notes.map((n) => <span key={n} className="row-sub">{t('Check: {note}', { note: t(n) })}</span>)}
                     {r.action === 'change' && r.changes.map((c) => <span key={c} className="row-sub">{c}</span>)}
                   </div>
                 </li>
               ))}
             </ul>
-            {rows.length > SHOWN && <p className="muted">And {rows.length - SHOWN} more rows like these.</p>}
+            {rows.length > SHOWN && <p className="muted">{t('And {n} more rows like these.', { n: rows.length - SHOWN })}</p>}
 
             {!report.applied && (
               <div className="row" style={{ justifyContent: 'flex-end' }}>
                 <Button kind="secondary" onClick={clear}>Choose another file</Button>
-                <Button busy={busy} icon="check" onClick={save}>{todo && !s.problems ? `Save ${todo} change${todo === 1 ? '' : 's'}` : 'Save'}</Button>
+                <Button busy={busy} icon="check" onClick={save}>{todo && !s.problems ? tn(todo, 'Save {n} change', 'Save {n} changes') : 'Save'}</Button>
               </div>
             )}
             {report.applied && <div className="row" style={{ justifyContent: 'flex-end' }}><Button kind="secondary" onClick={clear}>Upload another file</Button></div>}

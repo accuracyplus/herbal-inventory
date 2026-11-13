@@ -3,7 +3,7 @@
  * from the old app, the activity log, and — for group administrators — units.
  */
 
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import {
@@ -11,6 +11,10 @@ import {
 } from '../ui.jsx';
 import { ItemForm } from './Stock.jsx';
 import Bulk from './Bulk.jsx';
+import { t, tn } from '../i18n.js';
+
+/** A translated phrase whose `{slot}`s are pieces of the page (bold words), not plain text. */
+const rich = (phrase, parts) => t(phrase).split(/\{(\w+)\}/).map((s, i) => (i % 2 ? <Fragment key={i}>{parts[s]}</Fragment> : s));
 
 export default function Admin() {
   const { can, me, route } = useApp();
@@ -65,8 +69,8 @@ function Items() {
           <Table rows={rows} onRow={setEditing} empty="No items yet. Add one, or import the old app's list." columns={[
             { key: 'name', label: 'Item', primary: true, render: (i) => <span className="min0"><span className="row-label">{i.name} {!i.active && <Pill tone="faint">Retired</Pill>}</span><span className="row-sub"><code>{i.code}</code></span></span> },
             { key: 'category', label: 'Category' },
-            { key: 'uom', label: 'Counted in' },
-            { key: 'kind', label: 'Kind', render: (i) => (i.isLinen ? 'Linen' : i.tracksExpiry ? 'Batches & expiry' : 'Simple') },
+            { key: 'uom', label: 'Counted in', render: (i) => t(i.uom) },
+            { key: 'kind', label: 'Kind', render: (i) => t(i.isLinen ? 'Linen' : i.tracksExpiry ? 'Batches & expiry' : 'Simple') },
             { key: 'levels', label: 'Levels set', render: (i) => i.stores.filter((s) => s.level).length || '' },
             { key: 'total', label: 'Total', align: 'right', render: (i) => fmtQty(i.total) },
           ]} />
@@ -100,13 +104,13 @@ function SimpleList({ path, title, kinds, empty, makeBody, fields, columns = [] 
         <Card pad={false}>
           <Table rows={data} onRow={(r) => setEditing({ ...r })} empty={empty} columns={[
             { key: 'name', label: title, primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name} {!r.active && <Pill tone="faint">Closed</Pill>}</span><span className="row-sub"><code>{r.code}</code></span></span> },
-            ...(kinds ? [{ key: 'kind', label: 'Kind', render: (r) => kinds.find((k) => k.value === r.kind)?.label || r.kind }] : []),
+            ...(kinds ? [{ key: 'kind', label: 'Kind', render: (r) => t(kinds.find((k) => k.value === r.kind)?.label) || r.kind }] : []),
             ...columns,
           ]} />
         </Card>
       )}
       {editing && (
-        <Sheet title={editing.id ? editing.name : `New ${title.toLowerCase()}`} onClose={() => { setEditing(null); setErr(null); }}
+        <Sheet title={editing.id ? editing.name : t('New {what}', { what: t(title).toLowerCase() })} onClose={() => { setEditing(null); setErr(null); }}
           footer={<><Button kind="secondary" onClick={() => setEditing(null)}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
           <div className="form two">
             <Field label="Name"><input value={editing.name || ''} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></Field>
@@ -124,7 +128,7 @@ function SimpleList({ path, title, kinds, empty, makeBody, fields, columns = [] 
 
 const Stores = () => (
   <>
-    <Note icon="stock"><span>A <b>main store</b> receives deliveries; <b>sub stores</b> (a spa cupboard, a counter) are topped up from it through requests and transfers.</span></Note>
+    <Note icon="stock"><span>{rich('A {main} receives deliveries; {sub} (a spa cupboard, a counter) are topped up from it through requests and transfers.', { main: <b>{t('main store')}</b>, sub: <b>{t('sub stores')}</b> })}</span></Note>
     <SimpleList path="/api/stores" title="Store" empty="No stores yet."
       kinds={[{ value: 'MAIN', label: 'Main store' }, { value: 'SUB', label: 'Sub store' }]}
       makeBody={(e) => ({ code: e.code, name: e.name, kind: e.kind, sort: e.sort || 0, active: !!e.active })}
@@ -134,7 +138,7 @@ const Stores = () => (
 
 const Departments = () => (
   <>
-    <Note icon="unit"><span>A department groups rooms and benches: Spa and Front office, or Haematology and Biochemistry. Stock used in a room counts towards its department.</span></Note>
+    <Note icon="unit"><span>{t('A department groups rooms and benches: Spa and Front office, or Haematology and Biochemistry. Stock used in a room counts towards its department.')}</span></Note>
     <SimpleList path="/api/departments" title="Department" empty="No departments yet. Add one, then give each room its department."
       makeBody={(e) => ({ code: e.code, name: e.name, active: !!e.active })}
       columns={[{ key: 'rooms', label: 'Open rooms', align: 'right' }]} />
@@ -148,7 +152,7 @@ function Areas() {
     <SimpleList path="/api/areas" title="Room or area" empty="No rooms yet. Add treatment rooms, the front desk, the pharmacy counter…"
       kinds={[{ value: 'ROOM', label: 'Treatment room' }, { value: 'BENCH', label: 'Bench' }, { value: 'DESK', label: 'Front desk' }, { value: 'COUNTER', label: 'Counter' }, { value: 'OFFICE', label: 'Office' }, { value: 'OTHER', label: 'Other' }]}
       makeBody={(e) => ({ code: e.code, name: e.name, kind: e.kind, departmentId: e.department_id || null, active: !!e.active })}
-      columns={[{ key: 'department_name', label: 'Department', render: (r) => r.department_name || <span className="faint">None</span> }]}
+      columns={[{ key: 'department_name', label: 'Department', render: (r) => r.department_name || <span className="faint">{t('None')}</span> }]}
       fields={(e, set) => options.length > 0 && (
         <Field label="Department"><Select value={e.department_id || ''} onChange={(v) => set({ ...e, department_id: v })} placeholder="Choose a department" options={options} /></Field>
       )} />
@@ -158,8 +162,8 @@ function Areas() {
 /** Somebody from HiFive ID's staff list who has no seat here yet: this unit's people first. */
 function PersonPicker({ people, onPick }) {
   const [q, setQ] = useState('');
-  const t = q.trim().toLowerCase();
-  const shown = people.filter((p) => !p.seated && (!t || `${p.name} ${p.code} ${p.designation || ''} ${p.department || ''}`.toLowerCase().includes(t))).slice(0, 40);
+  const typed = q.trim().toLowerCase();
+  const shown = people.filter((p) => !p.seated && (!typed || `${p.name} ${p.code} ${p.designation || ''} ${p.department || ''}`.toLowerCase().includes(typed))).slice(0, 40);
   return (
     <div className="stack">
       <SearchBox value={q} onChange={setQ} placeholder="Find by name, employee code or job" />
@@ -169,7 +173,7 @@ function PersonPicker({ people, onPick }) {
           sub: [p.code, p.designation, p.inUnit ? null : p.entity].filter(Boolean).join(' · '),
           onClick: () => onPick(p),
         }))} />
-        : <Quiet icon="search">Nobody in HiFive ID matches “{q}”, or they already have a seat here.</Quiet>}
+        : <Quiet icon="search">{t('Nobody in HiFive ID matches “{q}”, or they already have a seat here.', { q })}</Quiet>}
     </div>
   );
 }
@@ -181,11 +185,11 @@ function Review({ hf, people, onOpen, onRename, onAdd }) {
   const r = hf.review;
   const open = (code) => { const p = people?.find((x) => x.code === code); if (p) onOpen(p); };
   const blocks = [
-    r.left.length > 0 && ['Left, according to HiFive ID', 'danger', r.left.map((p) => ({ key: p.code, label: p.name, sub: `${p.code}${p.endDate ? ` · last day ${dmy(p.endDate)}` : ''} · still has a seat here`, action: ['Open', () => open(p.code)] }))],
-    r.joiners.length > 0 && ['Joined recently', 'brand', r.joiners.map((p) => ({ key: p.code, label: p.name, sub: [p.code, p.designation, p.startDate && `started ${dmy(p.startDate)}`].filter(Boolean).join(' · '), action: ['Add', () => onAdd(p)] }))],
+    r.left.length > 0 && ['Left, according to HiFive ID', 'danger', r.left.map((p) => ({ key: p.code, label: p.name, sub: [p.code, p.endDate && t('last day {date}', { date: dmy(p.endDate) }), t('still has a seat here')].filter(Boolean).join(' · '), action: ['Open', () => open(p.code)] }))],
+    r.joiners.length > 0 && ['Joined recently', 'brand', r.joiners.map((p) => ({ key: p.code, label: p.name, sub: [p.code, p.designation, p.startDate && t('started {date}', { date: dmy(p.startDate) })].filter(Boolean).join(' · '), action: ['Add', () => onAdd(p)] }))],
     r.renamed.length > 0 && ['Name differs from HiFive ID', 'warn', r.renamed.map((p) => ({ key: p.code, label: `${p.name} → ${p.hfidName}`, sub: p.code, action: ['Use HiFive ID’s name', () => onRename(p.code)] }))],
-    r.unknown.length > 0 && ['Not in HiFive ID', 'warn', r.unknown.map((p) => ({ key: p.code, label: p.name, sub: `${p.code} · check the code, or ask HR`, action: ['Open', () => open(p.code)] }))],
-    r.leaving.length > 0 && ['Leaving soon', 'faint', r.leaving.map((p) => ({ key: p.code, label: p.name, sub: `${p.code}${p.endDate ? ` · last day ${dmy(p.endDate)}` : ''}${p.noticeDate ? ` · notice from ${dmy(p.noticeDate)}` : ''}` }))],
+    r.unknown.length > 0 && ['Not in HiFive ID', 'warn', r.unknown.map((p) => ({ key: p.code, label: p.name, sub: `${p.code} · ${t('check the code, or ask HR')}`, action: ['Open', () => open(p.code)] }))],
+    r.leaving.length > 0 && ['Leaving soon', 'faint', r.leaving.map((p) => ({ key: p.code, label: p.name, sub: [p.code, p.endDate && t('last day {date}', { date: dmy(p.endDate) }), p.noticeDate && t('notice from {date}', { date: dmy(p.noticeDate) })].filter(Boolean).join(' · ') }))],
   ].filter(Boolean);
   if (!blocks.length) return <Quiet>HiFive ID and this unit agree: no joiners, leavers or name changes to look at.</Quiet>;
   return (
@@ -193,7 +197,7 @@ function Review({ hf, people, onOpen, onRename, onAdd }) {
       <div className="stack">
         {blocks.map(([title, tone, rows]) => (
           <div key={title} className="stack" style={{ gap: 6 }}>
-            <h3 className="hf-cap">{title}</h3>
+            <h3 className="hf-cap">{t(title)}</h3>
             <ul className="lots">
               {rows.map((x) => (
                 <li key={x.key} className="lot">
@@ -219,7 +223,7 @@ function People() {
   const roles = Object.keys(me.labels.roles);
   const startAdd = (p) => setEditing({ code: p?.code || '', full_name: p?.name || '', roles: ['STAFF'], stores: [], limit: false, isNew: true, picked: !!p });
   const rename = async (code) => {
-    try { const r = await post(`/api/hfid/people/${encodeURIComponent(code)}/name`); toast(r.unchanged ? 'Already the same' : `Now ${r.name}`); reload(); hf.reload(); refreshBadges(); } catch (e) { toast(e.message, 'danger'); }
+    try { const r = await post(`/api/hfid/people/${encodeURIComponent(code)}/name`); toast(r.unchanged ? 'Already the same' : t('Now {name}', { name: r.name })); reload(); hf.reload(); refreshBadges(); } catch (e) { toast(e.message, 'danger'); }
   };
   const save = async () => {
     setBusy(true); setErr(null);
@@ -235,7 +239,7 @@ function People() {
   const toggleStore = (id) => setEditing((e) => ({ ...e, stores: e.stores.includes(id) ? e.stores.filter((x) => x !== id) : [...e.stores, id] }));
   return (
     <>
-      <Note icon="help"><span>People come from HiFive ID's staff list and sign in with HiFive ID. Somebody HiFive ID grants Inventory to is added here automatically as {me.labels.roles.STAFF} on first sign-in.</span></Note>
+      <Note icon="help"><span>{t("People come from HiFive ID's staff list and sign in with HiFive ID. Somebody HiFive ID grants Inventory to is added here automatically as {role} on first sign-in.", { role: t(me.labels.roles.STAFF) })}</span></Note>
       <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => startAdd(null)}>Add a person</Button></div>
       {hf.loading && !hf.data && <Loading what="Reading HiFive ID's staff list" />}
       {hf.error && <ErrorNote error={hf.error} onRetry={hf.reload} />}
@@ -246,9 +250,9 @@ function People() {
         <Card pad={false}>
           <Table rows={data} onRow={(p) => setEditing({ ...p, limit: !!p.stores, stores: p.stores || [] })} empty="Nobody yet." columns={[
             { key: 'full_name', label: 'Person', primary: true, render: (p) => <span className="min0"><span className="row-label">{p.full_name} {!p.active && <Pill tone="faint">Removed</Pill>}</span><span className="row-sub"><code>{p.code}</code></span></span> },
-            { key: 'roles', label: 'Roles', render: (p) => p.roles.map((r) => me.labels.roles[r]).join(', ') },
-            { key: 'stores', label: 'Stores', render: (p) => (p.stores ? p.stores.map((id) => lists.stores.find((s) => s.id === id)?.name || '?').join(', ') : 'All') },
-            { key: 'last_sign_in', label: 'Last sign-in', render: (p) => (p.last_sign_in ? fmtDateTime(p.last_sign_in) : <span className="faint">Not yet</span>) },
+            { key: 'roles', label: 'Roles', render: (p) => p.roles.map((r) => t(me.labels.roles[r])).join(', ') },
+            { key: 'stores', label: 'Stores', render: (p) => (p.stores ? p.stores.map((id) => lists.stores.find((s) => s.id === id)?.name || '?').join(', ') : t('All')) },
+            { key: 'last_sign_in', label: 'Last sign-in', render: (p) => (p.last_sign_in ? fmtDateTime(p.last_sign_in) : <span className="faint">{t('Not yet')}</span>) },
           ]} />
         </Card>
       )}
@@ -262,7 +266,9 @@ function People() {
             <PersonPicker people={hf.data.people} onPick={(p) => setEditing({ ...editing, code: p.code, full_name: p.name, picked: true })} />
           )}
           {editing.isNew && !editing.picked && !hf.data && (
-            <Note tone="warn" icon="alert"><span>HiFive ID's staff list could not be read{hf.loading ? ' yet' : ''}. Type the employee code exactly as in HiFive ID; the activity log will say it was not checked.</span></Note>
+            <Note tone="warn" icon="alert"><span>{t(hf.loading
+              ? 'HiFive ID\'s staff list could not be read yet. Type the employee code exactly as in HiFive ID; the activity log will say it was not checked.'
+              : 'HiFive ID\'s staff list could not be read. Type the employee code exactly as in HiFive ID; the activity log will say it was not checked.')}</span></Note>
           )}
           {(!editing.isNew || editing.picked || !hf.data) && (
             <div className="form two">
@@ -278,7 +284,7 @@ function People() {
             <div className="stack" style={{ gap: 4 }}>
               {roles.map((r) => (
                 <Check key={r} checked={editing.roles.includes(r)} onChange={() => toggleRole(r)}>
-                  <b>{me.labels.roles[r]}:</b> <span className="muted">{me.labels.hints[r]}</span>
+                  <b>{t(me.labels.roles[r])}:</b> <span className="muted">{t(me.labels.hints[r])}</span>
                 </Check>
               ))}
             </div>
@@ -291,11 +297,11 @@ function People() {
           )}
           {me.groupAdmin && (
             <Check checked={!!editing.group_summary} onChange={(v) => setEditing({ ...editing, group_summary: v ? 1 : 0 })}>
-              <b>Director:</b> <span className="muted">can see the group monthly summary: counts and totals for every unit, no names. Give them a Viewer seat so the Reports screen shows.</span>
+              <b>{t('Director:')}</b> <span className="muted">{t('can see the group monthly summary: counts and totals for every unit, no names. Give them a Viewer seat so the Reports screen shows.')}</span>
             </Check>
           )}
           </>)}
-          {editing.active === 0 && <Note tone="warn" icon="alert">Saving will remove them from {me.unit.name}. Their records stay.</Note>}
+          {editing.active === 0 && <Note tone="warn" icon="alert">{t('Saving will remove them from {unit}. Their records stay.', { unit: me.unit.name })}</Note>}
           <ErrorNote error={err} />
         </Sheet>
       )}
@@ -317,7 +323,7 @@ function Settings() {
   // A detail setting shows only once the feature it belongs to is on (as chosen, saved or not).
   const now = (key) => vals[key] ?? data?.find((x) => x.key === key)?.value;
   const field = (s) => (
-    <Field key={s.key} label={<>{s.label}<Hint text={s.hint} /></>}>
+    <Field key={s.key} label={<>{t(s.label)}<Hint text={s.hint} /></>}>
       {s.options
         ? <Select value={vals[s.key] ?? s.value} onChange={(v) => setVals({ ...vals, [s.key]: v })} options={s.options.map((o) => ({ value: o, label: s.labels?.[o] ? s.labels[o] : o === 'none' ? 'No, straight to the store' : o === 'required' ? 'Yes, a manager approves first' : o }))} />
         : <input type="number" min={s.number[0]} max={s.number[1]} value={vals[s.key] ?? s.value} onChange={(e) => setVals({ ...vals, [s.key]: e.target.value })} />}
@@ -383,7 +389,7 @@ function Import() {
   return (
     <div className="stack">
       <Card title="1 · Get the old app's data">
-        <p>Open this link in your browser. It shows everything the old Herbal Park inventory app holds. Save the page as a file (Ctrl+S, or Share → Save on a phone).</p>
+        <p>{t('Open this link in your browser. It shows everything the old Herbal Park inventory app holds. Save the page as a file (Ctrl+S, or Share → Save on a phone).')}</p>
         <p><code style={{ overflowWrap: 'anywhere' }}>https://script.google.com/macros/s/AKfycbxjUENJrOfdFcYLxdAqxs6ggZtxGcythH48oGiCIlx0tWIEoJBaPHJuZoQf6qFzmLg3Dg/exec?action=getAll</code></p>
       </Card>
       <Card title="2 · Choose the file and where things go">
@@ -392,26 +398,28 @@ function Import() {
           <Field label="Old “Main” stock goes to"><Select value={mainId} onChange={setMainId} options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
           <Field label="Old “Sub” stock and linen go to"><Select value={subId} onChange={setSubId} options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
         </div>
-        {file && data && <p className="muted">{file.name}: {(data.items || []).length} items, {(data.linen || []).length} linen, {(data.rooms || []).length} rooms, {(data.movements || []).length} history rows.</p>}
+        {file && data && <p className="muted">{t('{file}: {items} items, {linen} linen, {rooms} rooms, {history} history rows.', {
+          file: file.name, items: (data.items || []).length, linen: (data.linen || []).length, rooms: (data.rooms || []).length, history: (data.movements || []).length,
+        })}</p>}
         <div className="row"><Button kind="secondary" busy={busy} disabled={!data || done} onClick={() => run(true)}>Check first (changes nothing)</Button></div>
       </Card>
       {report && (
         <Card title={done ? '3 · Imported' : '3 · What will happen'}>
           <dl className="dl">
-            <dt>Items</dt><dd>{report.items} ({report.withStock} with stock)</dd>
-            <dt>Linen</dt><dd>{report.linen} types, {fmtQty(report.linenPieces)} pieces</dd>
-            <dt>Rooms</dt><dd>{report.rooms}</dd>
-            <dt>Levels</dt><dd>{report.levels}</dd>
-            <dt>Old history</dt><dd>{report.history} rows, kept for reference under Reports → Old app history</dd>
-            {report.pendingRequests > 0 && <><dt>Open requests</dt><dd>{report.pendingRequests} pending in the old app are not carried over. Ask staff to raise them again here.</dd></>}
+            <dt>{t('Items')}</dt><dd>{t('{n} ({stock} with stock)', { n: report.items, stock: report.withStock })}</dd>
+            <dt>{t('Linen')}</dt><dd>{t('{n} types, {pieces} pieces', { n: report.linen, pieces: fmtQty(report.linenPieces) })}</dd>
+            <dt>{t('Rooms')}</dt><dd>{report.rooms}</dd>
+            <dt>{t('Levels')}</dt><dd>{report.levels}</dd>
+            <dt>{t('Old history')}</dt><dd>{t('{n} rows, kept for reference under Reports → Old app history', { n: report.history })}</dd>
+            {report.pendingRequests > 0 && <><dt>{t('Open requests')}</dt><dd>{t('{n} pending in the old app are not carried over. Ask staff to raise them again here.', { n: report.pendingRequests })}</dd></>}
           </dl>
           {report.problems.length > 0 && (
-            <Note tone="warn" icon="alert"><div><b>Please look at these:</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{report.problems.map((p) => <li key={p}>{p}</li>)}</ul></div></Note>
+            <Note tone="warn" icon="alert"><div><b>{t('Please look at these:')}</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{report.problems.map((p) => <li key={p}>{p}</li>)}</ul></div></Note>
           )}
           {report.staffToAdd.length > 0 && (
-            <Note icon="help"><div><b>People are not imported.</b> The old app knew names, not HiFive ID employee codes. Add these on the People tab with their codes: {report.staffToAdd.map((s) => s.name).join(', ')}.</div></Note>
+            <Note icon="help"><div><b>{t('People are not imported.')}</b> {t('The old app knew names, not HiFive ID employee codes. Add these on the People tab with their codes: {names}.', { names: report.staffToAdd.map((s) => s.name).join(', ') })}</div></Note>
           )}
-          {!done && <div className="row"><Button busy={busy} onClick={() => run(false)}>Import now</Button><span className="muted">Runs once. It is refused if this unit already has stock movements.</span></div>}
+          {!done && <div className="row"><Button busy={busy} onClick={() => run(false)}>Import now</Button><span className="muted">{t('Runs once. It is refused if this unit already has stock movements.')}</span></div>}
           {done && <Quiet>Done. Check the Stock screen against the old app before switching over.</Quiet>}
         </Card>
       )}
@@ -457,7 +465,7 @@ function Units() {
   };
   return (
     <>
-      <Note icon="unit"><span>Each HiFive business is a unit with its own stores, items and people. The name must match the entity name in HiFive ID, so first sign-ins land in the right unit.</span></Note>
+      <Note icon="unit"><span>{t('Each HiFive business is a unit with its own stores, items and people. The name must match the entity name in HiFive ID, so first sign-ins land in the right unit.')}</span></Note>
       <div className="row" style={{ justifyContent: 'flex-end' }}><Button icon="plus" onClick={() => setEditing({ active: 1 })}>New unit</Button></div>
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}
@@ -478,7 +486,7 @@ function Units() {
             <Field label="City"><input value={editing.city || ''} onChange={(e) => setEditing({ ...editing, city: e.target.value })} placeholder="Dubai" /></Field>
             {editing.id && <div className="span2"><Check checked={editing.active === 0} onChange={(v) => setEditing({ ...editing, active: v ? 0 : 1 })}>Closed</Check></div>}
           </div>
-          {!editing.id && <p className="muted">A new unit starts with one main store. Switch to it to add people, items and more stores.</p>}
+          {!editing.id && <p className="muted">{t('A new unit starts with one main store. Switch to it to add people, items and more stores.')}</p>}
           <ErrorNote error={err} />
         </Sheet>
       )}

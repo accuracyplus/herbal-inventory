@@ -2,8 +2,13 @@
  * Help: what each role may do (the same table the server enforces), and how the main flows go.
  */
 
+import { Fragment } from 'react';
 import { Card, Page, Table, useApp } from '../ui.jsx';
 import Icon from '../icons.jsx';
+import { t } from '../i18n.js';
+
+/** A translated phrase whose `{slot}`s are pieces of the page (bold words), not plain text. */
+const rich = (phrase, parts) => t(phrase).split(/\{(\w+)\}/).map((s, i) => (i % 2 ? <Fragment key={i}>{parts[s]}</Fragment> : s));
 
 const ACTIONS = {
   'stock.view': 'See stock', 'stock.use': 'Record use and move linen', 'use.for_others': 'Record use or give stock for somebody else', 'custody.team': 'See and settle what the team holds', 'cost.people': 'See cost per person', 'cost.view': 'See costs and values',
@@ -44,17 +49,19 @@ export default function Help() {
     <Page title="Help" subtitle="How HiFive Inventory works, and who may do what.">
       <div className="grid3">
         {FLOWS.map(([icon, title, text]) => (
-          <Card key={title}><div className="row"><span className="inv-well"><Icon name={icon} size={18} /></span><h2 className="grow">{title}</h2></div><p className="muted">{text}</p></Card>
+          <Card key={title}><div className="row"><span className="inv-well"><Icon name={icon} size={18} /></span><h2 className="grow">{t(title)}</h2></div><p className="muted">{t(text)}</p></Card>
         ))}
       </div>
       <Card title="Who may do what" hint="Somebody may never approve what they raised themselves, unless they are the only approver in the unit." pad={false}>
         <Table rows={rows} rowKey={(r) => r.a} columns={[
-          { key: 'label', label: 'Action', primary: true, sortable: false },
-          ...roles.map((r) => ({ key: r, label: me.labels.roles[r].replace(' (read-only)', ''), sortable: false, render: (x) => (x[r] ? <Icon name="check" size={18} label="Yes" /> : '') })),
+          { key: 'label', label: 'Action', primary: true, sortable: false, render: (x) => t(x.label) },
+          ...roles.map((r) => ({ key: r, label: me.labels.roles[r].replace(' (read-only)', ''), sortable: false, render: (x) => (x[r] ? <Icon name="check" size={18} label={t('Yes')} /> : '') })),
         ]} />
       </Card>
       <Card title="Your access">
-        <p>You are <b>{me.roles.map((r) => me.labels.roles[r]).join(', ')}</b> in {me.unit.name}{me.groupAdmin ? ', and a group administrator for every unit' : ''}.{me.stores ? ' You record against selected stores only.' : ''}</p>
+        <p>{rich(me.groupAdmin ? 'You are {roles} in {unit}, and a group administrator for every unit.' : 'You are {roles} in {unit}.', {
+          roles: <b>{me.roles.map((r) => t(me.labels.roles[r])).join(', ')}</b>, unit: me.unit.name,
+        })}{me.stores ? ` ${t('You record against selected stores only.')}` : ''}</p>
       </Card>
     </Page>
   );

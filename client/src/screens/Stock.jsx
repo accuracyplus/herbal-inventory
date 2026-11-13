@@ -10,6 +10,7 @@ import {
 } from '../ui.jsx';
 import { ItemPrices, priceViewer } from './Suppliers.jsx';
 import { STORAGE } from './InUse.jsx';
+import { t, tn } from '../i18n.js';
 
 const KIND = {
   RECEIPT: 'Received', ISSUE: 'Used', TRANSFER_OUT: 'Sent', TRANSFER_IN: 'Arrived', ADJUST: 'Correction',
@@ -26,7 +27,9 @@ export function inPack(qty, uom, pack) {
   if (!pack || !(qty >= pack.factor)) return null;
   const whole = Math.floor(+(qty / pack.factor).toFixed(6));
   const rest = +(qty - whole * pack.factor).toFixed(3);
-  return `${whole} × ${pack.label}${rest ? ` and ${fmtQty(rest)} ${uom}` : ''}`;
+  return rest
+    ? t('{whole} × {pack} and {qty} {uom}', { whole, pack: pack.label, qty: fmtQty(rest), uom: t(uom) })
+    : `${whole} × ${pack.label}`;
 }
 
 export default function Stock() {
@@ -40,10 +43,10 @@ export default function Stock() {
   const cats = useMemo(() => [...new Set((stock?.items || []).map((i) => i.category))].sort(), [stock]);
   const rows = useMemo(() => {
     if (!stock) return [];
-    const t = q.trim().toLowerCase();
+    const typed = q.trim().toLowerCase();
     return stock.items.filter((it) => {
       if (category && it.category !== category) return false;
-      if (t && !`${it.name} ${it.code} ${it.barcode || ''} ${it.category}`.toLowerCase().includes(t)) return false;
+      if (typed && !`${it.name} ${it.code} ${it.barcode || ''} ${it.category}`.toLowerCase().includes(typed)) return false;
       const st = storeId ? it.stores.find((s) => s.storeId === storeId) : null;
       if (storeId && !st?.held) return false;
       const status = st ? st.status : it.status;
@@ -61,14 +64,14 @@ export default function Stock() {
 
   const columns = [
     { key: 'name', label: 'Item', primary: true, render: (it) => (
-      <span className="min0"><span className="row-label">{it.name}</span><span className="row-sub"><code>{it.code}</code> · {it.category}{it.isLinen && it.category !== 'Linen' ? ' · linen' : ''}</span></span>
+      <span className="min0"><span className="row-label">{it.name}</span><span className="row-sub"><code>{it.code}</code> · {it.category}{it.isLinen && it.category !== 'Linen' ? ` · ${t('linen')}` : ''}</span></span>
     ) },
     ...(storeId ? [] : stock.stores.map((s) => ({
       key: `s-${s.id}`, label: s.name, align: 'right', sort: (it) => it.stores.find((x) => x.storeId === s.id)?.qty ?? 0,
       render: (it) => {
         const x = it.stores.find((y) => y.storeId === s.id);
         if (!x?.held) return '';
-        return <span className={x.status === 'OK' ? '' : `tone-txt-${x.status}`}>{fmtQty(x.qty)}{it.isLinen && (x.inUse || x.inWash) ? <span className="faint"> +{fmtQty(x.inUse + x.inWash)} out</span> : ''}</span>;
+        return <span className={x.status === 'OK' ? '' : `tone-txt-${x.status}`}>{fmtQty(x.qty)}{it.isLinen && (x.inUse || x.inWash) ? <span className="faint"> {t('+{n} out', { n: fmtQty(x.inUse + x.inWash) })}</span> : ''}</span>;
       },
     }))),
     ...(storeId ? [{ key: 'qty', label: 'On shelf', align: 'right', sort: (it) => qtyFor(it)?.qty ?? 0, render: (it) => {
@@ -76,7 +79,7 @@ export default function Stock() {
       const target = x?.level?.par || (x?.level?.reorder ? x.level.reorder * 2 : 0);
       return (
         <span style={{ display: 'grid', justifyItems: 'end' }}>
-          <b>{fmtQty(x?.qty)} {it.uom}</b>
+          <b>{fmtQty(x?.qty)} {t(it.uom)}</b>
           {target > 0 && <span className={`qbar ${x.status}`} style={{ width: 90 }}><span style={{ width: `${Math.min(100, (x.qty / target) * 100)}%` }} /></span>}
         </span>
       );
@@ -96,15 +99,15 @@ export default function Stock() {
   ]);
 
   return (
-    <Page title="Stock" subtitle={`${stock.items.length} items across ${stock.stores.length} store${stock.stores.length === 1 ? '' : 's'}`}
+    <Page title="Stock" subtitle={tn(stock.stores.length, '{items} items across {n} store', '{items} items across {n} stores', { items: stock.items.length })}
       actions={<>
         <Button kind="secondary" icon="download" onClick={exportCsv}>CSV</Button>
         {can('items.edit') && <Button icon="plus" onClick={() => setEditing({})}>New item</Button>}
       </>}>
       <div className="toolbar">
         <SearchBox value={q} onChange={setQ} placeholder="Search name, code or barcode" />
-        <Select value={storeId} onChange={setStoreId} placeholder="All stores" options={stock.stores.map((s) => ({ value: s.id, label: s.name }))} aria-label="Store" />
-        <Select value={category} onChange={setCategory} placeholder="All categories" options={cats.map((c) => ({ value: c, label: c }))} aria-label="Category" />
+        <Select value={storeId} onChange={setStoreId} placeholder="All stores" options={stock.stores.map((s) => ({ value: s.id, label: s.name }))} aria-label={t('Store')} />
+        <Select value={category} onChange={setCategory} placeholder="All categories" options={cats.map((c) => ({ value: c, label: c }))} aria-label={t('Category')} />
       </div>
       <Segmented label="Show" value={filter} onChange={setFilter} options={[
         { value: 'all', label: 'All', n: stock.items.length }, { value: 'short', label: 'Short', n: shortN },
@@ -134,25 +137,25 @@ function ItemSheet({ id, onClose, onEdit }) {
       {loading && <Loading />}
       {it && (
         <>
-          <p className="muted"><code>{it.code}</code> · {it.category} · counted in {it.uom}{it.barcode ? <> · barcode <code>{it.barcode}</code></> : ''}{it.supplier ? ` · usual supplier ${it.supplier.name}` : ''}{it.storage ? ` · ${STORAGE[it.storage] || it.storage}` : ''}{it.open_life_days ? ` · usable ${it.open_life_days} days once opened` : ''}</p>
+          <p className="muted"><code>{it.code}</code> · {it.category} · {t('counted in {uom}', { uom: t(it.uom) })}{it.barcode ? <> · {t('barcode')} <code>{it.barcode}</code></> : ''}{it.supplier ? ` · ${t('usual supplier {name}', { name: it.supplier.name })}` : ''}{it.storage ? ` · ${STORAGE[it.storage] ? t(STORAGE[it.storage]) : it.storage}` : ''}{it.open_life_days ? ` · ${t('usable {n} days once opened', { n: it.open_life_days })}` : ''}</p>
           {!it.active && <Note tone="warn" icon="alert">This item has been retired. It stays in the records but cannot be used or ordered.</Note>}
-          {it.packs?.length > 0 && <p className="muted">Packs: {it.packs.map((p) => `${p.label} (${fmtQty(p.factor)} ${it.uom}${p.supplierName ? `, ${p.supplierName}` : ''})`).join(' · ')}</p>}
+          {it.packs?.length > 0 && <p className="muted">{t('Packs: {list}', { list: it.packs.map((p) => `${p.label} (${fmtQty(p.factor)} ${t(it.uom)}${p.supplierName ? `, ${p.supplierName}` : ''})`).join(' · ') })}</p>}
           <dl className="hf-kv hf-kv--3">
             {it.balances.map((b) => {
               const place = it.locations?.find((l) => l.store_id === b.store_id)?.location;
               const shown = inPack(b.qty, it.uom, storePack(it.packs));
               return (
-                <div key={b.store_id}><dt>{b.store_name}</dt><dd>{fmtQty(b.qty)} {it.uom}</dd>
+                <div key={b.store_id}><dt>{b.store_name}</dt><dd>{fmtQty(b.qty)} {t(it.uom)}</dd>
                   {shown && <span className="row-sub">{shown}</span>}
-                  {b.on_hold > 0 && <span className="row-sub">{fmtQty(b.on_hold)} {it.uom} held for inspection</span>}
-                  {place && <span className="row-sub">Shelf {place}</span>}
-                  {it.is_linen ? <span className="row-sub">{fmtQty(b.in_use)} in rooms · {fmtQty(b.in_wash)} at laundry</span> : null}
+                  {b.on_hold > 0 && <span className="row-sub">{t('{qty} {uom} held for inspection', { qty: fmtQty(b.on_hold), uom: t(it.uom) })}</span>}
+                  {place && <span className="row-sub">{t('Shelf {shelf}', { shelf: place })}</span>}
+                  {it.is_linen ? <span className="row-sub">{t('{rooms} in rooms · {laundry} at laundry', { rooms: fmtQty(b.in_use), laundry: fmtQty(b.in_wash) })}</span> : null}
                 </div>
               );
             })}
-            {it.with_people > 0 && <div><dt>With people</dt><dd>{fmtQty(it.with_people)} {it.uom}</dd><span className="row-sub">Taken, not yet used or returned</span></div>}
-            <div><dt>Used, last 30 days</dt><dd>{fmtQty(it.used30)} {it.uom}</dd></div>
-            {can('cost.view') && <div><dt>Average cost</dt><dd>{fmtMoney(it.avg_cost, currency)}</dd></div>}
+            {it.with_people > 0 && <div><dt>{t('With people')}</dt><dd>{fmtQty(it.with_people)} {t(it.uom)}</dd><span className="row-sub">{t('Taken, not yet used or returned')}</span></div>}
+            <div><dt>{t('Used, last 30 days')}</dt><dd>{fmtQty(it.used30)} {t(it.uom)}</dd></div>
+            {can('cost.view') && <div><dt>{t('Average cost')}</dt><dd>{fmtMoney(it.avg_cost, currency)}</dd></div>}
           </dl>
           {it.levels.length > 0 && (
             <Card title="Levels" hint="Low at the reorder level, red at the critical level, and topped up to par when replenished or ordered.">
@@ -179,8 +182,8 @@ function ItemSheet({ id, onClose, onEdit }) {
             <Table columns={[
               { key: 'at', label: 'When', render: (m) => <span className="nowrap">{fmtDateTime(m.at)}</span> },
               { key: 'kind', label: 'What', primary: true, render: (m) => (
-                <span className="min0"><span className="row-label">{KIND[m.kind] || m.kind}{m.kind === 'LINEN' ? `: ${STATE[m.from_state]} → ${STATE[m.to_state]}` : ''}</span>
-                  <span className="row-sub">{[m.store_name, m.area_name, m.counterpart_name && (m.qty < 0 ? `to ${m.counterpart_name}` : `from ${m.counterpart_name}`), m.doc_ref, m.reason, m.batch_no && `lot ${m.batch_no}`].filter(Boolean).join(' · ')}</span></span>
+                <span className="min0"><span className="row-label">{t(KIND[m.kind]) || m.kind}{m.kind === 'LINEN' ? `: ${t(STATE[m.from_state])} → ${t(STATE[m.to_state])}` : ''}</span>
+                  <span className="row-sub">{[m.store_name, m.area_name, m.counterpart_name && (m.qty < 0 ? t('to {name}', { name: m.counterpart_name }) : t('from {name}', { name: m.counterpart_name })), m.doc_ref, m.reason, m.batch_no && t('lot {lot}', { lot: m.batch_no })].filter(Boolean).join(' · ')}</span></span>
               ) },
               { key: 'qty', label: 'Qty', align: 'right', render: (m) => <b>{m.kind === 'LINEN' ? fmtQty(m.qty) : `${m.qty > 0 ? '+' : ''}${fmtQty(m.qty)}`}</b> },
               { key: 'balance_after', label: 'After', align: 'right', render: (m) => fmtQty(m.balance_after) },
@@ -237,7 +240,7 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <Sheet wide title={item?.id ? `Edit ${item.name}` : 'New item'} onClose={onClose}
+    <Sheet wide title={item?.id ? t('Edit {name}', { name: item.name }) : 'New item'} onClose={onClose}
       footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
       <ErrorNote error={err} />
       <datalist id="cat-list">{cats.map((c) => <option key={c} value={c} />)}</datalist>
@@ -246,36 +249,36 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
         <Field label="Code" hint="Short and unique in this unit. Letters, numbers, dash."><input value={f.code} onChange={(e) => set('code', e.target.value.toUpperCase())} placeholder="OIL-DHAN-450" /></Field>
         <Field label="Category"><input value={f.category} onChange={(e) => set('category', e.target.value)} placeholder="Oils" list="cat-list" /></Field>
         <Field label="Counted in" hint="The unit people count and use: bottle, box, kg, pcs."><input value={f.uom} onChange={(e) => set('uom', e.target.value)} /></Field>
-        <Field label="Barcode"><input value={f.barcode} onChange={(e) => set('barcode', e.target.value)} placeholder="Optional: scan into this box" /></Field>
+        <Field label="Barcode"><input value={f.barcode} onChange={(e) => set('barcode', e.target.value)} placeholder={t('Optional: scan into this box')} /></Field>
         <Field label="Usual supplier"><Select value={f.supplierId} onChange={(v) => set('supplierId', v)} placeholder="None" options={(suppliers || []).map((s) => ({ value: s.id, label: s.name }))} /></Field>
-        {!item?.id && can('cost.view') && <Field label={`Starting cost (${currency})`} hint="Optional. Receipts set the average cost from then on."><QtyInput value={f.unitCost} onChange={(v) => set('unitCost', v)} label="Starting cost" /></Field>}
+        {!item?.id && can('cost.view') && <Field label={t('Starting cost ({currency})', { currency })} hint="Optional. Receipts set the average cost from then on."><QtyInput value={f.unitCost} onChange={(v) => set('unitCost', v)} label="Starting cost" /></Field>}
         <div className="span2 stack" style={{ gap: 6 }}>
-          <Check checked={f.tracksExpiry} onChange={(v) => set('tracksExpiry', v)}>Track batches and expiry dates<span className="muted">: oils, medicines, creams</span></Check>
-          <Check checked={f.isLinen} onChange={(v) => set('isLinen', v)}>This is linen<span className="muted">: towels and sheets go to rooms and the laundry and come back</span></Check>
-          {item?.id && <Check checked={!f.active} onChange={(v) => set('active', !v)}>Retire this item<span className="muted">: it stays in the records but cannot be used or ordered</span></Check>}
+          <Check checked={f.tracksExpiry} onChange={(v) => set('tracksExpiry', v)}>{t('Track batches and expiry dates')}<span className="muted">: {t('oils, medicines, creams')}</span></Check>
+          <Check checked={f.isLinen} onChange={(v) => set('isLinen', v)}>{t('This is linen')}<span className="muted">: {t('towels and sheets go to rooms and the laundry and come back')}</span></Check>
+          {item?.id && <Check checked={!f.active} onChange={(v) => set('active', !v)}>{t('Retire this item')}<span className="muted">: {t('it stays in the records but cannot be used or ordered')}</span></Check>}
         </div>
         {lab && (
           <>
             <Field label="Kept in (optional)"><Select value={f.storage} onChange={(v) => set('storage', v)} placeholder="Not said" options={Object.entries(STORAGE).map(([value, label]) => ({ value, label }))} /></Field>
-            <Field label="Days usable once opened (optional)" hint="An opened pack's in-use date is this many days after opening, or its printed expiry if that comes first.">
+            <Field label="Days usable once opened (optional)" hint={`An opened pack's in-use date is this many days after opening, or its printed expiry if that comes first.`}>
               <input type="number" min="1" max="3650" inputMode="numeric" value={f.openLifeDays} onChange={(e) => set('openLifeDays', e.target.value)} />
             </Field>
           </>
         )}
         {inspectOn && (
-          <div className="span2"><Check checked={f.inspect} onChange={(v) => set('inspect', v)}>Inspect on arrival <span className="muted">: a delivery of it is held as not usable until somebody checks and releases it</span></Check></div>
+          <div className="span2"><Check checked={f.inspect} onChange={(v) => set('inspect', v)}>{t('Inspect on arrival')} <span className="muted">: {t('a delivery of it is held as not usable until somebody checks and releases it')}</span></Check></div>
         )}
         <Field label="Notes" className="span2"><textarea value={f.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
       </div>
       {packsOn && (
-        <Card title="Pack sizes" hint={`How it is bought or stored, in ${f.uom || 'its own unit'}. Stock is always kept in ${f.uom || 'its own unit'}; a pack is a way of writing it on an order or a delivery.`}>
+        <Card title="Pack sizes" hint={t('How it is bought or stored, in {uom}. Stock is always kept in {uom}; a pack is a way of writing it on an order or a delivery.', { uom: f.uom ? t(f.uom) : t('its own unit') })}>
           <div className="stack">
-            {f.packs.length === 0 && <p className="muted">No pack sizes. It is bought and stored in {f.uom || 'its own unit'}.</p>}
+            {f.packs.length === 0 && <p className="muted">{t('No pack sizes. It is bought and stored in {uom}.', { uom: f.uom ? t(f.uom) : t('its own unit') })}</p>}
             {f.packs.map((p) => (
               <div key={p.key} className="line" style={{ gridTemplateColumns: '1fr' }}>
                 <div className="line-fields">
                   <Field label="Pack"><input value={p.label} onChange={(e) => setPack(p.key, 'label', e.target.value)} placeholder="Carton of 48" maxLength={40} /></Field>
-                  <Field label={`${f.uom || 'pcs'} in one`}><QtyInput value={p.factor} onChange={(v) => setPack(p.key, 'factor', v)} label={`How many ${f.uom} in ${p.label || 'this pack'}`} /></Field>
+                  <Field label={t('{uom} in one', { uom: t(f.uom || 'pcs') })}><QtyInput value={p.factor} onChange={(v) => setPack(p.key, 'factor', v)} label={t('How many {uom} in {pack}', { uom: t(f.uom), pack: p.label || t('this pack') })} /></Field>
                   <Field label="Supplier"><Select value={p.supplierId} onChange={(v) => setPack(p.key, 'supplierId', v)} placeholder="Any supplier" options={(suppliers || []).map((s) => ({ value: s.id, label: s.name }))} /></Field>
                   <Field label="Used for"><Select value={p.use} onChange={(v) => setPack(p.key, 'use', v)} options={[{ value: 'BOTH', label: 'Buying and storing' }, { value: 'BUY', label: 'Buying only' }, { value: 'STORE', label: 'Storing only' }]} /></Field>
                   <Button kind="ghost" icon="close" onClick={() => set('packs', f.packs.filter((x) => x.key !== p.key))}>Remove</Button>
@@ -292,10 +295,10 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
             <div key={l.storeId} className="line" style={{ gridTemplateColumns: '1fr' }}>
               <div className="line-name">{l.name}</div>
               <div className="line-fields">
-                <Field label="Reorder at"><QtyInput value={l.reorder} onChange={(v) => setLevel(l.storeId, 'reorder', v)} label={`Reorder at, ${l.name}`} /></Field>
-                <Field label="Critical at"><QtyInput value={l.critical} onChange={(v) => setLevel(l.storeId, 'critical', v)} label={`Critical at, ${l.name}`} /></Field>
-                <Field label="Top up to"><QtyInput value={l.par} onChange={(v) => setLevel(l.storeId, 'par', v)} label={`Top up to, ${l.name}`} /></Field>
-                {placesOn && <Field label="Shelf location"><input value={l.location} onChange={(e) => setLevel(l.storeId, 'location', e.target.value)} placeholder="A-3-2" maxLength={40} aria-label={`Shelf location, ${l.name}`} /></Field>}
+                <Field label="Reorder at"><QtyInput value={l.reorder} onChange={(v) => setLevel(l.storeId, 'reorder', v)} label={t('Reorder at, {store}', { store: l.name })} /></Field>
+                <Field label="Critical at"><QtyInput value={l.critical} onChange={(v) => setLevel(l.storeId, 'critical', v)} label={t('Critical at, {store}', { store: l.name })} /></Field>
+                <Field label="Top up to"><QtyInput value={l.par} onChange={(v) => setLevel(l.storeId, 'par', v)} label={t('Top up to, {store}', { store: l.name })} /></Field>
+                {placesOn && <Field label="Shelf location"><input value={l.location} onChange={(e) => setLevel(l.storeId, 'location', e.target.value)} placeholder="A-3-2" maxLength={40} aria-label={t('Shelf location, {store}', { store: l.name })} /></Field>}
               </div>
             </div>
           ))}

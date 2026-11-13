@@ -14,6 +14,7 @@ import Icon from '../icons.jsx';
 import LineEditor, { lineErrors, newLine, noteDifferences, toPayload } from '../lines.jsx';
 import { Button, Card, ErrorNote, Field, ItemPicker, Loading, Note, Page, Pill, QtyInput, Select, useApp, useData } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
+import { t, tn } from '../i18n.js';
 
 const SOURCE = { remembered: ['ok', 'Remembered'], code: ['ok', 'By its code'], guess: ['warn', 'A guess: check it'] };
 let fileKey = 0;
@@ -25,12 +26,12 @@ export function Paperwork({ files, setFiles, kinds, needNote }) {
   return (
     <div className="stack">
       {needNote && !has('NOTE') && !has('INVOICE') && (
-        <Note tone="warn" icon="alert"><span>A manager cannot approve this delivery until the delivery note is attached. For a purchase with no note, attach the invoice.</span></Note>
+        <Note tone="warn" icon="alert"><span>{t('A manager cannot approve this delivery until the delivery note is attached. For a purchase with no note, attach the invoice.')}</span></Note>
       )}
       <div className="scan-row">
         {Object.entries(kinds).filter(([k]) => k !== 'OTHER').map(([k, label]) => (
           <label key={k} className="hf-btn hf-btn--secondary file-btn">
-            <Icon name="plus" size={18} /><span>{label}</span>
+            <Icon name="plus" size={18} /><span>{t(label)}</span>
             <input type="file" accept="image/*,application/pdf" multiple onChange={(e) => { add(e.target.files, k); e.target.value = ''; }} />
           </label>
         ))}
@@ -41,8 +42,8 @@ export function Paperwork({ files, setFiles, kinds, needNote }) {
             <li key={f.key} className="lot">
               <div className="min0"><span className="row-label">{f.file.name}</span><span className="row-sub">{Math.max(1, Math.round(f.file.size / 1024))} KB</span></div>
               <div className="lot-actions">
-                <Select value={f.kind} onChange={(v) => setFiles((cur) => cur.map((x) => (x.key === f.key ? { ...x, kind: v } : x)))} options={Object.entries(kinds).map(([value, label]) => ({ value, label }))} aria-label="What this file is" />
-                <button type="button" className="icon-btn" onClick={() => setFiles((cur) => cur.filter((x) => x.key !== f.key))} aria-label={`Remove ${f.file.name}`}><Icon name="close" size={20} /></button>
+                <Select value={f.kind} onChange={(v) => setFiles((cur) => cur.map((x) => (x.key === f.key ? { ...x, kind: v } : x)))} options={Object.entries(kinds).map(([value, label]) => ({ value, label }))} aria-label={t('What this file is')} />
+                <button type="button" className="icon-btn" onClick={() => setFiles((cur) => cur.filter((x) => x.key !== f.key))} aria-label={t('Remove {name}', { name: f.file.name })}><Icon name="close" size={20} /></button>
               </div>
             </li>
           ))}
@@ -66,9 +67,9 @@ function ReadLines({ read, setRead, items, onUse }) {
               <div className="inv-line__top">
               <div className="min0 grow">
                 <span className="row-label">“{l.text}”</span>
-                <span className="row-sub">{l.qty ? `${fmtQty(l.qty)} ${l.unit || ''}` : 'no quantity read'}{l.unitPrice !== null ? ` at ${fmtMoney(l.unitPrice, '', 2).trim()}` : ''}</span>
+                <span className="row-sub">{l.qty ? `${fmtQty(l.qty)} ${l.unit || ''}` : t('no quantity read')}{l.unitPrice !== null ? ` ${t('at {price}', { price: fmtMoney(l.unitPrice, '', 2).trim() })}` : ''}</span>
               </div>
-              <button type="button" className="icon-btn" onClick={() => setRead((r) => ({ ...r, lines: r.lines.filter((x) => x.key !== l.key) }))} aria-label={`Leave out ${l.text}`}><Icon name="close" size={20} /></button>
+              <button type="button" className="icon-btn" onClick={() => setRead((r) => ({ ...r, lines: r.lines.filter((x) => x.key !== l.key) }))} aria-label={t('Leave out {name}', { name: l.text })}><Icon name="close" size={20} /></button>
               </div>
               <div className="inv-line__fields">
                 {item
@@ -80,16 +81,16 @@ function ReadLines({ read, setRead, items, onUse }) {
                   )
                   : <Field label="Which item is this?"><ItemPicker items={items} onPick={(it) => set(l.key, { itemId: it.id, source: null })} filter={(i) => !i.isLinen} placeholder="Type a name or a code" /></Field>}
                 <Field label="Quantity on the note"><QtyInput value={l.qty ?? ''} onChange={(v) => set(l.key, { qty: v })} /></Field>
-                {item && <Field label={`1 ${l.unit || 'on the note'} = how many ${item.uom}`} hint="For a box of 12 bottles counted as bottles, enter 12."><QtyInput value={l.factor} onChange={(v) => set(l.key, { factor: v })} /></Field>}
+                {item && <Field label={t('1 {unit} = how many {uom}', { unit: l.unit || t('on the note'), uom: t(item.uom) })} hint="For a box of 12 bottles counted as bottles, enter 12."><QtyInput value={l.factor} onChange={(v) => set(l.key, { factor: v })} /></Field>}
               </div>
-              {item && Number(l.qty) > 0 && Number(l.factor) > 0 && <span className="row-sub">That is {fmtQty(Number(l.qty) * Number(l.factor))} {item.uom} to count.</span>}
+              {item && Number(l.qty) > 0 && Number(l.factor) > 0 && <span className="row-sub">{t('That is {qty} {uom} to count.', { qty: fmtQty(Number(l.qty) * Number(l.factor)), uom: t(item.uom) })}</span>}
             </div>
           );
         })}
       </div>
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <Button kind="ghost" onClick={() => setRead(null)}>Discard what was read</Button>
-        <Button icon="check" onClick={() => onUse(ready)}>{ready.length ? `Add ${ready.length} line${ready.length === 1 ? '' : 's'} to the delivery` : 'Add to the delivery'}</Button>
+        <Button icon="check" onClick={() => onUse(ready)}>{ready.length ? tn(ready.length, 'Add {n} line to the delivery', 'Add {n} lines to the delivery') : 'Add to the delivery'}</Button>
       </div>
     </Card>
   );
@@ -159,7 +160,7 @@ export default function ReceiveScreen() {
       setRead({ supplier: r.supplier, lines: r.lines.map((l, i) => ({ key: i, text: l.text, qty: l.qty ?? '', unit: l.unit, unitPrice: l.unitPrice, itemId: l.match?.itemId || null, factor: l.match?.factor || 1, source: l.match?.source || null })) });
       // The photo that was read is the delivery note: keep it with the delivery.
       setFiles((cur) => [...cur, { key: fileKey += 1, file, kind: 'NOTE' }]);
-      toast(`${r.lines.length} line${r.lines.length === 1 ? '' : 's'} read. Check them below.`);
+      toast(tn(r.lines.length, '{n} line read. Check them below.', '{n} lines read. Check them below.'));
     } catch (e) { setErr(e); } finally { setReading(false); }
   };
 
@@ -187,7 +188,7 @@ export default function ReceiveScreen() {
   const errors = lineErrors(lines, 'in', storeId);
   const warnings = noteDifferences(lines);
   const bad = lines.map((l, i) => (errors[l.key] ? i + 1 : 0)).filter(Boolean);
-  const missing = !lines.length ? ['at least one item that arrived'] : bad.length ? [`what is marked on line ${bad.join(' and ')}`] : [];
+  const missing = !lines.length ? [t('at least one item that arrived')] : bad.length ? [t('what is marked on line {lines}', { lines: bad.join(t(' and ')) })] : [];
   const save = async () => {
     if (missing.length) { setTried(true); return; }
     setBusy(true); setErr(null);
@@ -207,7 +208,7 @@ export default function ReceiveScreen() {
         try { await sendForm(`/api/receipts/${r.id}/files`, { kind: f.kind, file: await shrinkImage(f.file) }); } catch (e) { failed.push(`${f.file.name}: ${e.message}`); }
       }
       setDone({ ...r, failed, attached: files.length - failed.length, hasNote: files.some((f) => ['NOTE', 'INVOICE'].includes(f.kind) && !failed.some((x) => x.startsWith(f.file.name))) });
-      toast(`${r.ref} recorded`);
+      toast(t('{ref} recorded', { ref: r.ref }));
       setLines([]); setFiles([]); setRead(null); setCharges([]); setNoteNo(''); setNoteDate(''); setInvoiceNo(''); setInvoiceDate(''); setNote(''); setPoId(''); setTried(false);
       refreshStock(); refreshBadges();
     } catch (e) { setErr(e); } finally { setBusy(false); }
@@ -218,15 +219,15 @@ export default function ReceiveScreen() {
       <Page title="Receive a delivery">
         <Card>
           <div className="row"><span className="inv-done"><Icon name="check" /></span>
-            <h2 className="grow">{done.ref} recorded{showCost ? `, ${fmtMoney(done.total, currency)}` : ''}.</h2></div>
+            <h2 className="grow">{showCost ? t('{ref} recorded, {total}.', { ref: done.ref, total: fmtMoney(done.total, currency) }) : t('{ref} recorded.', { ref: done.ref })}</h2></div>
           {done.status === 'PENDING'
-            ? <p>It is waiting for a manager's approval. The stock is on the shelf once it is approved.</p>
-            : <p>The stock is on the shelf.</p>}
-          {done.status === 'PENDING' && needNote && !done.hasNote && <Note tone="warn" icon="alert"><span>No delivery note is attached yet, so it cannot be approved. Open the delivery and attach it.</span></Note>}
-          {done.failed.length > 0 && <Note tone="danger" icon="alert" role="alert"><div><b>These files were not attached:</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{done.failed.map((f) => <li key={f}>{f}</li>)}</ul>Open the delivery and add them again.</div></Note>}
+            ? <p>{t("It is waiting for a manager's approval. The stock is on the shelf once it is approved.")}</p>
+            : <p>{t('The stock is on the shelf.')}</p>}
+          {done.status === 'PENDING' && needNote && !done.hasNote && <Note tone="warn" icon="alert"><span>{t('No delivery note is attached yet, so it cannot be approved. Open the delivery and attach it.')}</span></Note>}
+          {done.failed.length > 0 && <Note tone="danger" icon="alert" role="alert"><div><b>{t('These files were not attached:')}</b><ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{done.failed.map((f) => <li key={f}>{f}</li>)}</ul>{t('Open the delivery and add them again.')}</div></Note>}
           <div className="row">
             <Button onClick={() => setDone(null)}>Record another</Button>
-            <Button kind="secondary" onClick={() => navigate(`purchasing/d/${done.id}`)}>Open {done.ref}</Button>
+            <Button kind="secondary" onClick={() => navigate(`purchasing/d/${done.id}`)}>{t('Open {ref}', { ref: done.ref })}</Button>
           </div>
         </Card>
       </Page>
@@ -239,13 +240,13 @@ export default function ReceiveScreen() {
         <Card title="The delivery note" hint="Photograph it and the supplier, note number and lines are read from the photo and shown for you to check. Nothing is saved until you press the button at the foot of the page.">
           <div className="scan-row">
             <label className={`hf-btn hf-btn--secondary file-btn ${reading ? 'busy' : ''}`}>
-              <Icon name="camera" size={18} /><span>{reading ? 'Reading the note…' : 'Photograph the delivery note'}</span>
+              <Icon name="camera" size={18} /><span>{reading ? t('Reading the note…') : t('Photograph the delivery note')}</span>
               <input type="file" accept="image/*" capture="environment" disabled={reading} onChange={(e) => { const f = e.target.files[0]; e.target.value = ''; if (f) readPhoto(f); }} />
             </label>
           </div>
           {reading && <Loading what="Reading the note, about ten seconds" />}
           {read && !read.supplier.id && read.supplier.text && !supplierId && (
-            <Note icon="help"><span>The note is from “{read.supplier.text}”, which is not one of this unit's suppliers by that name. Choose the supplier below so its wording is remembered.</span></Note>
+            <Note icon="help"><span>{t("The note is from “{name}”, which is not one of this unit's suppliers by that name. Choose the supplier below so its wording is remembered.", { name: read.supplier.text })}</span></Note>
           )}
         </Card>
       )}
@@ -258,7 +259,7 @@ export default function ReceiveScreen() {
           </Field>
           <Field label="Goes into"><Select value={storeId} onChange={setStoreId} disabled={!!poId} options={stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
           <Field label="Supplier (optional)"><Select value={supplierId} onChange={setSupplierId} disabled={!!poId} placeholder="Not recorded" options={(suppliers || []).map((s) => ({ value: s.id, label: s.name }))} /></Field>
-          <Field label="Note number"><input value={noteNo} onChange={(e) => setNoteNo(e.target.value)} placeholder="As printed on the note" maxLength={60} /></Field>
+          <Field label="Note number"><input value={noteNo} onChange={(e) => setNoteNo(e.target.value)} placeholder={t('As printed on the note')} maxLength={60} /></Field>
           <Field label="Date on the note"><input type="date" value={noteDate} max={gstToday()} onChange={(e) => setNoteDate(e.target.value)} /></Field>
           <Field label="Invoice number (optional)"><input value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)} maxLength={60} /></Field>
           <Field label="Invoice date (optional)"><input type="date" value={invoiceDate} max={gstToday()} onChange={(e) => setInvoiceDate(e.target.value)} /></Field>
@@ -283,7 +284,7 @@ export default function ReceiveScreen() {
               <div key={c.key} className="line" style={{ gridTemplateColumns: '1fr' }}>
                 <div className="line-fields">
                   <Field label="Charge"><Select value={c.kind} onChange={(v) => setCharges(charges.map((x) => (x.key === c.key ? { ...x, kind: v } : x)))} options={Object.entries(me.labels.chargeKinds || {}).map(([value, label]) => ({ value, label }))} /></Field>
-                  <Field label={`Amount (${currency})`}><QtyInput value={c.amount} onChange={(v) => setCharges(charges.map((x) => (x.key === c.key ? { ...x, amount: v } : x)))} label="Charge amount" /></Field>
+                  <Field label={t('Amount ({currency})', { currency })}><QtyInput value={c.amount} onChange={(v) => setCharges(charges.map((x) => (x.key === c.key ? { ...x, amount: v } : x)))} label="Charge amount" /></Field>
                   <Field label="Note (optional)"><input value={c.note} onChange={(e) => setCharges(charges.map((x) => (x.key === c.key ? { ...x, note: e.target.value } : x)))} maxLength={200} /></Field>
                   <Button kind="ghost" icon="close" onClick={() => setCharges(charges.filter((x) => x.key !== c.key))}>Remove</Button>
                 </div>
@@ -293,13 +294,13 @@ export default function ReceiveScreen() {
           </div>
         </Card>
       )}
-      <Card title="Paperwork" hint="Photos or PDFs of the delivery note, the supplier's invoice and the LPO. Each is kept with who attached it and when.">
+      <Card title="Paperwork" hint={`Photos or PDFs of the delivery note, the supplier's invoice and the LPO. Each is kept with who attached it and when.`}>
         {me.has?.files === false
-          ? <Note tone="warn" icon="alert"><span>File storage is not set up for this app yet, so nothing can be attached. Tell your administrator.</span></Note>
+          ? <Note tone="warn" icon="alert"><span>{t('File storage is not set up for this app yet, so nothing can be attached. Tell your administrator.')}</span></Note>
           : <Paperwork files={files} setFiles={setFiles} kinds={kinds} needNote={needNote} />}
       </Card>
       <ErrorNote error={err} />
-      {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">Still needed: {missing.join(', ')}.</Note>}
+      {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">{t('Still needed: {what}.', { what: missing.join(', ') })}</Note>}
       <div className="inv-submit">
         <Button busy={busy} onClick={save} icon="receive">{twoStep ? 'Send for approval' : 'Receive'}</Button>
       </div>

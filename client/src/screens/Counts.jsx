@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtMoney, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
+import { t, tn } from '../i18n.js';
 import { isDesk, PairSheet, ScanSheet } from '../scan/ScanSheets.jsx';
 import {
   Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
@@ -27,7 +28,7 @@ export default function Counts() {
       {tab === 'counts' && data && (
         <Card pad={false}>
           <Table rows={data} onRow={(c) => navigate(`counts/${c.id}`)} empty="No counts yet. Start one for a store." columns={[
-            { key: 'ref', label: 'Count', primary: true, render: (c) => <span className="min0"><span className="row-label">{c.ref}</span><span className="row-sub">{c.store_name}{c.category ? ` · ${c.category}` : ''}{c.blind ? ' · blind' : ''}</span></span> },
+            { key: 'ref', label: 'Count', primary: true, render: (c) => <span className="min0"><span className="row-label">{c.ref}</span><span className="row-sub">{c.store_name}{c.category ? ` · ${c.category}` : ''}{c.blind ? ` · ${t('blind')}` : ''}</span></span> },
             { key: 'progress', label: 'Counted', align: 'right', render: (c) => `${c.counted_count} / ${c.line_count}` },
             { key: 'started_at', label: 'Started', render: (c) => <span>{c.started_by_name}<span className="row-sub">{fmtDateTime(c.started_at)}</span></span> },
             { key: 'status', label: 'Status', render: (c) => <Pill status={c.status === 'SUBMITTED' ? 'SUBMITTED' : c.status} /> },
@@ -57,7 +58,7 @@ function CycleCounts({ onStarted }) {
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/counts', { storeId, itemIds: due.map((x) => x.itemId), blind: true, note: `Cycle count${grade ? `, ${grade} items` : ''}` });
-      toast(`${r.ref} started, ${r.lines} items to count`);
+      toast(t('{ref} started, {n} items to count', { ref: r.ref, n: r.lines }));
       onStarted(r.id);
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
@@ -66,11 +67,11 @@ function CycleCounts({ onStarted }) {
       <Card title="Cycle counts" hint="Items are graded by the value used in the last 90 days: A, the few that are most of it, are counted most often. An item is due when it has not been counted in a store for its grade's number of days.">
         <div className="form two">
           <Field label="Store"><Select value={storeId} onChange={setStoreId} options={mine.map((s) => ({ value: s.id, label: s.name }))} /></Field>
-          <Field label="Grade"><Select value={grade} onChange={setGrade} placeholder="Every grade" options={['A', 'B', 'C'].map((g) => ({ value: g, label: `${g} items${data ? `: counted every ${data.days[g]} days` : ''}` }))} /></Field>
+          <Field label="Grade"><Select value={grade} onChange={setGrade} placeholder="Every grade" options={['A', 'B', 'C'].map((g) => ({ value: g, label: data ? t('{g} items: counted every {n} days', { g, n: data.days[g] }) : t('{g} items', { g }) }))} /></Field>
         </div>
-        {data && <p className="muted">{data.grades.A} A, {data.grades.B} B and {data.grades.C} C items here; {data.due} due for counting.</p>}
+        {data && <p className="muted">{t('{a} A, {b} B and {c} C items here; {due} due for counting.', { a: data.grades.A, b: data.grades.B, c: data.grades.C, due: data.due })}</p>}
         <ErrorNote error={error || err} onRetry={error ? reload : undefined} />
-        {can('count.run') && data && <div className="row" style={{ justifyContent: 'flex-end' }}><Button busy={busy} icon="counts" onClick={start}>{due.length ? `Count the ${due.length} due` : 'Nothing due'}</Button></div>}
+        {can('count.run') && data && <div className="row" style={{ justifyContent: 'flex-end' }}><Button busy={busy} icon="counts" onClick={start}>{due.length ? t('Count the {n} due', { n: due.length }) : t('Nothing due')}</Button></div>}
       </Card>
       {loading && !data && <Loading />}
       {data && (
@@ -78,8 +79,8 @@ function CycleCounts({ onStarted }) {
           <Table caption="Due for a cycle count" rows={due} rowKey={(r) => r.itemId} empty="Nothing is due. Every item has been counted within its grade's days." columns={[
             { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code> · {r.category}</span></span> },
             { key: 'grade', label: 'Grade', render: (r) => <Pill tone={GRADE_TONE[r.grade]}>{r.grade}</Pill> },
-            { key: 'lastCounted', label: 'Last counted', render: (r) => (r.lastCounted ? fmtDate(r.lastCounted) : 'Never') },
-            { key: 'lateDays', label: 'Late by', align: 'right', render: (r) => (r.lateDays ? `${r.lateDays} day${r.lateDays === 1 ? '' : 's'}` : '') },
+            { key: 'lastCounted', label: 'Last counted', render: (r) => (r.lastCounted ? fmtDate(r.lastCounted) : t('Never')) },
+            { key: 'lateDays', label: 'Late by', align: 'right', render: (r) => (r.lateDays ? tn(r.lateDays, '{n} day', '{n} days') : '') },
           ]} />
         </Card>
       )}
@@ -98,14 +99,14 @@ function StartCount({ onClose, onDone }) {
   const cats = [...new Set((stock?.items || []).map((i) => i.category))].sort();
   const go = async () => {
     setBusy(true); setErr(null);
-    try { const r = await post('/api/counts', { storeId, category: category || null, blind }); toast(`${r.ref} started, ${r.lines} items to count`); onDone(r.id); } catch (e) { setErr(e); } finally { setBusy(false); }
+    try { const r = await post('/api/counts', { storeId, category: category || null, blind }); toast(t('{ref} started, {n} items to count', { ref: r.ref, n: r.lines })); onDone(r.id); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
     <Sheet title="Start a count" onClose={onClose} footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={go}>Start</Button></>}>
       <Field label="Store"><Select value={storeId} onChange={setStoreId} options={mine.map((s) => ({ value: s.id, label: s.name }))} /></Field>
       <Field label="What to count" hint="A whole store, or one category at a time: a cycle count."><Select value={category} onChange={setCategory} placeholder="Everything in the store" options={cats.map((c) => ({ value: c, label: c }))} /></Field>
-      <Check checked={blind} onChange={setBlind}>Blind count<span className="muted">: counters do not see what the system expects (recommended)</span></Check>
-      <p className="muted">Stock can still be used while the count is open: the difference is worked out against the moment the count started.</p>
+      <Check checked={blind} onChange={setBlind}>{t('Blind count')}<span className="muted">: {t('counters do not see what the system expects (recommended)')}</span></Check>
+      <p className="muted">{t('Stock can still be used while the count is open: the difference is worked out against the moment the count started.')}</p>
       <ErrorNote error={err} />
     </Sheet>
   );
@@ -141,7 +142,7 @@ function CountSheet({ id, onClose, onChanged }) {
   const act = async (action, msg) => {
     if (open && dirty && !(await save())) return;
     setBusy(true); setErr(null);
-    try { const r = await post(`/api/counts/${id}/${action}`, { note }); toast(r.clamped?.length ? `${msg}. Limited to what is on the shelf for: ${r.clamped.join(', ')}` : msg); reload(); onChanged(); refreshBadges(); if (action === 'approve') refreshStock(); } catch (e) { setErr(e); } finally { setBusy(false); }
+    try { const r = await post(`/api/counts/${id}/${action}`, { note }); toast(r.clamped?.length ? t('{msg}. Limited to what is on the shelf for: {items}', { msg: t(msg), items: r.clamped.join(', ') }) : msg); reload(); onChanged(); refreshBadges(); if (action === 'approve') refreshStock(); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   /** A scan counts one more of an item on this count; anything else is not part of it. */
   const countOne = (item) => {
@@ -162,8 +163,8 @@ function CountSheet({ id, onClose, onChanged }) {
         {open && can('count.run') && <Button busy={busy} onClick={() => (counted ? act('submit', 'Submitted for review') : toast('Count at least one item first'))}>Submit</Button>}
         {c.status === 'SUBMITTED' && can('count.decide') && <><Button kind="secondary" busy={busy} onClick={() => act('reopen', 'Sent back for recounting')}>Send back</Button><Button busy={busy} onClick={() => act('approve', 'Count approved and stock corrected')}>Approve</Button></>}
       </>}>
-      <div className="row"><Pill status={c.status} /><span className="muted">{counted} of {c.lines.length} counted{c.category ? ` · ${c.category}` : ''}{c.blind && c.hidden ? ' · blind' : ''}</span></div>
-      {c.status !== 'OPEN' && !c.hidden && can('cost.view') && <p>Net difference at cost: <b>{fmtMoney(totalVar, currency)}</b></p>}
+      <div className="row"><Pill status={c.status} /><span className="muted">{t('{n} of {of} counted', { n: counted, of: c.lines.length })}{c.category ? ` · ${c.category}` : ''}{c.blind && c.hidden ? ` · ${t('blind')}` : ''}</span></div>
+      {c.status !== 'OPEN' && !c.hidden && can('cost.view') && <p>{t('Net difference at cost:')} <b>{fmtMoney(totalVar, currency)}</b></p>}
       {open && (
         <div className="toolbar">
           <SearchBox value={q} onChange={setQ} placeholder="Find an item, or scan" />
@@ -182,16 +183,16 @@ function CountSheet({ id, onClose, onChanged }) {
             <div key={l.item_id} className={`line ${variance ? (variance < 0 ? 'danger' : 'warn') : ''}`}>
               <div className="min0">
                 <div className="line-name">{l.name}</div>
-                <div className="line-sub">{l.location ? <><b>Shelf {l.location}</b> · </> : null}<code>{l.code}</code> · {l.category}{!c.hidden && l.expected !== null ? ` · system ${fmtQty(l.expected)} ${l.uom}` : ''}{l.counted_by ? ` · ${l.counted_by}` : ''}</div>
+                <div className="line-sub">{l.location ? <><b>{t('Shelf {shelf}', { shelf: l.location })}</b> · </> : null}<code>{l.code}</code> · {l.category}{!c.hidden && l.expected !== null ? ` · ${t('system {qty} {uom}', { qty: fmtQty(l.expected), uom: t(l.uom) })}` : ''}{l.counted_by ? ` · ${l.counted_by}` : ''}</div>
               </div>
               <div style={{ width: 120 }}>
                 {open && can('count.run')
-                  ? <QtyInput value={v} onChange={(x) => { setVals((s) => ({ ...s, [l.item_id]: x })); setDirty(true); }} label={`Counted ${l.name}`} placeholder="Count" />
-                  : <b>{l.counted === null ? <span className="faint">not counted</span> : `${fmtQty(l.counted)} ${l.uom}`}</b>}
+                  ? <QtyInput value={v} onChange={(x) => { setVals((s) => ({ ...s, [l.item_id]: x })); setDirty(true); }} label={t('Counted {name}', { name: l.name })} placeholder={t('Count')} />
+                  : <b>{l.counted === null ? <span className="faint">{t('not counted')}</span> : `${fmtQty(l.counted)} ${t(l.uom)}`}</b>}
               </div>
               {variance !== null && variance !== 0 && (
                 <div className="line-warning" style={{ color: variance < 0 ? undefined : 'inherit' }}>
-                  {variance > 0 ? '+' : ''}{fmtQty(variance)} {l.uom}{can('cost.view') && l.value !== null ? ` · ${fmtMoney(l.value, currency)}` : ''}
+                  {variance > 0 ? '+' : ''}{fmtQty(variance)} {t(l.uom)}{can('cost.view') && l.value !== null ? ` · ${fmtMoney(l.value, currency)}` : ''}
                 </div>
               )}
             </div>
@@ -200,8 +201,8 @@ function CountSheet({ id, onClose, onChanged }) {
         {!lines.length && <Quiet>Every item is counted.</Quiet>}
       </div>
       {c.status === 'SUBMITTED' && can('count.decide') && mine && <Note icon="alert">You submitted this count, so another manager approves it, unless you are the only one.</Note>}
-      {['OPEN', 'SUBMITTED'].includes(c.status) && <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Optional" /></Field>}
-      {c.decided_at && <p className="muted">{c.status === 'APPROVED' ? 'Approved' : 'Closed'} by {c.decided_by_name}, {fmtDateTime(c.decided_at)}{c.decision_note ? `: “${c.decision_note}”` : ''}</p>}
+      {['OPEN', 'SUBMITTED'].includes(c.status) && <Field label="Note"><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder={t('Optional')} /></Field>}
+      {c.decided_at && <p className="muted">{t(c.status === 'APPROVED' ? 'Approved by {name}, {when}' : 'Closed by {name}, {when}', { name: c.decided_by_name, when: fmtDateTime(c.decided_at) })}{c.decision_note ? `: “${c.decision_note}”` : ''}</p>}
       <ErrorNote error={err} />
     </Sheet>
   );

@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../ui.jsx';
 import { makeReader } from './reader.js';
+import { t } from '../i18n.js';
 
 const SAY = {
   starting: 'Starting the camera…',
@@ -44,7 +45,7 @@ export default function Camera({ onCode, paused = false }) {
         setState(e?.name === 'NotAllowedError' ? 'denied' : 'none');
         return;
       }
-      if (stopped) { stream.getTracks().forEach((t) => t.stop()); return; }
+      if (stopped) { stream.getTracks().forEach((track) => track.stop()); return; }
       const v = video.current;
       v.srcObject = stream;
       await v.play().catch(() => {});
@@ -60,7 +61,7 @@ export default function Camera({ onCode, paused = false }) {
       };
       tick();
     })();
-    return () => { stopped = true; clearTimeout(timer); stream?.getTracks().forEach((t) => t.stop()); };
+    return () => { stopped = true; clearTimeout(timer); stream?.getTracks().forEach((track) => track.stop()); };
   }, []);
 
   const submit = (e) => {
@@ -74,13 +75,13 @@ export default function Camera({ onCode, paused = false }) {
   return (
     <div className="stack">
       <div className={`camera ${state === 'on' ? 'on' : ''}`}>
-        <video ref={video} playsInline muted aria-label="Camera" />
+        <video ref={video} playsInline muted aria-label={t('Camera')} />
         {state === 'on' && <span className="camera-frame" aria-hidden="true" />}
-        {state !== 'on' && <p className="camera-say">{SAY[state]}</p>}
-        {state === 'on' && paused && <p className="camera-say">Paused</p>}
+        {state !== 'on' && <p className="camera-say">{t(SAY[state])}</p>}
+        {state === 'on' && paused && <p className="camera-say">{t('Paused')}</p>}
       </div>
       <form className="row" onSubmit={submit} style={{ flexWrap: 'nowrap' }}>
-        <input className="hf-input" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Or type the code" aria-label="Type a barcode or item code" inputMode="text" autoComplete="off" />
+        <input className="hf-input" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={t('Or type the code')} aria-label={t('Type a barcode or item code')} inputMode="text" autoComplete="off" />
         <Button kind="secondary" type="submit" disabled={paused}>Add</Button>
       </form>
     </div>

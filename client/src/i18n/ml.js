@@ -9,7 +9,15 @@
  * `{name}` slots are filled in by the screen; keep them as they are.
  */
 
-export default {
+import labels from './ml-parts/labels.js';
+import admin from './ml-parts/admin.js';
+import stock from './ml-parts/stock.js';
+import buying from './ml-parts/buying.js';
+import control from './ml-parts/control.js';
+import reports from './ml-parts/reports.js';
+
+/** The core list below is written last, so its words win where a part repeats one: one word per idea. */
+const core = {
   // ── The shell ──────────────────────────────────────────────────────────────────────────
   'Inventory': 'ഇൻവെന്ററി',
   'HiFive Inventory': 'HiFive ഇൻവെന്ററി',
@@ -128,7 +136,17 @@ export default {
   'Note (optional)': 'കുറിപ്പ് (ആവശ്യമെങ്കിൽ)',
   'Show': 'കാണിക്കുക',
   'Status': 'നില',
-  'Open': 'തുറന്നവ',
+  'Open': 'തുറക്കുക',
+  'filter:Open': 'തുറന്നവ',
+  'status:Open': 'തുറന്നത്',
+  'filter:Done': 'പൂർത്തിയായവ',
+  'col:Done': 'എത്ര തവണ',
+  'filter:Received': 'ലഭിച്ചവ',
+  'filter:Approved': 'അംഗീകരിച്ചവ',
+  'filter:Rejected': 'നിരസിച്ചവ',
+  'filter:Cancelled': 'റദ്ദാക്കിയവ',
+  'filter:Pending': 'കാത്തിരിക്കുന്നവ',
+  'filter:Closed': 'അടച്ചവ',
   'All': 'എല്ലാം',
   'All {n}': 'എല്ലാം ({n})',
   'Approve': 'അംഗീകരിക്കുക',
@@ -218,13 +236,13 @@ export default {
   'Nothing left, or less than the least this store should hold.': 'ഒന്നും ബാക്കിയില്ല, അല്ലെങ്കിൽ ഈ സ്റ്റോറിൽ വേണ്ട ഏറ്റവും കുറഞ്ഞ അളവിനേക്കാൾ കുറവ്.',
   'item running low': 'സാധനം കുറയുന്നു',
   'items running low': 'സാധനങ്ങൾ കുറയുന്നു',
-  'At or under the level set for reordering.': 'വീണ്ടും ഓർഡർ ചെയ്യാനുള്ള അളവിലോ അതിനു താഴെയോ.',
+  'At or under the level set for reordering.': 'റീഓർഡർ ലെവലിലോ അതിനു താഴെയോ.',
   'used so far this month': 'ഈ മാസം ഇതുവരെ ഉപയോഗിച്ചത്',
   'Value of everything recorded as used since the 1st, at average cost.': '1-ആം തീയതി മുതൽ ഉപയോഗിച്ചതായി രേഖപ്പെടുത്തിയ എല്ലാറ്റിന്റെയും മൂല്യം, ശരാശരി വിലയിൽ.',
   '{n} urgent': '{n} അടിയന്തരം',
   '{qty} {uom} left': '{qty} {uom} ബാക്കി',
   'None left': 'ഒന്നും ബാക്കിയില്ല',
-  'reorder at {n}': '{n} ആകുമ്പോൾ വീണ്ടും ഓർഡർ',
+  'reorder at {n}': 'റീഓർഡർ ലെവൽ {n}',
   'Lot {lot}.': 'ലോട്ട് {lot}.',
   '{qty} {uom} in {store}.': '{store}-ൽ {qty} {uom}.',
   'Expired {date}': '{date}-ന് കാലാവധി കഴിഞ്ഞു',
@@ -264,6 +282,8 @@ export default {
   '{n} return to the supplier to approve': 'അംഗീകരിക്കാൻ സപ്ലയർക്കുള്ള {n} തിരിച്ചയക്കൽ',
   '{n} returns to the supplier to approve': 'അംഗീകരിക്കാൻ സപ്ലയർക്കുള്ള {n} തിരിച്ചയക്കലുകൾ',
   '{n} return waiting for a credit note': 'ക്രെഡിറ്റ് നോട്ട് കാത്തിരിക്കുന്ന {n} തിരിച്ചയക്കൽ',
+  '{n} change from HiFive ID to review: joiners, leavers, names': 'പരിശോധിക്കാൻ HiFive ID-യിൽ നിന്ന് {n} മാറ്റം: പുതിയവർ, പോയവർ, പേരുകൾ',
+  '{n} changes from HiFive ID to review: joiners, leavers, names': 'പരിശോധിക്കാൻ HiFive ID-യിൽ നിന്ന് {n} മാറ്റങ്ങൾ: പുതിയവർ, പോയവർ, പേരുകൾ',
   '{n} returns waiting for a credit note': 'ക്രെഡിറ്റ് നോട്ട് കാത്തിരിക്കുന്ന {n} തിരിച്ചയക്കലുകൾ',
 
   // ── Record use, transfer ───────────────────────────────────────────────────────────────
@@ -339,7 +359,7 @@ export default {
   'To give out': 'നൽകാൻ',
   'Close as done': 'പൂർത്തിയായി എന്ന് അടയ്ക്കുക',
   'Waiting for a manager.': 'മാനേജറെ കാത്തിരിക്കുന്നു.',
-  'Fill from this store\'s levels': 'ഈ സ്റ്റോറിന്റെ അളവുകൾ അനുസരിച്ച് നിറയ്ക്കുക',
+  'Fill from this store\'s levels': 'ഈ സ്റ്റോറിന്റെ ലെവലുകൾ അനുസരിച്ച് നിറയ്ക്കുക',
   'You asked for this, so another manager approves it, unless you are the only one.': 'ഇത് നിങ്ങൾ ചോദിച്ചതാണ്, അതിനാൽ മറ്റൊരു മാനേജർ അംഗീകരിക്കണം; നിങ്ങൾ മാത്രമേയുള്ളൂവെങ്കിൽ ഒഴികെ.',
   'Times': 'തവണ',
   'Asked for, approved, and given out.': 'ചോദിച്ചതും അംഗീകരിച്ചതും നൽകിയതും.',
@@ -427,3 +447,5 @@ export default {
   'error:FEATURE_OFF': 'ഈ സൗകര്യം ഈ യൂണിറ്റിൽ ഓഫാണ്. യൂണിറ്റ് അഡ്മിനിസ്ട്രേറ്റർക്ക് അഡ്മിൻ, സെറ്റിംഗ്സിൽ ഓൺ ചെയ്യാം.',
   'error:OVER_LIMIT': 'ഈ തുക ഒരു മാനേജർക്ക് അംഗീകരിക്കാവുന്നതിലും കൂടുതലാണ്. യൂണിറ്റ് അഡ്മിനിസ്ട്രേറ്ററോ ഡയറക്ടറോ അംഗീകരിക്കണം.',
 };
+
+export default { ...labels, ...admin, ...stock, ...buying, ...control, ...reports, ...core };

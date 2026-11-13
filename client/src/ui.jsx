@@ -15,7 +15,14 @@ import {
 } from '@hifive/ui';
 import Icon from './icons.jsx';
 import { fmtQty, get } from './api.js';
-import { t, useLang } from './i18n.js';
+import { has, t, useLang } from './i18n.js';
+
+/**
+ * One English word can mean different things in different places ("Open" is a button, a filter
+ * and a status). A language may give the word for one place under '<place>:<English>'; without
+ * one, the plain word is used.
+ */
+const inPlace = (place, v) => (typeof v === 'string' && has(`${place}:${v}`) ? t(`${place}:${v}`) : tx(v));
 
 /**
  * Plain English given to a piece is said in the screen's language (D-043). Only exact phrases in
@@ -198,7 +205,7 @@ export function Segmented({ value, onChange, options, label }) {
   return (
     <ChipGroup label={tx(label)}>
       {options.map((o) => (
-        <Chip key={o.value} pressed={value === o.value} count={o.n > 0 ? o.n : undefined} onClick={() => onChange(o.value)}>{tx(o.label)}</Chip>
+        <Chip key={o.value} pressed={value === o.value} count={o.n > 0 ? o.n : undefined} onClick={() => onChange(o.value)}>{inPlace('filter', o.label)}</Chip>
       ))}
     </ChipGroup>
   );
@@ -232,7 +239,7 @@ const STATUS_TEXT = {
   PARTLY_RECEIVED: 'Partly received', SUBMITTED: 'Waiting approval', SOON: 'Expiring soon', UNKNOWN: 'No date',
 };
 const CHIP_TONE = { ok: 'ok', warn: 'warn', danger: 'danger', brand: 'plain', faint: 'plain', plain: 'plain' };
-export const statusText = (s) => t(STATUS_TEXT[s] || (s ? s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ') : ''));
+export const statusText = (s) => inPlace('status', STATUS_TEXT[s] || (s ? s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ') : ''));
 
 /** A status, always an icon and words: the fixed status colours only, never the palette's. */
 export function Pill({ status, children, tone }) {
@@ -273,7 +280,7 @@ export function useToasts() {
 export function Table({ columns, rows, onRow, empty = 'Nothing here.', rowKey = (r, i) => r.id ?? i, initialSort, caption = 'List' }) {
   const index = useMemo(() => new Map(rows.map((r, i) => [r, i])), [rows]);
   const cols = columns.map((c) => ({
-    key: c.key, label: tx(c.label), render: c.render, lead: !!c.primary, align: c.align === 'right' ? 'end' : 'start',
+    key: c.key, label: inPlace('col', c.label), render: c.render, lead: !!c.primary, align: c.align === 'right' ? 'end' : 'start',
     width: c.width || (c.primary ? 'minmax(0, 1.6fr)' : undefined),
     sortValue: c.sortable === false ? undefined : (c.sort || ((r) => r[c.key])),
   }));

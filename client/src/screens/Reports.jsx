@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { downloadCsv, fmtDate, fmtDateTime, fmtMoney, fmtQty, gstToday } from '../api.js';
+import { dateLocale, t, tn } from '../i18n.js';
 import { Button, Card, ErrorNote, Field, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Table, useApp, useData } from '../ui.jsx';
 
 const ALL = [
@@ -101,17 +102,17 @@ function Consumption({ d }) {
   return (
     <>
       <div className="grid2">
-        <Card title={`By category${money ? ', at cost' : ''}`} actions={<Csv name={`usage-by-category-${d.from}-${d.to}`} rows={d.byCategory} />}><Bars rows={d.byCategory} value={by} fmt={fmt} /></Card>
-        <Card title="By room or purpose" actions={<Csv name={`usage-by-room-${d.from}-${d.to}`} rows={d.byArea} />}><Bars rows={d.byArea} value={money ? 'value' : 'times'} fmt={money ? fmt : (v) => `${v} times`} /></Card>
+        <Card title={money ? 'By category, at cost' : 'By category'} actions={<Csv name={`usage-by-category-${d.from}-${d.to}`} rows={d.byCategory} />}><Bars rows={d.byCategory} value={by} fmt={fmt} /></Card>
+        <Card title="By room or purpose" actions={<Csv name={`usage-by-room-${d.from}-${d.to}`} rows={d.byArea} />}><Bars rows={d.byArea} value={money ? 'value' : 'times'} fmt={money ? fmt : (v) => t('{n} times', { n: v })} /></Card>
       </div>
       {d.byDepartment.length > 0 && (
         <Card title="By department" hint="The department a room belonged to when the stock was used. Listed by name." actions={<Csv name={`usage-by-department-${d.from}-${d.to}`} rows={d.byDepartment} />}>
-          <Bars rows={d.byDepartment} value={money ? 'value' : 'times'} fmt={money ? fmt : (v) => `${v} times`} />
+          <Bars rows={d.byDepartment} value={money ? 'value' : 'times'} fmt={money ? fmt : (v) => t('{n} times', { n: v })} />
         </Card>
       )}
       {d.byDay.length > 1 && (
-        <Card title="Day by day" hint={`From ${fmtDate(d.from)} to ${fmtDate(d.to)}.`}>
-          <div className="spark" role="img" aria-label={`Daily usage, highest ${fmt(max)}`}>
+        <Card title="Day by day" hint={t('From {from} to {to}.', { from: fmtDate(d.from), to: fmtDate(d.to) })}>
+          <div className="spark" role="img" aria-label={t('Daily usage, highest {max}', { max: fmt(max) })}>
             {d.byDay.map((x) => <span key={x.day} title={`${fmtDate(x.day)}: ${fmt(x[by])}`} style={{ height: `${Math.max(2, (x[by] / max) * 100)}%` }} />)}
           </div>
         </Card>
@@ -119,7 +120,7 @@ function Consumption({ d }) {
       <Card title="By item" pad={false} actions={<Csv name={`usage-${d.from}-${d.to}`} rows={d.byItem} />}>
         <Table rows={d.byItem} rowKey={(r) => r.code} empty="Nothing was recorded as used in this period." columns={[
           { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code> · {r.category}</span></span> },
-          { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
+          { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${t(r.uom)}` },
           { key: 'times', label: 'Times', align: 'right' },
           ...(money ? [{ key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
         ]} />
@@ -133,7 +134,7 @@ function ServiceUse({ d, word }) {
   const { can, currency } = useApp();
   const money = can('cost.view');
   const m = (v) => fmtMoney(v, currency);
-  const diff = (a, b, f = fmtQty) => { const x = +(a - b).toFixed(3); return x === 0 ? <span className="faint">none</span> : <b>{x > 0 ? '+' : '−'}{f(Math.abs(x))}</b>; };
+  const diff = (a, b, f = fmtQty) => { const x = +(a - b).toFixed(3); return x === 0 ? <span className="faint">{t('none')}</span> : <b>{x > 0 ? '+' : '−'}{f(Math.abs(x))}</b>; };
   const valueCols = money ? [
     { key: 'std_value', label: 'By the recipe', align: 'right', sortable: false, render: (r) => m(r.std_value) },
     { key: 'value', label: 'Actually used', align: 'right', sortable: false, render: (r) => m(r.value) },
@@ -143,9 +144,9 @@ function ServiceUse({ d, word }) {
   const one = word.replace(/s$/, '');
   return (
     <>
-      <Card title={`By ${one.toLowerCase()}`} hint="What the recipes said should be used for the number done, beside what was recorded as used, at each item's cost at the time." pad={false}
+      <Card title={t('By {one}', { one: t(one.toLowerCase()) })} hint="What the recipes said should be used for the number done, beside what was recorded as used, at each item's cost at the time." pad={false}
         actions={<Csv name={`${word.toLowerCase()}-${d.from}-${d.to}`} rows={d.byService} cols={csvCols({ key: 'name', label: one })} />}>
-        <Table rows={d.byService} rowKey={(r) => r.service_id} empty={`No ${word.toLowerCase()} were recorded in this period.`} columns={[
+        <Table rows={d.byService} rowKey={(r) => r.service_id} empty={t('No {word} were recorded in this period.', { word: t(word.toLowerCase()) })} columns={[
           { key: 'name', label: one, primary: true, sortable: false }, { key: 'times', label: 'Done', align: 'right', sortable: false }, ...valueCols,
         ]} />
       </Card>
@@ -159,7 +160,7 @@ function ServiceUse({ d, word }) {
             { key: 'margin', label: 'Margin', align: 'right', sortable: false, render: (r) => <b>{m(r.margin)}</b> },
             { key: 'percent', label: '%', align: 'right', sortable: false, render: (r) => (r.percent === null ? '' : `${r.percent}%`) },
           ]} />
-          {d.unpriced > 0 && <p className="muted" style={{ padding: '0 18px 14px' }}>{d.unpriced} more {d.unpriced === 1 ? 'was' : 'were'} recorded with no price, and {d.unpriced === 1 ? 'is' : 'are'} left out of the margin.</p>}
+          {d.unpriced > 0 && <p className="muted" style={{ padding: '0 18px 14px' }}>{tn(d.unpriced, '{n} more was recorded with no price, and is left out of the margin.', '{n} more were recorded with no price, and are left out of the margin.')}</p>}
         </Card>
       )}
       {d.byItem.length > 0 && (
@@ -167,8 +168,8 @@ function ServiceUse({ d, word }) {
           actions={<Csv name={`${word.toLowerCase()}-items-${d.from}-${d.to}`} rows={d.byItem} cols={[{ key: 'service', label: one }, { key: 'code', label: 'Code' }, { key: 'name', label: 'Item' }, { key: 'uom', label: 'Unit' }, { key: 'std_qty', label: 'By the recipe' }, { key: 'qty', label: 'Used' }]} />}>
           <Table rows={d.byItem} rowKey={(r) => `${r.service_id}-${r.code}`} columns={[
             { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub">{r.service}</span></span> },
-            { key: 'std_qty', label: 'By the recipe', align: 'right', render: (r) => `${fmtQty(r.std_qty)} ${r.uom}` },
-            { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
+            { key: 'std_qty', label: 'By the recipe', align: 'right', render: (r) => `${fmtQty(r.std_qty)} ${t(r.uom)}` },
+            { key: 'qty', label: 'Used', align: 'right', render: (r) => `${fmtQty(r.qty)} ${t(r.uom)}` },
             { key: 'diff', label: 'Difference', align: 'right', sort: (r) => r.qty - r.std_qty, render: (r) => diff(r.qty, r.std_qty) },
           ]} />
         </Card>
@@ -205,14 +206,14 @@ function People({ d }) {
 function Group({ d }) {
   const { currency } = useApp();
   const m = (v) => fmtMoney(v, currency, 0);
-  const title = new Date(`${d.month}-01T00:00:00+04:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Asia/Dubai' });
+  const title = new Date(`${d.month}-01T00:00:00+04:00`).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric', timeZone: 'Asia/Dubai' });
   return (
     <>
       <dl className="hf-kv hf-kv--3">
-        <div><dt>Used</dt><dd>{m(d.totals.used)}</dd></div>
-        <div><dt>Received</dt><dd>{m(d.totals.received)}</dd></div>
-        <div><dt>Written off</dt><dd>{m(d.totals.writtenOff)}</dd></div>
-        <div><dt>Stock value now</dt><dd>{m(d.totals.stockValueNow)}</dd></div>
+        <div><dt>{t('Used')}</dt><dd>{m(d.totals.used)}</dd></div>
+        <div><dt>{t('Received')}</dt><dd>{m(d.totals.received)}</dd></div>
+        <div><dt>{t('Written off')}</dt><dd>{m(d.totals.writtenOff)}</dd></div>
+        <div><dt>{t('Stock value now')}</dt><dd>{m(d.totals.stockValueNow)}</dd></div>
       </dl>
       <Card title={title} hint="Counts and totals for each unit, listed by name. Stock value and unaccounted items are as they stand today, whichever month is chosen." pad={false}
         actions={<Csv name={`group-summary-${d.month}`} rows={d.rows} cols={[
@@ -249,7 +250,7 @@ function Valuation({ d }) {
         <Table rows={d.rows} rowKey={(r, i) => `${r.code}-${r.store}-${i}`} columns={[
           { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code> · {r.category}</span></span> },
           { key: 'store', label: 'Store' },
-          { key: 'qty', label: 'Shelf', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
+          { key: 'qty', label: 'Shelf', align: 'right', render: (r) => `${fmtQty(r.qty)} ${t(r.uom)}` },
           { key: 'out', label: 'Rooms / laundry', align: 'right', render: (r) => (r.in_use || r.in_wash ? `${fmtQty(r.in_use)} / ${fmtQty(r.in_wash)}` : '') },
           { key: 'with_people', label: 'With people', align: 'right', render: (r) => (r.with_people ? fmtQty(r.with_people) : '') },
           ...(money ? [{ key: 'avg_cost', label: 'Avg cost', align: 'right', render: (r) => fmtMoney(r.avg_cost, currency) }, { key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
@@ -264,13 +265,13 @@ function Expiry({ d }) {
   const [show, setShow] = useState('due');
   const rows = d.rows.filter((r) => (show === 'due' ? ['EXPIRED', 'SOON', 'UNKNOWN'].includes(r.state) : true));
   return (
-    <Card title={`Batches, warned ${d.warnDays} days ahead`} pad={false} actions={<><Segmented label="Show" value={show} onChange={setShow} options={[{ value: 'due', label: 'Needs attention' }, { value: 'all', label: 'All batches' }]} /><Csv name={`expiry-${gstToday()}`} rows={rows} /></>}>
+    <Card title={t('Batches, warned {n} days ahead', { n: d.warnDays })} pad={false} actions={<><Segmented label="Show" value={show} onChange={setShow} options={[{ value: 'due', label: 'Needs attention' }, { value: 'all', label: 'All batches' }]} /><Csv name={`expiry-${gstToday()}`} rows={rows} /></>}>
       <Table rows={rows} rowKey={(r, i) => `${r.code}-${r.store}-${r.batch_no}-${i}`} empty="Nothing is expired, close to expiry, or missing a date." columns={[
-        { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code>{r.batch_no ? ` · lot ${r.batch_no}` : ''}</span></span> },
+        { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code>{r.batch_no ? ` · ${t('lot {lot}', { lot: r.batch_no })}` : ''}</span></span> },
         { key: 'store', label: 'Store' },
         { key: 'expiry', label: 'Expiry', sort: (r) => r.expiry || '9999', render: (r) => <span className="row">{r.expiry ? fmtDate(r.expiry) : ''}<Pill status={r.state} /></span> },
         { key: 'days', label: 'Days', align: 'right', render: (r) => (r.days === null ? '' : r.days) },
-        { key: 'qty', label: 'Qty', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
+        { key: 'qty', label: 'Qty', align: 'right', render: (r) => `${fmtQty(r.qty)} ${t(r.uom)}` },
         ...(can('cost.view') ? [{ key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
       ]} />
     </Card>
@@ -286,10 +287,10 @@ function Ledger({ d }) {
   return (
     <Card title="Every movement" pad={false} actions={<Csv name={`movements-${d.from}-${d.to}`} rows={rows} />}>
       <div style={{ padding: '0 18px' }}><SearchBox value={q} onChange={setQ} placeholder="Filter by item, reference, person, room" /></div>
-      {d.capped && <p className="muted" style={{ padding: '0 18px' }}>Showing the latest 3,000. Narrow the dates to see older ones.</p>}
+      {d.capped && <p className="muted" style={{ padding: '0 18px' }}>{t('Showing the latest 3,000. Narrow the dates to see older ones.')}</p>}
       <Table rows={rows} rowKey={(r, i) => `${r.at}-${i}`} empty="No movements in this period." columns={[
         { key: 'at', label: 'When', render: (r) => <span className="nowrap">{fmtDateTime(r.at)}</span> },
-        { key: 'item', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.item}</span><span className="row-sub">{[KIND[r.kind], r.store, r.area, r.counterpart, r.doc_ref, r.reason].filter(Boolean).join(' · ')}</span></span> },
+        { key: 'item', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.item}</span><span className="row-sub">{[t(KIND[r.kind]), r.store, r.area, r.counterpart, r.doc_ref, r.reason].filter(Boolean).join(' · ')}</span></span> },
         { key: 'qty', label: 'Qty', align: 'right', render: (r) => <b>{r.kind !== 'LINEN' && r.qty > 0 ? '+' : ''}{fmtQty(r.qty)}</b> },
         { key: 'balance_after', label: 'After', align: 'right', render: (r) => fmtQty(r.balance_after) },
         ...(can('cost.view') ? [{ key: 'value', label: 'Value', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
@@ -320,11 +321,11 @@ function Variance({ d }) {
 function Slow({ d }) {
   const { currency, can } = useApp();
   return (
-    <Card title={`Not used for ${d.days} days or more`} pad={false} actions={<Csv name={`slow-moving-${gstToday()}`} rows={d.rows} />}>
+    <Card title={t('Not used for {n} days or more', { n: d.days })} pad={false} actions={<Csv name={`slow-moving-${gstToday()}`} rows={d.rows} />}>
       <Table rows={d.rows} rowKey={(r) => r.code} empty="Everything held has been used recently." columns={[
         { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub"><code>{r.code}</code> · {r.category}</span></span> },
-        { key: 'qty', label: 'On shelf', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
-        { key: 'last_used', label: 'Last used', render: (r) => (r.last_used ? fmtDate(r.last_used) : 'Never') },
+        { key: 'qty', label: 'On shelf', align: 'right', render: (r) => `${fmtQty(r.qty)} ${t(r.uom)}` },
+        { key: 'last_used', label: 'Last used', render: (r) => (r.last_used ? fmtDate(r.last_used) : t('Never')) },
         ...(can('cost.view') ? [{ key: 'value', label: 'Value tied up', align: 'right', render: (r) => fmtMoney(r.value, currency) }] : []),
       ]} />
     </Card>
@@ -339,7 +340,7 @@ function Purchases({ d }) {
       <Card title="Deliveries" pad={false} actions={<Csv name={`deliveries-${d.from}-${d.to}`} rows={d.receipts} />}>
         <Table rows={d.receipts} rowKey={(r) => r.ref} empty="No deliveries in this period." columns={[
           { key: 'at', label: 'When', render: (r) => fmtDate(r.at) },
-          { key: 'ref', label: 'Delivery', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.ref} · {r.supplier || 'No supplier'}</span><span className="row-sub">{[r.store, r.po_ref, r.invoice_no && `invoice ${r.invoice_no}`].filter(Boolean).join(' · ')}</span></span> },
+          { key: 'ref', label: 'Delivery', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.ref} · {r.supplier || t('No supplier')}</span><span className="row-sub">{[r.store, r.po_ref, r.invoice_no && t('invoice {no}', { no: r.invoice_no })].filter(Boolean).join(' · ')}</span></span> },
           { key: 'total', label: 'Total', align: 'right', render: (r) => fmtMoney(r.total, currency) },
           { key: 'by_name', label: 'Received by' },
         ]} />

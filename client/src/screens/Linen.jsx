@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { fmtAgo, fmtDateTime, fmtQty, post } from '../api.js';
 import Icon from '../icons.jsx';
 import { Button, Card, ErrorNote, Field, Loading, Page, Quiet, Select, Sheet, Stepper, Table, useApp, useData } from '../ui.jsx';
+import { t } from '../i18n.js';
 
 const FLOWS = {
   ISSUE: { label: 'Send to a room', from: 'available', icon: 'use' },
@@ -30,7 +31,7 @@ export default function Linen() {
       {data && !data.rows.length && (
         <Card>
           <Quiet icon="linen">No linen is held yet.</Quiet>
-          {can('receive') && <p className="muted">Add linen as an item marked “This is linen”, then receive the pieces into a store.</p>}
+          {can('receive') && <p className="muted">{t('Add linen as an item marked “This is linen”, then receive the pieces into a store.')}</p>}
           {can('items.edit') && <div><Button kind="secondary" onClick={() => navigate('admin')}>Go to items</Button></div>}
         </Card>
       )}
@@ -40,17 +41,17 @@ export default function Linen() {
             <Card key={`${r.id}-${r.store_id}`} title={r.store_name}>
               <h2>{r.name}</h2>
               <div className="linen-states">
-                <div><b>{fmtQty(r.available)}</b><span>clean</span></div>
-                <div><b>{fmtQty(r.in_use)}</b><span>in rooms</span></div>
-                <div><b>{fmtQty(r.in_wash)}</b><span>laundry</span></div>
+                <div><b>{fmtQty(r.available)}</b><span>{t('clean')}</span></div>
+                <div><b>{fmtQty(r.in_use)}</b><span>{t('in rooms')}</span></div>
+                <div><b>{fmtQty(r.in_wash)}</b><span>{t('laundry')}</span></div>
               </div>
-              {r.in_wash > 0 && <p className="muted" style={{ fontSize: 13 }}>Last back from the laundry: {r.last_back ? fmtAgo(r.last_back) : 'never'}</p>}
+              {r.in_wash > 0 && <p className="muted" style={{ fontSize: 13 }}>{t('Last back from the laundry: {when}', { when: r.last_back ? fmtAgo(r.last_back) : t('never') })}</p>}
               {can('stock.use') && (
                 <div className="row">
                   <Button kind="secondary" disabled={!r.available} onClick={() => setMove({ row: r, flow: 'ISSUE' })}>To room</Button>
                   <Button kind="secondary" disabled={!r.in_use} onClick={() => setMove({ row: r, flow: 'WASH' })}>To laundry</Button>
                   <Button kind="secondary" disabled={!r.in_wash} onClick={() => setMove({ row: r, flow: 'RETURN' })}>Back clean</Button>
-                  <button className="icon-btn" aria-label={`More for ${r.name}`} onClick={() => setMove({ row: r, flow: null })}><Icon name="more" size={18} /></button>
+                  <button className="icon-btn" aria-label={t('More for {name}', { name: r.name })} onClick={() => setMove({ row: r, flow: null })}><Icon name="more" size={18} /></button>
                 </div>
               )}
             </Card>
@@ -62,7 +63,7 @@ export default function Linen() {
           <Table columns={[
             { key: 'at', label: 'When', render: (m) => <span className="nowrap">{fmtDateTime(m.at)}</span> },
             { key: 'name', label: 'Item', primary: true, render: (m) => `${fmtQty(m.qty)} × ${m.name}` },
-            { key: 'move', label: 'Move', render: (m) => `${STATE[m.from_state] || m.from_state} → ${m.to_state === 'gone' ? 'discarded' : STATE[m.to_state]}${m.area_name ? ` (${m.area_name})` : ''}${m.reason ? `: ${m.reason}` : ''}` },
+            { key: 'move', label: 'Move', render: (m) => `${STATE[m.from_state] ? t(STATE[m.from_state]) : m.from_state} → ${m.to_state === 'gone' ? t('discarded') : t(STATE[m.to_state])}${m.area_name ? ` (${m.area_name})` : ''}${m.reason ? `: ${m.reason}` : ''}` },
             { key: 'actor_name', label: 'By' },
           ]} rows={data.recent} rowKey={(m, i) => `${m.at}-${i}`} />
         </Card>
@@ -84,7 +85,7 @@ function MoveSheet({ move, areas, onClose, onDone }) {
   const src = flow === 'DISCARD' ? from : FLOWS[flow].from;
   const max = r[src];
   const save = async () => {
-    if (!(Number(qty) > 0) || Number(qty) > max) { setErr(new Error(`Still needed: how many pieces, from 1 to ${max}.`)); return; }
+    if (!(Number(qty) > 0) || Number(qty) > max) { setErr(new Error(t('Still needed: how many pieces, from 1 to {max}.', { max }))); return; }
     setBusy(true); setErr(null);
     try {
       await post('/api/linen', { storeId: r.store_id, itemId: r.id, flow, qty: Number(qty), areaId: areaId || null, from, reason });
@@ -99,15 +100,15 @@ function MoveSheet({ move, areas, onClose, onDone }) {
           <Select value={flow} onChange={setFlow} options={Object.entries(FLOWS).map(([k, f]) => ({ value: k, label: f.label }))} />
         </Field>
       )}
-      {move.flow && <p className="muted">{FLOWS[flow].label}.</p>}
+      {move.flow && <p className="muted">{t(FLOWS[flow].label)}.</p>}
       {flow === 'DISCARD' && (
         <>
           <Field label="Where are the pieces now"><Select value={from} onChange={setFrom} options={Object.entries(STATE).map(([k, l]) => ({ value: k, label: l }))} /></Field>
-          <Field label="Why"><input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Torn, stained beyond washing, lost at laundry…" maxLength={120} /></Field>
+          <Field label="Why"><input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('Torn, stained beyond washing, lost at laundry…')} maxLength={120} /></Field>
         </>
       )}
       {flow === 'ISSUE' && <Field label="Room"><Select value={areaId} onChange={setAreaId} placeholder="Not a particular room" options={areas.map((a) => ({ value: a.id, label: a.name }))} /></Field>}
-      <Field label={`How many (${fmtQty(max)} ${STATE[src]})`}><Stepper value={qty} onChange={setQty} max={max} /></Field>
+      <Field label={t('How many ({n} {where})', { n: fmtQty(max), where: t(STATE[src]) })}><Stepper value={qty} onChange={setQty} max={max} /></Field>
       <ErrorNote error={err} />
     </Sheet>
   );

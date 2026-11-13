@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtMoney, fmtQty, get, post } from '../api.js';
+import { t } from '../i18n.js';
 import {
   Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
@@ -20,7 +21,7 @@ export default function Returns() {
     ...(on(me, 'returns.on') ? [{ value: 'returns', label: 'Returns to suppliers' }] : []),
   ];
   const asked = route.query.get('tab') || (route.query.get('status') ? 'returns' : null);
-  const tab = tabs.find((t) => t.value === asked)?.value || tabs[0]?.value;
+  const tab = tabs.find((x) => x.value === asked)?.value || tabs[0]?.value;
   return (
     <Page title="Returns and inspection" subtitle="Deliveries held until they are checked, and goods going back to suppliers.">
       {tabs.length > 1 && <Segmented label="Show" value={tab} onChange={(v) => navigate(`returns?tab=${v}`)} options={tabs} />}
@@ -46,12 +47,12 @@ function Inspection() {
       {data?.length > 0 && (
         <Card pad={false}>
           <Table caption="Held for inspection" rows={data} onRow={status === 'HELD' && can('inspect') ? setOpen : undefined} columns={[
-            { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub">{[r.batch_no && `Lot ${r.batch_no}`, r.expiry && `expires ${fmtDate(r.expiry)}`, r.store_name].filter(Boolean).join(' · ')}</span></span> },
-            { key: 'qty', label: 'Quantity', align: 'right', render: (r) => `${fmtQty(r.qty)} ${r.uom}` },
-            { key: 'receipt_ref', label: 'Delivery', render: (r) => <span className="min0"><span>{r.receipt_ref}</span><span className="row-sub">{r.supplier_name || 'No supplier'}</span></span> },
+            { key: 'name', label: 'Item', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.name}</span><span className="row-sub">{[r.batch_no && t('Lot {lot}', { lot: r.batch_no }), r.expiry && t('expires {date}', { date: fmtDate(r.expiry) }), r.store_name].filter(Boolean).join(' · ')}</span></span> },
+            { key: 'qty', label: 'Quantity', align: 'right', render: (r) => `${fmtQty(r.qty)} ${t(r.uom)}` },
+            { key: 'receipt_ref', label: 'Delivery', render: (r) => <span className="min0"><span>{r.receipt_ref}</span><span className="row-sub">{r.supplier_name || t('No supplier')}</span></span> },
             status === 'HELD'
               ? { key: 'held_at', label: 'Held since', render: (r) => fmtDateTime(r.held_at) }
-              : { key: 'decided_at', label: 'Decided', render: (r) => <span className="min0"><span>{fmtDateTime(r.decided_at)}, {r.decided_by_name}</span>{(r.note || r.return_ref) && <span className="row-sub">{[r.note, r.return_ref && `returned as ${r.return_ref}`].filter(Boolean).join('. ')}</span>}</span> },
+              : { key: 'decided_at', label: 'Decided', render: (r) => <span className="min0"><span>{fmtDateTime(r.decided_at)}, {r.decided_by_name}</span>{(r.note || r.return_ref) && <span className="row-sub">{[r.note, r.return_ref && t('returned as {ref}', { ref: r.return_ref })].filter(Boolean).join('. ')}</span>}</span> },
           ]} />
         </Card>
       )}
@@ -70,14 +71,15 @@ function InspectSheet({ row, onClose, onDone }) {
     setBusy(true); setErr(null);
     try {
       const r = await post(`/api/inspections/${row.id}/${action}`, { note });
-      toast(action === 'release' ? `${row.name} released to ${row.store_name}` : r.returnRef ? `${row.name} rejected, going back as ${r.returnRef}` : `${row.name} rejected and written off`);
+      toast(action === 'release' ? t('{name} released to {store}', { name: row.name, store: row.store_name })
+        : r.returnRef ? t('{name} rejected, going back as {ref}', { name: row.name, ref: r.returnRef }) : t('{name} rejected and written off', { name: row.name }));
       refreshStock(); refreshBadges(); onDone();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
     <Sheet title={row.name} onClose={onClose}
       footer={<><Button kind="secondary" busy={busy} onClick={() => act('reject')}>Reject</Button><Button busy={busy} icon="check" onClick={() => act('release')}>Release to the shelf</Button></>}>
-      <p className="muted">{fmtQty(row.qty)} {row.uom}{row.batch_no ? `, lot ${row.batch_no}` : ''}{row.expiry ? `, expires ${fmtDate(row.expiry)}` : ''}, from {row.receipt_ref}{row.supplier_name ? ` (${row.supplier_name})` : ''}, received by {row.received_by}.</p>
+      <p className="muted">{fmtQty(row.qty)} {t(row.uom)}{row.batch_no ? `, ${t('lot {lot}', { lot: row.batch_no })}` : ''}{row.expiry ? `, ${t('expires {date}', { date: fmtDate(row.expiry) })}` : ''}, {t('from {ref}', { ref: row.receipt_ref })}{row.supplier_name ? ` (${row.supplier_name})` : ''}, {t('received by {name}', { name: row.received_by })}.</p>
       <Field label="What was checked, or what was wrong" hint={on(me, 'returns.on') ? 'Needed to reject it. Rejected stock goes back to the supplier, waiting for its credit note.' : 'Needed to reject it. Rejected stock is written off.'}>
         <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} />
       </Field>
@@ -103,13 +105,13 @@ function ReturnList({ status, id }) {
       ]} />
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}
-      {data && !data.length && <Card><Quiet>No returns{status ? ' here' : ' yet'}. A return is raised from a delivery: open it under Purchasing, Deliveries.</Quiet></Card>}
+      {data && !data.length && <Card><Quiet>{t(status ? 'No returns here. A return is raised from a delivery: open it under Purchasing, Deliveries.' : 'No returns yet. A return is raised from a delivery: open it under Purchasing, Deliveries.')}</Quiet></Card>}
       {data?.length > 0 && (
         <Card pad={false}>
           <Table caption="Returns" rows={data} onRow={(r) => navigate(`returns/${r.id}?tab=returns${status ? `&status=${status}` : ''}`)} columns={[
             { key: 'ref', label: 'Return', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.ref}</span><span className="row-sub">{r.summary}</span></span> },
-            { key: 'supplier_name', label: 'Supplier', render: (r) => <span className="min0"><span>{r.supplier_name || 'No supplier'}</span><span className="row-sub">from {r.receipt_ref}</span></span> },
-            { key: 'reason', label: 'Why', render: (r) => r.reason_label },
+            { key: 'supplier_name', label: 'Supplier', render: (r) => <span className="min0"><span>{r.supplier_name || t('No supplier')}</span><span className="row-sub">{t('from {ref}', { ref: r.receipt_ref })}</span></span> },
+            { key: 'reason', label: 'Why', render: (r) => t(r.reason_label) },
             { key: 'value', label: 'Credit due', align: 'right', render: (r) => fmtMoney(r.value, currency) },
             { key: 'status', label: 'Status', render: (r) => <Pill tone={RSTATUS[r.status][0]}>{RSTATUS[r.status][1]}</Pill> },
           ]} />
@@ -132,7 +134,7 @@ function ReturnSheet({ id, onClose, onChanged }) {
     setBusy(true); setErr(null);
     try {
       await post(`/api/returns/${id}/${action}`, { note, ...extra });
-      toast({ approve: `${r.ref} approved: the stock has left`, reject: `${r.ref} not sent`, cancel: `${r.ref} cancelled`, credit: `Credit note recorded on ${r.ref}`, close: `${r.ref} closed` }[action]);
+      toast(t({ approve: '{ref} approved: the stock has left', reject: '{ref} not sent', cancel: '{ref} cancelled', credit: 'Credit note recorded on {ref}', close: '{ref} closed' }[action], { ref: r.ref }));
       refreshStock(); refreshBadges(); reload(); onChanged();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
@@ -152,23 +154,23 @@ function ReturnSheet({ id, onClose, onChanged }) {
       {loading && !r && <Loading />}
       {r && (
         <>
-          <p className="muted">{r.reason_label}{r.note ? `: ${r.note}` : ''}. From {r.receipt_ref}, {r.store_name}, to {r.supplier_name || 'no named supplier'}. Raised by {r.raised_by_name} on {fmtDateTime(r.raised_at)}.</p>
+          <p className="muted">{t(r.reason_label)}{r.note ? `: ${r.note}` : ''}. {t('From {ref}, {store}, to {supplier}.', { ref: r.receipt_ref, store: r.store_name, supplier: r.supplier_name || t('no named supplier') })} {t('Raised by {name} on {when}.', { name: r.raised_by_name, when: fmtDateTime(r.raised_at) })}</p>
           <div><Pill tone={RSTATUS[r.status][0]}>{RSTATUS[r.status][1]}</Pill></div>
           <Card pad={false}>
             <Table caption="Going back" rows={r.lines} columns={[
-              { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span>{(l.batch_no || l.from_hold) ? <span className="row-sub">{[l.batch_no && `Lot ${l.batch_no}`, l.from_hold && 'rejected at inspection'].filter(Boolean).join(' · ')}</span> : null}</span> },
-              { key: 'qty', label: 'Quantity', align: 'right', render: (l) => `${fmtQty(l.qty)} ${l.uom}` },
+              { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span>{(l.batch_no || l.from_hold) ? <span className="row-sub">{[l.batch_no && t('Lot {lot}', { lot: l.batch_no }), l.from_hold && t('rejected at inspection')].filter(Boolean).join(' · ')}</span> : null}</span> },
+              { key: 'qty', label: 'Quantity', align: 'right', render: (l) => `${fmtQty(l.qty)} ${t(l.uom)}` },
               { key: 'unit_cost', label: 'Price paid', align: 'right', render: (l) => fmtMoney(l.unit_cost, currency) },
               { key: 'value', label: 'Credit due', align: 'right', render: (l) => fmtMoney(l.qty * l.unit_cost, currency) },
             ]} />
           </Card>
-          {r.decided_by_name && <p className="muted">{r.status === 'REJECTED' ? 'Not sent' : 'Approved'} by {r.decided_by_name}, {fmtDateTime(r.decided_at)}{r.decision_note ? `: ${r.decision_note}` : ''}.</p>}
-          {r.status === 'CREDITED' && <Note tone="ok" icon="check">Credit note {r.credit_no} of {fmtDate(r.credit_date)}: {fmtMoney(r.credit_amount, currency)}{Math.abs(r.credit_amount - r.value) > 0.005 ? `, ${fmtMoney(r.value - r.credit_amount, currency)} short of what was due` : ''}. Recorded by {r.credited_by_name}.</Note>}
+          {r.decided_by_name && <p className="muted">{t(r.status === 'REJECTED' ? 'Not sent by {name}, {when}' : 'Approved by {name}, {when}', { name: r.decided_by_name, when: fmtDateTime(r.decided_at) })}{r.decision_note ? `: ${r.decision_note}` : ''}.</p>}
+          {r.status === 'CREDITED' && <Note tone="ok" icon="check">{t('Credit note {no} of {date}: {amount}', { no: r.credit_no, date: fmtDate(r.credit_date), amount: fmtMoney(r.credit_amount, currency) })}{Math.abs(r.credit_amount - r.value) > 0.005 ? `, ${t('{amount} short of what was due', { amount: fmtMoney(r.value - r.credit_amount, currency) })}` : ''}. {t('Recorded by {name}.', { name: r.credited_by_name })}</Note>}
           {r.status === 'SENT' && can('po.edit') && (
             <div className="form two">
               <Field label="Credit note number"><input value={credit.creditNo} onChange={(e) => setCredit({ ...credit, creditNo: e.target.value })} maxLength={60} /></Field>
               <Field label="Date on the credit note"><input type="date" value={credit.creditDate} onChange={(e) => setCredit({ ...credit, creditDate: e.target.value })} /></Field>
-              <Field label={`Amount credited (${currency})`} hint={`${fmtMoney(r.value, currency)} was due.`}><QtyInput value={credit.amount} onChange={(v) => setCredit({ ...credit, amount: v })} label="Amount credited" /></Field>
+              <Field label={t('Amount credited ({currency})', { currency })} hint={t('{amount} was due.', { amount: fmtMoney(r.value, currency) })}><QtyInput value={credit.amount} onChange={(v) => setCredit({ ...credit, amount: v })} label="Amount credited" /></Field>
             </div>
           )}
           {(r.status === 'PENDING' || r.status === 'SENT') && can('return.decide') && (
@@ -200,12 +202,12 @@ export function RaiseReturn({ receiptId, onClose, onDone }) {
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/returns', { receiptId, reason, note, lines });
-      toast(`${r.ref} raised, ${fmtMoney(r.value, currency)} to be credited. A manager approves it.`);
+      toast(t('{ref} raised, {amount} to be credited. A manager approves it.', { ref: r.ref, amount: fmtMoney(r.value, currency) }));
       refreshBadges(); onDone(r);
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <Sheet wide title={data ? `Return goods from ${data.receipt.ref}` : 'Return goods'} onClose={onClose}
+    <Sheet wide title={data ? t('Return goods from {ref}', { ref: data.receipt.ref }) : 'Return goods'} onClose={onClose}
       footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} icon="returns" onClick={save}>Raise the return</Button></>}>
       <ErrorNote error={error} />
       {loading && <Loading />}
@@ -213,17 +215,17 @@ export function RaiseReturn({ receiptId, onClose, onDone }) {
         <>
           <Card pad={false}>
             <Table caption="On this delivery" rows={data.lines} columns={[
-              { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub">{[l.batch_no && `Lot ${l.batch_no}`, `${fmtQty(l.qty)} ${l.uom} received`, l.returned > 0 && `${fmtQty(l.returned)} already going back`].filter(Boolean).join(' · ')}</span></span> },
+              { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub">{[l.batch_no && t('Lot {lot}', { lot: l.batch_no }), t('{qty} {uom} received', { qty: fmtQty(l.qty), uom: t(l.uom) }), l.returned > 0 && t('{qty} already going back', { qty: fmtQty(l.returned) })].filter(Boolean).join(' · ')}</span></span> },
               { key: 'left', label: 'Going back', align: 'right', render: (l) => (l.left > 0
-                ? <QtyInput value={qty[l.id] ?? ''} onChange={(v) => setQty((x) => ({ ...x, [l.id]: v }))} label={`Going back: ${l.name}`} placeholder={`Up to ${fmtQty(l.left)}`} />
-                : 'All returned') },
+                ? <QtyInput value={qty[l.id] ?? ''} onChange={(v) => setQty((x) => ({ ...x, [l.id]: v }))} label={t('Going back: {name}', { name: l.name })} placeholder={t('Up to {n}', { n: fmtQty(l.left) })} />
+                : t('All returned')) },
             ]} />
           </Card>
           <div className="form two">
             <Field label="Why"><Select value={reason} onChange={setReason} placeholder="Choose" options={Object.entries(me.labels.returnReasons || data.reasons).map(([value, label]) => ({ value, label }))} /></Field>
             <Field label="Note" hint="What is wrong with it, for the supplier and the approver."><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} /></Field>
           </div>
-          {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">Still needed: {missing.join(', ')}.</Note>}
+          {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">{t('Still needed: {what}.', { what: missing.map((m) => t(m)).join(', ') })}</Note>}
           <ErrorNote error={err} />
         </>
       )}

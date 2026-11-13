@@ -43,6 +43,7 @@ const WAIT = {
   inspect: ['{n} delivery line held for inspection', '{n} delivery lines held for inspection'],
   'returns-approve': ['{n} return to the supplier to approve', '{n} returns to the supplier to approve'],
   'returns-credit': ['{n} return waiting for a credit note', '{n} returns waiting for a credit note'],
+  'people-review': ['{n} change from HiFive ID to review: joiners, leavers, names', '{n} changes from HiFive ID to review: joiners, leavers, names'],
 };
 const waitText = (w) => {
   if (lang() === 'en') return w.text;

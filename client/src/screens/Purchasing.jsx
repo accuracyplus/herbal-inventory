@@ -11,6 +11,7 @@ import {
 import { Deliveries, DeliveryPage, DeliveryPill } from './Deliveries.jsx';
 import { priceViewer, SupplierList, SupplierPage } from './Suppliers.jsx';
 import Levels, { MissingLevels } from './Levels.jsx';
+import { t, tn } from '../i18n.js';
 
 export default function Purchasing() {
   const { route, navigate, can } = useApp();
@@ -44,7 +45,7 @@ export default function Purchasing() {
           {data && (
             <Card pad={false}>
               <Table rows={data} onRow={(p) => navigate(`purchasing/${p.id}`)} empty="No purchase orders here." columns={[
-                { key: 'ref', label: 'Order', primary: true, render: (p) => <span className="min0"><span className="row-label">{p.ref}</span><span className="row-sub">{p.supplier_name} · {p.line_count} line{p.line_count === 1 ? '' : 's'}</span></span> },
+                { key: 'ref', label: 'Order', primary: true, render: (p) => <span className="min0"><span className="row-label">{p.ref}</span><span className="row-sub">{p.supplier_name} · {tn(p.line_count, '{n} line', '{n} lines')}</span></span> },
                 { key: 'store_name', label: 'Deliver to' },
                 { key: 'expected_date', label: 'Expected', render: (p) => (p.expected_date ? fmtDate(p.expected_date) : '') },
                 { key: 'total', label: 'Total', align: 'right', render: (p) => fmtMoney(p.total) },
@@ -92,7 +93,7 @@ function Suggestions({ onDraft, onLevels }) {
             { key: 'on_hand', label: 'On hand', align: 'right', render: (r) => fmtQty(r.on_hand) },
             { key: 'on_order', label: 'On order', align: 'right', render: (r) => fmtQty(r.on_order) },
             { key: 'reorder', label: 'Reorder at', align: 'right', render: (r) => fmtQty(r.reorder) },
-            { key: 'suggest', label: 'Buy', align: 'right', render: (r) => <b>{fmtQty(r.suggest)} {r.uom}</b> },
+            { key: 'suggest', label: 'Buy', align: 'right', render: (r) => <b>{fmtQty(r.suggest)} {t(r.uom)}</b> },
             { key: 'cost', label: 'Est.', align: 'right', render: (r) => fmtMoney(r.suggest * (r.unit_cost || 0), currency) },
           ]} />
         </Card>
@@ -134,33 +135,33 @@ function PoEditor({ po, onClose, onSaved }) {
     const g = guide[l.item.id];
     if (!g) continue;
     const words = [];
-    if (g.here) words.push(`Last paid to this supplier: ${fmtMoney(g.here.price, currency)} on ${fmtDate(g.here.day)}.`);
-    if (g.best) words.push(`${g.best.supplierName} charged ${fmtMoney(g.best.price, currency)} on ${fmtDate(g.best.day)}.`);
+    if (g.here) words.push(t('Last paid to this supplier: {price} on {date}.', { price: fmtMoney(g.here.price, currency), date: fmtDate(g.here.day) }));
+    if (g.best) words.push(t('{name} charged {price} on {date}.', { name: g.best.supplierName, price: fmtMoney(g.best.price, currency), date: fmtDate(g.best.day) }));
     if (words.length) notes[l.item.id] = words.join(' ');
   }
-  const missing = [...(!supplierId ? ['the supplier'] : []), ...(!lines.length ? ['at least one item'] : [])];
+  const missing = [...(!supplierId ? [t('the supplier')] : []), ...(!lines.length ? [t('at least one item')] : [])];
   const save = async () => {
     if (missing.length) { setTried(true); return; }
     setBusy(true); setErr(null);
     try {
       const body = { supplierId, storeId, expectedDate: expected || null, note, lines: toPayload(lines) };
       const r = po.id ? await put(`/api/pos/${po.id}`, body) : await post('/api/pos', body);
-      toast(po.id ? `${r.ref} saved` : `${r.ref} drafted`);
+      toast(po.id ? t('{ref} saved', { ref: r.ref }) : t('{ref} drafted', { ref: r.ref }));
       onSaved(r.id);
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <Sheet wide title={po.id ? `Edit ${po.ref}` : 'New purchase order'} onClose={onClose}
+    <Sheet wide title={po.id ? t('Edit {ref}', { ref: po.ref }) : 'New purchase order'} onClose={onClose}
       footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save draft</Button></>}>
       <div className="form two">
         <Field label="Supplier"><Select value={supplierId} onChange={setSupplierId} placeholder="Choose" options={(suppliers || []).map((s) => ({ value: s.id, label: s.name }))} /></Field>
         <Field label="Deliver to"><Select value={storeId} onChange={setStoreId} options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
-        <Field label="Expected by (optional)" hint="The date it should all have arrived. The supplier's record is judged against it."><input type="date" value={expected} onChange={(e) => setExpected(e.target.value)} /></Field>
+        <Field label="Expected by (optional)" hint={`The date it should all have arrived. The supplier's record is judged against it.`}><input type="date" value={expected} onChange={(e) => setExpected(e.target.value)} /></Field>
         <Field label="Note to the supplier (optional)" hint="Printed on the order."><input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} /></Field>
       </div>
       {suppliers && !suppliers.length && <Note tone="warn" icon="alert">Add a supplier first, on the Suppliers tab.</Note>}
       <LineEditor mode="po" items={stock.items} storeId={storeId} lines={lines} setLines={setLines} showCost currency={currency} notes={notes} supplierId={supplierId || null} />
-      {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">Still needed: {missing.join(', ')}.</Note>}
+      {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">{t('Still needed: {what}.', { what: missing.join(', ') })}</Note>}
       <ErrorNote error={err} />
     </Sheet>
   );
@@ -200,17 +201,17 @@ function PoSheet({ id, onClose, onChanged, onEdit }) {
         <>
           <div className="row"><Pill status={po.status} /><span className="muted">{fmtMoney(po.total, currency)}</span></div>
           <dl className="dl">
-            <dt>Supplier</dt><dd>{po.supplier_name}{po.supplier_contact ? ` · ${po.supplier_contact}` : ''}{po.supplier_phone ? ` · ${po.supplier_phone}` : ''}</dd>
-            <dt>Deliver to</dt><dd>{po.store_name}</dd>
-            {po.expected_date && <><dt>Expected</dt><dd>{fmtDate(po.expected_date)}</dd></>}
-            <dt>Raised</dt><dd>{po.created_by_name}, {fmtDateTime(po.created_at)}</dd>
-            {po.decided_at && <><dt>{po.status === 'REJECTED' ? 'Sent back' : 'Approved'}</dt><dd>{po.decided_by_name}, {fmtDateTime(po.decided_at)}{po.decision_note ? `: “${po.decision_note}”` : ''}</dd></>}
-            {po.note && <><dt>Note</dt><dd>{po.note}</dd></>}
+            <dt>{t('Supplier')}</dt><dd>{po.supplier_name}{po.supplier_contact ? ` · ${po.supplier_contact}` : ''}{po.supplier_phone ? ` · ${po.supplier_phone}` : ''}</dd>
+            <dt>{t('Deliver to')}</dt><dd>{po.store_name}</dd>
+            {po.expected_date && <><dt>{t('Expected')}</dt><dd>{fmtDate(po.expected_date)}</dd></>}
+            <dt>{t('Raised')}</dt><dd>{po.created_by_name}, {fmtDateTime(po.created_at)}</dd>
+            {po.decided_at && <><dt>{po.status === 'REJECTED' ? t('Sent back') : t('Approved')}</dt><dd>{po.decided_by_name}, {fmtDateTime(po.decided_at)}{po.decision_note ? `: “${po.decision_note}”` : ''}</dd></>}
+            {po.note && <><dt>{t('Note')}</dt><dd>{po.note}</dd></>}
           </dl>
           <Card pad={false}>
             <Table rows={po.lines} columns={[
               { key: 'name', label: 'Item', primary: true, render: (l) => <span className="min0"><span className="row-label">{l.name}</span><span className="row-sub"><code>{l.code}</code></span></span> },
-              { key: 'qty', label: 'Ordered', align: 'right', render: (l) => `${fmtQty(l.qty)} ${l.uom}` },
+              { key: 'qty', label: 'Ordered', align: 'right', render: (l) => `${fmtQty(l.qty)} ${t(l.uom)}` },
               { key: 'unit_cost', label: 'Price', align: 'right', render: (l) => fmtMoney(l.unit_cost, currency) },
               ...(seesPrices ? [{ key: 'last_cost', label: 'Last paid', align: 'right', render: (l) => (l.last_cost === null || l.last_cost === undefined ? '' : fmtMoney(l.last_cost, currency)) }] : []),
               { key: 'line', label: 'Line total', align: 'right', render: (l) => fmtMoney(l.qty * l.unit_cost, currency) },
@@ -219,22 +220,22 @@ function PoSheet({ id, onClose, onChanged, onEdit }) {
           </Card>
           {po.receipts.length > 0 && (
             <Card title="Deliveries">
-              <ul className="timeline">{po.receipts.map((r) => <li key={r.id}><span><button className="link" onClick={() => navigate(`purchasing/d/${r.id}`)}><b>{r.ref}</b></button> · {fmtMoney(r.total, currency)}{r.invoice_no ? ` · invoice ${r.invoice_no}` : ''} {r.status === 'PENDING' && <DeliveryPill status={r.status} />}<span className="row-sub">{r.by_name}, {fmtDateTime(r.at)}</span></span></li>)}</ul>
+              <ul className="timeline">{po.receipts.map((r) => <li key={r.id}><span><button className="link" onClick={() => navigate(`purchasing/d/${r.id}`)}><b>{r.ref}</b></button> · {fmtMoney(r.total, currency)}{r.invoice_no ? ` · ${t('invoice {no}', { no: r.invoice_no })}` : ''} {r.status === 'PENDING' && <DeliveryPill status={r.status} />}<span className="row-sub">{r.by_name}, {fmtDateTime(r.at)}</span></span></li>)}</ul>
             </Card>
           )}
           {['DRAFT', 'SUBMITTED'].includes(po.status) && (dearer.length > 0 || cheaper.length > 0) && (
             <Note tone="warn" icon="alert">
-              <b>Prices to look at.</b>
+              <b>{t('Prices to look at.')}</b>
               <ul className="inv-plain">
-                {dearer.map((l) => <li key={`d${l.id}`}>{l.name}: {fmtMoney(l.unit_cost, currency)} here, {fmtMoney(l.last_cost, currency)} last time on {fmtDate(l.last_day)}.</li>)}
-                {cheaper.map((l) => <li key={`c${l.id}`}>{l.name}: {l.best.supplierName} charged {fmtMoney(l.best.price, currency)} on {fmtDate(l.best.day)}.</li>)}
+                {dearer.map((l) => <li key={`d${l.id}`}>{t('{name}: {price} here, {last} last time on {date}.', { name: l.name, price: fmtMoney(l.unit_cost, currency), last: fmtMoney(l.last_cost, currency), date: fmtDate(l.last_day) })}</li>)}
+                {cheaper.map((l) => <li key={`c${l.id}`}>{t('{name}: {supplier} charged {price} on {date}.', { name: l.name, supplier: l.best.supplierName, price: fmtMoney(l.best.price, currency), date: fmtDate(l.best.day) })}</li>)}
               </ul>
             </Note>
           )}
           {sendable && <SendToSupplier po={po} onSent={reload} />}
           {po.emails.length > 0 && (
             <Card title="Sent to the supplier">
-              <ul className="timeline">{po.emails.map((e) => <li key={e.at}><span><b>{e.status === 'SENT' ? `Emailed to ${e.to_email}` : `Not sent to ${e.to_email}`}</b>{e.cc ? `, copy to ${e.cc}` : ''}<span className="row-sub">{e.by_name}, {fmtDateTime(e.at)}{e.error ? `. ${e.error}` : ''}</span></span></li>)}</ul>
+              <ul className="timeline">{po.emails.map((e) => <li key={e.at}><span><b>{e.status === 'SENT' ? t('Emailed to {email}', { email: e.to_email }) : t('Not sent to {email}', { email: e.to_email })}</b>{e.cc ? `, ${t('copy to {cc}', { cc: e.cc })}` : ''}<span className="row-sub">{e.by_name}, {fmtDateTime(e.at)}{e.error ? `. ${e.error}` : ''}</span></span></li>)}</ul>
             </Card>
           )}
           {po.status === 'SUBMITTED' && can('po.decide') && mine && <Note icon="alert">You raised this order, so another manager approves it, unless you are the only one.</Note>}
@@ -263,18 +264,18 @@ function SendToSupplier({ po, onSent }) {
     setBusy(true); setErr(null);
     try {
       const r = await post(`/api/pos/${po.id}/email`, { cc, message, again: !!sent });
-      toast(`Emailed to ${r.to}`); setCc(''); setMessage(''); onSent();
+      toast(t('Emailed to {email}', { email: r.to })); setCc(''); setMessage(''); onSent();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   if (!me.has?.mail) {
     return <Quiet icon="info">Emailing is not set up for this app yet. Download the PDF and send it yourself.</Quiet>;
   }
   if (!po.supplier_email) {
-    return <Note icon="info">{po.supplier_name} has no email address. Add it under Purchasing, Suppliers, to send the order from here.</Note>;
+    return <Note icon="info">{t('{name} has no email address. Add it under Purchasing, Suppliers, to send the order from here.', { name: po.supplier_name })}</Note>;
   }
   return (
-    <Card title={sent ? 'Send it again' : 'Send it to the supplier'} hint="The order goes as a PDF, from this unit's mailbox. Nothing is sent until you press the button.">
-      <p className="muted">To {po.supplier_email}{po.supplier_contact ? `, for ${po.supplier_contact}` : ''}.</p>
+    <Card title={sent ? 'Send it again' : 'Send it to the supplier'} hint={`The order goes as a PDF, from this unit's mailbox. Nothing is sent until you press the button.`}>
+      <p className="muted">{po.supplier_contact ? t('To {email}, for {name}.', { email: po.supplier_email, name: po.supplier_contact }) : t('To {email}.', { email: po.supplier_email })}</p>
       <div className="form two">
         <Field label="Copy to (optional)" hint="Up to five addresses, separated by commas."><input value={cc} onChange={(e) => setCc(e.target.value)} inputMode="email" maxLength={600} /></Field>
         <Field label="A line for the supplier (optional)"><input value={message} onChange={(e) => setMessage(e.target.value)} maxLength={1000} /></Field>

@@ -12,6 +12,7 @@ import {
   Button, Card, ErrorNote, Field, ItemPicker, Loading, Note, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
+import { t } from '../i18n.js';
 
 export const STORAGE = { ROOM: 'Room temperature', FRIDGE: 'Fridge, 2 to 8 °C', FREEZER: 'Freezer' };
 const STANDING = { PAST: ['danger', 'Past its date'], DUE: ['warn', 'Due soon'], OK: ['ok', 'In date'], NO_DATE: ['plain', 'No date'] };
@@ -39,10 +40,10 @@ export default function InUse() {
 const what = (o) => (
   <span className="min0">
     <span className="row-label">{o.name}</span>
-    <span className="row-sub">{[o.batch_no ? `Lot ${o.batch_no}` : 'No lot number', o.qty !== 1 && `${fmtQty(o.qty)} ${o.uom}`, o.storage && STORAGE[o.storage]].filter(Boolean).join(' · ')}</span>
+    <span className="row-sub">{[o.batch_no ? t('Lot {lot}', { lot: o.batch_no }) : t('No lot number'), o.qty !== 1 && `${fmtQty(o.qty)} ${t(o.uom)}`, o.storage && t(STORAGE[o.storage])].filter(Boolean).join(' · ')}</span>
   </span>
 );
-const where = (o) => <span className="min0"><span>{o.area_name || 'No area'}</span>{o.department_name && <span className="row-sub">{o.department_name}</span>}</span>;
+const where = (o) => <span className="min0"><span>{o.area_name || t('No area')}</span>{o.department_name && <span className="row-sub">{o.department_name}</span>}</span>;
 
 function OpenList({ rows, reload }) {
   const { can, toast } = useApp();
@@ -92,13 +93,13 @@ function CloseSheet({ o, onClose, onDone }) {
     setBusy(true); setErr(null);
     try {
       await post(`/api/openings/${o.id}/${action}`, { reason });
-      onDone(action === 'finish' ? `${o.name} marked finished` : `${o.name} marked thrown away`);
+      onDone(action === 'finish' ? t('{name} marked finished', { name: o.name }) : t('{name} marked thrown away', { name: o.name }));
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
     <Sheet title={o.name} onClose={onClose}
       footer={<><Button kind="secondary" busy={busy} onClick={() => act('discard')}>Thrown away</Button><Button busy={busy} icon="check" onClick={() => act('finish')}>Finished</Button></>}>
-      <p className="muted">{[o.batch_no ? `Lot ${o.batch_no}` : 'No lot number', `opened ${fmtDateTime(o.opened_at)} by ${o.opened_by_name}`, o.area_name && `at ${o.area_name}`, o.use_by && `use by ${fmtDate(o.use_by)}`].filter(Boolean).join(', ')}.</p>
+      <p className="muted">{[o.batch_no ? t('Lot {lot}', { lot: o.batch_no }) : t('No lot number'), t('opened {date} by {name}', { date: fmtDateTime(o.opened_at), name: o.opened_by_name }), o.area_name && t('at {area}', { area: o.area_name }), o.use_by && t('use by {date}', { date: fmtDate(o.use_by) })].filter(Boolean).join(', ')}.</p>
       <Field label="Why it is thrown away (needed only for that)" hint="Past its date, contaminated, failed quality control."><input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} /></Field>
       <ErrorNote error={err} />
     </Sheet>
@@ -130,14 +131,14 @@ function OpenSheet({ onClose, onDone }) {
   }, [item, storeId]);
   const here = useMemo(() => item?.stores?.find((s) => s.storeId === storeId), [item, storeId]);
   if (!stock) return null;
-  const missing = [...(!item ? ['the item'] : []), ...(!areaId ? ['the bench or analyser'] : []), ...(!(Number(qty) > 0) ? ['how many packs'] : [])];
+  const missing = [...(!item ? [t('the item')] : []), ...(!areaId ? [t('the bench or analyser')] : []), ...(!(Number(qty) > 0) ? [t('how many packs')] : [])];
   const save = async () => {
     if (missing.length) { setTried(true); return; }
     setBusy(true); setErr(null);
     try {
       const r = await post('/api/openings', { storeId, itemId: item.id, batchId: batchId || null, areaId, personId: personId || (needPerson ? me.staffId : null), qty: Number(qty) });
       const dates = r.openings.map((o) => o.useBy).filter(Boolean);
-      toast(`${item.name} opened${dates.length ? `, use by ${fmtDate(dates.sort()[0])}` : ''}`);
+      toast(dates.length ? t('{name} opened, use by {date}', { name: item.name, date: fmtDate(dates.sort()[0]) }) : t('{name} opened', { name: item.name }));
       refreshStock(); refreshBadges(); onDone();
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
@@ -156,7 +157,7 @@ function OpenSheet({ onClose, onDone }) {
             <div className="inv-line__top">
               <div className="min0 grow">
                 <span className="row-label">{item.name}</span>
-                <span className="row-sub">{[here && `${fmtQty(here.qty)} ${item.uom} here`, item.storage && STORAGE[item.storage], item.openLifeDays && `usable ${item.openLifeDays} days once opened`].filter(Boolean).join(' · ')}</span>
+                <span className="row-sub">{[here && t('{qty} {uom} here', { qty: fmtQty(here.qty), uom: t(item.uom) }), item.storage && t(STORAGE[item.storage]), item.openLifeDays && t('usable {n} days once opened', { n: item.openLifeDays })].filter(Boolean).join(' · ')}</span>
               </div>
               <Button kind="ghost" onClick={() => setItem(null)}>Change</Button>
             </div>
@@ -166,17 +167,17 @@ function OpenSheet({ onClose, onDone }) {
       <div className="form two">
         {batches.length > 0 && (
           <Field label="Lot" hint="Left as it is, the lot that expires first is opened. Expired lots are never opened.">
-            <Select value={batchId} onChange={setBatchId} placeholder="The one that expires first" options={batches.map((b) => ({ value: b.id, label: `${b.batch_no || 'No lot number'} · ${b.expiry ? `expires ${fmtDate(b.expiry)}` : 'no date'} · ${fmtQty(b.qty)} left` }))} />
+            <Select value={batchId} onChange={setBatchId} placeholder="The one that expires first" options={batches.map((b) => ({ value: b.id, label: `${b.batch_no || t('No lot number')} · ${b.expiry ? t('expires {date}', { date: fmtDate(b.expiry) }) : t('no date')} · ${t('{n} left', { n: fmtQty(b.qty) })}` }))} />
           </Field>
         )}
-        <Field label="Packs opened"><Stepper value={qty} onChange={setQty} min={1} unit={item?.uom} label="Packs opened" /></Field>
+        <Field label="Packs opened"><Stepper value={qty} onChange={setQty} min={1} unit={t(item?.uom)} label="Packs opened" /></Field>
         {needPerson && forOthers && (
           <Field label="Opened by" hint="Left as it is, it is recorded under your name.">
-            <Select value={personId} onChange={setPersonId} placeholder={`${me.name} (you)`} options={(people || []).map((p) => ({ value: p.id, label: p.name }))} />
+            <Select value={personId} onChange={setPersonId} placeholder={t('{name} (you)', { name: me.name })} options={(people || []).map((p) => ({ value: p.id, label: p.name }))} />
           </Field>
         )}
       </div>
-      {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">Still needed: {missing.join(', ')}.</Note>}
+      {tried && missing.length > 0 && <Note tone="warn" icon="alert" role="alert">{t('Still needed: {what}.', { what: missing.join(', ') })}</Note>}
       <ErrorNote error={err} />
     </Sheet>
   );

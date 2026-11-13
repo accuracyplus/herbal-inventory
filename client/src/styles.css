@@ -255,3 +255,12 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 /* A newer build is live (src/update.js): the note and its Reload button, at the top of the page. */
 .inv-update { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
 .inv-update > :first-child { flex: 1 1 220px; margin: 0; }
+
+/* The side menu's scrollbar: hidden until the pointer is over the menu or a link in it has focus,
+   then a thin one in the line colour, never the grey native bar (HiFive ID polish check, 13 Nov). */
+.inv-side { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.inv-side:hover, .inv-side:focus-within { scrollbar-color: var(--line-strong, var(--line)) transparent; }
+.inv-side::-webkit-scrollbar { width: 8px; }
+.inv-side::-webkit-scrollbar-track { background: transparent; }
+.inv-side::-webkit-scrollbar-thumb { background: transparent; border-radius: 8px; }
+.inv-side:hover::-webkit-scrollbar-thumb, .inv-side:focus-within::-webkit-scrollbar-thumb { background: var(--line-strong, var(--line)); }

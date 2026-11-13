@@ -1,12 +1,19 @@
 /**
  * Today: the person first (what is waiting on them, what happened to their requests), then the
  * unit's shelves (short, expiring, at the laundry). A section with nothing in it is left out or
- * collapses to one line, and a tile is never shown for zero.
+ * collapses to one line, and a tile is never shown for zero. "Nothing waiting" is said once, in
+ * the line under the greeting, never again in an empty card.
+ *
+ * Staff, who record use but run no store, see only what is theirs (approved prototype, 13 Nov
+ * 2026): Record use first, what they hold now, their requests, their own count today. The
+ * shelves stay with the roles that act on them.
  */
 
 import { KeyValues } from '@hifive/ui';
 import { fmtAgo, fmtDate, fmtMoney, fmtQty } from '../api.js';
-import { Card, ErrorNote, Loading, Page, Pill, Quiet, StatusRows, Tile, useApp, useData } from '../ui.jsx';
+import { useState } from 'react';
+import { Button, Card, ErrorNote, Loading, Page, Pill, StatusRows, Tile, useApp, useData } from '../ui.jsx';
+import { Lot, Settle } from './WithMe.jsx';
 import { lang, t, tn } from '../i18n.js';
 
 const greeting = () => {
@@ -53,6 +60,9 @@ const left = (s) => `${s.storeName}. ${[
 export default function Today() {
   const { me, navigate, can, currency } = useApp();
   const { data, error, loading, reload } = useData('/api/today');
+  // Staff: they record use and run no store, so the shelves are not theirs to act on.
+  const personal = can('stock.use') && !['receive', 'request.fulfil', 'request.decide', 'po.edit', 'reports'].some(can);
+  if (personal) return <MyToday data={data} error={error} loading={loading} reload={reload} />;
   const first = me.name.split(/\s+/)[0];
   const waiting = data ? data.waiting.length : null;
   const lede = waiting === null ? me.unit.name
@@ -90,15 +100,7 @@ export default function Today() {
 
           <div className="grid2">
             <div className="stack" style={{ gap: 18 }}>
-              <Card title="Waiting on you" pad={false} tour="waiting">
-                {data.waiting.length ? (
-                  <StatusRows rows={data.waiting.map((w) => ({
-                    key: w.key, icon: ICON[w.screen] || 'requests', label: waitText(w),
-                    flag: w.urgent > 0 && w.key !== 'po-receive' ? t('{n} urgent', { n: w.urgent }) : null,
-                    onClick: () => navigate(w.to || `${w.screen}${w.filter ? `?status=${w.filter}` : ''}`),
-                  }))} />
-                ) : <Quiet>Nothing is waiting on you.</Quiet>}
-              </Card>
+              <Waiting rows={data.waiting} />
 
               {data.mine.length > 0 && (
                 <Card title="Your requests this week" pad={false}>
@@ -155,6 +157,66 @@ export default function Today() {
           </div>
         </>
       )}
+    </Page>
+  );
+}
+
+/** What waits on the person; left out when nothing does, since the line under the greeting says so. */
+function Waiting({ rows }) {
+  const { navigate } = useApp();
+  if (!rows.length) return null;
+  return (
+    <Card title="Waiting on you" pad={false} tour="waiting">
+      <StatusRows rows={rows.map((w) => ({
+        key: w.key, icon: ICON[w.screen] || 'requests', label: waitText(w),
+        flag: w.urgent > 0 && w.key !== 'po-receive' ? t('{n} urgent', { n: w.urgent }) : null,
+        onClick: () => navigate(w.to || `${w.screen}${w.filter ? `?status=${w.filter}` : ''}`),
+      }))} />
+    </Card>
+  );
+}
+
+/** Staff's Today: only what is theirs. */
+function MyToday({ data, error, loading, reload }) {
+  const { me, navigate, refreshBadges } = useApp();
+  const held = useData('/api/custody/mine');
+  const [target, setTarget] = useState(null);
+  const first = me.name.split(/\s+/)[0];
+  const waiting = data ? data.waiting.length : null;
+  const lede = waiting === null ? me.unit.name
+    : waiting === 0 ? t('Nothing is waiting on you at {unit}.', { unit: me.unit.name })
+      : tn(waiting, '{n} thing is waiting on you at {unit}.', '{n} things are waiting on you at {unit}.', { unit: me.unit.name });
+  const rows = held.data?.rows || [];
+  return (
+    <Page title={`${greeting()}, ${first}`} subtitle={lede} tour="today">
+      <ErrorNote error={error} onRetry={reload} />
+      {loading && !data && <Loading />}
+      {data && (
+        <div className="stack inv-mytoday" style={{ gap: 18 }}>
+          <div className="inv-mytoday__act">
+            <Button icon="use" onClick={() => navigate('use')}>Record use</Button>
+            <button type="button" className="hf-btn hf-btn--quiet" onClick={() => navigate('with-me/take')}>{t('Take stock for later')}</button>
+          </div>
+          <Waiting rows={data.waiting} />
+          <ErrorNote error={held.error} onRetry={held.reload} />
+          {rows.length > 0 && (
+            <Card title="With you now">
+              <ul className="lots">{rows.map((l) => <Lot key={l.id} lot={l} plain onSettle={(lot, action) => setTarget({ lot, action })} />)}</ul>
+            </Card>
+          )}
+          {data.mine.length > 0 && (
+            <Card title="Your requests this week" pad={false}>
+              <StatusRows rows={data.mine.map((r) => ({
+                key: r.id, label: r.summary || r.ref, end: <Pill status={r.status} />,
+                sub: `${r.ref}${r.decision_note ? ` “${r.decision_note}”` : ''}`,
+                onClick: () => navigate(`requests/${r.id}`),
+              }))} />
+            </Card>
+          )}
+          {data.myUses > 0 && <p className="muted inv-mytoday__count">{tn(data.myUses, 'You recorded {n} use today.', 'You recorded {n} uses today.')}</p>}
+        </div>
+      )}
+      {target && <Settle target={target} onClose={() => setTarget(null)} onDone={() => { setTarget(null); held.reload(); reload(); refreshBadges(); }} />}
     </Page>
   );
 }

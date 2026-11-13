@@ -17,7 +17,8 @@ import { t, tn } from '../i18n.js';
 
 const ageText = (h) => (h < 1 ? t('under an hour') : h < 48 ? tn(h, '{n} hour', '{n} hours') : tn(Math.floor(h / 24), '{n} day', '{n} days'));
 
-function Lot({ lot, onSettle }) {
+/** One held line. `plain` draws both buttons as secondary, for a page whose primary is elsewhere (Today). */
+export function Lot({ lot, onSettle, plain = false }) {
   const where = [lot.store_name && t('from {store}', { store: lot.store_name }), lot.area_name, lot.batch_no && t('lot {lot}', { lot: lot.batch_no }), lot.expiry && t('expires {date}', { date: fmtDate(lot.expiry) })].filter(Boolean).join(' · ');
   return (
     <li className="lot">
@@ -27,13 +28,13 @@ function Lot({ lot, onSettle }) {
       </div>
       <div className="lot-actions">
         <Button kind="secondary" onClick={() => onSettle(lot, 'return')}>Return</Button>
-        <Button onClick={() => onSettle(lot, 'use')}>Used</Button>
+        <Button kind={plain ? 'secondary' : 'primary'} onClick={() => onSettle(lot, 'use')}>Used</Button>
       </div>
     </li>
   );
 }
 
-function Settle({ target, onClose, onDone }) {
+export function Settle({ target, onClose, onDone }) {
   const { me, lists, toast, refreshStock, refreshBadges } = useApp();
   const { lot, action, forName } = target;
   const isUse = action === 'use';

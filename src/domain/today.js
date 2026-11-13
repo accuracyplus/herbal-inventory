@@ -6,6 +6,7 @@
  * section with nothing in it is left out, never shown as an empty box.
  */
 
+import { usesToday } from './usual.js';
 import { gstDate, q3 } from '../lib/data.js';
 import { may } from './access.js';
 import { stockList } from './catalog.js';
@@ -82,6 +83,8 @@ export async function today(env, user, { bearer } = {}) {
             COALESCE(SUM(CASE WHEN kind = 'RECEIPT' THEN value END), 0) AS received,
             COALESCE(SUM(CASE WHEN kind IN ('ADJUST','COUNT') AND value < 0 THEN -value END), 0) AS written_off
        FROM movements WHERE unit_id = ? AND at >= ?`, u, new Date(`${todayStr.slice(0, 8)}01T00:00:00+04:00`).toISOString()) : null;
+  // The person's own count, for a Today that shows only what is theirs (staff).
+  const myUses = may(user, 'stock.use') ? await usesToday(env, user, dayStart) : 0;
   const valueRow = showCost ? items.reduce((s, it) => s + (it.value || 0), 0) : null;
 
   return {
@@ -100,6 +103,7 @@ export async function today(env, user, { bearer } = {}) {
     day: { issues: day?.issues || 0, receipts: day?.receipts || 0, transfers: day?.transfers || 0, usedValue: showCost ? q3(day?.used_value || 0) : undefined },
     month: month ? { used: Math.round(month.used), received: Math.round(month.received), writtenOff: Math.round(month.written_off) } : null,
     stockValue: valueRow === null ? null : Math.round(valueRow),
+    myUses,
     itemCount: items.length,
   };
 }

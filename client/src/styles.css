@@ -224,3 +224,30 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .signin-card { width: min(420px, 100%); padding: 32px 26px; gap: 18px; text-align: center; justify-items: center; }
 .signin-card .inv-mark { width: 64px; height: 64px; border-radius: 20px; }
 .signin-card .hf-btn { width: 100%; }
+
+/* The phone's More menu (approved prototype, 13 Nov 2026): the screens not on the bar as a grid
+   of two, then the person's own settings. The wide screen keeps its full list. The breakpoint is
+   the bar's own. */
+.inv-more { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.inv-more .inv-nav { min-height: 56px; border-radius: var(--r-md); background: var(--surface-1); border: 1px solid var(--line); font-weight: 600; }
+.inv-more .inv-nav .hf-icon, .inv-more .inv-nav svg { color: var(--primary-text, var(--primary)); flex: none; }
+@media (min-width: 1024px) { .inv-only-phone { display: none !important; } }
+@media (max-width: 1023px) { .inv-only-desk { display: none !important; } }
+
+/* Staff's Today (approved prototype, 13 Nov 2026): Record use first, full width on a phone. */
+.inv-mytoday__act { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.inv-mytoday__act > .hf-btn:first-child { width: 100%; }
+@media (min-width: 768px) { .inv-mytoday__act { flex-direction: row; } .inv-mytoday__act > .hf-btn:first-child { width: auto; } }
+.inv-mytoday__count { text-align: center; margin: 0; }
+@media (min-width: 1024px) { .inv-mytoday { max-width: 720px; } }
+
+/* Record use (approved prototype, 13 Nov 2026): the button stays above the bar while the list scrolls. */
+.inv-small { font-size: 13px; margin: 4px 0 0; }
+.inv-usual { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+@media (max-width: 1023px) {
+  .inv-submit--dock { position: sticky; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 5; padding: 10px 0 4px; background: linear-gradient(180deg, transparent, var(--surface-0) 35%); }
+}
+
+/* A tab takes the width its word needs before the bar shares out the rest: on a 320px phone a
+   longer Malayalam word is not cut while a short one leaves room (13 Nov 2026). */
+.inv-tabs { grid-template-columns: repeat(5, minmax(min-content, 1fr)); column-gap: 2px; }

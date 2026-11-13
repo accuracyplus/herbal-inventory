@@ -17,7 +17,8 @@ import { put } from './api.js';
 import { lang, LANGS, setLang, t, useLang } from './i18n.js';
 import { Button, Segmented, Sheet } from './ui.jsx';
 
-const isPhone = () => window.innerWidth < 768;
+// The bottom bar shows below 1024px (styles.css), so that is a phone here too.
+const isPhone = () => window.innerWidth < 1024;
 
 /** Where a screen's link is: its tab on a phone, else the side menu; on a phone without a tab, the More button. */
 function navSpot(id) {
@@ -25,13 +26,18 @@ function navSpot(id) {
   return document.querySelector(`.inv-tabs [data-tour="nav-${id}"]`) ? `.inv-tabs [data-tour="nav-${id}"]` : '.inv-tabs [data-tour="more"]';
 }
 
+/** Staff: they record use and run no store (Today.jsx shows them only what is theirs). */
+const personal = (can) => can('stock.use') && !['receive', 'request.fulfil', 'request.decide', 'po.edit', 'reports'].some(can);
+
 /** The steps for this person, in their language. */
 export function tourSteps(me, visible) {
   const can = (a) => me.can.includes(a);
   const has = (id) => visible.some((s) => s.id === id);
   const word = me.settings?.['services.word'] || 'Services';
   const steps = [
-    { selector: '[data-tour="today"]', title: t('This is Today'), text: t('What is waiting on you, and what the store is short of. It is the first screen you see.') },
+    { selector: '[data-tour="today"]', title: t('This is Today'), text: personal(can)
+      ? t('What is waiting on you, the stock you hold and your requests. It is the first screen you see.')
+      : t('What is waiting on you, and what the store is short of. It is the first screen you see.') },
   ];
   if (has('use')) steps.push({ selector: navSpot('use'), title: t('Record what you use'), text: t('Each time you use oil, powder or a cloth, record it here: the room, then the items. It takes a few seconds.') });
   if (has('services') && can('stock.use')) steps.push({ selector: navSpot('services'), title: t(word), text: t('Record a whole treatment in one go: its usual items are filled in, and you change only what was different.') });
@@ -39,7 +45,9 @@ export function tourSteps(me, visible) {
   if (has('requests')) steps.push({ selector: navSpot('requests'), title: t('Ask the store'), text: t('Need something that is not on your shelf? Ask here; you see when it is approved and given out.') });
   if (has('receive')) steps.push({ selector: navSpot('receive'), title: t('Deliveries'), text: t('Count what arrived against the delivery note and photograph the note. A manager approves it before it is on the shelf.') });
   if (can('request.decide') || can('po.decide') || can('receipt.decide')) {
-    steps.push({ selector: '[data-tour="waiting"]', title: t('Approvals wait here'), text: t('Requests, orders and deliveries that need your approval are listed first on Today, oldest first.') });
+    // Nothing waiting today: no card, so the step points at the line under the greeting that says so.
+    const spot = document.querySelector('[data-tour="waiting"]') ? '[data-tour="waiting"]' : '[data-tour="today"]';
+    steps.push({ selector: spot, title: t('Approvals wait here'), text: t('Requests, orders and deliveries that need your approval are listed first on Today, oldest first.') });
   }
   steps.push({ selector: isPhone() ? '.inv-tabs [data-tour="more"]' : '.inv-side [data-tour="me"]', title: t('Everything else, and your language'), text: t('The menu has every screen, English or Malayalam, and this walkthrough again whenever you want it.') });
   return steps;

@@ -60,6 +60,28 @@ const SCREENS = [
 ];
 const GROUPS = { main: null, do: 'Everyday', store: 'Store', manage: 'Manage' };
 
+/**
+ * The phone's bottom bar: the four screens this person's role uses most (approved prototype,
+ * 13 Nov 2026; Design Guide D-044). Someone with two roles gets the bar of the higher one. A screen
+ * the person may not open is skipped and the next one fills its place; every screen stays one
+ * tap away in More.
+ */
+const BARS = {
+  manage: ['today', 'requests', 'stock', 'reports'],
+  store: ['today', 'requests', 'receive', 'stock'],
+  buy: ['today', 'purchasing', 'stock', 'requests'],
+  staff: ['today', 'use', 'with-me', 'requests'],
+  view: ['today', 'stock', 'reports', 'requests'],
+};
+export function barFor(can, visible) {
+  const bar = can('request.decide') || can('admin') ? BARS.manage
+    : can('receive') && can('request.fulfil') ? BARS.store
+      : can('po.edit') ? BARS.buy
+        : can('stock.use') ? BARS.staff : BARS.view;
+  const ids = [...bar, 'today', 'stock', 'use', 'requests', 'reports'].filter((id, i, a) => a.indexOf(id) === i);
+  return ids.map((id) => visible.find((s) => s.id === id)).filter(Boolean).slice(0, 4);
+}
+
 function parseHash() {
   const h = location.hash.replace(/^#\/?/, '');
   const [path, qs] = h.split('?');
@@ -188,8 +210,8 @@ export default function App() {
   };
   const initials = me.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   const roleWords = me.roles.map((r) => t(me.labels.roles[r])).join(', ');
-  const phoneNav = ['today', 'stock', me.can.includes('stock.use') ? 'use' : 'requests', 'requests'].filter((v, i, a) => a.indexOf(v) === i);
-  const phoneTabs = [...phoneNav.map((id) => visible.find((s) => s.id === id)).filter(Boolean)].slice(0, 4);
+  const phoneTabs = barFor(ctx.can, visible);
+  const moreScreens = visible.filter((s) => !phoneTabs.includes(s));
   const pickUnit = me.units.length > 1 ? () => { setMenu(false); setUnitSheet(true); } : undefined;
 
   return (
@@ -238,8 +260,18 @@ export default function App() {
       {menu && (
         <Sheet title={me.name} onClose={() => setMenu(false)}>
           <p className="muted">{t('{code} · {roles} in {unit}', { code: me.code, roles: roleWords, unit: me.unit.name })}</p>
+          {/* On a phone, More lists only what is not on the bar, then you (approved prototype). The wide
+              screen keeps the full list, as its side menu does. */}
+          <nav className="inv-more inv-only-phone" aria-label={t('More screens')}>
+            {moreScreens.map((s) => (
+              <a key={s.id} href={`#/${s.id}`} className={current.id === s.id ? 'inv-nav is-on' : 'inv-nav'} aria-current={current.id === s.id ? 'page' : undefined} onClick={() => setMenu(false)}>
+                <Icon name={s.icon} />{t(s.label)}{badges[s.id] ? <span className="inv-badge" aria-label={t('{n} waiting', { n: badges[s.id] })}>{badges[s.id]}</span> : null}
+              </a>
+            ))}
+          </nav>
+          <div className="hf-cap inv-navg inv-only-phone">{t('You')}</div>
           <Segmented label={t('Language')} value={language} onChange={chooseLanguage} options={Object.entries(LANGS).map(([value, label]) => ({ value, label }))} />
-          <nav className="inv-menu" aria-label={t('Every screen')}>
+          <nav className="inv-menu inv-only-desk" aria-label={t('Every screen')}>
             <NavList screens={visible} current={current.id} badges={badges} />
           </nav>
           <div className="inv-menu">

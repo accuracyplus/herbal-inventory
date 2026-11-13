@@ -218,7 +218,8 @@ export async function resolveAuthContext(request, env) {
  * A Viewer reads. Refused here, where every request passes, rather than left to each handler —
  * the lesson HiFive Transport learned on 5 November 2026.
  */
-const VIEWER_MAY_POST = new Set(['/auth/hfid/arrived']);
+// Their own language and "walkthrough seen" are the person's settings, not a record of stock (D-043).
+const VIEWER_MAY_POST = new Set(['/auth/hfid/arrived', '/api/me/prefs']);
 
 function refuseViewerWrite(user, request) {
   if (request.method === 'GET' || !user.roles.every((r) => r === 'VIEWER')) return;

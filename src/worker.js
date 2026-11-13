@@ -14,6 +14,7 @@ import {
 } from './lib/auth.js';
 import { DomainError } from './lib/errors.js';
 import { nowIso, sha256Hex, text, uuid } from './lib/data.js';
+import { usualFor } from './domain/usual.js';
 import { auditNow } from './lib/audit.js';
 import { hfidFetch } from './lib/hfid.js';
 import { recordTrouble, troubleMessage } from './lib/trouble.js';
@@ -470,6 +471,8 @@ api('GET', '/api/batches', async ({ env, url }, user) => {
 // ── Everyday actions ─────────────────────────────────────────────────────────
 
 api('POST', '/api/use', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await recordUse(env, user, await body(request)), 201); });
+// The person's own usual items in a store and the room they used last, for Record use.
+api('GET', '/api/use/usual', async ({ env, url }, user) => { requireMay(user, 'stock.use'); return json(await usualFor(env, user, url.searchParams.get('store'))); });
 // Opened packs (lab readiness): open one at a bench or analyser, see what is in use, finish or discard.
 api('GET', '/api/openings', async ({ env, url }, user) => { requireMay(user, 'stock.view'); return json(await openings(env, user, { closed: url.searchParams.get('closed') === '1', q: url.searchParams.get('q') || '' })); });
 api('POST', '/api/openings', async ({ request, env }, user) => { requireMay(user, 'stock.use'); return json(await openPack(env, user, await body(request)), 201); });

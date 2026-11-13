@@ -62,3 +62,13 @@ test('a Worker live before migration 0011 still signs people in, and does not sh
   assert.equal(r.body.lang, null);
   assert.equal(r.body.tourDoneAt, 'unavailable');
 });
+
+test('a viewer, who records nothing, may still choose a language and finish the walkthrough', async () => {
+  const env = testEnv();
+  const r = await save(env, { lang: 'ml', tourDone: true }, 'viewer');
+  assert.equal(r.status, 200);
+  assert.equal((await me(env, 'viewer')).lang, 'ml');
+  assert.ok((await me(env, 'viewer')).tourDoneAt);
+  const write = await call(env, 'POST', '/api/requests', { as: 'viewer', body: { lines: [] } });
+  assert.equal(write.status, 403, 'every other write is still refused');
+});

@@ -251,3 +251,7 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 /* A tab takes the width its word needs before the bar shares out the rest: on a 320px phone a
    longer Malayalam word is not cut while a short one leaves room (13 Nov 2026). */
 .inv-tabs { grid-template-columns: repeat(5, minmax(min-content, 1fr)); column-gap: 2px; }
+
+/* A newer build is live (src/update.js): the note and its Reload button, at the top of the page. */
+.inv-update { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
+.inv-update > :first-child { flex: 1 1 220px; margin: 0; }

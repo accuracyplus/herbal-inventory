@@ -13,6 +13,7 @@ import { startFollowingAppearance, syncChromeColour } from './appearance.js';
 import { AppCtx, Button, Loading, Note, Segmented, Sheet, useToasts } from './ui.jsx';
 import { chooseLang, has, lang, LANGS, setLang, t, useLang } from './i18n.js';
 import FirstTour from './tour.jsx';
+import { useNewVersion } from './update.js';
 import Today from './screens/Today.jsx';
 import Stock from './screens/Stock.jsx';
 import { TransferScreen, UseScreen } from './screens/Record.jsx';
@@ -194,6 +195,9 @@ export default function App() {
   };
   const signOut = () => { token.clear(); unitPref.clear(); location.hash = ''; location.reload(); };
 
+  // A newer build is live: say so, and reload only when asked (src/update.js). A hook, so it
+  // sits above the early returns.
+  const fresh = useNewVersion();
   if (checking) return <div className="hf signin"><Loading what={t('Checking your sign-in')} /></div>;
   if (!me) return <SignIn error={error} />;
 
@@ -241,6 +245,12 @@ export default function App() {
         </header>
 
         <main className="inv-main" id="main">
+          {fresh && (
+            <div className="inv-update" role="status">
+              <Note icon="alert">{t('A new version of HiFive Inventory is ready.')}</Note>
+              <Button kind="secondary" onClick={() => location.reload()}>{t('Reload')}</Button>
+            </div>
+          )}
           <Screen key={`${me.unit.id}-${current.id}-${language}`} />
         </main>
 

@@ -35,6 +35,8 @@ const core = {
   'All HiFive apps': 'എല്ലാ HiFive ആപ്പുകളും',
   'Colours and dark mode, in HiFive ID': 'നിറങ്ങളും ഡാർക്ക് മോഡും, HiFive ID-യിൽ',
   'Sign out': 'സൈൻ ഔട്ട്',
+  'A new version of HiFive Inventory is ready.': 'HiFive ഇൻവെന്ററിയുടെ പുതിയ പതിപ്പ് തയ്യാറാണ്.',
+  'Reload': 'പുതുക്കുക',
   'Show me around again': 'വീണ്ടും പരിചയപ്പെടുത്തുക',
   '{name}: your menu': '{name}: നിങ്ങളുടെ മെനു',
   '{code} · {roles} in {unit}': '{code} · {unit}-ൽ {roles}',

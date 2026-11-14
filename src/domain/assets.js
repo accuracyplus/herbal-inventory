@@ -11,7 +11,7 @@
 import { refuse } from '../lib/errors.js';
 import { gstDate, isoDate, m2, nonNegative, nowIso, text, uuid } from '../lib/data.js';
 import { auditStmt } from '../lib/audit.js';
-import { areaFor } from './access.js';
+import { areaFor, may } from './access.js';
 import { requireFeature, setting } from './settings.js';
 import { commit } from './stock.js';
 
@@ -52,8 +52,10 @@ export async function listAssets(env, user, { q, show } = {}) {
       WHERE a.unit_id = ? ORDER BY CASE WHEN a.next_service_on IS NULL THEN 1 ELSE 0 END, a.next_service_on, a.name`,
   ).bind(user.unitId).all();
   const t = String(q || '').trim().toLowerCase();
+  const money = may(user, 'cost.view');
   return (results || []).map((a) => ({
     ...a,
+    cost: money ? a.cost : undefined,
     standing: a.status === 'RETIRED' ? 'NONE' : serviceStanding(a.next_service_on, today, warn),
     warranty: a.warranty_until ? (a.warranty_until < today ? 'ENDED' : serviceStanding(a.warranty_until, today, warn) === 'DUE' ? 'ENDING' : 'OK') : null,
   })).filter((a) => {
@@ -70,7 +72,8 @@ export async function getAsset(env, user, id) {
   const a = (await listAssets(env, user, { show: 'any' })).find((x) => x.id === id);
   if (!a) refuse('NOT_FOUND', 'That equipment is not in this unit.', 404);
   const { results } = await env.DB.prepare(`SELECT * FROM asset_services WHERE asset_id = ? ORDER BY on_date DESC, recorded_at DESC`).bind(a.id).all();
-  return { ...a, services: (results || []).map((s) => ({ ...s, kind_label: SERVICE_KINDS[s.kind] })) };
+  const money = may(user, 'cost.view');
+  return { ...a, services: (results || []).map((s) => ({ ...s, cost: money ? s.cost : undefined, kind_label: SERVICE_KINDS[s.kind] })) };
 }
 
 export async function saveAsset(env, user, body, id = null) {
@@ -86,7 +89,9 @@ export async function saveAsset(env, user, body, id = null) {
   }
   const every = body.serviceEveryMonths === '' || body.serviceEveryMonths === null || body.serviceEveryMonths === undefined ? null : Number(body.serviceEveryMonths);
   if (every !== null && !(Number.isInteger(every) && every >= 1 && every <= 120)) refuse('BAD_INTERVAL', 'Service every: a whole number of months, 1 to 120, or leave it empty.');
-  const cost = body.cost === '' || body.cost === null || body.cost === undefined ? null : nonNegative(body.cost);
+  // Somebody who may not see costs never sees this one, so their edit leaves it as it was.
+  const keepCost = id && !may(user, 'cost.view');
+  const cost = keepCost || body.cost === '' || body.cost === null || body.cost === undefined ? null : nonNegative(body.cost);
   const status = ['ACTIVE', 'IN_REPAIR', 'RETIRED'].includes(body.status) ? body.status : 'ACTIVE';
   const f = {
     tag: tag.toUpperCase(), name, category: text(body.category, 60), make: text(body.make, 60), model: text(body.model, 60),
@@ -102,6 +107,7 @@ export async function saveAsset(env, user, body, id = null) {
   const clash = await env.DB.prepare(`SELECT id FROM assets WHERE unit_id = ? AND tag = ? AND id <> ?`).bind(user.unitId, f.tag, id || '').first();
   if (clash) refuse('TAG_TAKEN', `${f.tag} is already another piece of equipment's number.`, 409);
   const now = nowIso();
+  if (keepCost) delete f.cost;
   const cols = Object.keys(f);
   if (id) {
     const a = await env.DB.prepare(`SELECT id FROM assets WHERE id = ? AND unit_id = ?`).bind(id, user.unitId).first();

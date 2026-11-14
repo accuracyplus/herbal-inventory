@@ -487,3 +487,27 @@ test('month close: only a past month, only a unit administrator, and nothing dat
   const log = env.DB.db.prepare(`SELECT action, detail FROM audit_log WHERE action LIKE 'PERIOD_%' ORDER BY at`).all();
   assert.deepEqual(log.map((l) => l.action), ['PERIOD_CLOSE', 'PERIOD_REOPEN']);
 });
+
+test('equipment: what it cost is shown only to people who may see costs, and their edits keep it', async () => {
+  const env = testEnv();
+  await settings(env, { 'assets.on': 'on' });
+  const r = await call(env, 'POST', '/api/assets', { as: 'manager', body: { tag: 'EQ-7', name: 'Steamer', cost: 900 } });
+  assert.equal(r.status, 201, JSON.stringify(r.body));
+  const today = new Date(Date.now() + 4 * 36e5).toISOString().slice(0, 10);
+  assert.equal((await call(env, 'POST', `/api/assets/${r.body.id}/services`, { as: 'keeper', body: { kind: 'SERVICE', onDate: today, cost: 150 } })).status, 201);
+  for (const as of ['staff', 'keeper']) {
+    const one = (await call(env, 'GET', `/api/assets/${r.body.id}`, { as })).body;
+    assert.equal(one.cost, undefined, `${as} is not sent what it cost`);
+    assert.equal(one.services[0].cost, undefined, `${as} is not sent what the service cost`);
+    assert.equal((await call(env, 'GET', '/api/assets', { as })).body[0].cost, undefined);
+  }
+  const m = (await call(env, 'GET', `/api/assets/${r.body.id}`, { as: 'manager' })).body;
+  assert.equal(m.cost, 900);
+  assert.equal(m.services[0].cost, 150);
+  // The store keeper's form has no cost to send back; their edit must not wipe it, nor set one.
+  const e = await call(env, 'PUT', `/api/assets/${r.body.id}`, { as: 'keeper', body: { tag: 'EQ-7', name: 'Steam chamber', cost: 1 } });
+  assert.ok(e.status < 300, JSON.stringify(e.body));
+  const after = (await call(env, 'GET', `/api/assets/${r.body.id}`, { as: 'manager' })).body;
+  assert.equal(after.name, 'Steam chamber');
+  assert.equal(after.cost, 900, 'the cost is as it was');
+});

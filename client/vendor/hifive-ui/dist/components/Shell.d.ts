@@ -26,6 +26,8 @@ export interface SignInProps {
     onLanguage?: (value: string) => void;
     /** The footer's help line: who to ask. */
     help?: ReactNode;
+    /** The legal line under the footer (LegalLinks by default); false only where a page must not show it. */
+    legal?: ReactNode | false;
     /** Any line replaced, for an app's own language. */
     words?: Partial<SignInWords>;
     /** The language of the app's own lines (name, lede, words), e.g. 'ml'. */
@@ -93,6 +95,8 @@ export interface AppFrameProps {
     top?: ReactNode;
     /** The phone bar (TabBar), shown below 1024px. */
     tabs?: ReactNode;
+    /** The legal line after the page (LegalLinks by default); false only where a page must not show it. */
+    legal?: ReactNode | false;
     children: ReactNode;
 }
 /**
@@ -100,4 +104,4 @@ export interface AppFrameProps {
  * it, the top bar or the side menu inside the panel; on a phone the panel fills the screen and the
  * phone bar sits at the bottom.
  */
-export declare function AppFrame({ side, top, tabs, children }: AppFrameProps): import("react").JSX.Element;
+export declare function AppFrame({ side, top, tabs, legal, children }: AppFrameProps): import("react").JSX.Element;

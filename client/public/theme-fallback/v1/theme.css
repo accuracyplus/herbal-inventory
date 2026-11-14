@@ -1,4 +1,4 @@
-/* @hifive/tokens 1.2.6 — built 2026-11-13. Edit packages/tokens/src, not this file. */
+/* @hifive/tokens 1.2.8 — built 2026-11-14. Edit packages/tokens/src, not this file. */
 /* ============================================================
    HiFive design tokens — shared by HiFive ID and every app in the hub
    ------------------------------------------------------------
@@ -187,7 +187,11 @@
    --on-attention is the text colour for a filled attention pill; light mode is white,
    dark mode is ink, and Fire and Aadi (orange coral) darken the fill one step instead. */
 :root { --on-attention: #ffffff; }
-:root[data-skin="sol"] { --on-primary: rgb(var(--ink-950)); }
+:root[data-skin="sol"] { --on-primary: rgb(var(--ink-950)); --primary-hover: rgb(var(--brand-500)); }
+/* --primary-hover moves AWAY from --on-primary, never towards it: lighter under dark text,
+   darker under white text. The default (darker in light, lighter in dark) failed where the
+   text is ink in light (Sol, 4.00) or white in dark (Fire 3.32, Aadi 3.46, Aami 3.76, Luna 4.05).
+   Reported by the HiFive ID chat, 14 Nov 2026; checked by scripts/check-contrast.mjs. */
 :root[data-skin="fire"], :root[data-skin="aadi"] { --attention: rgb(var(--coral-700)); }
 /* --primary-text is the brand colour used as text (links, quiet buttons, the
    selected chip). --primary is a fill and is too light to read as text in Air
@@ -201,12 +205,12 @@
 :root[data-skin="water"][data-theme="dark"], :root[data-skin="water"].dark,
 :root[data-skin="earth"][data-theme="dark"], :root[data-skin="earth"].dark,
 :root[data-skin="air"][data-theme="dark"],   :root[data-skin="air"].dark,
-:root[data-skin="sol"][data-theme="dark"],   :root[data-skin="sol"].dark { --on-primary: rgb(var(--ink-950)); }
+:root[data-skin="sol"][data-theme="dark"],   :root[data-skin="sol"].dark { --on-primary: rgb(var(--ink-950)); --primary-hover: rgb(var(--brand-300)); }
 :root[data-skin="fire"][data-theme="dark"],  :root[data-skin="fire"].dark,
 :root[data-skin="aami"][data-theme="dark"],  :root[data-skin="aami"].dark,
-:root[data-skin="aadi"][data-theme="dark"],  :root[data-skin="aadi"].dark { --on-primary: #ffffff; }
+:root[data-skin="aadi"][data-theme="dark"],  :root[data-skin="aadi"].dark { --on-primary: #ffffff; --primary-hover: rgb(var(--brand-500)); }
 /* Luna's brand-400 passes with neither white nor ink; one step darker with white does. */
-:root[data-skin="luna"][data-theme="dark"],  :root[data-skin="luna"].dark { --primary: rgb(var(--brand-500)); --primary-hover: rgb(var(--brand-400)); --on-primary: #ffffff; }
+:root[data-skin="luna"][data-theme="dark"],  :root[data-skin="luna"].dark { --primary: rgb(var(--brand-500)); --primary-hover: rgb(var(--brand-600)); --on-primary: #ffffff; }
 :root[data-theme="dark"], :root.dark { --on-attention: rgb(var(--ink-950)); --attention: rgb(var(--coral-400)); }
 :root[data-skin="fire"][data-theme="dark"], :root[data-skin="fire"].dark,
 :root[data-skin="aadi"][data-theme="dark"], :root[data-skin="aadi"].dark { --attention: rgb(var(--coral-400)); }

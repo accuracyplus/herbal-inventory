@@ -50,7 +50,10 @@ export { Button, TextField, TextArea, Select, Checkbox, Segmented, ChoiceCards, 
 export { StageLanes, type StageLanesProps, type LaneCard } from './components/Lanes';
 export { MonthStrip, MonthKey, StageBar, SplitView, Stepper, Timeline, DocumentList, type SplitViewProps, type StripMonth, type Step, type TimelineItem, type DocItem } from './components/Workflow';
 export { sortRows, nextSort, stepMark, monthLine, stageLine, splitStep, splitAfter, laneStep, laneCount, MOVE_WORDS, MONTH_WORDS, type SortState, type SortDir, type StepState, type MonthState } from './lib/controls';
-export { AppLogo, AppLogoTile, type AppLogoProps } from './components/AppLogo';
+export { AppLogo, AppLogoTile, useSkin, type AppLogoProps } from './components/AppLogo';
+export { appIconSvg, appIconSrc, appIconKey, APP_ICON_THEMES } from './lib/appIcons';
 export { APPS as APP_FAMILY, logoSvg } from '@hifive/icons';
+export { LegalLinks, type LegalLinksProps } from './components/LegalLinks';
+export { legalLinks, copyrightLine, LEGAL_BASE, LEGAL_WORDS, type LegalWords, type LegalLink } from './lib/legal';
 export { SignIn, TabBar, SideMenu, AppFrame, type SignInProps, type SignInLanguage, type TabBarProps, type TabItem, type SideMenuProps, type SideGroup, type SideItem, type AppFrameProps } from './components/Shell';
 export { signInWords, tabColumns, SIGN_IN_WORDS, type SignInWords } from './lib/shell';

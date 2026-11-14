@@ -144,7 +144,7 @@ export async function itemDetail(env, user, id) {
     ).bind(id).all(),
     env.DB.prepare(
       `SELECT m.id, m.at, m.kind, m.qty, m.balance_after, m.from_state, m.to_state, m.unit_cost, m.value, m.doc_type, m.doc_ref,
-              m.reason, m.note, m.actor_name, s.name AS store_name, a.name AS area_name, cs.name AS counterpart_name,
+              m.reason, m.note, m.actor_name, m.actor_id, s.name AS store_name, a.name AS area_name, cs.name AS counterpart_name,
               bt.batch_no, bt.expiry
          FROM movements m JOIN stores s ON s.id = m.store_id
          LEFT JOIN areas a ON a.id = m.area_id
@@ -158,9 +158,15 @@ export async function itemDetail(env, user, id) {
     `SELECT COALESCE(SUM(-qty), 0) AS used FROM movements
       WHERE item_id = ? AND kind = 'ISSUE' AND at > datetime('now', '-30 days')`,
   ).bind(id).first();
-  const strip = (m) => (showCost
-    ? (['ISSUE', 'TAKE', 'RETURN'].includes(m.kind) && !may(user, 'cost.people') ? { ...m, actor_name: null } : m)
-    : { ...m, unit_cost: undefined, value: undefined });
+  // Who did what is for the store and the managers: somebody without reports (a therapist) sees
+  // their own name on their own lines and nobody else's, as on their treatments list.
+  const others = !may(user, 'reports');
+  const strip = ({ actor_id, ...m }) => {
+    if (others && actor_id !== user.staffId) m = { ...m, actor_name: null };
+    return showCost
+      ? (['ISSUE', 'TAKE', 'RETURN'].includes(m.kind) && !may(user, 'cost.people') ? { ...m, actor_name: null } : m)
+      : { ...m, unit_cost: undefined, value: undefined };
+  };
   // How much, never who: this sheet is open to everybody who can see stock.
   const out = await env.DB.prepare(`SELECT COALESCE(SUM(qty), 0) AS n FROM custody WHERE item_id = ? AND qty > 0`).bind(id).first();
   const packs = (await featureOn(env, user.unitId, 'packs.on')) ? (await packsByItem(env, user.unitId, [id])).get(id) || [] : undefined;

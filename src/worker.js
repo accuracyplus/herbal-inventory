@@ -536,14 +536,17 @@ api('GET', '/api/linen', async ({ env }, user) => {
       WHERE i.unit_id = ? AND i.is_linen = 1 AND i.active = 1 ORDER BY s.name, i.name`,
   ).bind(user.unitId).all();
   const { results: recent } = await env.DB.prepare(
-    `SELECT m.at, m.qty, m.from_state, m.to_state, i.name, s.name AS store_name, a.name AS area_name, m.actor_name, m.reason
+    `SELECT m.at, m.qty, m.from_state, m.to_state, i.name, s.name AS store_name, a.name AS area_name, m.actor_name, m.actor_id, m.reason
        FROM movements m JOIN items i ON i.id = m.item_id JOIN stores s ON s.id = m.store_id LEFT JOIN areas a ON a.id = m.area_id
       WHERE m.unit_id = ? AND m.kind = 'LINEN' ORDER BY m.at DESC LIMIT 30`,
   ).bind(user.unitId).all();
   const { results: linenItems } = await env.DB.prepare(
     `SELECT id, code, name FROM items WHERE unit_id = ? AND is_linen = 1 AND active = 1 ORDER BY name`,
   ).bind(user.unitId).all();
-  return json({ rows: results || [], recent: recent || [], items: linenItems || [] });
+  // As on an item's history: without reports, a person's own name only.
+  const names = may(user, 'reports');
+  const moves = (recent || []).map(({ actor_id, ...m }) => (names || actor_id === user.staffId ? m : { ...m, actor_name: null }));
+  return json({ rows: results || [], recent: moves, items: linenItems || [] });
 });
 
 // ── Scanning ─────────────────────────────────────────────────────────────────

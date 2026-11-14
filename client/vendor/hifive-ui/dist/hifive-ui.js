@@ -1,6 +1,6 @@
 import { jsx as e, jsxs as i, Fragment as I } from "react/jsx-runtime";
 import { useId as fe, useState as M, useRef as j, useMemo as _e, useEffect as H, createElement as na, useSyncExternalStore as ia, useCallback as Me, useLayoutEffect as yt, Fragment as sa } from "react";
-import { Search as je, Minus as He, Plus as la, Check as ne, Building2 as ra, ChevronsUpDown as oa, Settings as kt, User as wt, Briefcase as Nt, Calendar as xt, Lock as Mt, ChevronRight as J, X as Le, Clock as qe, Award as Se, Target as ca, Bell as zt, ShieldCheck as Bt, Pin as Lt, ThumbsUp as St, Hand as me, Sun as Ct, MessageSquare as ha, Star as Gt, BookOpen as Re, UserPlus as Ce, Sparkles as da, RefreshCw as fa, CheckCircle2 as pa, BadgeCheck as ua, ExternalLink as ze, Users as Aa, Hourglass as Ye, LogOut as ma, Info as Tt, ChevronDown as $t, FileText as We, ArrowUp as _a, ArrowDown as ga, AlertTriangle as Be, Circle as ba, Paperclip as va, ChevronLeft as ya, List as ka } from "lucide-react";
+import { Search as je, Minus as He, Plus as la, Check as ne, Building2 as ra, ChevronsUpDown as oa, Settings as kt, User as wt, Briefcase as Nt, Calendar as xt, Lock as Mt, ChevronRight as J, X as Be, Clock as qe, Award as Se, Target as ca, Bell as zt, ShieldCheck as Lt, Pin as Bt, ThumbsUp as St, Hand as me, Sun as Ct, MessageSquare as ha, Star as Gt, BookOpen as Re, UserPlus as Ce, Sparkles as da, RefreshCw as fa, CheckCircle2 as pa, BadgeCheck as ua, ExternalLink as ze, Users as Aa, Hourglass as Ye, LogOut as ma, Info as Tt, ChevronDown as $t, FileText as We, ArrowUp as _a, ArrowDown as ga, AlertTriangle as Le, Circle as ba, Paperclip as va, ChevronLeft as ya, List as ka } from "lucide-react";
 import { createPortal as wa } from "react-dom";
 const De = (t) => t.trim().toLowerCase();
 function Na(t, a, n = 30) {
@@ -23,19 +23,19 @@ function xa(t, a, n = {}) {
   return h < s && (h = s), l !== void 0 && h > l && (h = l), String(Math.round(h * 1e6) / 1e6);
 }
 function Jn({ label: t, options: a, onPick: n, placeholder: s, hint: l, error: r, hideLabel: o, limit: c = 30, empty: h, footer: f, id: d }) {
-  const m = fe(), u = d ?? m, [y, k] = M(""), [p, A] = M(!1), [_, g] = M(0), L = j(null), w = _e(() => Na(a, y, c), [a, y, c]);
+  const m = fe(), u = d ?? m, [y, k] = M(""), [p, A] = M(!1), [_, g] = M(0), B = j(null), w = _e(() => Na(a, y, c), [a, y, c]);
   H(() => {
     if (!p) return;
-    const B = (U) => {
+    const L = (U) => {
       var x;
-      (x = L.current) != null && x.contains(U.target) || A(!1);
+      (x = B.current) != null && x.contains(U.target) || A(!1);
     };
-    return document.addEventListener("pointerdown", B), () => document.removeEventListener("pointerdown", B);
+    return document.addEventListener("pointerdown", L), () => document.removeEventListener("pointerdown", L);
   }, [p]);
-  const G = (B) => {
-    n(B), k(""), A(!1), g(0);
+  const G = (L) => {
+    n(L), k(""), A(!1), g(0);
   }, E = [l ? `${u}-h` : "", r ? `${u}-e` : ""].filter(Boolean).join(" ") || void 0;
-  return /* @__PURE__ */ i("div", { className: "hf-fld hf-pick", ref: L, children: [
+  return /* @__PURE__ */ i("div", { className: "hf-fld hf-pick", ref: B, children: [
     /* @__PURE__ */ e("label", { htmlFor: u, className: o ? "hf-sr" : "hf-fld__l", children: t }),
     l && /* @__PURE__ */ e("span", { id: `${u}-h`, className: "hf-fld__h", children: l }),
     /* @__PURE__ */ i("div", { className: "hf-pick__wrap", children: [
@@ -56,17 +56,17 @@ function Jn({ label: t, options: a, onPick: n, placeholder: s, hint: l, error: r
             value: y,
             placeholder: s,
             onFocus: () => A(!0),
-            onChange: (B) => {
-              k(B.target.value), A(!0), g(0);
+            onChange: (L) => {
+              k(L.target.value), A(!0), g(0);
             },
-            onKeyDown: (B) => {
-              B.key === "ArrowDown" ? (B.preventDefault(), A(!0), g((U) => Math.min(U + 1, w.length - 1))) : B.key === "ArrowUp" ? (B.preventDefault(), g((U) => Math.max(U - 1, 0))) : B.key === "Enter" && p && w[_] ? (B.preventDefault(), G(w[_])) : B.key === "Escape" && p && (B.stopPropagation(), A(!1));
+            onKeyDown: (L) => {
+              L.key === "ArrowDown" ? (L.preventDefault(), A(!0), g((U) => Math.min(U + 1, w.length - 1))) : L.key === "ArrowUp" ? (L.preventDefault(), g((U) => Math.max(U - 1, 0))) : L.key === "Enter" && p && w[_] ? (L.preventDefault(), G(w[_])) : L.key === "Escape" && p && (L.stopPropagation(), A(!1));
             }
           }
         )
       ] }),
       p && /* @__PURE__ */ i("div", { className: "hf-pick__list", children: [
-        /* @__PURE__ */ e("div", { id: `${u}-l`, role: "listbox", "aria-label": t, children: w.map((B, U) => /* @__PURE__ */ i(
+        /* @__PURE__ */ e("div", { id: `${u}-l`, role: "listbox", "aria-label": t, children: w.map((L, U) => /* @__PURE__ */ i(
           "button",
           {
             id: `${u}-o${U}`,
@@ -76,17 +76,17 @@ function Jn({ label: t, options: a, onPick: n, placeholder: s, hint: l, error: r
             tabIndex: -1,
             className: U === _ ? "hf-pick__opt is-on" : "hf-pick__opt",
             onPointerDown: (x) => x.preventDefault(),
-            onClick: () => G(B),
+            onClick: () => G(L),
             onPointerEnter: () => g(U),
             children: [
               /* @__PURE__ */ i("span", { className: "hf-pick__b", children: [
-                /* @__PURE__ */ e("span", { className: "hf-pick__t", children: B.label }),
-                B.sub && /* @__PURE__ */ e("span", { className: "hf-pick__s", children: B.sub })
+                /* @__PURE__ */ e("span", { className: "hf-pick__t", children: L.label }),
+                L.sub && /* @__PURE__ */ e("span", { className: "hf-pick__s", children: L.sub })
               ] }),
-              B.end && /* @__PURE__ */ e("span", { className: B.endTone ? `hf-pick__e hf-pick__e--${B.endTone}` : "hf-pick__e", children: B.end })
+              L.end && /* @__PURE__ */ e("span", { className: L.endTone ? `hf-pick__e hf-pick__e--${L.endTone}` : "hf-pick__e", children: L.end })
             ]
           },
-          B.value
+          L.value
         )) }),
         w.length === 0 && /* @__PURE__ */ e("p", { className: "hf-pick__none", children: h ? h(y) : `Nothing matches “${y}”.` }),
         f && /* @__PURE__ */ e("div", { className: "hf-pick__foot", children: f })
@@ -291,16 +291,16 @@ function ve({ open: t, title: a, subtitle: n, onClose: s, children: l, wide: r }
         /* @__PURE__ */ e("h2", { id: o, className: "hf-sheet__title", children: a }),
         n && /* @__PURE__ */ e("p", { className: "hf-sheet__sub", children: n })
       ] }),
-      /* @__PURE__ */ e("button", { ref: c, type: "button", className: "hf-sheet__close", onClick: s, "aria-label": "Close", children: /* @__PURE__ */ e(Le, { size: 18 }) })
+      /* @__PURE__ */ e("button", { ref: c, type: "button", className: "hf-sheet__close", onClick: s, "aria-label": "Close", children: /* @__PURE__ */ e(Be, { size: 18 }) })
     ] }),
     l
   ] }) }) : null;
 }
-function Ba(t) {
+function La(t) {
   const a = t.reduce((n, s) => n + s.weight, 0) || 1;
   return Math.round(t.reduce((n, s) => n + s.score / s.max * s.weight, 0) / a * 100);
 }
-function La(t, a) {
+function Ba(t, a) {
   return t >= a.exceeding ? { label: "Exceeding", icon: /* @__PURE__ */ e(Se, { size: 12 }), tone: "brand" } : t >= a.onTrack ? { label: "On track", icon: /* @__PURE__ */ e(ca, { size: 12 }), tone: "pop" } : { label: "Needs attention", icon: /* @__PURE__ */ e(zt, { size: 12 }), tone: "coral" };
 }
 function Sa({ history: t }) {
@@ -314,7 +314,7 @@ function Sa({ history: t }) {
 }
 function ni({ factors: t, bands: a, conductPolicy: n, status: s, history: l = [], improve: r = [], building: o, title: c = "Your HiFive Factor" }) {
   var V;
-  const [h, f] = M(!1), [d, m] = M(0), [u, y] = M(0), k = Ba(t), p = typeof window < "u" && ((V = window.matchMedia) == null ? void 0 : V.call(window, "(prefers-reduced-motion: reduce)").matches), A = typeof document < "u" && document.documentElement.getAttribute("data-tier") === "lite", _ = p || A;
+  const [h, f] = M(!1), [d, m] = M(0), [u, y] = M(0), k = La(t), p = typeof window < "u" && ((V = window.matchMedia) == null ? void 0 : V.call(window, "(prefers-reduced-motion: reduce)").matches), A = typeof document < "u" && document.documentElement.getAttribute("data-tier") === "lite", _ = p || A;
   H(() => {
     if (_) {
       m(1), y(k);
@@ -332,12 +332,12 @@ function ni({ factors: t, bands: a, conductPolicy: n, status: s, history: l = []
       clearTimeout(N), clearTimeout(W);
     };
   }, [k, _]);
-  const g = t.reduce((N, W) => N + W.weight, 0) || 1, L = 45, w = 2 * Math.PI * L;
+  const g = t.reduce((N, W) => N + W.weight, 0) || 1, B = 45, w = 2 * Math.PI * B;
   let G = 0;
   const E = t.map((N) => {
     const W = N.score / N.max * N.weight / g * w, R = { ...N, len: W, offset: G };
     return G += W, R;
-  }), B = La(k, a), U = t.find((N) => N.balance), x = U && n ? U.score >= n.warn ? "ok" : U.score >= n.formalWarning ? "watch" : "risk" : "ok", P = `${c} ${k} out of 100: ` + t.map((N) => `${N.label} ${N.score} of ${N.max}`).join(", ") + (s ? `. ${s}` : ""), O = l.length >= 2 ? k - l[0] : null;
+  }), L = Ba(k, a), U = t.find((N) => N.balance), x = U && n ? U.score >= n.warn ? "ok" : U.score >= n.formalWarning ? "watch" : "risk" : "ok", P = `${c} ${k} out of 100: ` + t.map((N) => `${N.label} ${N.score} of ${N.max}`).join(", ") + (s ? `. ${s}` : ""), O = l.length >= 2 ? k - l[0] : null;
   return /* @__PURE__ */ i(I, { children: [
     /* @__PURE__ */ i("button", { type: "button", className: "hf hf-card hf-card--hero hf-factor hf-press", onClick: () => f(!0), "data-tour": "factor", "aria-haspopup": "dialog", children: [
       /* @__PURE__ */ i("div", { className: "hf-factor__head", children: [
@@ -354,14 +354,14 @@ function ni({ factors: t, bands: a, conductPolicy: n, status: s, history: l = []
       /* @__PURE__ */ i("div", { className: "hf-factor__row", children: [
         /* @__PURE__ */ i("div", { className: "hf-ring", children: [
           /* @__PURE__ */ i("svg", { viewBox: "0 0 100 100", role: "img", "aria-label": o ? `${c}: building, first score after your first review` : P, children: [
-            /* @__PURE__ */ e("circle", { className: "hf-ring__track", cx: "50", cy: "50", r: L, fill: "none", strokeWidth: "8" }),
+            /* @__PURE__ */ e("circle", { className: "hf-ring__track", cx: "50", cy: "50", r: B, fill: "none", strokeWidth: "8" }),
             !o && E.map((N, W) => /* @__PURE__ */ e(
               "circle",
               {
                 className: q("hf-ring__seg", he(N.tone)),
                 cx: "50",
                 cy: "50",
-                r: L,
+                r: B,
                 fill: "none",
                 strokeWidth: "8",
                 stroke: "var(--hf-tone-bar)",
@@ -373,10 +373,10 @@ function ni({ factors: t, bands: a, conductPolicy: n, status: s, history: l = []
           o ? /* @__PURE__ */ e("span", { className: "hf-ring__building", children: "Building — first score after your first review" }) : /* @__PURE__ */ e("span", { className: "hf-ring__num hf-num", "aria-hidden": "true", children: u })
         ] }),
         /* @__PURE__ */ i("div", { style: { flex: 1, minWidth: 0 }, children: [
-          !o && /* @__PURE__ */ i("span", { className: q("hf-band", he(B.tone)), children: [
-            B.icon,
+          !o && /* @__PURE__ */ i("span", { className: q("hf-band", he(L.tone)), children: [
+            L.icon,
             " ",
-            B.label
+            L.label
           ] }),
           s && /* @__PURE__ */ e("p", { className: "hf-factor__status", children: s }),
           U && n && x !== "ok" && /* @__PURE__ */ i("p", { className: "hf-factor__warn", children: [
@@ -475,7 +475,7 @@ function ii({ score: t, max: a, policy: n, label: s = "Conduct points left", hin
       "aria-label": `${s}: ${t} of ${a}${h}`,
       children: [
         /* @__PURE__ */ i("div", { className: "hf-tile__top", children: [
-          /* @__PURE__ */ e("span", { className: "hf-tile__ic", children: /* @__PURE__ */ e(Bt, { size: 18 }) }),
+          /* @__PURE__ */ e("span", { className: "hf-tile__ic", children: /* @__PURE__ */ e(Lt, { size: 18 }) }),
           /* @__PURE__ */ e(ie, { text: f })
         ] }),
         /* @__PURE__ */ i("div", { children: [
@@ -511,7 +511,7 @@ function rt({ item: t, onReact: a }) {
   if (t.type === "pinned")
     return /* @__PURE__ */ i("article", { className: "hf hf-card hf-pinned", children: [
       /* @__PURE__ */ i("div", { className: "hf-pinned__tag", children: [
-        /* @__PURE__ */ e(Lt, { size: 12 }),
+        /* @__PURE__ */ e(Bt, { size: 12 }),
         " Pinned by HR"
       ] }),
       t.title && /* @__PURE__ */ e("h4", { children: t.title }),
@@ -769,10 +769,10 @@ function di({ open: t, onClose: a, people: n, onSend: s }) {
     l || (_.to = "Choose who the kudos is for");
     const g = d.trim();
     if (g.length < 4 && (_.msg = "Add a few words about what they did"), g.length > 280 && (_.msg = "Keep it under 280 characters"), y(_), _.to || _.msg) return;
-    const L = n.find((w) => w.id === l);
+    const B = n.find((w) => w.id === l);
     p(!0);
     try {
-      await s(L, g), r(""), c(""), m(""), a();
+      await s(B, g), r(""), c(""), m(""), a();
     } catch (w) {
       y({ msg: w instanceof Error && w.message ? w.message : "That didn't send. Try again, or tell HR." });
     } finally {
@@ -790,7 +790,7 @@ function di({ open: t, onClose: a, people: n, onSend: s }) {
         ] }),
         /* @__PURE__ */ e("button", { type: "button", className: "hf-who__x", "aria-label": `Change from ${f.name}`, onClick: () => {
           r(""), c("");
-        }, children: /* @__PURE__ */ e(Le, { size: 16 }) })
+        }, children: /* @__PURE__ */ e(Be, { size: 16 }) })
       ] }) : /* @__PURE__ */ i(I, { children: [
         /* @__PURE__ */ i("div", { className: "hf-who__search", children: [
           /* @__PURE__ */ e(je, { size: 16, "aria-hidden": "true" }),
@@ -885,7 +885,7 @@ function ui({ type: t, title: a, detail: n, onDismiss: s }) {
         /* @__PURE__ */ e("h2", { className: "hf-display hf-celebrate__h", children: a }),
         n && /* @__PURE__ */ e("p", { className: "hf-celebrate__p", children: n })
       ] }),
-      /* @__PURE__ */ e("button", { type: "button", className: "hf-celebrate__x", onClick: s, "aria-label": "Dismiss", children: /* @__PURE__ */ e(Le, { size: 18 }) })
+      /* @__PURE__ */ e("button", { type: "button", className: "hf-celebrate__x", onClick: s, "aria-label": "Dismiss", children: /* @__PURE__ */ e(Be, { size: 18 }) })
     ] })
   ] });
 }
@@ -1101,7 +1101,7 @@ function gi({ onSearch: t, placeholder: a = "Search", id: n }) {
           role: "combobox"
         }
       ),
-      s && /* @__PURE__ */ e("button", { type: "button", className: "hf-search__clear", onClick: () => l(""), "aria-label": "Clear", children: /* @__PURE__ */ e(Le, { size: 16 }) })
+      s && /* @__PURE__ */ e("button", { type: "button", className: "hf-search__clear", onClick: () => l(""), "aria-label": "Clear", children: /* @__PURE__ */ e(Be, { size: 16 }) })
     ] }),
     f && /* @__PURE__ */ i("div", { className: "hf-search__results", id: m, role: "listbox", children: [
       r.length === 0 && /* @__PURE__ */ i("p", { className: "hf-search__group hf-muted", style: { margin: 0 }, children: [
@@ -1208,7 +1208,7 @@ function vi({ open: t, steps: a = Qa, context: n = {}, onSkip: s, onDone: l, lab
   H(() => {
     t && (m(0), y(!1), p(!0));
   }, [t]);
-  const L = Me(() => {
+  const B = Me(() => {
     d + 1 >= h.length ? y(!0) : m(d + 1);
   }, [d, h.length]), w = Me(() => {
     u ? y(!1) : d > 0 && m(d - 1);
@@ -1216,14 +1216,14 @@ function vi({ open: t, steps: a = Qa, context: n = {}, onSkip: s, onDone: l, lab
   if (H(() => {
     if (!t) return;
     const P = (O) => {
-      O.key === "Escape" ? (O.preventDefault(), s()) : (O.key === "ArrowRight" || O.key === "Enter") && !u ? (O.preventDefault(), L()) : O.key === "ArrowLeft" && (O.preventDefault(), w());
+      O.key === "Escape" ? (O.preventDefault(), s()) : (O.key === "ArrowRight" || O.key === "Enter") && !u ? (O.preventDefault(), B()) : O.key === "ArrowLeft" && (O.preventDefault(), w());
     };
     return window.addEventListener("keydown", P), () => window.removeEventListener("keydown", P);
-  }, [t, u, L, w, s]), H(() => {
+  }, [t, u, B, w, s]), H(() => {
     var P;
     t && ((P = g.current) == null || P.focus());
   }, [t, d, u]), !t || !u && !A) return null;
-  const G = window.innerWidth < 768, E = window.innerWidth, B = window.innerHeight;
+  const G = window.innerWidth < 768, E = window.innerWidth, L = window.innerHeight;
   if (u)
     return /* @__PURE__ */ e("div", { className: "hf hf-tour__scrim hf-tour__scrim--centre", role: "dialog", "aria-modal": "true", "aria-labelledby": "hf-tour-done", children: /* @__PURE__ */ i("div", { ref: g, tabIndex: -1, className: "hf-tour__card hf-tour__card--done", lang: o, children: [
       /* @__PURE__ */ e("h2", { id: "hf-tour-done", className: "hf-display hf-tour__title", style: { fontSize: 22 }, children: c.doneTitle }),
@@ -1243,11 +1243,11 @@ function vi({ open: t, steps: a = Qa, context: n = {}, onSkip: s, onDone: l, lab
     x = {
       left: "max(16px, env(safe-area-inset-left, 0px))",
       right: "max(16px, env(safe-area-inset-right, 0px))",
-      bottom: _ && _.top + _.height / 2 > B / 2 && _ ? B - _.top + de + 12 : "calc(16px + env(safe-area-inset-bottom, 0px))"
+      bottom: _ && _.top + _.height / 2 > L / 2 && _ ? L - _.top + de + 12 : "calc(16px + env(safe-area-inset-bottom, 0px))"
     };
   else {
-    const P = _.top + _.height + de + 12, O = B - _.top + de + 12, V = Math.min(Math.max(16, _.left + _.width / 2 - Ne / 2), E - Ne - 16);
-    x = P + 160 < B ? { top: P, left: V, width: Ne } : { bottom: O, left: V, width: Ne };
+    const P = _.top + _.height + de + 12, O = L - _.top + de + 12, V = Math.min(Math.max(16, _.left + _.width / 2 - Ne / 2), E - Ne - 16);
+    x = P + 160 < L ? { top: P, left: V, width: Ne } : { bottom: O, left: V, width: Ne };
   }
   return /* @__PURE__ */ i("div", { className: "hf", children: [
     /* @__PURE__ */ e("div", { className: "hf-tour__spot", style: U, "aria-hidden": "true" }),
@@ -1259,7 +1259,7 @@ function vi({ open: t, steps: a = Qa, context: n = {}, onSkip: s, onDone: l, lab
         /* @__PURE__ */ e("button", { type: "button", className: "hf-btn hf-btn--quiet", onClick: s, children: c.skip }),
         /* @__PURE__ */ i("span", { className: "hf-tour__nav", children: [
           d > 0 && /* @__PURE__ */ e("button", { type: "button", className: "hf-btn hf-btn--secondary", style: { minHeight: 44 }, onClick: w, children: c.back }),
-          /* @__PURE__ */ e("button", { type: "button", className: "hf-btn hf-btn--primary", style: { width: "auto", minHeight: 44 }, onClick: L, children: d + 1 >= h.length ? c.finish : c.next })
+          /* @__PURE__ */ e("button", { type: "button", className: "hf-btn hf-btn--primary", style: { width: "auto", minHeight: 44 }, onClick: B, children: d + 1 >= h.length ? c.finish : c.next })
         ] })
       ] })
     ] })
@@ -1322,7 +1322,7 @@ function an(t, a, n, s = 40) {
     const d = r[f], m = Math.max(1, n[h.id] ?? s);
     let u = 0, y = 0, k = 1 / 0;
     for (let p = 0; p + d <= l; p++) {
-      const A = o.slice(p, p + d), _ = Math.max(...A), g = A.reduce((L, w) => L + (_ - w), 0);
+      const A = o.slice(p, p + d), _ = Math.max(...A), g = A.reduce((B, w) => B + (_ - w), 0);
       _ + g < k && (k = _ + g, y = _, u = p);
     }
     for (let p = u; p < u + d; p++) o[p] = y + m;
@@ -1460,7 +1460,7 @@ function Ni() {
     ] })
   ] });
 }
-const ln = { joiners: Ce, anniversary: Se, kudos: me, induction: Re, probation: ua, pinned: Lt }, Ue = 4;
+const ln = { joiners: Ce, anniversary: Se, kudos: me, induction: Re, probation: ua, pinned: Bt }, Ue = 4;
 function xi({ items: t, limit: a = 4, onKudos: n, onReact: s }) {
   const [l, r] = M(!1), [o, c] = M({}), [h, f] = M(!1), d = t.filter((p) => p.kind === "pinned"), m = t.filter((p) => p.kind !== "pinned"), u = [...d, ...m], y = l ? u : u.slice(0, a), k = m.length === 0 && d.length === 0;
   return /* @__PURE__ */ i("section", { className: "hf hf-card hf-happen", "aria-label": "Happening at HiFive", "data-tour": "feed", children: [
@@ -1478,7 +1478,7 @@ function xi({ items: t, limit: a = 4, onKudos: n, onReact: s }) {
         ] })
       ] })
     ] }) : /* @__PURE__ */ e("ul", { className: "hf-happen__list", children: y.map((p) => {
-      var g, L, w, G, E, B, U;
+      var g, B, w, G, E, L, U;
       const A = ln[p.kind], _ = !!o[p.id];
       return /* @__PURE__ */ i("li", { className: "hf-happen__row", children: [
         /* @__PURE__ */ i("div", { className: "hf-happen__line", children: [
@@ -1486,7 +1486,7 @@ function xi({ items: t, limit: a = 4, onKudos: n, onReact: s }) {
             /* @__PURE__ */ e(ae, { name: p.person, size: 36 }),
             /* @__PURE__ */ e("span", { className: `hf-kind-badge hf-kind--${p.kind}`, children: /* @__PURE__ */ e(A, { size: 11 }) })
           ] }) : /* @__PURE__ */ e("span", { className: `hf-kind-well hf-kind--${p.kind}`, "aria-hidden": "true", children: /* @__PURE__ */ e(A, { size: 17 }) }),
-          /* @__PURE__ */ e("div", { className: "hf-happen__body", children: (L = p.people) != null && L.length ? /* @__PURE__ */ i("button", { type: "button", className: "hf-happen__toggle", "aria-expanded": _, onClick: () => {
+          /* @__PURE__ */ e("div", { className: "hf-happen__body", children: (B = p.people) != null && B.length ? /* @__PURE__ */ i("button", { type: "button", className: "hf-happen__toggle", "aria-expanded": _, onClick: () => {
             c((x) => ({ [p.id]: !x[p.id] })), f(!1);
           }, children: [
             /* @__PURE__ */ e("span", { className: "hf-happen__text", children: p.headline ?? /* @__PURE__ */ i(I, { children: [
@@ -1532,7 +1532,7 @@ function xi({ items: t, limit: a = 4, onKudos: n, onReact: s }) {
             " ",
             p.likes ?? 0
           ] }),
-          /* @__PURE__ */ i("button", { type: "button", className: `hf-react2${(B = p.mine) != null && B.clap ? " is-on" : ""}`, "aria-pressed": !!((U = p.mine) != null && U.clap), onClick: () => s(p.id, "clap"), children: [
+          /* @__PURE__ */ i("button", { type: "button", className: `hf-react2${(L = p.mine) != null && L.clap ? " is-on" : ""}`, "aria-pressed": !!((U = p.mine) != null && U.clap), onClick: () => s(p.id, "clap"), children: [
             /* @__PURE__ */ e(me, { size: 14 }),
             " ",
             p.claps ?? 0
@@ -1613,11 +1613,11 @@ function dn(t, a = /* @__PURE__ */ new Date()) {
   const n = qt(t.unaccounted, t.since, a);
   return n ? `${Ee(t.holding)}, ${n}` : Ee(t.holding);
 }
-function Bi(t, a) {
+function Li(t, a) {
   const n = `${t === 1 ? "Item" : "Items"} in hand`;
   return a > 0 ? `${n} · ${a} to account for` : n;
 }
-function Li(t) {
+function Bi(t) {
   return t ? t.state === "down" ? !0 : t.state === "ok" && t.holding > 0 : !1;
 }
 function fn(t, a) {
@@ -1797,7 +1797,7 @@ function Si({ crumbs: t, onCrumb: a, title: n, note: s, glance: l, month: r, uni
           /* @__PURE__ */ e(J, { size: 18, "aria-hidden": "true", className: "hf-kid__chev" })
         ] }) }, `${g.entity}-${g.department ?? ""}`)) }),
         c && /* @__PURE__ */ e("ul", { className: "hf-kids hf-kids--people", children: A.map((g) => {
-          const L = /* @__PURE__ */ i(I, { children: [
+          const B = /* @__PURE__ */ i(I, { children: [
             /* @__PURE__ */ e(ae, { name: g.name, size: 40 }),
             /* @__PURE__ */ i("span", { className: "hf-kid__txt", children: [
               /* @__PURE__ */ e("span", { className: "hf-kid__name hf-truncate", children: g.name }),
@@ -1815,7 +1815,7 @@ function Si({ crumbs: t, onCrumb: a, title: n, note: s, glance: l, month: r, uni
             ] }),
             g.code && f && /* @__PURE__ */ e(J, { size: 18, "aria-hidden": "true", className: "hf-kid__chev" })
           ] });
-          return /* @__PURE__ */ e("li", { children: g.code && f ? /* @__PURE__ */ e("button", { type: "button", className: "hf hf-card hf-kid hf-press", onClick: () => f(g), children: L }) : /* @__PURE__ */ e("div", { className: "hf hf-card hf-kid", children: L }) }, g.code ?? g.name);
+          return /* @__PURE__ */ e("li", { children: g.code && f ? /* @__PURE__ */ e("button", { type: "button", className: "hf hf-card hf-kid hf-press", onClick: () => f(g), children: B }) : /* @__PURE__ */ e("div", { className: "hf hf-card hf-kid", children: B }) }, g.code ?? g.name);
         }) })
       ] }),
       /* @__PURE__ */ i("aside", { className: "hf-unitpage__side", children: [
@@ -1967,24 +1967,24 @@ function Nn({ ctx: t, first: a, open: n }) {
 }
 function Gi({ form: t, open: a, onSave: n, onClose: s }) {
   var R, ee, re, Y;
-  const [l, r] = M([]), [o, c] = M(0), [h, f] = M(0), [d, m] = M({}), [u, y] = M(!1), [k, p] = M([]), [A, _] = M(!1), [g, L] = M(null);
+  const [l, r] = M([]), [o, c] = M(0), [h, f] = M(0), [d, m] = M({}), [u, y] = M(!1), [k, p] = M([]), [A, _] = M(!1), [g, B] = M(null);
   H(() => {
-    !a || !t || (r(t.items), c(0), f(0), m({}), y(!1), p([]), L(null));
+    !a || !t || (r(t.items), c(0), f(0), m({}), y(!1), p([]), B(null));
   }, [a, t]);
   const w = l[o], G = _e(() => {
     var v;
     return (v = w == null ? void 0 : w.steps) != null && v.length ? w.steps : (t == null ? void 0 : t.steps) ?? [];
   }, [w, t]);
   if (!t || !w || !G.length) return /* @__PURE__ */ e(ve, { open: a && !!t, onClose: () => s(k), title: (t == null ? void 0 : t.title) ?? "", children: /* @__PURE__ */ e("p", { className: "hf-muted", children: "Nothing is waiting here any more." }) });
-  const E = G[h], B = h === G.length - 1, U = o === l.length - 1, x = kn(E, d), P = yn(E, d), O = (v, F) => {
-    m((Q) => ({ ...Q, [v]: F })), L(null);
+  const E = G[h], L = h === G.length - 1, U = o === l.length - 1, x = kn(E, d), P = yn(E, d), O = (v, F) => {
+    m((Q) => ({ ...Q, [v]: F })), B(null);
   }, V = t.unit.toLowerCase();
   async function N() {
     if (x.length || P) {
       y(!0);
       return;
     }
-    if (y(!1), !B) {
+    if (y(!1), !L) {
       f(h + 1);
       return;
     }
@@ -1999,7 +1999,7 @@ function Gi({ form: t, open: a, onSave: n, onClose: s }) {
       c(o + 1), f(0), m({});
     } catch (v) {
       const F = v;
-      if (L({ text: (F == null ? void 0 : F.message) || "That didn't save. Try again, or open it in the app.", field: F == null ? void 0 : F.field }), F != null && F.field) {
+      if (B({ text: (F == null ? void 0 : F.message) || "That didn't save. Try again, or open it in the app.", field: F == null ? void 0 : F.field }), F != null && F.field) {
         const Q = G.findIndex((X) => X.fields.some((oe) => oe.key === F.field));
         Q >= 0 && f(Q);
       }
@@ -2007,7 +2007,7 @@ function Gi({ form: t, open: a, onSave: n, onClose: s }) {
       _(!1);
     }
   }
-  const W = B ? U ? "Save" : `Save and next ${V}` : "Next";
+  const W = L ? U ? "Save" : `Save and next ${V}` : "Next";
   return /* @__PURE__ */ e(ve, { open: a, onClose: () => s(k), title: t.title, children: /* @__PURE__ */ i("div", { className: "hf-quick", children: [
     /* @__PURE__ */ i("div", { className: "hf-quick__app", children: [
       /* @__PURE__ */ e(ye, { app: t.app, size: 28 }),
@@ -2162,10 +2162,10 @@ const Zt = {
   skipped: "Skipped",
   future: "Still to come"
 };
-function Bn(t) {
+function Ln(t) {
   return t.map((a) => `${a.label}: ${Zt[a.state].toLowerCase()}`).join(", ");
 }
-function Ln(t, a) {
+function Bn(t, a) {
   const n = t.indexOf(a);
   if (n < 0) return { index: -1, line: a ? `${a}: not one of the usual stages.` : "Stage not known." };
   const s = t[n + 1];
@@ -2403,7 +2403,7 @@ function Tn({ label: t, children: a }) {
 const $n = {
   ok: /* @__PURE__ */ e(ne, { size: 14, strokeWidth: 2.5, "aria-hidden": "true" }),
   warn: /* @__PURE__ */ e(qe, { size: 14, strokeWidth: 2.5, "aria-hidden": "true" }),
-  danger: /* @__PURE__ */ e(Be, { size: 14, strokeWidth: 2.5, "aria-hidden": "true" }),
+  danger: /* @__PURE__ */ e(Le, { size: 14, strokeWidth: 2.5, "aria-hidden": "true" }),
   plain: /* @__PURE__ */ e(ba, { size: 10, strokeWidth: 3, "aria-hidden": "true" })
 };
 function qi({ tone: t, icon: a, children: n }) {
@@ -2414,8 +2414,8 @@ function qi({ tone: t, icon: a, children: n }) {
 }
 const Dn = {
   ok: /* @__PURE__ */ e(ne, { size: 18, "aria-hidden": "true" }),
-  warn: /* @__PURE__ */ e(Be, { size: 18, "aria-hidden": "true" }),
-  danger: /* @__PURE__ */ e(Be, { size: 18, "aria-hidden": "true" }),
+  warn: /* @__PURE__ */ e(Le, { size: 18, "aria-hidden": "true" }),
+  danger: /* @__PURE__ */ e(Le, { size: 18, "aria-hidden": "true" }),
   plain: /* @__PURE__ */ e(Tt, { size: 18, "aria-hidden": "true" })
 };
 function Ri({ tone: t = "plain", icon: a, children: n, role: s, action: l }) {
@@ -2453,8 +2453,8 @@ function Fn({ caption: t, children: a, action: n }) {
 }
 function Yi({ caption: t, columns: a, rows: n, rowKey: s, onRowClick: l, rowHref: r, empty: o, initialSort: c = null, hideCaption: h, wide: f }) {
   const [d, m] = M(c), u = _e(() => xn(n, d, (A, _) => {
-    var g, L;
-    return (L = (g = a.find((w) => w.key === _)) == null ? void 0 : g.sortValue) == null ? void 0 : L.call(g, A);
+    var g, B;
+    return (B = (g = a.find((w) => w.key === _)) == null ? void 0 : g.sortValue) == null ? void 0 : B.call(g, A);
   }), [n, d, a]), y = a.map((A) => A.width ?? "minmax(0, 1fr)").join(" "), k = (A, _) => A.render ? A.render(_) : _[A.key], p = (A) => A == null || A === "" || A === !1;
   return /* @__PURE__ */ i("div", { className: f ? "hf-table hf-table--wide" : "hf-table", role: "table", "aria-label": t, children: [
     !h && /* @__PURE__ */ e("div", { className: "hf-table__cap hf-cap", children: t }),
@@ -2476,17 +2476,17 @@ function Yi({ caption: t, columns: a, rows: n, rowKey: s, onRowClick: l, rowHref
     }) }),
     u.length === 0 && o && /* @__PURE__ */ e("div", { className: "hf-table__empty", children: o }),
     u.map((A) => {
-      const _ = a.map((L) => {
-        const w = k(L, A);
+      const _ = a.map((B) => {
+        const w = k(B, A);
         return /* @__PURE__ */ e(
           "span",
           {
             role: "cell",
-            "data-label": L.label,
-            className: ["hf-table__td", L.lead ? "is-lead" : "", L.align === "end" ? "is-end" : "", p(w) ? "is-blank" : ""].filter(Boolean).join(" "),
+            "data-label": B.label,
+            className: ["hf-table__td", B.lead ? "is-lead" : "", B.align === "end" ? "is-end" : "", p(w) ? "is-blank" : ""].filter(Boolean).join(" "),
             children: w
           },
-          L.key
+          B.key
         );
       }), g = r == null ? void 0 : r(A);
       return g ? /* @__PURE__ */ e(
@@ -2496,8 +2496,8 @@ function Yi({ caption: t, columns: a, rows: n, rowKey: s, onRowClick: l, rowHref
           className: "hf-table__tr is-link",
           style: { gridTemplateColumns: y },
           href: g,
-          onClick: l ? (L) => {
-            L.preventDefault(), l(A);
+          onClick: l ? (B) => {
+            B.preventDefault(), l(A);
           } : void 0,
           children: _
         },
@@ -2555,7 +2555,7 @@ function Qi(t) {
   const { label: a, lanes: n, items: s, laneOf: l, itemKey: r, itemName: o, card: c, onOpen: h, onMove: f, leading: d, empty: m, initialLane: u } = t, y = In(), k = n.map((b) => b.key), p = (b) => {
     var z;
     return ((z = n.find((S) => S.key === b)) == null ? void 0 : z.label) ?? b;
-  }, A = (b) => s.filter((z) => l(z) === b), _ = (b) => s.find((z) => r(z) === b) ?? null, g = k.find((b) => A(b).length) ?? k[0], [L, w] = M(u ?? g ?? ""), [G, E] = M(null), [B, U] = M({ x: 0, y: 0 }), [x, P] = M(null), [O, V] = M(null), [N, W] = M(""), R = j(null), ee = j({}), re = j({}), Y = j(null), v = j(null), F = j(null), Q = j(0), X = j(null), oe = j(!1), D = !!f, Te = Me((b, z) => {
+  }, A = (b) => s.filter((z) => l(z) === b), _ = (b) => s.find((z) => r(z) === b) ?? null, g = k.find((b) => A(b).length) ?? k[0], [B, w] = M(u ?? g ?? ""), [G, E] = M(null), [L, U] = M({ x: 0, y: 0 }), [x, P] = M(null), [O, V] = M(null), [N, W] = M(""), R = j(null), ee = j({}), re = j({}), Y = j(null), v = j(null), F = j(null), Q = j(0), X = j(null), oe = j(!1), D = !!f, Te = Me((b, z) => {
     let S = null, C = 1 / 0;
     for (const T of k) {
       const Z = ee.current[T];
@@ -2678,13 +2678,13 @@ function Qi(t) {
     n.map((C) => /* @__PURE__ */ e(gt, { pressed: z(C.key), count: A(C.key).length, onClick: () => b(C.key), children: C.label ?? C.key }, C.key))
   ] });
   if (y) {
-    const b = !!d && L === d.key, z = b ? [] : A(L);
+    const b = !!d && B === d.key, z = b ? [] : A(B);
     return /* @__PURE__ */ i("div", { className: "hf-lanes hf-lanes--one", "aria-label": a, role: "region", children: [
-      it(w, (S) => S === L, "Stage"),
-      b ? d.render(!0) : z.length ? /* @__PURE__ */ e(Fn, { caption: `${p(L)}, ${z.length}`, children: z.map((S) => {
+      it(w, (S) => S === B, "Stage"),
+      b ? d.render(!0) : z.length ? /* @__PURE__ */ e(Fn, { caption: `${p(B)}, ${z.length}`, children: z.map((S) => {
         const C = c(S);
         return /* @__PURE__ */ e(Pn, { icon: C.icon, title: C.title, sub: C.sub, below: C.chips, onClick: () => h(S) }, r(S));
-      }) }) : /* @__PURE__ */ e(Ma, { children: m ? m(p(L)) : `Nobody in ${p(L)}.` }),
+      }) }) : /* @__PURE__ */ e(Ma, { children: m ? m(p(B)) : `Nobody in ${p(B)}.` }),
       nt
     ] });
   }
@@ -2756,7 +2756,7 @@ function Qi(t) {
         {
           className: "hf-lanecard is-ghost",
           "aria-hidden": "true",
-          style: { width: G.w, transform: `translate(${B.x - G.offX}px, ${B.y - G.offY}px) rotate(1.5deg) scale(1.03)` },
+          style: { width: G.w, transform: `translate(${L.x - G.offX}px, ${L.y - G.offY}px) rotate(1.5deg) scale(1.03)` },
           children: /* @__PURE__ */ e(vt, { c: c(ke) })
         }
       ),
@@ -2772,7 +2772,7 @@ const Jt = {
   future: /* @__PURE__ */ e("span", { className: "hf-month__dot" })
 };
 function Zi({ months: t, label: a = "Monthly ratings" }) {
-  return /* @__PURE__ */ e("div", { className: "hf-months", role: "img", "aria-label": `${a}. ${Bn(t)}`, style: { gridTemplateColumns: `repeat(${Math.max(1, t.length)}, minmax(0, 1fr))` }, children: t.map((n, s) => /* @__PURE__ */ i("span", { className: `hf-month hf-month--${n.state}`, "aria-hidden": "true", children: [
+  return /* @__PURE__ */ e("div", { className: "hf-months", role: "img", "aria-label": `${a}. ${Ln(t)}`, style: { gridTemplateColumns: `repeat(${Math.max(1, t.length)}, minmax(0, 1fr))` }, children: t.map((n, s) => /* @__PURE__ */ i("span", { className: `hf-month hf-month--${n.state}`, "aria-hidden": "true", children: [
     /* @__PURE__ */ e("span", { className: "hf-month__l", children: n.label }),
     Jt[n.state]
   ] }, s)) });
@@ -2787,7 +2787,7 @@ function Ji({ hint: t }) {
   ] });
 }
 function Xi({ stages: t, current: a, label: n = "Stage" }) {
-  const { index: s, line: l } = Ln(t, a);
+  const { index: s, line: l } = Bn(t, a);
   return /* @__PURE__ */ i("div", { className: "hf-stagebar", children: [
     /* @__PURE__ */ e("span", { className: "hf-stagebar__bar", role: "img", "aria-label": `${n}. ${l}`, children: t.map((r, o) => /* @__PURE__ */ e("span", { className: o <= s ? "hf-stagebar__seg hf-stagebar__seg--on" : "hf-stagebar__seg" }, r)) }),
     /* @__PURE__ */ e("span", { className: "hf-stagebar__line", "aria-hidden": "true", children: l })
@@ -2891,7 +2891,7 @@ function as({ list: t, children: a, keys: n, current: s, onOpen: l, word: r = "I
   ] });
 }
 const Xt = "https://hifive-id-portal.pages.dev/legal/", et = {
-  owner: "HiFive Holdings",
+  owner: "HiFive Holdings LLC",
   terms: "Terms of Use",
   privacy: "Privacy",
   disclaimer: "Disclaimer",
@@ -2975,11 +2975,11 @@ function ns(t) {
           }, children: n.label }, n.value)) })
         ] }),
         t.error && /* @__PURE__ */ i("div", { className: "hf-signin__err", role: "alert", children: [
-          /* @__PURE__ */ e(Be, { size: 20, "aria-hidden": "true" }),
+          /* @__PURE__ */ e(Le, { size: 20, "aria-hidden": "true" }),
           /* @__PURE__ */ e("span", { children: t.error })
         ] }),
         /* @__PURE__ */ i("button", { type: "button", className: "hf-signin__go", onClick: t.onContinue, disabled: t.busy, "aria-busy": t.busy || void 0, children: [
-          /* @__PURE__ */ e(Bt, { size: 20, "aria-hidden": "true" }),
+          /* @__PURE__ */ e(Lt, { size: 20, "aria-hidden": "true" }),
           t.busy ? a.busy : a.button
         ] }),
         /* @__PURE__ */ e("p", { className: "hf-signin__hint", children: a.hint }),
@@ -3132,12 +3132,12 @@ export {
   Wa as appIconSvg,
   Va as applyPrefs,
   an as arrange,
-  La as bandFor,
+  Ba as bandFor,
   Ze as columnsFor,
   jn as copyrightLine,
   Ya as currentPrefs,
   Ie as dayWords,
-  Ba as factorTotal,
+  La as factorTotal,
   Pt as firstName,
   mn as glanceLine,
   za as initials,
@@ -3151,24 +3151,24 @@ export {
   Ta as matchPeople,
   kn as missingFields,
   _t as missingLine,
-  Bn as monthLine,
+  Ln as monthLine,
   Mn as nextSort,
   gn as peopleFilters,
-  Li as showStockTile,
+  Bi as showStockTile,
   qn as signInWords,
   Xa as sortBlocks,
   xn as sortRows,
   Ka as spansFor,
   Di as splitAfter,
   Sn as splitStep,
-  Ln as stageLine,
+  Bn as stageLine,
   zn as stepMark,
   yn as stepProblem,
   xa as stepQuantity,
   qt as stockChip,
   on as stockDay,
   cn as stockLead,
-  Bi as stockTileLabel,
+  Li as stockTileLabel,
   hn as stockWhy,
   Rn as tabColumns,
   An as tenureWords,

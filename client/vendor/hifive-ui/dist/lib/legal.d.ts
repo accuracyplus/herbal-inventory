@@ -24,5 +24,5 @@ export interface LegalLink {
 }
 /** The four links in order, with their addresses under `base` (a trailing slash is added if missing). */
 export declare function legalLinks(base?: string, words?: Partial<LegalWords>): LegalLink[];
-/** "© 2026 HiFive Holdings". */
+/** "© 2026 HiFive Holdings LLC", the registered name (Sinu, 14 Nov 2026). */
 export declare function copyrightLine(year?: number, words?: Partial<LegalWords>): string;

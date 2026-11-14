@@ -149,6 +149,9 @@ export default function App() {
     let arrived = null;
     try { arrived = await captureSignIn(); } catch (e) { setError(e.message); setChecking(false); return; }
     if (arrived) post('/auth/hfid/arrived').catch(() => {});
+    // Signing in may put back the link the person followed (api.js arrive). That address change
+    // fires no hashchange, so read it here, or a shared link lands on Today with its own address showing.
+    setRoute(parseHash());
     // A phone opening a computer's pairing link works in the unit the computer is in.
     const askedUnit = parseHash().query.get('unit');
     if (askedUnit) unitPref.set(askedUnit);

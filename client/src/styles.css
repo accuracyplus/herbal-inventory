@@ -126,7 +126,7 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .link { text-decoration: underline; color: inherit; min-height: 0; }
 .tone-txt-OUT, .tone-txt-CRITICAL { font-weight: 700; color: color-mix(in srgb, rgb(var(--danger)) 75%, var(--text-strong)); }
 .tone-txt-LOW { font-weight: 700; color: color-mix(in srgb, rgb(var(--warn)) 55%, var(--text-strong)); }
-.dark .tone-txt-OUT, .dark .tone-txt-CRITICAL, [data-theme="dark"] .tone-txt-OUT, [data-theme="dark"] .tone-txt-CRITICAL { color: color-mix(in srgb, rgb(var(--danger)) 70%, white); }
+.dark .tone-txt-OUT, .dark .tone-txt-CRITICAL, [data-theme="dark"] .tone-txt-OUT, [data-theme="dark"] .tone-txt-CRITICAL { color: color-mix(in srgb, rgb(var(--danger)) 55%, white); }
 .dark .tone-txt-LOW, [data-theme="dark"] .tone-txt-LOW { color: rgb(var(--warn)); }
 .inv-plain { margin: 6px 0 0; padding-left: 18px; }
 .inv-total { display: flex; justify-content: flex-end; align-items: baseline; gap: 16px; padding: 12px 18px 6px; }

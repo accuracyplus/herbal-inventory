@@ -10,7 +10,7 @@ import { captureSignIn, get, hfidLoginUrl, post, put, rememberAddress, token, un
 import { AppFrame, AppLogo as HfAppLogo, SideMenu, SignIn as HfSignIn, TabBar, UnitSwitch } from '@hifive/ui';
 import Icon from './icons.jsx';
 import { startFollowingAppearance, syncChromeColour } from './appearance.js';
-import { AppCtx, Button, Loading, Note, Segmented, Sheet, useToasts } from './ui.jsx';
+import { AppCtx, Boundary, Button, Loading, Note, Segmented, Sheet, useToasts } from './ui.jsx';
 import { chooseLang, has, lang, LANGS, setLang, t, useLang } from './i18n.js';
 import FirstTour from './tour.jsx';
 import { useNewVersion } from './update.js';
@@ -277,7 +277,12 @@ export default function App() {
                 <Button kind="secondary" onClick={() => location.reload()}>{t('Reload')}</Button>
               </div>
             )}
-            <Screen key={`${me.unit.id}-${current.id}-${language}`} />
+            {/* One screen that fails to draw never blanks the app: the frame, the menu and the way
+                back stay (13 Nov 2026). */}
+            <Boundary where={`the ${current.id} screen`} className="page" resetKey={`${me.unit.id}-${current.id}-${language}`}
+              back={current.id === visible[0].id ? undefined : { label: t('Go to {screen}', { screen: t(visible[0].label) }), go: () => navigate(visible[0].id) }}>
+              <Screen key={`${me.unit.id}-${current.id}-${language}`} />
+            </Boundary>
           </div>
         </AppFrame>
       </div>

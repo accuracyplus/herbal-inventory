@@ -7,7 +7,7 @@
  * (Design Guide Part J), never drawn here.
  */
 
-import { Children, cloneElement, createContext, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Children, Component, cloneElement, createContext, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Search as SearchGlass, X } from 'lucide-react';
 import {
   Banner, Button as HfButton, Checkbox, Chip, ChipGroup, DataTable, Hint as HfHint, ListRow, Loading as HfLoading,
@@ -35,9 +35,21 @@ export const tx = (v) => (typeof v === 'string' ? t(v) : v);
 export const AppCtx = createContext(null);
 export const useApp = () => useContext(AppCtx);
 
+/**
+ * What a screen may show while `path` is asked for. An answer (or an error) from another endpoint
+ * is never handed on: in the render after a switch, one report to another say, it is the wrong
+ * shape, and a panel reading it took the whole app down (13 Nov 2026). The same endpoint with a
+ * new query (other dates, a search) keeps what it had until the new answer comes.
+ */
+export const endpointOf = (p) => (p ? String(p).split('?')[0] : null);
+export function dataFor(state, path) {
+  if (path && endpointOf(state.for) === endpointOf(path)) return state;
+  return { data: null, error: null, loading: !!path, for: state.for };
+}
+
 /** Fetch a path; `reload` refetches. Errors are kept, not thrown, so a screen can say them. */
 export function useData(path, deps = []) {
-  const [state, setState] = useState({ data: null, error: null, loading: !!path });
+  const [state, setState] = useState({ data: null, error: null, loading: !!path, for: path });
   const tick = useRef(0);
   const load = useCallback(async () => {
     if (!path) return;
@@ -45,13 +57,53 @@ export function useData(path, deps = []) {
     setState((s) => ({ ...s, loading: true }));
     try {
       const data = await get(path);
-      if (mine === tick.current) setState({ data, error: null, loading: false });
+      if (mine === tick.current) setState({ data, error: null, loading: false, for: path });
     } catch (e) {
-      if (mine === tick.current) setState({ data: null, error: e, loading: false });
+      if (mine === tick.current) setState({ data: null, error: e, loading: false, for: path });
     }
   }, [path, ...deps]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [load]);
-  return { ...state, reload: load };
+  const { data, error, loading } = dataFor(state, path);
+  return { data, error, loading, reload: load };
+}
+
+/**
+ * A part of the screen that fails to draw says so calmly and offers a way back, instead of
+ * blanking the whole app. It clears itself when `resetKey` changes (another report, another
+ * screen) and whenever the address changes, so moving on always works. `back` is { label, go }.
+ */
+export class Boundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { failed: null };
+    this.retry = () => { if (this.state.failed) this.setState({ failed: null }); };
+  }
+
+  static getDerivedStateFromError(failed) { return { failed }; }
+
+  componentDidCatch(error, info) {
+    console.error(`[inventory] ${this.props.where || 'part of the screen'} could not be drawn:`, error, info?.componentStack || '');
+  }
+
+  componentDidMount() { addEventListener('hashchange', this.retry); }
+
+  componentWillUnmount() { removeEventListener('hashchange', this.retry); }
+
+  componentDidUpdate(prev) { if (prev.resetKey !== this.props.resetKey) this.retry(); }
+
+  render() {
+    if (!this.state.failed) return this.props.children;
+    const { back } = this.props;
+    return (
+      <div className={`stack inv-broken ${this.props.className || ''}`} role="alert" data-broken={this.props.where || ''}>
+        <Note icon="alert">{t("This part couldn't load. The rest of Inventory still works.")}</Note>
+        <div className="row">
+          <Button kind="secondary" onClick={this.retry}>Try again</Button>
+          {back && <Button kind="ghost" onClick={back.go}>{back.label}</Button>}
+        </div>
+      </div>
+    );
+  }
 }
 
 // ── Layout ───────────────────────────────────────────────────────────────────

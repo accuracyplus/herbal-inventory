@@ -114,6 +114,16 @@ await step('usage history', async () => {
   return null;
 });
 
+// A few rows from the old Google Sheet app, so Reports → Old app history has something to draw.
+await step('old app history', async () => {
+  const add = env.DB.db.prepare(`INSERT INTO legacy_movements (id, unit_id, at, type, item_name, qty, store, staff, purpose, remarks) VALUES (?,?,?,?,?,?,?,?,?,?)`);
+  [['2025-03-02 10:15', 'OUT', 'Dhanwantharam thailam', 2, 'Main store', 'Sara', 'Treatment room 1'],
+    ['2025-03-02 16:40', 'IN', 'Kizhi powder', 10, 'Main store', 'Kiran', 'Delivery'],
+    ['2025-03-03 09:05', 'OUT', 'Cotton kizhi cloth', 6, 'Spa sub store', 'Sara', 'Treatment room 2']]
+    .forEach((r, i) => add.run(`lg-${i}`, 'u-hp', ...r, null));
+  return null;
+});
+
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 const isApi = (path) => /^\/(api|auth|pending|hooks|version|health)(\/|$)/.test(path);
 

@@ -127,6 +127,8 @@ const core = {
   // ── Shared pieces ──────────────────────────────────────────────────────────────────────
   'Loading': 'ലോഡ് ചെയ്യുന്നു',
   'Try again': 'വീണ്ടും ശ്രമിക്കുക',
+  "This part couldn't load. The rest of Inventory still works.": 'ഈ ഭാഗം ലോഡ് ചെയ്യാനായില്ല. ഇൻവെന്ററിയുടെ ബാക്കി ഭാഗങ്ങൾ പ്രവർത്തിക്കുന്നുണ്ട്.',
+  'Go to {screen}': '{screen} തുറക്കുക',
   'Search': 'തിരയുക',
   'Clear the search': 'തിരച്ചിൽ മായ്ക്കുക',
   'Nothing here.': 'ഇവിടെ ഒന്നുമില്ല.',

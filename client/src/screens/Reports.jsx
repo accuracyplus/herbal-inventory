@@ -7,14 +7,27 @@
 import { useState } from 'react';
 import { downloadCsv, fmtDate, fmtDateTime, fmtMoney, fmtQty, gstToday } from '../api.js';
 import { dateLocale, t, tn } from '../i18n.js';
-import { Button, Card, ErrorNote, Field, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Table, useApp, useData } from '../ui.jsx';
+import { Boundary, Button, Card, ErrorNote, Field, Loading, Page, Pill, Quiet, SearchBox, Segmented, Select, Table, useApp, useData } from '../ui.jsx';
 
-const ALL = [
+export const ALL = [
   ['consumption', 'Usage'], ['services', 'Services'], ['people', 'By person'], ['group', 'Group summary'], ['valuation', 'Stock value'], ['expiry', 'Expiry'], ['ledger', 'Movements'],
   ['variance', 'Variances'], ['slow', 'Slow-moving'], ['purchases', 'Purchases'], ['legacy', 'Old app history'],
 ];
 const RANGED = ['consumption', 'services', 'people', 'ledger', 'variance', 'purchases'];
 const BY_STORE = ['consumption', 'people', 'ledger'];
+
+/** Where each report is asked for. */
+export function reportPath(tab, { from, to, month, storeId } = {}) {
+  if (tab === 'legacy') return '/api/legacy';
+  if (tab === 'group') return `/api/group/monthly?month=${month}`;
+  const qs = new URLSearchParams();
+  if (RANGED.includes(tab)) { qs.set('from', from); qs.set('to', to); }
+  if (storeId && BY_STORE.includes(tab)) qs.set('store', storeId);
+  return `/api/reports/${tab}?${qs}`;
+}
+
+/** The report a link asks for (#/reports?r=expiry), when it is one this person has; otherwise the first. */
+export const startingReport = (asked, tabs) => (tabs.some(([k]) => k === asked) ? asked : tabs[0][0]);
 
 export default function Reports() {
   const { route, can, me } = useApp();
@@ -24,15 +37,12 @@ export default function Reports() {
     return k === 'purchases' ? can('cost.view') : true;
   });
   const word = me.settings['services.word'] || 'Services';
-  const [tab, setTab] = useState(route.query.get('r') || 'consumption');
+  const [tab, setTab] = useState(() => startingReport(route.query.get('r'), tabs));
   const [from, setFrom] = useState(gstToday(-29));
   const [to, setTo] = useState(gstToday());
   const [month, setMonth] = useState(gstToday().slice(0, 7));
   const [storeId, setStoreId] = useState('');
-  const qs = new URLSearchParams();
-  if (RANGED.includes(tab)) { qs.set('from', from); qs.set('to', to); }
-  if (storeId && BY_STORE.includes(tab)) qs.set('store', storeId);
-  const path = tab === 'legacy' ? '/api/legacy' : tab === 'group' ? `/api/group/monthly?month=${month}` : `/api/reports/${tab}?${qs}`;
+  const path = reportPath(tab, { from, to, month, storeId });
   const { data, error, loading, reload } = useData(path, [path]);
   const { lists } = useApp();
 
@@ -57,22 +67,50 @@ export default function Reports() {
       <ErrorNote error={error} onRetry={reload} />
       {loading && <Loading />}
       {data && !loading && (
-        <>
-          {tab === 'consumption' && data.byDepartment && <Consumption d={data} />}
-          {tab === 'services' && data.byService && <ServiceUse d={data} word={word} />}
-          {tab === 'people' && data.rows && <People d={data} />}
-          {tab === 'group' && data.totals && <Group d={data} />}
-          {tab === 'valuation' && <Valuation d={data} />}
-          {tab === 'expiry' && <Expiry d={data} />}
-          {tab === 'ledger' && <Ledger d={data} />}
-          {tab === 'variance' && <Variance d={data} />}
-          {tab === 'slow' && <Slow d={data} />}
-          {tab === 'purchases' && <Purchases d={data} />}
-          {tab === 'legacy' && <Legacy rows={data} />}
-        </>
+        <Boundary where={`the ${tab} report`} resetKey={path}>
+          <ReportBody tab={tab} data={data} word={word} />
+        </Boundary>
       )}
     </Page>
   );
+}
+
+const list = (v) => Array.isArray(v);
+/**
+ * The shape each report's answer has. A panel is drawn only for an answer of its own shape, so a
+ * report never reads another's numbers, even for the one render after the tab changes.
+ */
+export const FITS = {
+  consumption: (d) => list(d?.byDepartment) && list(d.byCategory) && list(d.byArea) && list(d.byDay) && list(d.byItem),
+  services: (d) => list(d?.byService) && list(d.byItem) && list(d.byArea),
+  people: (d) => list(d?.rows) && 'from' in d,
+  group: (d) => !!d?.totals && list(d.rows),
+  valuation: (d) => list(d?.rows) && list(d.byCategory) && list(d.byStore),
+  expiry: (d) => list(d?.rows) && 'warnDays' in d,
+  ledger: (d) => list(d?.rows) && 'from' in d && !('byReason' in d),
+  variance: (d) => list(d?.byReason) && list(d.counts),
+  slow: (d) => list(d?.rows) && 'days' in d,
+  purchases: (d) => list(d?.bySupplier) && list(d.receipts),
+  legacy: (d) => list(d),
+};
+
+/** The chosen report's panel, or nothing while the answer in hand is not this report's. */
+export function ReportBody({ tab, data, word = 'Services' }) {
+  if (!FITS[tab]?.(data)) return null;
+  switch (tab) {
+    case 'consumption': return <Consumption d={data} />;
+    case 'services': return <ServiceUse d={data} word={word} />;
+    case 'people': return <People d={data} />;
+    case 'group': return <Group d={data} />;
+    case 'valuation': return <Valuation d={data} />;
+    case 'expiry': return <Expiry d={data} />;
+    case 'ledger': return <Ledger d={data} />;
+    case 'variance': return <Variance d={data} />;
+    case 'slow': return <Slow d={data} />;
+    case 'purchases': return <Purchases d={data} />;
+    case 'legacy': return <Legacy rows={data} />;
+    default: return null;
+  }
 }
 
 export function Bars({ rows, value = 'value', label = 'name', fmt }) {
@@ -351,7 +389,7 @@ function Purchases({ d }) {
 
 function Legacy({ rows }) {
   const [q, setQ] = useState('');
-  const shown = rows.filter((r) => !q || `${r.item_name} ${r.staff} ${r.purpose}`.toLowerCase().includes(q.toLowerCase()));
+  const shown = (Array.isArray(rows) ? rows : []).filter((r) => !q || `${r.item_name} ${r.staff} ${r.purpose}`.toLowerCase().includes(q.toLowerCase()));
   return (
     <Card title="History from the old Google Sheet app" hint="Kept for reference exactly as it was. It is not part of today's stock figures, which start from the imported opening balances." pad={false}
       actions={<Csv name="old-app-history" rows={shown} />}>

@@ -10,7 +10,7 @@ import { captureSignIn, get, hfidLoginUrl, post, put, rememberAddress, token, un
 import { AppFrame, AppLogo as HfAppLogo, SideMenu, SignIn as HfSignIn, TabBar, UnitSwitch } from '@hifive/ui';
 import Icon from './icons.jsx';
 import { startFollowingAppearance, syncChromeColour } from './appearance.js';
-import { AppCtx, Boundary, Button, Loading, Note, Segmented, Sheet, useToasts } from './ui.jsx';
+import { AppCtx, Boundary, Button, LegalFooter, Loading, Note, Segmented, Sheet, useToasts } from './ui.jsx';
 import { chooseLang, has, lang, LANGS, setLang, t, useLang } from './i18n.js';
 import FirstTour from './tour.jsx';
 import { useNewVersion } from './update.js';
@@ -239,6 +239,7 @@ export default function App() {
           screens, unit switch and menu; the walkthrough finds them by their data-tour marks. */}
       <div className="hf inv-shell">
         <AppFrame
+          legal={<LegalFooter />}
           side={(
             <SideMenu label={t('Main')}
               brand={<><HfAppLogo app="inventory" size={36} /><span className="inv-brand__n">{t('Inventory')}</span></>}
@@ -366,7 +367,7 @@ function SignIn({ error }) {
       lede={t('Stock, requests, purchasing and linen for every HiFive unit.')}
       note={t('HR gives access to Inventory.')}
       help={t('Cannot sign in? Ask HR, with your employee code.')}
-      error={error} busy={busy} onContinue={go}
+      error={error} busy={busy} onContinue={go} legal={<LegalFooter />}
       languages={Object.entries(LANGS).map(([value, label]) => ({ value, label, lang: value }))}
       language={language} onLanguage={setLang}
       words={{

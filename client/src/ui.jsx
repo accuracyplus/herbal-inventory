@@ -10,8 +10,8 @@
 import { Children, Component, cloneElement, createContext, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Search as SearchGlass, X } from 'lucide-react';
 import {
-  Banner, Button as HfButton, Checkbox, Chip, ChipGroup, DataTable, Hint as HfHint, ListRow, Loading as HfLoading,
-  Picker, QuantityField, Quiet as HfQuiet, Sheet as HfSheet, StatusChip, Tile as HfTile, Toast,
+  Banner, Button as HfButton, Checkbox, Chip, ChipGroup, DataTable, Hint as HfHint, LEGAL_WORDS, ListRow, Loading as HfLoading,
+  Picker, QuantityField, Quiet as HfQuiet, Sheet as HfSheet, StatusChip, Tile as HfTile, Toast, copyrightLine, legalLinks,
 } from '@hifive/ui';
 import Icon from './icons.jsx';
 import { fmtQty, get } from './api.js';
@@ -188,6 +188,39 @@ export function Sheet({ title, onClose, children, footer, wide = false }) {
 /** A note inside a screen: something to know (plain), to look at (warn), or that stopped it (danger). */
 export function Note({ tone = 'plain', icon, children, role }) {
   return <Banner tone={tone} role={role} icon={icon ? <Icon name={icon} size={18} /> : undefined}>{tx(children)}</Banner>;
+}
+
+/**
+ * The legal footer (Design Guide C20, D-057, 15 Nov 2026), given to AppFrame and SignIn in place
+ * of their own: last on every page, outside any card. The markup is @hifive/ui 0.33's LegalLinks;
+ * the words, addresses and owner come from the vendored library (0.26.1), in the screen's
+ * language. Why not the library's: 0.33 also brings the D-056 phone pieces, whose "Sort by" on
+ * every table has no Malayalam words yet. When Inventory takes a library with D-057 (0.33.0 or
+ * later), pass `words` and `lang` to its LegalLinks instead and delete this and the
+ * `.hf-legal` block in styles.css.
+ */
+export function LegalFooter() {
+  const language = useLang();
+  const w = {
+    ...LEGAL_WORDS, terms: t('Terms'), privacy: t('Privacy'), disclaimer: t('Disclaimer'), copyright: t('Copyright'),
+    newTab: t('(opens in a new tab)'), label: t('Legal'),
+  };
+  const links = legalLinks(undefined, w);
+  return (
+    <nav className="hf hf-legal" aria-label={w.label} lang={language}>
+      <p className="hf-legal__copy">{copyrightLine(undefined, w)}<span className="hf-legal__dot hf-legal__dot--wide" aria-hidden="true">·</span></p>
+      <ul className="hf-legal__links">
+        {/* Each link carries the dot after it and the last none: a wrapped line ends with a dot
+            and never starts with one. */}
+        {links.map((l, i) => (
+          <li key={l.key} className="hf-legal__item">
+            <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}<span className="hf-sr"> {w.newTab}</span></a>
+            {i < links.length - 1 && <span className="hf-legal__dot" aria-hidden="true">·</span>}
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
 }
 
 // ── Controls ─────────────────────────────────────────────────────────────────

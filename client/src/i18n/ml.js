@@ -38,6 +38,13 @@ const core = {
   'A new version of HiFive Inventory is ready.': 'HiFive ഇൻവെന്ററിയുടെ പുതിയ പതിപ്പ് തയ്യാറാണ്.',
   'Reload': 'പുതുക്കുക',
   'Sign in to Inventory': 'ഇൻവെന്ററിയിലേക്ക് സൈൻ ഇൻ ചെയ്യുക',
+  // The legal footer (D-057). The pages it opens are in English; the owner's name stays as registered.
+  'Terms': 'നിബന്ധനകൾ',
+  'Privacy': 'സ്വകാര്യത',
+  'Disclaimer': 'നിരാകരണം',
+  'Copyright': 'പകർപ്പവകാശം',
+  '(opens in a new tab)': '(പുതിയ ടാബിൽ തുറക്കും)',
+  'Legal': 'നിയമപരം',
   'With your HiFive ID.': 'നിങ്ങളുടെ HiFive ID ഉപയോഗിച്ച്.',
   'Continue with HiFive ID': 'HiFive ID വഴി തുടരുക',
   'Opening HiFive ID…': 'HiFive ID തുറക്കുന്നു…',

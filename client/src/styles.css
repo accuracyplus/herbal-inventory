@@ -63,6 +63,33 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
   .inv-bar { display: none; }
 }
 
+/* The legal footer (Design Guide C20, D-057, 15 Nov 2026), drawn by LegalFooter in ui.jsx. The
+   rules of @hifive/ui 0.33's .hf-legal block, written here over the vendored 0.26.1 ones (which
+   underlined the links in one wrapping row) until Inventory takes a library with D-057: then
+   delete this block. Phone (900px and under): links over the copyright, two centred lines.
+   Computer: one line, copyright first. Muted, no underline until hovered or focused, a hairline
+   above, outside any card, in the page's own scroll. Full width up to 720px: as an item of the frame's column it
+   would otherwise shrink to its text, and the hairline with it. */
+.hf-legal { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: center; gap: 2px; width: 100%; margin: 24px auto 0; padding: 14px 16px 20px; max-width: 720px; border-top: 1px solid var(--line); color: var(--text-muted); text-align: center; font-size: 14px; line-height: 1.5; }
+.hf-legal__links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.hf-legal__item { display: inline-flex; align-items: center; white-space: nowrap; }
+.hf-legal a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 6px; border-radius: 6px; color: var(--text-muted); text-decoration: none; }
+.hf-legal a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.hf-legal a:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; border-radius: 6px; text-decoration: underline; text-underline-offset: 3px; }
+.hf-legal__dot { opacity: .7; }
+.hf-legal__copy { order: 2; margin: 0; font-size: 12px; }
+.hf-legal__dot--wide { display: none; }
+@media (min-width: 901px) {
+  .hf-legal { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0; }
+  .hf-legal__copy { order: 0; display: inline-flex; align-items: center; font-size: 12px; }
+  .hf-legal__links { font-size: 12px; }
+  .hf-legal__dot--wide { display: inline; margin-left: 6px; }
+}
+/* Touch screens: 44px to hit. After the base rule, or the base wins. */
+@media (pointer: coarse) { .hf-legal a { min-height: 44px; } }
+/* Sign-in: under the card, as wide as it. */
+.hf-signin__side .hf-legal { width: 100%; max-width: 440px; margin-top: 16px; padding: 12px 0 0; }
+
 /* ── Page and card ──────────────────────────────────────────────────────────── */
 
 .page { width: 100%; max-width: 1184px; margin: 0 auto; padding: 20px 24px 28px; display: grid; gap: 18px; }

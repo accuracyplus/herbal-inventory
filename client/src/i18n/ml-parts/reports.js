@@ -138,7 +138,7 @@ export default {
   // Old app history.
   'History from the old Google Sheet app': 'പഴയ Google Sheet ആപ്പിലെ ചരിത്രം',
   'Kept for reference exactly as it was. It is not part of today\'s stock figures, which start from the imported opening balances.': 'നോക്കാനായി, ഉണ്ടായിരുന്നതുപോലെ തന്നെ സൂക്ഷിച്ചിരിക്കുന്നു. ഇന്നത്തെ സ്റ്റോക്ക് കണക്കുകൾ ഇംപോർട്ട് ചെയ്ത ഓപ്പണിംഗ് ബാലൻസിൽ നിന്നാണ് തുടങ്ങുന്നത്; ഈ ചരിത്രം അവയിൽ ഉൾപ്പെടുന്നില്ല.',
-  'Filter by item, person or room': 'സാധനം, ആൾ അല്ലെങ്കിൽ മുറി വച്ച് തിരയുക',
+  'Filter by item, person, store or purpose': 'സാധനം, ആൾ, സ്റ്റോർ അല്ലെങ്കിൽ ഉദ്ദേശ്യം വച്ച് തിരയുക',
   'No history was imported.': 'ചരിത്രമൊന്നും ഇംപോർട്ട് ചെയ്തിട്ടില്ല.',
   'Type': 'തരം',
 

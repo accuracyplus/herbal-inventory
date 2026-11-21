@@ -279,3 +279,8 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 /* From 1024px the corner button sits at the bottom left, over the end of the side menu: the menu
    ends above it (your name and menu stay clear of it), only while the button is on the page. */
 @media (min-width: 1024px) { body:has(#hifive-hub-button) .hf-side__foot { padding-bottom: 60px; } }
+
+/* A final action asking first (ConfirmButton, ui.jsx): the question and its two answers take the
+   button's place in its row, and wrap onto their own line when the row is narrow. */
+.inv-confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; flex-basis: 100%; justify-content: flex-end; }
+.inv-confirm__q { flex: 1 1 220px; font-weight: 600; color: var(--text-strong); }

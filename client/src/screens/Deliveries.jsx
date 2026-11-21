@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { fmtDate, fmtDateTime, fmtMoney, fmtQty, openFile, post, sendForm, shrinkImage } from '../api.js';
 import { KeyValues, Timeline } from '@hifive/ui';
-import { Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Table, useApp, useData } from '../ui.jsx';
+import { Button, Card, ConfirmButton, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Table, useApp, useData } from '../ui.jsx';
 import { Paperwork } from './Receive.jsx';
 import { RaiseReturn } from './Returns.jsx';
 import { t, tn } from '../i18n.js';
@@ -82,7 +82,7 @@ export function DeliveryPage({ id, onClose }) {
     <Page guard="delivery" back={onClose} title={r ? t('Delivery {ref}', { ref: r.note_no || r.ref }) : 'Delivery'}
       subtitle={r ? `${r.supplier_name ? `${t('From {name}.', { name: r.supplier_name })} ` : ''}${t('Counted by {name}, {date}.', { name: r.by_name, date: fmtDateTime(r.at) })}` : undefined}
       actions={r && (pending ? <>
-        {(mine || decides) && <Button kind="ghost" busy={busy} onClick={() => act('cancel', 'Delivery cancelled')}>Cancel it</Button>}
+        {(mine || decides) && <ConfirmButton kind="ghost" busy={busy} ask="Cancel this delivery? Nothing from it goes on the shelf." yes="Yes, cancel the delivery" onConfirm={() => act('cancel', 'Delivery cancelled')}>Cancel it</ConfirmButton>}
         {decides && <Button kind="secondary" busy={busy} onClick={sendBack}>Send it back</Button>}
         {decides && <Button busy={busy} icon="check" onClick={() => act('approve', 'Approved. The stock is on the shelf.')}>Approve</Button>}
       </> : r.status === 'APPROVED' && me.settings['returns.on'] === 'on' && can('return.raise') && (
@@ -145,7 +145,7 @@ export function DeliveryPage({ id, onClose }) {
                           <span className="row-sub">{f.name} · {Math.max(1, Math.round(f.bytes / 1024))} KB · {f.uploaded_by_name}, {fmtDateTime(f.uploaded_at)}</span></div>
                         <div className="lot-actions">
                           <Button kind="secondary" onClick={() => view(f)}>View</Button>
-                          {pending && (f.uploaded_by === me.staffId || decides) && can('receive') && <Button kind="ghost" onClick={() => remove(f)}>Remove</Button>}
+                          {pending && (f.uploaded_by === me.staffId || decides) && can('receive') && <ConfirmButton kind="ghost" ask="Remove this file? It cannot be brought back." yes="Yes, remove it" onConfirm={() => remove(f)}>Remove</ConfirmButton>}
                         </div>
                       </li>
                     ))}

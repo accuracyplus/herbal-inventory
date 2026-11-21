@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { API, fmtDateTime, post } from '../api.js';
 import { t } from '../i18n.js';
 import Icon from '../icons.jsx';
-import { Button, Card, ErrorNote, Field, Guard, Loading, Note, Pill, Quiet, Select, useApp, useData } from '../ui.jsx';
+import { Button, Card, ConfirmButton, ErrorNote, Field, Guard, Loading, Note, Pill, Quiet, Select, useApp, useData } from '../ui.jsx';
 
 const RESULT = { ready: ['ok', 'Ready'], recorded: ['ok', 'Recorded'], duplicate: ['faint', 'Already recorded'], dismissed: ['faint', 'Dismissed'], problem: ['danger', 'Problem'], failed: ['danger', 'Waiting'], refused: ['danger', 'Refused'] };
 
@@ -179,7 +179,7 @@ function Keys() {
   };
   const revoke = async (k) => { setErr(null); try { await post(`/api/link/keys/${k.id}/revoke`); toast(t('{name} can no longer send', { name: k.name })); reload(); } catch (e) { setErr(e); } };
   const copy = async (text) => { try { await navigator.clipboard.writeText(text); toast('Copied'); } catch { toast('Select the text and copy it', 'danger'); } };
-  const example = `POST ${url}\nAuthorization: Bearer <the key>\nContent-Type: application/json\n\n{ "services": [\n  { "ref": "INV-1001-1", "service": "ABH", "times": 1,\n    "at": "2026-11-10T14:30:00+04:00",\n    "room": "R1", "person": "HPAHC040", "price": 250 }\n] }`;
+  const example = `POST ${url}\nAuthorization: Bearer <the key>\nContent-Type: application/json\n\n{ "services": [\n  { "ref": "INV-1001-1", "service": "ABH", "times": 1,\n    "at": "2026-11-10T14:30:00+04:00",\n    "room": "R1", "person": "ABC123", "price": 250 }\n] }`;
   return (
     <Guard name="connections">
     <Card title="Connections" hint="A key lets one other system send completed services for this unit, and nothing else. It is shown once, when it is made: keep it in that system's settings. A lost key is replaced, not recovered.">
@@ -193,13 +193,15 @@ function Keys() {
               <li key={k.id} className="lot">
                 <div className="min0"><span className="row-label">{k.name} {k.revoked_at ? <Pill tone="faint">Revoked</Pill> : <Pill tone="ok">Live</Pill>}</span>
                   <span className="row-sub"><code>{k.hint}…</code> · {t('takes from {store}', { store: k.store_name })} · {t('made by {name}, {when}', { name: k.created_by, when: fmtDateTime(k.created_at) })} · {k.last_used_at ? t('last used {when}', { when: fmtDateTime(k.last_used_at) }) : t('never used')}</span></div>
-                {!k.revoked_at && <div className="lot-actions"><Button kind="ghost" onClick={() => revoke(k)}>Revoke</Button></div>}
+                {!k.revoked_at && <div className="lot-actions"><ConfirmButton kind="ghost" ask={t('Revoke the key for {name}? That system stops sending at once, and it needs a new key.', { name: k.name })} yes="Yes, revoke it" onConfirm={() => revoke(k)}>Revoke</ConfirmButton></div>}
               </li>
             ))}
           </ul>
         )}
         {made && (
-          <Note tone="warn" icon="alert"><div className="min0 stack" style={{ gap: 8 }}>
+          // Shown once: until "I have stored it", leaving the screen or closing the tab asks first
+          // (leave.js), as it would for typed work, or the key is gone for good.
+          <Note tone="warn" icon="alert"><div className="min0 stack" style={{ gap: 8 }} data-hf-unsaved="true">
             <b>{t('The key for {name}. It will not be shown again.', { name: made.name })}</b>
             <code style={{ overflowWrap: 'anywhere' }}>{made.key}</code>
             <div className="row"><Button kind="secondary" onClick={() => copy(made.key)}>Copy the key</Button><Button kind="ghost" onClick={() => setMade(null)}>I have stored it</Button></div>

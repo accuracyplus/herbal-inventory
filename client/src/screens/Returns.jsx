@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtMoney, fmtQty, get, post } from '../api.js';
 import { t } from '../i18n.js';
 import {
-  Button, CancelButton, Card, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, ConfirmButton, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 
 const on = (me, k) => !!me.settings?.[k] && me.settings[k] !== 'off';
@@ -78,7 +78,7 @@ function InspectSheet({ row, onClose, onDone }) {
   };
   return (
     <Sheet title={row.name} onClose={onClose}
-      footer={<><Button kind="secondary" busy={busy} onClick={() => act('reject')}>Reject</Button><Button busy={busy} icon="check" onClick={() => act('release')}>Release to the shelf</Button></>}>
+      footer={<><ConfirmButton busy={busy} ask="Reject this stock? It does not go on the shelf." yes="Yes, reject it" onConfirm={() => act('reject')}>Reject</ConfirmButton><Button busy={busy} icon="check" onClick={() => act('release')}>Release to the shelf</Button></>}>
       <p className="muted">{fmtQty(row.qty)} {t(row.uom)}{row.batch_no ? `, ${t('lot {lot}', { lot: row.batch_no })}` : ''}{row.expiry ? `, ${t('expires {date}', { date: fmtDate(row.expiry) })}` : ''}, {t('from {ref}', { ref: row.receipt_ref })}{row.supplier_name ? ` (${row.supplier_name})` : ''}, {t('received by {name}', { name: row.received_by })}.</p>
       <Field label="What was checked, or what was wrong" hint={on(me, 'returns.on') ? 'Needed to reject it. Rejected stock goes back to the supplier, waiting for its credit note.' : 'Needed to reject it. Rejected stock is written off.'}>
         <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} />
@@ -144,7 +144,7 @@ function ReturnSheet({ id, onClose, onChanged }) {
       ? <>{(mine || can('return.decide')) && <Button kind="secondary" busy={busy} onClick={() => act('cancel')}>Cancel it</Button>}
           {can('return.decide') && <><Button kind="secondary" busy={busy} onClick={() => act('reject')}>Do not send</Button><Button busy={busy} icon="check" onClick={() => act('approve')}>Approve: send it back</Button></>}</>
       : r.status === 'SENT'
-        ? <>{can('return.decide') && <Button kind="secondary" busy={busy} onClick={() => act('close')}>Close without credit</Button>}
+        ? <>{can('return.decide') && <ConfirmButton busy={busy} ask="Close this return without a credit? No credit can be recorded after this." yes="Yes, close without credit" onConfirm={() => act('close')}>Close without credit</ConfirmButton>}
             {can('po.edit') && <Button busy={busy} icon="check" onClick={() => act('credit', credit)}>Record the credit note</Button>}</>
         : null
   );

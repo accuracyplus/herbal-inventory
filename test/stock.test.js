@@ -198,3 +198,18 @@ test('levels give each store its own status', async () => {
   const bad = await call(env, 'PUT', `/api/items/${id}`, { body: { code: row.code, name: row.name, levels: [{ storeId: S.main, reorder: 5, critical: 9 }] } });
   assert.equal(bad.status, 422);
 });
+
+test('Today: towels at the laundry are late from their latest laundry movement, not the first ever', async () => {
+  const env = testEnv();
+  const id = await makeItem(env, { isLinen: true, name: 'Bath towel', uom: 'pcs', category: 'Linen' });
+  await receive(env, id, 20, { storeId: S.sub, unitCost: 15 });
+  const go = (flow, qty) => call(env, 'POST', '/api/linen', { as: 'staff', body: { storeId: S.sub, itemId: id, flow, qty } });
+  assert.equal((await go('REWASH', 2)).status, 201);
+  // That first send was ten days ago; nothing has come back since.
+  env.DB.db.exec('DROP TRIGGER IF EXISTS movements_no_update');
+  env.DB.db.prepare(`UPDATE movements SET at = ? WHERE item_id = ? AND kind = 'LINEN'`).run(new Date(Date.now() - 10 * 864e5).toISOString(), id);
+  const late = async () => (await call(env, 'GET', '/api/today', { as: 'keeper' })).body.laundryLate.filter((l) => l.itemId === id);
+  assert.equal((await late()).length, 1, 'ten days at the laundry is late');
+  assert.equal((await go('REWASH', 2)).status, 201);   // more sent today
+  assert.equal((await late()).length, 0, 'sent today: not late, whatever went first');
+});

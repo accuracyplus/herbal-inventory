@@ -276,6 +276,24 @@ export function Button({ kind = 'primary', icon, children, busy, className = '',
   );
 }
 
+/**
+ * A final action (cancel, revoke, remove, close): the first press asks, in place, and only the
+ * second does it (Design Guide: a destructive action is a secondary button plus a confirmation
+ * step). The question takes the button's place in the same row, never a window over the window
+ * (Part O). `ask` says what will happen; `yes` names the deed ("Yes, cancel it").
+ */
+export function ConfirmButton({ kind = 'secondary', busy, children, ask, yes, onConfirm }) {
+  const [asking, setAsking] = useState(false);
+  if (!asking) return <Button kind={kind} busy={busy} onClick={() => setAsking(true)}>{children}</Button>;
+  return (
+    <span className="inv-confirm" role="group" aria-label={tx(ask)}>
+      <span className="inv-confirm__q" role="alert">{tx(ask)}</span>
+      <Button kind="ghost" onClick={() => setAsking(false)}>Keep it</Button>
+      <Button kind="secondary" busy={busy} onClick={async () => { try { await onConfirm(); } finally { setAsking(false); } }}>{yes}</Button>
+    </span>
+  );
+}
+
 const TAKES_A_LABEL = ['input', 'select', 'textarea'];
 const PLAIN_INPUT = (el) => el.type === 'textarea' || el.type === 'select' || !['checkbox', 'radio', 'file', 'range'].includes(el.props.type);
 

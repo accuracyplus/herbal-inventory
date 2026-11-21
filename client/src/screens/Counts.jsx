@@ -9,7 +9,7 @@ import Icon from '../icons.jsx';
 import { t, tn } from '../i18n.js';
 import { isDesk, PairSheet, ScanSheet } from '../scan/ScanSheets.jsx';
 import {
-  Button, CancelButton, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, Check, ConfirmButton, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 
 export default function Counts() {
@@ -158,7 +158,7 @@ function CountSheet({ id, onClose, onChanged }) {
   return (
     <Sheet wide title={`${c.ref} · ${c.store_name}`} onClose={onClose}
       footer={<>
-        {['OPEN', 'SUBMITTED'].includes(c.status) && (can('count.run') || can('count.decide')) && <Button kind="ghost" busy={busy} onClick={() => act('cancel', 'Count cancelled')}>Cancel count</Button>}
+        {['OPEN', 'SUBMITTED'].includes(c.status) && (can('count.run') || can('count.decide')) && <ConfirmButton kind="ghost" busy={busy} ask="Cancel this count? What was counted is not kept." yes="Yes, cancel the count" onConfirm={() => act('cancel', 'Count cancelled')}>Cancel count</ConfirmButton>}
         {open && can('count.run') && <Button kind="secondary" busy={busy} disabled={!dirty} onClick={save}>Save progress</Button>}
         {open && can('count.run') && <Button busy={busy} onClick={() => (counted ? act('submit', 'Submitted for review') : toast('Count at least one item first'))}>Submit</Button>}
         {c.status === 'SUBMITTED' && can('count.decide') && <><Button kind="secondary" busy={busy} onClick={() => act('reopen', 'Sent back for recounting')}>Send back</Button><Button busy={busy} onClick={() => act('approve', 'Count approved and stock corrected')}>Approve</Button></>}

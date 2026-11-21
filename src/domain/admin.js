@@ -214,7 +214,7 @@ export async function listPeopleToPick(env, user) {
  */
 export async function savePerson(env, user, body, { bearer } = {}) {
   const code = text(body.code, 30)?.toUpperCase();
-  if (!code || !/^[A-Z0-9._-]+$/.test(code)) refuse('BAD_CODE', 'Enter their HiFive ID employee code, for example HPAHC040.');
+  if (!code || !/^[A-Z0-9._-]+$/.test(code)) refuse('BAD_CODE', 'Enter their HiFive ID employee code, for example ABC123.');
   const roles = [...new Set((body.roles || []).filter((r) => ROLES.includes(r)))];
   if (!roles.length) refuse('ROLE_REQUIRED', 'Choose at least one role.');
   if (roles.includes('VIEWER') && roles.length > 1) refuse('VIEWER_ALONE', 'Viewer is read-only, so it cannot be combined with another role.');

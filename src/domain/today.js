@@ -61,15 +61,16 @@ export async function today(env, user, { bearer } = {}) {
   const { results: laundry } = await env.DB.prepare(
     `SELECT b.item_id, i.name, b.in_wash, s.name AS store_name,
             (SELECT MAX(at) FROM movements m WHERE m.item_id = b.item_id AND m.store_id = b.store_id
-                AND m.kind = 'LINEN' AND m.from_state = 'in_wash') AS last_back,
-            (SELECT MIN(at) FROM movements m WHERE m.item_id = b.item_id AND m.store_id = b.store_id
-                AND m.kind = 'LINEN' AND m.to_state = 'in_wash') AS first_sent
+                AND m.kind = 'LINEN' AND (m.from_state = 'in_wash' OR m.to_state = 'in_wash')) AS last_wash
        FROM balances b JOIN items i ON i.id = b.item_id JOIN stores s ON s.id = b.store_id
       WHERE s.unit_id = ? AND b.in_wash > 0`,
   ).bind(u).all();
   const cutoff = new Date(Date.now() - washDays * 864e5).toISOString();
-  const laundryLate = (laundry || []).filter((l) => (l.last_back || l.first_sent || '') < cutoff)
-    .map((l) => ({ itemId: l.item_id, name: l.name, inWash: l.in_wash, storeName: l.store_name, since: l.last_back || l.first_sent }));
+  // The latest laundry movement either way: sent or back. It was the latest back, or else the
+  // FIRST time ever sent, which showed as "Last movement" and called pieces sent yesterday late
+  // (found 21 Nov 2026, the admin-console audit's first/last pattern).
+  const laundryLate = (laundry || []).filter((l) => (l.last_wash || '') < cutoff)
+    .map((l) => ({ itemId: l.item_id, name: l.name, inWash: l.in_wash, storeName: l.store_name, since: l.last_wash }));
 
   // The day so far, and the month, for people who see costs.
   const showCost = may(user, 'cost.view');

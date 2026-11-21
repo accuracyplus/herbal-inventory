@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtMoney, fmtQty, openPath, post, put } from '../api.js';
 import LineEditor, { newLine, toPayload } from '../lines.jsx';
 import {
-  Button, CancelButton, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, ConfirmButton, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 import { Deliveries, DeliveryPage, DeliveryPill } from './Deliveries.jsx';
 import { priceViewer, SupplierList, SupplierPage } from './Suppliers.jsx';
@@ -189,11 +189,11 @@ function PoSheet({ id, onClose, onChanged, onEdit }) {
     <Sheet wide title={po ? `${po.ref} · ${po.supplier_name}` : 'Purchase order'} onClose={onClose}
       footer={po && <>
         <Button kind="ghost" icon="file" onClick={() => openPath(`/api/pos/${po.id}/pdf`, `${po.ref}.pdf`).catch(setErr)}>PDF</Button>
-        {['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].includes(po.status) && can('po.edit') && !po.receipts.length && <Button kind="ghost" busy={busy} onClick={() => act('cancel', 'Order cancelled')}>Cancel order</Button>}
+        {['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].includes(po.status) && can('po.edit') && !po.receipts.length && <ConfirmButton kind="ghost" busy={busy} ask="Cancel this order? It cannot be sent or received after this." yes="Yes, cancel the order" onConfirm={() => act('cancel', 'Order cancelled')}>Cancel order</ConfirmButton>}
         {['DRAFT', 'REJECTED'].includes(po.status) && can('po.edit') && <Button kind="secondary" icon="edit" onClick={() => onEdit(po)}>Edit</Button>}
         {po.status === 'DRAFT' && can('po.edit') && <Button busy={busy} onClick={() => act('submit', 'Sent for approval')}>Submit for approval</Button>}
         {po.status === 'SUBMITTED' && can('po.decide') && <><Button kind="secondary" busy={busy} onClick={() => act('reject', 'Sent back')}>Send back</Button><Button busy={busy} onClick={() => act('approve', 'Order approved')}>Approve</Button></>}
-        {po.status === 'PARTLY_RECEIVED' && can('receive') && <Button kind="secondary" busy={busy} onClick={() => act('close', 'Order closed short')}>Close short</Button>}
+        {po.status === 'PARTLY_RECEIVED' && can('receive') && <ConfirmButton busy={busy} ask="Close this order short? What has not arrived is no longer expected." yes="Yes, close it short" onConfirm={() => act('close', 'Order closed short')}>Close short</ConfirmButton>}
         {['APPROVED', 'PARTLY_RECEIVED'].includes(po.status) && can('receive') && <Button icon="receive" onClick={() => navigate(`receive?po=${po.id}`)}>Receive delivery</Button>}
       </>}>
       <ErrorNote error={error} />

@@ -472,6 +472,26 @@ const core = {
   // Asked before leaving a screen, or closing a window, with unsaved work (leave.js, Design Guide C21).
   'You have changes that are not saved. Leave this page and lose them?': 'സേവ് ചെയ്യാത്ത മാറ്റങ്ങളുണ്ട്. ഈ പേജ് വിട്ടാൽ അവ നഷ്ടപ്പെടും. വിട്ടുപോകണോ?',
   'You have changes that are not saved. Close this window and lose them?': 'സേവ് ചെയ്യാത്ത മാറ്റങ്ങളുണ്ട്. ഈ വിൻഡോ അടച്ചാൽ അവ നഷ്ടപ്പെടും. അടയ്ക്കണോ?',
+  // A final action asks first, in place (ConfirmButton, ui.jsx). Malayalam order: what happens, then the question.
+  'Keep it': 'വേണ്ട, നിലനിർത്തുക',
+  'Cancel this count? What was counted is not kept.': 'ഈ എണ്ണൽ റദ്ദാക്കിയാൽ ഇതുവരെ എണ്ണിയത് സൂക്ഷിക്കില്ല. റദ്ദാക്കണോ?',
+  'Yes, cancel the count': 'അതെ, എണ്ണൽ റദ്ദാക്കുക',
+  'Cancel this delivery? Nothing from it goes on the shelf.': 'ഈ ഡെലിവറി റദ്ദാക്കിയാൽ അതിലെ ഒന്നും ഷെൽഫിലെത്തില്ല. റദ്ദാക്കണോ?',
+  'Yes, cancel the delivery': 'അതെ, ഡെലിവറി റദ്ദാക്കുക',
+  'Remove this file? It cannot be brought back.': 'ഈ ഫയൽ നീക്കിയാൽ പിന്നീട് തിരികെ കൊണ്ടുവരാനാകില്ല. നീക്കണോ?',
+  'Yes, remove it': 'അതെ, നീക്കുക',
+  'Cancel this order? It cannot be sent or received after this.': 'ഈ ഓർഡർ റദ്ദാക്കിയാൽ പിന്നീട് അത് അയയ്ക്കാനോ സ്വീകരിക്കാനോ കഴിയില്ല. റദ്ദാക്കണോ?',
+  'Yes, cancel the order': 'അതെ, ഓർഡർ റദ്ദാക്കുക',
+  'Close this order short? What has not arrived is no longer expected.': 'ഈ ഓർഡർ കുറവോടെ അടച്ചാൽ ഇതുവരെ എത്താത്തവ ഇനി പ്രതീക്ഷിക്കില്ല. അടയ്ക്കണോ?',
+  'Yes, close it short': 'അതെ, കുറവോടെ അടയ്ക്കുക',
+  'Reject this stock? It does not go on the shelf.': 'ഈ സ്റ്റോക്ക് നിരസിച്ചാൽ അത് ഷെൽഫിലെത്തില്ല. നിരസിക്കണോ?',
+  'Yes, reject it': 'അതെ, നിരസിക്കുക',
+  'Close this return without a credit? No credit can be recorded after this.': 'ഈ തിരിച്ചയക്കൽ ക്രെഡിറ്റ് ഇല്ലാതെ അടച്ചാൽ പിന്നീട് ക്രെഡിറ്റ് രേഖപ്പെടുത്താനാകില്ല. അടയ്ക്കണോ?',
+  'Yes, close without credit': 'അതെ, ക്രെഡിറ്റ് ഇല്ലാതെ അടയ്ക്കുക',
+  'Revoke the key for {name}? That system stops sending at once, and it needs a new key.': '{name}-ന്റെ കീ പിൻവലിച്ചാൽ ആ സിസ്റ്റം ഉടൻ അയയ്ക്കുന്നത് നിർത്തും; പിന്നീട് പുതിയ കീ വേണ്ടിവരും. പിൻവലിക്കണോ?',
+  'Yes, revoke it': 'അതെ, പിൻവലിക്കുക',
+  'Close {month}? Nothing dated in it can be recorded or changed until an administrator reopens it.': '{month} അടച്ചാൽ, ഒരു അഡ്മിനിസ്ട്രേറ്റർ വീണ്ടും തുറക്കുന്നതുവരെ ആ മാസത്തെ തീയതിയിലുള്ള ഒന്നും രേഖപ്പെടുത്താനോ മാറ്റാനോ കഴിയില്ല. അടയ്ക്കണോ?',
+  'Yes, close {month}': 'അതെ, {month} അടയ്ക്കുക',
 };
 
 export default { ...labels, ...admin, ...stock, ...buying, ...control, ...reports, ...core };

@@ -25,7 +25,7 @@ const roster = defaultRoster().map((r) => (
   r.employee_code === 'HPV001' ? { ...r, status: 'exited', end_date: day(-3) }
     : r.employee_code === 'HPB001' ? { ...r, full_name: 'Bilal Ahmed Buyer' }
       : r.employee_code === 'HPK001' ? { ...r, end_date: day(25), notice_date: day(-5) } : r));
-roster.push({ employee_code: 'HPAHC040', full_name: 'Anitha Krishnan', entity: 'Herbal Park', designation: 'Therapist', start_date: day(-4), status: 'active' });
+roster.push({ employee_code: 'ABC123', full_name: 'Anitha Krishnan', entity: 'Herbal Park', designation: 'Therapist', start_date: day(-4), status: 'active' });
 // What "reading a delivery note" answers here, whatever the photo: a stand-in for Workers AI.
 const aiReply = {
   supplier: 'KERALA AYURVEDA TRADERS L.L.C', note_no: 'DN-4471', date: '10/11/2026',

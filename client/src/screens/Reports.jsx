@@ -389,11 +389,11 @@ function Purchases({ d }) {
 
 function Legacy({ rows }) {
   const [q, setQ] = useState('');
-  const shown = (Array.isArray(rows) ? rows : []).filter((r) => !q || `${r.item_name} ${r.staff} ${r.purpose}`.toLowerCase().includes(q.toLowerCase()));
+  const shown = (Array.isArray(rows) ? rows : []).filter((r) => !q || `${r.item_name} ${r.staff} ${r.store} ${r.purpose}`.toLowerCase().includes(q.toLowerCase()));
   return (
     <Card title="History from the old Google Sheet app" hint="Kept for reference exactly as it was. It is not part of today's stock figures, which start from the imported opening balances." pad={false}
       actions={<Csv name="old-app-history" rows={shown} />}>
-      <div style={{ padding: '0 18px' }}><SearchBox value={q} onChange={setQ} placeholder="Filter by item, person or room" /></div>
+      <div style={{ padding: '0 18px' }}><SearchBox value={q} onChange={setQ} placeholder="Filter by item, person, store or purpose" /></div>
       <Table rows={shown} rowKey={(r, i) => i} empty="No history was imported." columns={[
         { key: 'at', label: 'When' }, { key: 'item_name', label: 'Item', primary: true }, { key: 'type', label: 'Type' },
         { key: 'qty', label: 'Qty', align: 'right' }, { key: 'store', label: 'Store' }, { key: 'staff', label: 'Staff' }, { key: 'purpose', label: 'Purpose' },

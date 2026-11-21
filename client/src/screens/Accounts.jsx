@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { downloadCsv, fmtDateTime, get, post } from '../api.js';
 import { dateLocale, t, tn } from '../i18n.js';
-import { Button, CancelButton, Card, ErrorNote, Field, Guard, Loading, Page, Quiet, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
+import { Button, CancelButton, Card, ConfirmButton, ErrorNote, Field, Guard, Loading, Page, Quiet, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
 
 const gstDay = (ms = Date.now()) => new Date(ms + 4 * 36e5).toISOString().slice(0, 10);
 const monthName = (m) => new Date(`${m}-15T12:00:00Z`).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -104,7 +104,9 @@ function MonthClose({ admin }) {
         </div>
       )}
       <ErrorNote error={err} />
-      {admin && <div className="row" style={{ justifyContent: 'flex-end' }}><Button busy={busy} onClick={close}>{month ? t('Close {month}', { month: monthName(month) }) : t('Close the month')}</Button></div>}
+      {admin && <div className="row" style={{ justifyContent: 'flex-end' }}>{month
+        ? <ConfirmButton busy={busy} ask={t('Close {month}? Nothing dated in it can be recorded or changed until an administrator reopens it.', { month: monthName(month) })} yes={t('Yes, close {month}', { month: monthName(month) })} onConfirm={close}>{t('Close {month}', { month: monthName(month) })}</ConfirmButton>
+        : <Button busy={busy} onClick={close}>{t('Close the month')}</Button>}</div>}
       {!admin && <Quiet icon="info">The unit administrator closes and reopens months.</Quiet>}
       {reopening && <Reopen month={reopening} onClose={() => setReopening(null)} onDone={() => { setReopening(null); reload(); }} />}
     </Card>

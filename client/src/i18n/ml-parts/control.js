@@ -5,7 +5,7 @@ export default {
   'Start a count': 'എണ്ണൽ തുടങ്ങുക',
   'Counts': 'എണ്ണലുകൾ',
   'Cycle counts due': 'സമയമായ സൈക്കിൾ എണ്ണലുകൾ',
-  'No counts yet. Start one for a store.': 'ഇതുവരെ എണ്ണലുകളൊന്നുമില്ല. ഒരു സ്റ്റോറിനായി ഒന്ന് തുടങ്ങുക.',
+  'No counts yet. Start one for a store.': 'ഇതുവരെ എണ്ണലുകളൊന്നുമില്ല. ഒരു സ്റ്റോറിൽ എണ്ണൽ തുടങ്ങുക.',
   'Count': 'എണ്ണൽ',
   'Started': 'തുടങ്ങിയത്',
   'blind': 'ബ്ലൈൻഡ്',
@@ -18,7 +18,7 @@ export default {
   'Counted {name}': '{name} എണ്ണിയത്',
   'not counted': 'എണ്ണിയിട്ടില്ല',
   'Every item is counted.': 'എല്ലാ സാധനങ്ങളും എണ്ണി.',
-  'You submitted this count, so another manager approves it, unless you are the only one.': 'ഈ എണ്ണൽ നിങ്ങൾ സമർപ്പിച്ചതാണ്, അതിനാൽ മറ്റൊരു മാനേജർ അംഗീകരിക്കണം; നിങ്ങൾ മാത്രമേയുള്ളൂവെങ്കിൽ ഒഴികെ.',
+  'You submitted this count, so another manager approves it, unless you are the only one.': 'ഈ എണ്ണൽ നിങ്ങൾ സമർപ്പിച്ചതായതിനാൽ, നിങ്ങൾ ഒരേയൊരു മാനേജറല്ലെങ്കിൽ മറ്റൊരു മാനേജർ അംഗീകരിക്കണം.',
   'Approved by {name}, {when}': '{name} അംഗീകരിച്ചു, {when}',
   'Closed by {name}, {when}': '{name} അടച്ചു, {when}',
   'Cancel count': 'എണ്ണൽ റദ്ദാക്കുക',
@@ -31,11 +31,11 @@ export default {
   'Count at least one item first': 'ആദ്യം ഒരു സാധനമെങ്കിലും എണ്ണുക',
   'Sent back for recounting': 'വീണ്ടും എണ്ണാൻ തിരിച്ചയച്ചു',
   'Count approved and stock corrected': 'എണ്ണൽ അംഗീകരിച്ചു, സ്റ്റോക്ക് തിരുത്തി',
-  '{msg}. Limited to what is on the shelf for: {items}': '{msg}. ഇവയ്ക്ക് ഷെൽഫിലുള്ളത്ര മാത്രം: {items}',
+  '{msg}. Limited to what is on the shelf for: {items}': '{msg}. {items} എന്നിവയ്ക്ക് ഷെൽഫിലുള്ളത്ര മാത്രമാക്കി.',
 
   // Starting a count.
   'What to count': 'എന്ത് എണ്ണണം',
-  'A whole store, or one category at a time: a cycle count.': 'സ്റ്റോർ മുഴുവനായി, അല്ലെങ്കിൽ ഒരു സമയം ഒരു കാറ്റഗറി: സൈക്കിൾ എണ്ണൽ.',
+  'A whole store, or one category at a time: a cycle count.': 'സ്റ്റോർ മുഴുവനായി എണ്ണാം, അല്ലെങ്കിൽ ഒരു സമയം ഒരു കാറ്റഗറി മാത്രം (ഇതാണ് സൈക്കിൾ എണ്ണൽ).',
   'Everything in the store': 'സ്റ്റോറിലുള്ളതെല്ലാം',
   'Start': 'തുടങ്ങുക',
   'Blind count': 'ബ്ലൈൻഡ് എണ്ണൽ',
@@ -45,17 +45,17 @@ export default {
 
   // ABC cycle counts.
   'Cycle counts': 'സൈക്കിൾ എണ്ണലുകൾ',
-  'Items are graded by the value used in the last 90 days: A, the few that are most of it, are counted most often. An item is due when it has not been counted in a store for its grade\'s number of days.': 'കഴിഞ്ഞ 90 ദിവസം ഉപയോഗിച്ചതിന്റെ മൂല്യം അനുസരിച്ചാണ് സാധനങ്ങളെ ഗ്രേഡ് ചെയ്യുന്നത്: മൂല്യത്തിന്റെ ഭൂരിഭാഗവും വരുന്ന കുറച്ച് സാധനങ്ങൾ A ആണ്, അവ ഏറ്റവും കൂടുതൽ തവണ എണ്ണും. ഒരു സ്റ്റോറിൽ ഒരു സാധനം അതിന്റെ ഗ്രേഡിനുള്ള ദിവസങ്ങളായി എണ്ണിയിട്ടില്ലെങ്കിൽ എണ്ണാൻ സമയമായി.',
+  'Items are graded by the value used in the last 90 days: A, the few that are most of it, are counted most often. An item is due when it has not been counted in a store for its grade\'s number of days.': 'കഴിഞ്ഞ 90 ദിവസം ഉപയോഗിച്ചതിന്റെ മൂല്യം അനുസരിച്ചാണ് സാധനങ്ങളെ ഗ്രേഡ് ചെയ്യുന്നത്. മൂല്യത്തിന്റെ ഭൂരിഭാഗവും വരുന്ന കുറച്ച് സാധനങ്ങളാണ് A; അവയാണ് ഏറ്റവും കൂടുതൽ തവണ എണ്ണുന്നത്. ഒരു സാധനം അതിന്റെ ഗ്രേഡിന് നിശ്ചയിച്ച ദിവസങ്ങളായി ഒരു സ്റ്റോറിൽ എണ്ണിയിട്ടില്ലെങ്കിൽ, ആ സ്റ്റോറിൽ അത് എണ്ണാൻ സമയമായി.',
   'Grade': 'ഗ്രേഡ്',
   'Every grade': 'എല്ലാ ഗ്രേഡും',
   '{g} items': '{g} സാധനങ്ങൾ',
   '{g} items: counted every {n} days': '{g} സാധനങ്ങൾ: {n} ദിവസം കൂടുമ്പോൾ എണ്ണും',
-  '{a} A, {b} B and {c} C items here; {due} due for counting.': 'ഇവിടെ {a} A, {b} B, {c} C സാധനങ്ങൾ; എണ്ണാൻ സമയമായവ {due}.',
+  '{a} A, {b} B and {c} C items here; {due} due for counting.': 'ഇവിടെ A ഗ്രേഡിൽ {a}, B-യിൽ {b}, C-യിൽ {c} സാധനങ്ങളുണ്ട്; അതിൽ {due} എണ്ണം എണ്ണാൻ സമയമായി.',
   'Nothing is due in what is shown.': 'കാണിക്കുന്നവയിൽ എണ്ണാൻ സമയമായതൊന്നുമില്ല.',
   'Count the {n} due': 'സമയമായ {n} എണ്ണുക',
   'Nothing due': 'സമയമായതൊന്നുമില്ല',
   'Due for a cycle count': 'സൈക്കിൾ എണ്ണലിന് സമയമായവ',
-  'Nothing is due. Every item has been counted within its grade\'s days.': 'സമയമായതൊന്നുമില്ല. എല്ലാ സാധനങ്ങളും ഗ്രേഡിനുള്ള ദിവസങ്ങൾക്കുള്ളിൽ എണ്ണിയിട്ടുണ്ട്.',
+  'Nothing is due. Every item has been counted within its grade\'s days.': 'എണ്ണാൻ സമയമായതൊന്നുമില്ല. എല്ലാ സാധനങ്ങളും അവയുടെ ഗ്രേഡിന് നിശ്ചയിച്ച ദിവസങ്ങൾക്കുള്ളിൽ എണ്ണിയിട്ടുണ്ട്.',
   'Last counted': 'അവസാനം എണ്ണിയത്',
   'Never': 'ഒരിക്കലുമില്ല',
   'Late by': 'വൈകിയത്',
@@ -79,7 +79,7 @@ export default {
   'Withdrawn': 'പിൻവലിച്ചു',
   'Approved. Stock corrected': 'അംഗീകരിച്ചു. സ്റ്റോക്ക് തിരുത്തി',
   'On shelf now': 'ഇപ്പോൾ ഷെൽഫിൽ',
-  'You raised this, so another manager approves it, unless you are the only one.': 'ഇത് നിങ്ങൾ ഉന്നയിച്ചതാണ്, അതിനാൽ മറ്റൊരു മാനേജർ അംഗീകരിക്കണം; നിങ്ങൾ മാത്രമേയുള്ളൂവെങ്കിൽ ഒഴികെ.',
+  'You raised this, so another manager approves it, unless you are the only one.': 'ഇത് നിങ്ങൾ ഉന്നയിച്ചതായതിനാൽ, നിങ്ങൾ ഒരേയൊരു മാനേജറല്ലെങ്കിൽ മറ്റൊരു മാനേജർ അംഗീകരിക്കണം.',
   'Required when rejecting.': 'നിരസിക്കുമ്പോൾ നിർബന്ധം.',
 
   // ── Returns and inspection ─────────────────────────────────────────────────────────────
@@ -105,8 +105,8 @@ export default {
   'from {ref}': '{ref}-ൽ നിന്ന്',
   'received by {name}': '{name} സ്വീകരിച്ചത്',
   'What was checked, or what was wrong': 'എന്ത് പരിശോധിച്ചു, അല്ലെങ്കിൽ എന്തായിരുന്നു പ്രശ്നം',
-  'Needed to reject it. Rejected stock goes back to the supplier, waiting for its credit note.': 'നിരസിക്കാൻ ഇത് വേണം. നിരസിച്ച സ്റ്റോക്ക് സപ്ലയർക്ക് തിരിച്ചയക്കും, ക്രെഡിറ്റ് നോട്ട് കാത്തിരിക്കും.',
-  'Needed to reject it. Rejected stock is written off.': 'നിരസിക്കാൻ ഇത് വേണം. നിരസിച്ച സ്റ്റോക്ക് എഴുതിത്തള്ളും.',
+  'Needed to reject it. Rejected stock goes back to the supplier, waiting for its credit note.': 'നിരസിക്കണമെങ്കിൽ ഇത് വേണം. നിരസിച്ച സ്റ്റോക്ക് സപ്ലയർക്ക് തിരിച്ചയക്കും, തുടർന്ന് അതിന്റെ ക്രെഡിറ്റ് നോട്ടിനായി കാത്തിരിക്കും.',
+  'Needed to reject it. Rejected stock is written off.': 'നിരസിക്കണമെങ്കിൽ ഇത് വേണം. നിരസിച്ച സ്റ്റോക്ക് എഴുതിത്തള്ളും.',
 
   // Returns to suppliers: where each stands.
   'Waiting for credit': 'ക്രെഡിറ്റ് കാത്തിരിക്കുന്നു',
@@ -115,15 +115,15 @@ export default {
   'Not sent': 'അയച്ചില്ല',
 
   // The list of returns.
-  'No returns here. A return is raised from a delivery: open it under Purchasing, Deliveries.': 'ഇവിടെ തിരിച്ചയക്കലുകളൊന്നുമില്ല. ഡെലിവറിയിൽ നിന്നാണ് തിരിച്ചയക്കൽ ഉന്നയിക്കുന്നത്: പർച്ചേസ്, ഡെലിവറികൾ എന്നതിൽ അത് തുറക്കുക.',
-  'No returns yet. A return is raised from a delivery: open it under Purchasing, Deliveries.': 'ഇതുവരെ തിരിച്ചയക്കലുകളൊന്നുമില്ല. ഡെലിവറിയിൽ നിന്നാണ് തിരിച്ചയക്കൽ ഉന്നയിക്കുന്നത്: പർച്ചേസ്, ഡെലിവറികൾ എന്നതിൽ അത് തുറക്കുക.',
+  'No returns here. A return is raised from a delivery: open it under Purchasing, Deliveries.': 'ഇവിടെ തിരിച്ചയക്കലുകളൊന്നുമില്ല. തിരിച്ചയക്കൽ ഉന്നയിക്കുന്നത് ഡെലിവറിയിൽ നിന്നാണ്; അതിനായി പർച്ചേസ്, ഡെലിവറികൾ എന്ന ഭാഗത്ത് ആ ഡെലിവറി തുറക്കുക.',
+  'No returns yet. A return is raised from a delivery: open it under Purchasing, Deliveries.': 'ഇതുവരെ തിരിച്ചയക്കലുകളൊന്നുമില്ല. തിരിച്ചയക്കൽ ഉന്നയിക്കുന്നത് ഡെലിവറിയിൽ നിന്നാണ്; അതിനായി പർച്ചേസ്, ഡെലിവറികൾ എന്ന ഭാഗത്ത് ആ ഡെലിവറി തുറക്കുക.',
   'Returns': 'തിരിച്ചയക്കലുകൾ',
   'Supplier': 'സപ്ലയർ',
   'Why': 'കാരണം',
   'Credit due': 'കിട്ടാനുള്ള ക്രെഡിറ്റ്',
 
   // One return.
-  '{ref} approved: the stock has left': '{ref} അംഗീകരിച്ചു: സ്റ്റോക്ക് പോയി',
+  '{ref} approved: the stock has left': '{ref} അംഗീകരിച്ചു, സ്റ്റോക്ക് പുറത്തുപോയി',
   '{ref} not sent': '{ref} അയച്ചില്ല',
   '{ref} cancelled': '{ref} റദ്ദാക്കി',
   'Credit note recorded on {ref}': '{ref}-ൽ ക്രെഡിറ്റ് നോട്ട് രേഖപ്പെടുത്തി',
@@ -133,7 +133,7 @@ export default {
   'Approve: send it back': 'അംഗീകരിക്കുക: തിരിച്ചയക്കുക',
   'Close without credit': 'ക്രെഡിറ്റ് ഇല്ലാതെ അടയ്ക്കുക',
   'Record the credit note': 'ക്രെഡിറ്റ് നോട്ട് രേഖപ്പെടുത്തുക',
-  'From {ref}, {store}, to {supplier}.': '{ref}-ൽ നിന്ന്, {store}, {supplier}-ലേക്ക്.',
+  'From {ref}, {store}, to {supplier}.': '{store}-ലെ {ref}-ൽ നിന്ന് {supplier}-ലേക്ക്.',
   'no named supplier': 'പേരുള്ള സപ്ലയർ ഇല്ല',
   'Raised by {name} on {when}.': '{when}-ന് {name} ഉന്നയിച്ചു.',
   'Going back': 'തിരിച്ചയക്കുന്നത്',
@@ -149,7 +149,7 @@ export default {
   'Amount credited': 'ക്രെഡിറ്റ് ചെയ്ത തുക',
   '{amount} was due.': '{amount} കിട്ടാനുണ്ടായിരുന്നു.',
   'Needed if it is not being sent.': 'അയക്കുന്നില്ലെങ്കിൽ ഇത് വേണം.',
-  'Needed to close it without a credit note: replaced instead, refused by the supplier.': 'ക്രെഡിറ്റ് നോട്ട് ഇല്ലാതെ അടയ്ക്കാൻ ഇത് വേണം: പകരം സാധനം തന്നു, സപ്ലയർ നിരസിച്ചു എന്നിങ്ങനെ.',
+  'Needed to close it without a credit note: replaced instead, refused by the supplier.': 'ക്രെഡിറ്റ് നോട്ട് ഇല്ലാതെ അടയ്ക്കണമെങ്കിൽ ഇത് വേണം (ഉദാ. പകരം സാധനം തന്നു, അല്ലെങ്കിൽ സപ്ലയർ നിരസിച്ചു).',
 
   // Raising a return from a delivery.
   'Return goods from {ref}': '{ref}-ൽ നിന്ന് സാധനങ്ങൾ തിരിച്ചയക്കുക',
@@ -161,13 +161,13 @@ export default {
   'Going back: {name}': 'തിരിച്ചയക്കുന്നത്: {name}',
   'Up to {n}': '{n} വരെ',
   'All returned': 'എല്ലാം തിരിച്ചയച്ചു',
-  'What is wrong with it, for the supplier and the approver.': 'എന്താണ് പ്രശ്നം, സപ്ലയർക്കും അംഗീകരിക്കുന്നയാൾക്കും വേണ്ടി.',
+  'What is wrong with it, for the supplier and the approver.': 'സപ്ലയർക്കും അംഗീകരിക്കുന്നയാൾക്കും വേണ്ടി, എന്താണ് പ്രശ്നം എന്ന്.',
   'how many of something are going back': 'എത്ര എണ്ണം തിരിച്ചയക്കുന്നു എന്ന്',
   'why': 'കാരണം',
-  '{ref} raised, {amount} to be credited. A manager approves it.': '{ref} ഉന്നയിച്ചു, {amount} ക്രെഡിറ്റ് ആകണം. മാനേജർ അംഗീകരിക്കും.',
+  '{ref} raised, {amount} to be credited. A manager approves it.': '{ref} ഉന്നയിച്ചു; {amount} ക്രെഡിറ്റ് ആയി കിട്ടാനുണ്ട്. ഇനി മാനേജർ അംഗീകരിക്കണം.',
 
   // ── Trace a lot ────────────────────────────────────────────────────────────────────────
-  'Where one batch came from, everywhere it went, and what is left. For a recall, or a question about one lot.': 'ഒരു ബാച്ച് എവിടെ നിന്ന് വന്നു, എവിടെയെല്ലാം പോയി, എന്ത് ബാക്കിയുണ്ട്. റീകോളിനോ ഒരു ലോട്ടിനെക്കുറിച്ചുള്ള ചോദ്യത്തിനോ.',
+  'Where one batch came from, everywhere it went, and what is left. For a recall, or a question about one lot.': 'ഒരു ബാച്ച് എവിടെ നിന്ന് വന്നു, എവിടെയെല്ലാം പോയി, എന്ത് ബാക്കിയുണ്ട് എന്നിവ. റീകോൾ ഉണ്ടാകുമ്പോഴോ ഒരു ലോട്ടിനെക്കുറിച്ച് ചോദ്യം വരുമ്പോഴോ ഉപയോഗിക്കുക.',
   'Type a lot or batch number': 'ലോട്ട് അല്ലെങ്കിൽ ബാച്ച് നമ്പർ ടൈപ്പ് ചെയ്യുക',
   'Type at least two characters of the lot number printed on the pack.': 'പാക്കിൽ അച്ചടിച്ച ലോട്ട് നമ്പറിന്റെ കുറഞ്ഞത് രണ്ട് അക്ഷരങ്ങൾ ടൈപ്പ് ചെയ്യുക.',
   'No lot with "{term}" in its number has been received in this unit.': 'നമ്പറിൽ "{term}" ഉള്ള ഒരു ലോട്ടും ഈ യൂണിറ്റിൽ ലഭിച്ചിട്ടില്ല.',
@@ -213,9 +213,9 @@ export default {
   'Opening balance': 'ഓപ്പണിംഗ് ബാലൻസ്',
 
   // ── Accounts ───────────────────────────────────────────────────────────────────────────
-  'Exports for the accounts system, and closing a month so nothing in it can change.': 'അക്കൗണ്ട്സ് സിസ്റ്റത്തിനുള്ള എക്സ്പോർട്ടുകൾ, ഒന്നും മാറാതിരിക്കാൻ മാസം അടയ്ക്കൽ.',
+  'Exports for the accounts system, and closing a month so nothing in it can change.': 'അക്കൗണ്ട്സ് സിസ്റ്റത്തിനുള്ള എക്സ്പോർട്ടുകളും, ഒന്നും മാറാതിരിക്കാൻ മാസം അടയ്ക്കലും.',
   'Exports': 'എക്സ്പോർട്ടുകൾ',
-  'A CSV file that opens in Excel. Costs are without VAT; VAT is in its own column. Purchases are dated the day they were approved onto the shelf.': 'Excel-ൽ തുറക്കുന്ന CSV ഫയൽ. വിലകൾ VAT ഇല്ലാതെ; VAT പ്രത്യേക കോളത്തിൽ. ഷെൽഫിലേക്ക് അംഗീകരിച്ച ദിവസത്തെ തീയതിയാണ് പർച്ചേസുകൾക്ക്.',
+  'A CSV file that opens in Excel. Costs are without VAT; VAT is in its own column. Purchases are dated the day they were approved onto the shelf.': 'Excel-ൽ തുറക്കാവുന്ന CSV ഫയൽ. വിലകൾ VAT ഇല്ലാതെയാണ്; VAT പ്രത്യേക കോളത്തിലുണ്ട്. ഷെൽഫിലേക്ക് അംഗീകരിച്ച ദിവസത്തെ തീയതിയാണ് പർച്ചേസുകൾക്ക് നൽകുന്നത്.',
   'Download the CSV': 'CSV ഡൗൺലോഡ് ചെയ്യുക',
   'Nothing in those dates': 'ആ തീയതികളിൽ ഒന്നുമില്ല',
   '{n} row downloaded': '{n} വരി ഡൗൺലോഡ് ചെയ്തു',

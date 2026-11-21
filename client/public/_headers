@@ -3,8 +3,12 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(self), geolocation=(), microphone=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://hifive-design.pages.dev; style-src 'self' 'unsafe-inline' https://hifive-design.pages.dev https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://hifive-design.pages.dev; connect-src 'self' https://hifive-inventory.sinusuresh.workers.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://hifive-design.pages.dev https://hifive-id-portal.pages.dev/hub-button.js; style-src 'self' 'unsafe-inline' https://hifive-design.pages.dev https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://hifive-design.pages.dev; connect-src 'self' https://hifive-inventory.sinusuresh.workers.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
+# script-src https://hifive-id-portal.pages.dev/hub-button.js: the HiFive corner button and the
+# suite's leave guard (index.html, src/leave.js), named as the one file rather than the whole site.
+# It draws inside its own shadow root and calls nothing outside the page.
+#
 # camera=(self): the barcode scanner, on this app's own pages only. The ZXing reader used where the
 # browser has no BarcodeDetector (every iPhone) is bundled under /assets, so script-src stays self.
 #

@@ -469,6 +469,8 @@ const core = {
   'error:PERIOD_CLOSED': 'ആ മാസം അക്കൗണ്ട്സിനായി അടച്ചിരിക്കുന്നു, അതിനാൽ അതിലെ ഒന്നും മാറ്റാനാകില്ല.',
   'error:FEATURE_OFF': 'ഈ സൗകര്യം ഈ യൂണിറ്റിൽ ഓഫാണ്. യൂണിറ്റ് അഡ്മിനിസ്ട്രേറ്റർക്ക് അഡ്മിൻ, സെറ്റിംഗ്സിൽ ഓൺ ചെയ്യാം.',
   'error:OVER_LIMIT': 'ഈ തുക ഒരു മാനേജർക്ക് അംഗീകരിക്കാവുന്നതിലും കൂടുതലാണ്. യൂണിറ്റ് അഡ്മിനിസ്ട്രേറ്ററോ ഡയറക്ടറോ അംഗീകരിക്കണം.',
+  // Asked before leaving a screen with unsaved work (leave.js, Design Guide C21).
+  'You have changes that are not saved. Leave this page and lose them?': 'സേവ് ചെയ്യാത്ത മാറ്റങ്ങളുണ്ട്. ഈ പേജ് വിട്ടാൽ അവ നഷ്ടപ്പെടും. വിട്ടുപോകണോ?',
 };
 
 export default { ...labels, ...admin, ...stock, ...buying, ...control, ...reports, ...core };

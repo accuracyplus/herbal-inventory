@@ -108,10 +108,11 @@ export class Boundary extends Component {
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 
-export function Page({ title, subtitle, actions, children, back, tour }) {
+/** `guard` (a name) marks the page's own form for the leave guard (leave.js), its header buttons included: Record use, Receive, a delivery. */
+export function Page({ title, subtitle, actions, children, back, tour, guard }) {
   useLang();
   return (
-    <div className="page">
+    <div className="page" data-hf-guard={guard || undefined}>
       {back && <button type="button" className="hf-btn hf-btn--quiet inv-back" onClick={back}><Icon name="back" size={18} />{t('Back')}</button>}
       <header className="page-head" data-tour={tour}>
         <div className="min0">
@@ -176,13 +177,30 @@ export function Hint({ text }) {
  */
 export const InSheet = createContext(false);
 
-export function Sheet({ title, onClose, children, footer, wide = false }) {
-  return (
-    <HfSheet open title={tx(title)} onClose={onClose} wide={wide}>
+/**
+ * Every window is guarded (leave.js): what a person types or chooses in it counts as unsaved until
+ * it closes or a save from it works. `guard={false}` for a window that only offers choices that act
+ * at once (the person's menu, the unit switch, the welcome). A control that only changes the view,
+ * inside a guarded window, carries `data-hf-no-guard`. The wrapper takes no space of its own
+ * (display: contents), so the footer stays where it was.
+ */
+export function Sheet({ title, onClose, children, footer, wide = false, guard = true }) {
+  const inner = (
+    <>
       <div className="inv-sheet__body"><InSheet.Provider value={true}>{children}</InSheet.Provider></div>
       {footer && <div className="inv-sheet__foot">{footer}</div>}
+    </>
+  );
+  return (
+    <HfSheet open title={tx(title)} onClose={onClose} wide={wide}>
+      {guard ? <div className="inv-guard" data-hf-guard={typeof guard === 'string' ? guard : 'window'}>{inner}</div> : inner}
     </HfSheet>
   );
+}
+
+/** A form on the page itself (Record use, Receive): guarded as a window is, for as long as it is shown. */
+export function Guard({ name, children }) {
+  return <div className="inv-guard" data-hf-guard={name}>{children}</div>;
 }
 
 /** A note inside a screen: something to know (plain), to look at (warn), or that stopped it (danger). */
@@ -309,7 +327,8 @@ export function Check({ checked, onChange, children, ...rest }) {
 export function SearchBox({ value, onChange, placeholder = 'Search', id }) {
   placeholder = tx(placeholder);
   return (
-    <div className="hf-search inv-search" role="search">
+    // A search saves nothing: typing in it never counts as unsaved work (leave.js).
+    <div className="hf-search inv-search" role="search" data-hf-no-guard>
       <SearchGlass size={18} aria-hidden="true" />
       <input id={id} type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder} />
       {value && <button type="button" className="hf-search__clear" onClick={() => onChange('')} aria-label={t('Clear the search')}><X size={16} aria-hidden="true" /></button>}
@@ -401,9 +420,13 @@ export function ItemPicker({ items, storeId, onPick, exclude = [], placeholder =
         item: it,
       };
     }), [items, storeId, exclude, filter]);
+  // Typing here only searches: it never counts as unsaved work. An item it adds to a list does
+  // (lines.jsx), as does anything typed for that item (leave.js).
   return (
-    <Picker label={tx(label)} hideLabel={!showLabel} placeholder={tx(placeholder)} options={options} onPick={(o) => onPick(o.item)}
-      empty={(typed) => t('No item matches “{typed}”.', { typed })} />
+    <div className="inv-pass" data-hf-no-guard>
+      <Picker label={tx(label)} hideLabel={!showLabel} placeholder={tx(placeholder)} options={options} onPick={(o) => onPick(o.item)}
+        empty={(typed) => t('No item matches “{typed}”.', { typed })} />
+    </div>
   );
 }
 

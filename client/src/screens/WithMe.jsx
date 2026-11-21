@@ -180,7 +180,7 @@ function Take() {
     } catch (e) { setErr(e); setBusy(false); }
   };
   return (
-    <Page title="Take stock" subtitle="It stays with the person until it is recorded as used or returned." back={back}>
+    <Page title="Take stock" subtitle="It stays with the person until it is recorded as used or returned." back={back} guard="take-stock">
       <Card>
         <div className="form two">
           <Field label="From store"><Select value={storeId} onChange={setStoreId} options={stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>

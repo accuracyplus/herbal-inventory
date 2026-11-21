@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { API, fmtDateTime, post } from '../api.js';
 import { t } from '../i18n.js';
 import Icon from '../icons.jsx';
-import { Button, Card, ErrorNote, Field, Loading, Note, Pill, Quiet, Select, useApp, useData } from '../ui.jsx';
+import { Button, Card, ErrorNote, Field, Guard, Loading, Note, Pill, Quiet, Select, useApp, useData } from '../ui.jsx';
 
 const RESULT = { ready: ['ok', 'Ready'], recorded: ['ok', 'Recorded'], duplicate: ['faint', 'Already recorded'], dismissed: ['faint', 'Dismissed'], problem: ['danger', 'Problem'], failed: ['danger', 'Waiting'], refused: ['danger', 'Refused'] };
 
@@ -48,6 +48,7 @@ function Waiting() {
     try { await post(`/api/link/inbox/${id}/dismiss`, { note: note[id] || '' }); toast('Dismissed'); after(); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
+    <Guard name="services-waiting">
     <Card title="Waiting" hint="Services that arrived but could not be recorded. Fix what the reason says (add the service or room, receive the stock), then try again. Dismiss one that should never be recorded, such as a test."
       actions={data?.length > 1 && <Button kind="secondary" busy={busy} onClick={() => retry(null)}>Try all again</Button>}>
       <ErrorNote error={error} onRetry={reload} />
@@ -73,6 +74,7 @@ function Waiting() {
       )}
       <ErrorNote error={err} />
     </Card>
+    </Guard>
   );
 }
 
@@ -115,6 +117,7 @@ function Sheet({ word, onRecorded }) {
   };
   const shown = report ? report.results.filter((r) => !['ready', 'recorded'].includes(r.status)) : [];
   return (
+    <Guard name="services-sheet">
     <Card title="From a sheet" hint={t('Until a booking or billing system is connected, a list of {word} done can be uploaded. Each row needs its own reference, so a row sent twice is recorded once.', { word: t(word.toLowerCase()) })}>
       <div className="stack">
         {tpl.data && (
@@ -156,6 +159,7 @@ function Sheet({ word, onRecorded }) {
         )}
       </div>
     </Card>
+    </Guard>
   );
 }
 
@@ -177,6 +181,7 @@ function Keys() {
   const copy = async (text) => { try { await navigator.clipboard.writeText(text); toast('Copied'); } catch { toast('Select the text and copy it', 'danger'); } };
   const example = `POST ${url}\nAuthorization: Bearer <the key>\nContent-Type: application/json\n\n{ "services": [\n  { "ref": "INV-1001-1", "service": "ABH", "times": 1,\n    "at": "2026-11-10T14:30:00+04:00",\n    "room": "R1", "person": "HPAHC040", "price": 250 }\n] }`;
   return (
+    <Guard name="connections">
     <Card title="Connections" hint="A key lets one other system send completed services for this unit, and nothing else. It is shown once, when it is made: keep it in that system's settings. A lost key is replaced, not recovered.">
       <div className="stack">
         <ErrorNote error={error} onRetry={reload} />
@@ -215,5 +220,6 @@ function Keys() {
         </details>
       </div>
     </Card>
+    </Guard>
   );
 }

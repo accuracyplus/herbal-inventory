@@ -21,9 +21,16 @@
     <script src="/theme-init.js"></script>
     <script src="/theme-defaults.js"></script>
     <link rel="stylesheet" href="https://hifive-design.pages.dev/theme/v1/theme.css" />
+    <!--
+      The HiFive corner button and the suite's leave guard (Design Guide C21, D-053 and D-060 to
+      D-062), the same script every HiFive app loads. If HiFive ID is unreachable it never loads
+      and Inventory is as it was. src/leave.js is how Inventory uses it.
+    -->
+    <script src="https://hifive-id-portal.pages.dev/hub-button.js" defer></script>
     <title>HiFive Inventory</title>
   </head>
-  <body>
+  <!-- data-hf-keep-on-submit: a submitted form counts as unsaved until the server takes it (D-061). -->
+  <body data-hf-keep-on-submit>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

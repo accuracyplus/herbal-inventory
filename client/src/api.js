@@ -7,6 +7,7 @@
  * token (the page may only talk to that Worker). The older `?hfid_token=` is still read.
  */
 
+import { markSaved, pressedGuard, savesSomething } from './leave.js';
 import { dateLocale, has, t } from './i18n.js';
 
 export const API = import.meta.env.VITE_API || '';
@@ -80,6 +81,8 @@ export class ApiError extends Error {
 
 /** `form` sends files: an object of fields, where a File or Blob goes as a file. `blob` returns the bytes. */
 export async function request(path, { method = 'GET', body, form, blob = false, noUnit = false } = {}) {
+  // A save pressed in a guarded window or form, noted now, before anything is awaited (leave.js).
+  const from = method !== 'GET' && savesSomething(path, body) ? pressedGuard() : null;
   let res;
   let payload;
   if (form) {
@@ -114,6 +117,9 @@ export async function request(path, { method = 'GET', body, form, blob = false, 
     const said = code && has(`error:${code}`) ? t(`error:${code}`) : t(data?.error?.message || 'Something went wrong.');
     throw new ApiError(said, res.status, code, data?.error?.details);
   }
+  // Accepted: what was typed there is saved, so leaving no longer asks (D-062). A refusal above
+  // marks nothing, and the work keeps counting until a save works.
+  markSaved(from);
   return data;
 }
 

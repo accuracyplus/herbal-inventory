@@ -79,7 +79,7 @@ export default function FirstTour({ me, visible, open, setOpen }) {
   return (
     <>
       {welcome && (
-        <Sheet title={t('Welcome to HiFive Inventory')} onClose={() => setWelcome(false)}
+        <Sheet title={t('Welcome to HiFive Inventory')} onClose={() => setWelcome(false)} guard={false}
           footer={<><Button kind="secondary" onClick={() => setWelcome(false)}>{t('Not now')}</Button><Button icon="check" onClick={() => { setWelcome(false); setOpen(true); }}>{t('Show me around')}</Button></>}>
           <p>{t('A short walk through the screens you will use, about a minute.')}</p>
           <Segmented label={t('Language')} value={lang()} onChange={pick} options={Object.entries(LANGS).map(([value, label]) => ({ value, label }))} />

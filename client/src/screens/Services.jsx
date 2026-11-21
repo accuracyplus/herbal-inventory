@@ -12,7 +12,7 @@ import { t, tn } from '../i18n.js';
 import Icon from '../icons.jsx';
 import LineEditor, { lineErrors, newLine, toPayload } from '../lines.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, StatusRows, Stepper, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Guard, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, StatusRows, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
 import ServiceLink from './ServiceLink.jsx';
@@ -116,7 +116,7 @@ function Record({ services, word, onRecipes }) {
     );
   }
   return (
-    <>
+    <Guard name="treatment">
       <Card>
         <div className="form two">
           <Field label={t('Which {one}', { one: t(one) })}><Select value={serviceId} onChange={setServiceId} placeholder="Choose" options={services.map((s) => ({ value: s.id, label: s.name }))} /></Field>
@@ -156,7 +156,7 @@ function Record({ services, word, onRecipes }) {
           }))} />
         </Card>
       )}
-    </>
+    </Guard>
   );
 }
 

@@ -84,7 +84,8 @@ export default function Bulk() {
   const what = t(kinds.find((k) => k.value === kind)?.label)?.toLowerCase();
 
   return (
-    <div className="stack">
+    // A file chosen and not yet saved is unsaved work, whatever was or was not typed (leave.js).
+    <div className="stack" data-hf-unsaved={file && !report?.applied ? 'true' : undefined}>
       {kinds.length > 1 && <Segmented label="List" value={kind} onChange={(k) => { setKind(k); clear(); }} options={kinds} />}
 
       <Card title="1 · Get the sheet" hint="It comes filled with what this unit already has. Change what you need, add rows for new ones, and leave the rest.">

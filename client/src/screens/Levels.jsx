@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { fmtQty, post } from '../api.js';
-import { Button, Card, Check, ErrorNote, Field, Loading, Note, Pill, QtyInput, Quiet, Segmented, Select, Table, useApp, useData } from '../ui.jsx';
+import { Button, Card, Check, ErrorNote, Field, Guard, Loading, Note, Pill, QtyInput, Quiet, Segmented, Select, Table, useApp, useData } from '../ui.jsx';
 import { t, tn } from '../i18n.js';
 
 /** Said when drawn, so it follows the language. */
@@ -54,9 +54,9 @@ export default function Levels({ start = '' }) {
     : <b>{fmtQty(r.suggested[k])}</b>);
 
   return (
-    <>
+    <Guard name="levels">
       <Card>
-        <Field label="For store"><Select value={storeId} onChange={(v) => { setStoreId(v); setShow('look'); }} options={stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
+        <div data-hf-no-guard><Field label="For store"><Select value={storeId} onChange={(v) => { setStoreId(v); setShow('look'); }} options={stores.map((s) => ({ value: s.id, label: s.name }))} /></Field></div>
         {data && (
           <p className="muted">
             {t('Worked out from what left {store} in the last 30 and 90 days.', { store: data.store.name })}{' '}
@@ -106,7 +106,7 @@ export default function Levels({ start = '' }) {
           {!sets && data.rows.length > 0 && <Quiet icon="info">A manager sets these levels.</Quiet>}
         </>
       )}
-    </>
+    </Guard>
   );
 }
 

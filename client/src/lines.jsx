@@ -55,8 +55,13 @@ export function noteDifferences(lines) {
 /** The packs a line can be written in on an order or a delivery: buying packs, this supplier's or anybody's. */
 export const buyPacks = (item, supplierId) => (item.packs || []).filter((p) => p.use !== 'STORE' && (!p.supplierId || !supplierId || p.supplierId === supplierId));
 
-export default function LineEditor({ mode, items, storeId, lines, setLines, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan, withNote = false, warnings = {}, notes = {}, supplierId = null }) {
+export default function LineEditor({ mode, items, storeId, lines, setLines: setLinesNow, currency = 'AED', showCost = false, pickerFilter, errors = {}, scan, withNote = false, warnings = {}, notes = {}, supplierId = null }) {
   const [scanning, setScanning] = useState(null);
+  // Lines added by a tap or a scan are work too, though nothing was typed: once the person has
+  // changed the list, it counts as unsaved while it has lines (leave.js). A save that works empties
+  // the list or closes the window, and the asking stops; a refused one leaves the lines, and it goes on.
+  const [changed, setChanged] = useState(false);
+  const setLines = (v) => { setChanged(true); setLinesNow(v); };
   const fresh = (item, extra = {}) => newLine(item, { ...(mode === 'in' || mode === 'po' ? { unitCost: item.lastCost ?? item.avgCost ?? '' } : {}), ...extra });
   const add = (item) => {
     if (mode !== 'in' && lines.some((l) => l.item.id === item.id)) return;
@@ -85,7 +90,7 @@ export default function LineEditor({ mode, items, storeId, lines, setLines, curr
   const total = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitCost) || 0), 0);
 
   return (
-    <div className="inv-lines">
+    <div className="inv-lines" data-hf-unsaved={changed && lines.length > 0 ? 'true' : undefined}>
       {lines.map((l) => {
         const here = l.item.stores?.find((s) => s.storeId === storeId);
         const what = t(withNote ? 'Counted' : mode === 'adjust' ? 'Change' : 'How much');

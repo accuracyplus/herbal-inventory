@@ -132,7 +132,7 @@ export function UseScreen() {
   const askStore = !oneStore;
   const askPerson = needPerson && forOthers;
   return (
-    <Page title="Record use" subtitle={lede}>
+    <Page title="Record use" subtitle={lede} guard="record-use">
       {(askStore || askPerson || !chips) && (
         <Card>
           <div className="form two">
@@ -212,7 +212,7 @@ export function TransferScreen() {
   };
   if (done) return <Page title="Transfer"><Done text={t('Transfer {ref} recorded.', { ref: done })} again={() => setDone(null)} /></Page>;
   return (
-    <Page title="Transfer" subtitle="Move stock from one store to another. Batches keep their expiry dates.">
+    <Page title="Transfer" subtitle="Move stock from one store to another. Batches keep their expiry dates." guard="transfer">
       <Card>
         <div className="form two">
           <Field label="From"><Select value={fromId} onChange={setFromId} options={from.map((s) => ({ value: s.id, label: s.name }))} /></Field>

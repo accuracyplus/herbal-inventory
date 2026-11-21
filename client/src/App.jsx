@@ -14,6 +14,7 @@ import { AppCtx, Boundary, Button, LegalFooter, Loading, Note, Segmented, Sheet,
 import { chooseLang, has, lang, LANGS, setLang, t, useLang } from './i18n.js';
 import FirstTour from './tour.jsx';
 import { useNewVersion } from './update.js';
+import { isUnsaved, mayLeave } from './leave.js';
 import Today from './screens/Today.jsx';
 import Stock from './screens/Stock.jsx';
 import { TransferScreen, UseScreen } from './screens/Record.jsx';
@@ -90,9 +91,32 @@ function parseHash() {
   return { screen: screen || 'today', id: id || null, sub: sub || null, query: new URLSearchParams(qs || '') };
 }
 
+const screenOf = (hash) => (String(hash || '').replace(/^#\/?/, '').split('?')[0].split('/')[0]) || 'today';
+
+/**
+ * Moving to another screen asks first when something typed is not saved (leave.js). Within a
+ * screen (a window opening or closing, a tab of the same screen) nothing asks, as before.
+ */
 export function navigate(to) {
   const next = `#/${to.replace(/^\/?#?\/?/, '')}`;
-  if (location.hash !== next) location.hash = next;
+  if (location.hash === next) return;
+  if (screenOf(next) !== screenOf(location.hash) && !mayLeave()) return;
+  location.hash = next;
+}
+
+/**
+ * Every way out of a screen that is a link: the side menu, the phone bar, More, "All HiFive apps".
+ * Asked before the link is followed, so staying leaves everything as it was (the menu stays open).
+ * A link opening a new tab (the legal pages) leaves nothing behind, so it never asks.
+ */
+function askBeforeLinks(e) {
+  if (!e.isTrusted || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+  if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+  const href = a.getAttribute('href');
+  const inApp = href.startsWith('#');
+  if (inApp && screenOf(href) === screenOf(location.hash)) return;
+  if (!mayLeave()) { e.preventDefault(); e.stopPropagation(); }
 }
 
 /**
@@ -120,9 +144,21 @@ export default function App() {
   const [touring, setTouring] = useState(false);
 
   useEffect(() => {
-    const on = () => { setRoute(parseHash()); setMenu(false); window.scrollTo(0, 0); };
+    let was = location.href;
+    const on = (e) => {
+      // Back or Forward to another screen with unsaved work: ask, and on "stay" put the address
+      // back as it was, so the screen and what was typed stay (leave.js). Links and navigate()
+      // have asked already; a "yes" there leaves nothing unsaved, so this does not ask twice.
+      if (screenOf(new URL(e.newURL || location.href).hash) !== screenOf(new URL(was).hash) && isUnsaved() && !mayLeave()) {
+        history.replaceState(history.state, '', was);
+        return;
+      }
+      was = location.href;
+      setRoute(parseHash()); setMenu(false); window.scrollTo(0, 0);
+    };
     addEventListener('hashchange', on);
-    return () => removeEventListener('hashchange', on);
+    document.addEventListener('click', askBeforeLinks, true);
+    return () => { removeEventListener('hashchange', on); document.removeEventListener('click', askBeforeLinks, true); };
   }, []);
 
   const loadMe = useCallback(async () => {
@@ -192,13 +228,14 @@ export default function App() {
     .map((s) => (s.id === 'services' ? { ...s, label: me.settings?.['services.word'] || s.label } : s)) : []), [me]);
 
   const switchUnit = async (id) => {
+    if (!mayLeave()) return;
     unitPref.set(id);
     setUnitSheet(false);
     setStock(null);
     await loadMe();
     navigate('today');
   };
-  const signOut = () => { token.clear(); unitPref.clear(); location.hash = ''; location.reload(); };
+  const signOut = () => { if (!mayLeave()) return; token.clear(); unitPref.clear(); location.hash = ''; location.reload(); };
 
   // A newer build is live: say so, and reload only when asked (src/update.js). A hook, so it
   // sits above the early returns.
@@ -278,7 +315,7 @@ export default function App() {
             {fresh && (
               <div className="inv-update" role="status">
                 <Note icon="alert">{t('A new version of HiFive Inventory is ready.')}</Note>
-                <Button kind="secondary" onClick={() => location.reload()}>{t('Reload')}</Button>
+                <Button kind="secondary" onClick={() => { if (mayLeave()) location.reload(); }}>{t('Reload')}</Button>
               </div>
             )}
             {/* One screen that fails to draw never blanks the app: the frame, the menu and the way
@@ -292,7 +329,7 @@ export default function App() {
       </div>
 
       {menu && (
-        <Sheet title={me.name} onClose={() => setMenu(false)}>
+        <Sheet title={me.name} onClose={() => setMenu(false)} guard={false}>
           <p className="muted">{t('{code} · {roles} in {unit}', { code: me.code, roles: roleWords, unit: me.unit.name })}</p>
           {/* On a phone, More lists only what is not on the bar, then you (approved prototype). The wide
               screen keeps the full list, as its side menu does. */}
@@ -318,7 +355,7 @@ export default function App() {
         </Sheet>
       )}
       {unitSheet && (
-        <Sheet title={t('Choose a unit')} onClose={() => setUnitSheet(false)}>
+        <Sheet title={t('Choose a unit')} onClose={() => setUnitSheet(false)} guard={false}>
           <div className="inv-menu">
             {me.units.map((u) => (
               <button type="button" key={u.id} className={u.id === me.unit.id ? 'inv-nav is-on' : 'inv-nav'} onClick={() => switchUnit(u.id)} aria-pressed={u.id === me.unit.id}>

@@ -79,7 +79,7 @@ export function DeliveryPage({ id, onClose }) {
     ? { APPROVED: 'Approved', REJECTED: 'Sent back', CANCELLED: 'Cancelled' }[r.status] || 'Decided' : null;
   const sendBack = () => { if (!note.trim()) { setErr(new Error('Say why it is being sent back, in the note. The receiver sees it.')); return; } act('reject', 'Sent back to the receiver'); };
   return (
-    <Page back={onClose} title={r ? t('Delivery {ref}', { ref: r.note_no || r.ref }) : 'Delivery'}
+    <Page guard="delivery" back={onClose} title={r ? t('Delivery {ref}', { ref: r.note_no || r.ref }) : 'Delivery'}
       subtitle={r ? `${r.supplier_name ? `${t('From {name}.', { name: r.supplier_name })} ` : ''}${t('Counted by {name}, {date}.', { name: r.by_name, date: fmtDateTime(r.at) })}` : undefined}
       actions={r && (pending ? <>
         {(mine || decides) && <Button kind="ghost" busy={busy} onClick={() => act('cancel', 'Delivery cancelled')}>Cancel it</Button>}

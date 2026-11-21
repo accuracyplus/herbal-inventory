@@ -235,7 +235,7 @@ export default function ReceiveScreen() {
   }
 
   return (
-    <Page title="Receive a delivery" subtitle={twoStep ? 'Count what arrived against the delivery note. A manager approves it before it is on the shelf.' : 'Goods in: from a purchase order, or a local purchase.'}>
+    <Page guard="receive" title="Receive a delivery" subtitle={twoStep ? 'Count what arrived against the delivery note. A manager approves it before it is on the shelf.' : 'Goods in: from a purchase order, or a local purchase.'}>
       {canRead && (
         <Card title="The delivery note" hint="Photograph it and the supplier, note number and lines are read from the photo and shown for you to check. Nothing is saved until you press the button at the foot of the page.">
           <div className="scan-row">

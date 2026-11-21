@@ -25,7 +25,7 @@ export const isDesk = () => typeof matchMedia === 'function' && matchMedia('(poi
  */
 function Frame({ title, onClose, children }) {
   const inside = useContext(InSheet);
-  if (!inside) return <Sheet title={title} onClose={onClose} footer={<Button onClick={onClose}>Done</Button>}>{children}</Sheet>;
+  if (!inside) return <Sheet title={title} onClose={onClose} guard={false} footer={<Button onClick={onClose}>Done</Button>}>{children}</Sheet>;
   return (
     <section className="inv-scanpanel" aria-label={t(title)}>
       <div className="row"><h3 className="grow inv-scanpanel__t">{t(title)}</h3><Button kind="secondary" onClick={onClose}>Done</Button></div>

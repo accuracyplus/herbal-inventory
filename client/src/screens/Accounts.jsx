@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { downloadCsv, fmtDateTime, get, post } from '../api.js';
 import { dateLocale, t, tn } from '../i18n.js';
-import { Button, Card, ErrorNote, Field, Loading, Page, Quiet, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
+import { Button, Card, ErrorNote, Field, Guard, Loading, Page, Quiet, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
 
 const gstDay = (ms = Date.now()) => new Date(ms + 4 * 36e5).toISOString().slice(0, 10);
 const monthName = (m) => new Date(`${m}-15T12:00:00Z`).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -85,6 +85,7 @@ function MonthClose({ admin }) {
     try { await post('/api/periods/close', { month, note }); toast(t('{month} closed', { month: monthName(month) })); setMonth(''); setNote(''); reload(); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
+    <Guard name="month-close">
     <Card title="Month close" hint="Close a month once its figures have gone to the accounts. Nothing dated in it can then be recorded or changed.">
       <ErrorNote error={error} onRetry={reload} />
       {loading && !data && <Loading />}
@@ -107,6 +108,7 @@ function MonthClose({ admin }) {
       {!admin && <Quiet icon="info">The unit administrator closes and reopens months.</Quiet>}
       {reopening && <Reopen month={reopening} onClose={() => setReopening(null)} onDone={() => { setReopening(null); reload(); }} />}
     </Card>
+    </Guard>
   );
 }
 

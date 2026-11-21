@@ -7,7 +7,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Hint, Loading, Note, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, StatusRows, Table, useApp, useData,
+  Button, Card, Check, ErrorNote, Field, Guard, Hint, Loading, Note, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, StatusRows, Table, useApp, useData,
 } from '../ui.jsx';
 import { ItemForm } from './Stock.jsx';
 import Bulk from './Bulk.jsx';
@@ -335,14 +335,14 @@ function Settings() {
       <ErrorNote error={error} />
       {loading && <Loading />}
       {data && (
-        <>
+        <Guard name="settings">
           <Card title="How this unit works"><div className="stack">{shown.filter((s) => !s.group).map(field)}</div></Card>
           <Card title="More features" hint="Each is off until switched on here, and only this unit sees it. Switching one off hides it again; nothing recorded is lost.">
             <div className="stack">{shown.filter((s) => s.group === 'more').map(field)}</div>
           </Card>
           <ErrorNote error={err} />
           <div className="row" style={{ justifyContent: 'flex-end' }}><Button busy={busy} onClick={save}>{Object.keys(vals).length ? 'Save settings' : 'Nothing changed yet'}</Button></div>
-        </>
+        </Guard>
       )}
     </>
   );
@@ -387,6 +387,7 @@ function Import() {
   };
   if (lists.stores.length < 2) return <Card><Note tone="warn" icon="alert">Set up a main store and a sub store first (Stores tab), so the old Main and Sub figures have somewhere to go.</Note></Card>;
   return (
+    <Guard name="import">
     <div className="stack">
       <Card title="1 · Get the old app's data">
         <p>{t('Open this link in your browser. It shows everything the old Herbal Park inventory app holds. Save the page as a file (Ctrl+S, or Share → Save on a phone).')}</p>
@@ -425,6 +426,7 @@ function Import() {
       )}
       <ErrorNote error={err} />
     </div>
+    </Guard>
   );
 }
 

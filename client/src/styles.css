@@ -270,3 +270,12 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .inv-brand__n { font-family: var(--font-display); font-weight: 800; font-size: 19px; line-height: 1.1; color: var(--text-strong); }
 .hf-side .hf-unit { margin-bottom: 8px; }
 .hf-side__t { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; }
+
+/* Leave guard (leave.js): the marked wrapper takes no space, so windows and forms lay out as before. */
+.inv-guard, .inv-pass { display: contents; }
+/* The HiFive corner button (hub-button.js) shows from 900px; below 1024px Inventory already has
+   its phone bar, whose first tab it would cover. There the bar's More menu has "All HiFive apps". */
+@media (max-width: 1023.98px) { #hifive-hub-button { display: none !important; } }
+/* From 1024px the corner button sits at the bottom left, over the end of the side menu: the menu
+   ends above it (your name and menu stay clear of it), only while the button is on the page. */
+@media (min-width: 1024px) { body:has(#hifive-hub-button) .hf-side__foot { padding-bottom: 60px; } }

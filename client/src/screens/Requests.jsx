@@ -7,7 +7,7 @@ import { fmtDateTime, fmtQty, get, post } from '../api.js';
 import Icon from '../icons.jsx';
 import LineEditor, { newLine, toPayload } from '../lines.jsx';
 import {
-  Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 import { t } from '../i18n.js';
 
@@ -93,7 +93,7 @@ function NewRequest({ preItem, onClose, onDone }) {
   ];
   return (
     <Sheet wide title="New request" onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Send request</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>Send request</Button></>}>
       <div className="form two">
         <Field label="Ask"><Select value={fromId} onChange={setFromId} options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
         <Field label="Needed in"><Select value={dest} onChange={setDest} placeholder="Choose" options={destOptions} /></Field>

@@ -7,7 +7,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Guard, Hint, Loading, Note, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, StatusRows, Table, useApp, useData,
+  Button, CancelButton, Card, Check, ErrorNote, Field, Guard, Hint, Loading, Note, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, StatusRows, Table, useApp, useData,
 } from '../ui.jsx';
 import { ItemForm } from './Stock.jsx';
 import Bulk from './Bulk.jsx';
@@ -111,7 +111,7 @@ function SimpleList({ path, title, kinds, empty, makeBody, fields, columns = [] 
       )}
       {editing && (
         <Sheet title={editing.id ? editing.name : t('New {what}', { what: t(title).toLowerCase() })} onClose={() => { setEditing(null); setErr(null); }}
-          footer={<><Button kind="secondary" onClick={() => setEditing(null)}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
+          footer={<><CancelButton onClick={() => setEditing(null)} /><Button busy={busy} onClick={save}>Save</Button></>}>
           <div className="form two">
             <Field label="Name"><input value={editing.name || ''} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></Field>
             <Field label="Short code" hint="Letters and numbers, used in lists and exports."><input value={editing.code || ''} onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })} /></Field>
@@ -260,7 +260,7 @@ function People() {
         <Sheet title={editing.isNew ? 'Add a person' : editing.full_name} onClose={() => { setEditing(null); setErr(null); }}
           footer={<>
             {!editing.isNew && editing.active !== 0 && <Button kind="ghost" busy={busy} onClick={() => { setEditing({ ...editing, active: 0 }); }}>Remove from this unit</Button>}
-            <Button kind="secondary" onClick={() => setEditing(null)}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button>
+            <CancelButton onClick={() => setEditing(null)} /><Button busy={busy} onClick={save}>Save</Button>
           </>}>
           {editing.isNew && !editing.picked && hf.data && (
             <PersonPicker people={hf.data.people} onPick={(p) => setEditing({ ...editing, code: p.code, full_name: p.name, picked: true })} />
@@ -481,7 +481,7 @@ function Units() {
       )}
       {editing && (
         <Sheet title={editing.id ? editing.name : 'New unit'} onClose={() => setEditing(null)}
-          footer={<><Button kind="secondary" onClick={() => setEditing(null)}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
+          footer={<><CancelButton onClick={() => setEditing(null)} /><Button busy={busy} onClick={save}>Save</Button></>}>
           <div className="form two">
             <Field label="Name, as in HiFive ID" className="span2"><input value={editing.name || ''} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Atomic Drugstore" /></Field>
             <Field label="Short code" hint="Starts every reference: AD-PO-0001."><input value={editing.code || ''} onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })} placeholder="AD" /></Field>

@@ -19,8 +19,9 @@
  *    guide, the scanner, the person's own settings) never mark anything.
  *  - Moving between screens inside the app asks first (App.jsx: links, navigate(), Back).
  *
- * Without the script (HiFive ID unreachable, or a test), every function here is a no-op that
- * lets the person go, and Inventory is exactly as it was.
+ * Without the script (HiFive ID unreachable, or a test), leaving a screen asks nothing and
+ * Inventory is as it was before 21 Nov 2026. Closing a window still asks: that check is
+ * Inventory's own (below), so work in a window is safe whether or not HiFive ID answers.
  */
 import { t } from './i18n.js';
 
@@ -53,9 +54,66 @@ export function savesSomething(path, body) {
   return !SAVES_NOTHING.some((re) => re.test(String(path).split('?')[0]));
 }
 
+/**
+ * Closing a window asks too (Sinu, 21 Nov 2026: "Ask on window close"). The script keeps one list
+ * for the whole page, and its "yes" drops everything, a form on the page behind the window
+ * included. So each guarded element's own edits are noted here as well, by the same rules as the
+ * script's: only a person's typing or choosing, a text field's late change not counted, nothing
+ * inside [data-hf-no-guard]. A window then asks only about what was typed in it, and a "yes"
+ * drops only that.
+ */
+const TEXTY = /^(text|search|email|tel|url|number|password)$/;
+const edited = new Set();
+const released = new WeakSet();   // a window the person agreed to close: never asked about again
+function noteEdit(e) {
+  if (!e.isTrusted) return;
+  const el = e.target;
+  if (!el || !el.closest) return;
+  if (e.type === 'change' && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && TEXTY.test(el.type || 'text')))) return;
+  if (el.closest('[data-hf-no-guard]')) return;
+  const g = el.closest('[data-hf-guard]');
+  if (g) edited.add(g);
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('input', noteEdit, true);
+  document.addEventListener('change', noteEdit, true);
+}
+
+/** Has anything in this element been changed and not saved: typed, chosen, or lines added? */
+export function hasUnsaved(el) {
+  if (!el || !el.isConnected || released.has(el)) return false;
+  for (const g of edited) {
+    if (!g.isConnected) edited.delete(g);
+    else if (g === el || el.contains(g)) return true;
+  }
+  return el.matches('[data-hf-unsaved="true"]') || !!el.querySelector('[data-hf-unsaved="true"]');
+}
+
 /** A save from this element worked: what was typed there is no longer at risk. */
 export function markSaved(el) {
-  if (el) suite()?.saved?.(el);
+  if (!el) return;
+  suite()?.saved?.(el);
+  for (const g of edited) if (g === el || el.contains(g)) edited.delete(g);
+}
+
+const CLOSE_WORDS = 'You have changes that are not saved. Close this window and lose them?';
+function askToClose(els) {
+  // The browser's own question, as the script's is: it stops everything until answered.
+  if (!window.confirm(t(CLOSE_WORDS))) return false;
+  for (const el of els) { markSaved(el); released.add(el); }
+  return true;
+}
+
+/** Before a window closes (its X, Escape, a tap outside it, Cancel): true to close it. */
+export function mayClose(el) {
+  return hasUnsaved(el) ? askToClose([el]) : true;
+}
+
+/** Back or Forward within a screen closes any window open on it: ask about those with unsaved work. */
+export function mayCloseOpenWindows() {
+  if (typeof document === 'undefined') return true;
+  const open = [...document.querySelectorAll('[data-inv-window]')].filter(hasUnsaved);
+  return open.length ? askToClose(open) : true;
 }
 
 export function isUnsaved() {

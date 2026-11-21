@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { downloadCsv, fmtDate, fmtDateTime, fmtMoney, fmtQty, post, put } from '../api.js';
 import Icon from '../icons.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 import { ItemPrices, priceViewer } from './Suppliers.jsx';
 import { STORAGE } from './InUse.jsx';
@@ -242,7 +242,7 @@ export function ItemForm({ item, stores, onClose, onSaved }) {
   };
   return (
     <Sheet wide title={item?.id ? t('Edit {name}', { name: item.name }) : 'New item'} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>Save</Button></>}>
       <ErrorNote error={err} />
       <datalist id="cat-list">{cats.map((c) => <option key={c} value={c} />)}</datalist>
       <div className="form two">

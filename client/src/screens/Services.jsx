@@ -12,7 +12,7 @@ import { t, tn } from '../i18n.js';
 import Icon from '../icons.jsx';
 import LineEditor, { lineErrors, newLine, toPayload } from '../lines.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Guard, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, StatusRows, Stepper, Table, useApp, useData,
+  Button, CancelButton, Card, Check, ErrorNote, Field, Guard, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, StatusRows, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
 import ServiceLink from './ServiceLink.jsx';
@@ -201,7 +201,7 @@ function RecipeSheet({ s, one, onClose, onSaved }) {
   };
   return (
     <Sheet wide title={s.id ? s.name : t('New {one}', { one: t(one) })} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>Save</Button></>}>
       <div className="form two">
         <Field label="Name"><input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder={t('Abhyanga')} maxLength={80} /></Field>
         <Field label="Short code" hint="Letters and numbers, used in lists and exports. A booking or billing system names the service by this."><input value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} placeholder="ABH" maxLength={20} /></Field>

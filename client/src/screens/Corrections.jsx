@@ -8,7 +8,7 @@ import { fmtDateTime, fmtMoney, fmtQty, post } from '../api.js';
 import Icon from '../icons.jsx';
 import { t } from '../i18n.js';
 import LineEditor, { lineErrors, toPayload } from '../lines.jsx';
-import { Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, Segmented, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
+import { Button, CancelButton, Card, ErrorNote, Field, Loading, Note, Page, Pill, Segmented, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
 
 export default function Corrections() {
   const { route, navigate, can, currency } = useApp();
@@ -64,7 +64,7 @@ function Raise({ onClose, onDone }) {
   };
   return (
     <Sheet wide title="New correction" onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Send for approval</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>Send for approval</Button></>}>
       <div className="form two">
         <Field label="Store"><Select value={storeId} onChange={setStoreId} options={mine.map((s) => ({ value: s.id, label: s.name }))} /></Field>
         <Field label="Reason"><Select value={reason} onChange={setReason} options={Object.entries(me.labels.reasons).map(([k, v]) => ({ value: k, label: v }))} /></Field>

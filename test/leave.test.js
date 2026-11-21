@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { isUnsaved, markSaved, mayLeave, pressedGuard, savesSomething } from '../client/src/leave.js';
+import { hasUnsaved, isUnsaved, markSaved, mayClose, mayLeave, pressedGuard, savesSomething } from '../client/src/leave.js';
 import ml from '../client/src/i18n/ml.js';
 
 const read = (p) => readFileSync(new URL(`../client/${p}`, import.meta.url), 'utf8');
@@ -110,4 +110,39 @@ test('a save that works marks its form saved; a refusal does not', () => {
   const marked = api.indexOf('markSaved(from)');
   assert.ok(refused > 0 && marked > refused, 'marked only after the refusal has been thrown');
   assert.match(api, /const from = method !== 'GET' && savesSomething\(path, body\) \? pressedGuard\(\) : null;/);
+});
+
+/** A stand-in for a window's element: connected, and holding unsaved lines or not. */
+const fakeWindow = (unsaved) => ({ isConnected: true, matches: () => false, querySelector: () => (unsaved ? {} : null), contains: () => false });
+
+test('closing a window asks only when something in it is unsaved, and only once after a yes', () => {
+  const asked = [];
+  let answer = false;
+  globalThis.window = { confirm: (m) => { asked.push(m); return answer; } };
+  try {
+    assert.equal(mayClose(fakeWindow(false)), true, 'nothing changed: closes without a word');
+    assert.equal(asked.length, 0);
+    const w = fakeWindow(true);
+    assert.equal(hasUnsaved(w), true);
+    assert.equal(mayClose(w), false, '"stay" keeps it open');
+    answer = true;
+    assert.equal(mayClose(w), true);
+    assert.deepEqual(asked, ['You have changes that are not saved. Close this window and lose them?', 'You have changes that are not saved. Close this window and lose them?']);
+    assert.equal(hasUnsaved(w), false, 'once dropped, the X and then Back do not ask twice');
+    assert.equal(mayClose(w), true);
+    assert.equal(asked.length, 2);
+    assert.equal(mayClose(null), true);
+  } finally { delete globalThis.window; }
+});
+
+test('every window Cancel asks first: none is a plain button any more', () => {
+  const files = readdirSync(new URL('../client/src/screens/', import.meta.url)).map((f) => `screens/${f}`);
+  let cancels = 0;
+  for (const f of files) {
+    const src = read(`src/${f}`);
+    assert.ok(!/>Cancel<\/Button>/.test(src), `${f} has a Cancel that does not ask`);
+    cancels += (src.match(/<CancelButton /g) || []).length;
+  }
+  assert.equal(cancels, 17);
+  assert.ok(ml['You have changes that are not saved. Close this window and lose them?']);
 });

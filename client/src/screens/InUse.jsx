@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtQty, get, post } from '../api.js';
 import {
-  Button, Card, ErrorNote, Field, ItemPicker, Loading, Note, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, Stepper, Table, useApp, useData,
+  Button, CancelButton, Card, ErrorNote, Field, ItemPicker, Loading, Note, Page, Pill, Quiet, SearchBox, Segmented, Select, Sheet, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
 import { t } from '../i18n.js';
@@ -144,7 +144,7 @@ function OpenSheet({ onClose, onDone }) {
   };
   return (
     <Sheet title="Open a pack" onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} icon="check" onClick={save}>Open it</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} icon="check" onClick={save}>Open it</Button></>}>
       <div className="form two">
         <Field label="Taken from"><Select value={storeId} onChange={setStoreId} options={stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>
         <Field label="Bench or analyser" hint="Where it is in use. Benches and analysers are added under Admin, Rooms and areas." error={tried && !areaId ? 'Choose where it is in use.' : undefined}>

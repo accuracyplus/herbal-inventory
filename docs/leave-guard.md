@@ -11,7 +11,8 @@ first and confirm none change."
 
 Nothing below is removed, moved or changed in what it does. The only difference anywhere is the
 question "You have changes that are not saved. Leave this page and lose them?" (in Malayalam when
-the screen is in Malayalam), asked before leaving a screen with unsaved work.
+the screen is in Malayalam), asked before leaving a screen with unsaved work, and its twin "...
+Close this window and lose them?" before closing a window with unsaved work (section 5).
 
 **The frame (every screen):** side menu from 1024px with groups and waiting-count badges; phone bar
 (four screens for the role) and More below 1024px; unit switch; your menu (More screens, language
@@ -82,19 +83,26 @@ nothing never mark anything: a check before saving (`dryRun`), reading a deliver
 guide, the scanner, your own settings. The page root carries `data-hf-keep-on-submit`, so the one
 real form submit is treated the same way.
 
-## 5. Unchanged on purpose
+## 5. Closing a window asks too (Sinu, 21 Nov 2026: "Ask on window close")
 
-- **Closing a window** (Cancel, the X, tapping outside it, Escape) asks nothing, as before.
-  Tapping outside a window with typed work still closes it and drops the work. Asking there would
-  change how every window behaves, so it is Sinu's decision.
-- **Moving within a screen** asks nothing: a tab of the same screen (Purchasing's sections, the
-  Services sections, Returns' tabs), a window opening or closing, the store picker on suggested
-  levels.
-- Without the HiFive script (HiFive ID unreachable), nothing asks and Inventory is as it was.
+- A window with unsaved work asks "You have changes that are not saved. Close this window and lose
+  them?" (in Malayalam on a Malayalam screen) before it closes by its X, Escape, a tap outside it,
+  its Cancel (`<CancelButton>`, all 17 Cancels), or Back from an item, request, order, count,
+  correction, return or equipment window. "Stay" keeps the window and what was typed. The
+  scanner's Done closes only the scanner, so it does not ask.
+- A window with nothing changed, or after a save from it worked, closes without a word.
+- Each window asks only about its own work: `src/leave.js` notes what was typed in each guarded
+  element, by the script's own rules. A "yes" drops that window's work only, and the X followed by
+  the address change does not ask twice. This check is Inventory's own, so it asks even when
+  HiFive ID is unreachable.
+
+**Unchanged on purpose:** moving within a screen asks nothing when no window is open: a tab of the
+same screen (Purchasing's sections, the Services sections, Returns' tabs) or the store picker on
+suggested levels. Without the HiFive script, leaving a screen asks nothing, as before.
 
 ## 6. Checked
 
-- `test/leave.test.js`: 9 tests. All 301 tests pass.
+- `test/leave.test.js`: 11 tests. All 303 tests pass.
 - Local copy, served with the same CSP as a meta tag, with real typing and clicks; only the
   browser's own confirm was stubbed, to answer it and record the words:
   - The script loads under the CSP.
@@ -108,3 +116,10 @@ real form submit is treated the same way.
     Saving closes the window, and nothing counts.
   - A count window after "Save progress" stays open and nothing counts.
   - On a phone in Malayalam, the phone bar asks in Malayalam; "leave" goes on and asks only once.
+  - Window close (in Malayalam): an untouched New item window closes on Escape without a word.
+    With a name typed, Escape, a tap outside and the X each asked, and "stay" kept the window and
+    the name. Cancel with "close" asked once and closed, and the move to Requests afterwards asked
+    nothing. In a request window with a typed note, Back asked, and "stay" kept the window, the
+    note and the address. The X with "close" asked once, closed, and the address change did not
+    ask again. Approving with a note kept the window open, and Escape then closed it without
+    asking.

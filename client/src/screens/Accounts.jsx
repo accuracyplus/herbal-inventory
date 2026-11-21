@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { downloadCsv, fmtDateTime, get, post } from '../api.js';
 import { dateLocale, t, tn } from '../i18n.js';
-import { Button, Card, ErrorNote, Field, Guard, Loading, Page, Quiet, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
+import { Button, CancelButton, Card, ErrorNote, Field, Guard, Loading, Page, Quiet, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
 
 const gstDay = (ms = Date.now()) => new Date(ms + 4 * 36e5).toISOString().slice(0, 10);
 const monthName = (m) => new Date(`${m}-15T12:00:00Z`).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -122,7 +122,7 @@ function Reopen({ month, onClose, onDone }) {
     try { await post('/api/periods/reopen', { month, reason }); toast(t('{month} reopened', { month: monthName(month) })); onDone(); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <Sheet title={t('Reopen {month}', { month: monthName(month) })} onClose={onClose} footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={go}>Reopen it</Button></>}>
+    <Sheet title={t('Reopen {month}', { month: monthName(month) })} onClose={onClose} footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={go}>Reopen it</Button></>}>
       <p className="muted">{t('Its figures may already be with the accounts. Whatever is changed now will differ from what they have.')}</p>
       <Field label="Why"><input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder={t('A delivery invoice arrived late')} /></Field>
       <ErrorNote error={err} />

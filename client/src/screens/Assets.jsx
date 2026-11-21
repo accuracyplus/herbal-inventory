@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { KeyValues } from '@hifive/ui';
 import { fmtDate, fmtDateTime, fmtMoney, post, put } from '../api.js';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, Check, ErrorNote, Field, Loading, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 import { t, tn } from '../i18n.js';
 
@@ -103,7 +103,7 @@ function ServiceSheet({ asset, onClose, onDone }) {
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <Sheet title={t('Record a service: {tag}', { tag: asset.tag })} onClose={onClose} footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} icon="check" onClick={save}>Record it</Button></>}>
+    <Sheet title={t('Record a service: {tag}', { tag: asset.tag })} onClose={onClose} footer={<><CancelButton onClick={onClose} /><Button busy={busy} icon="check" onClick={save}>Record it</Button></>}>
       <div className="form two">
         <Field label="What was done"><Select value={f.kind} onChange={(v) => set('kind', v)} options={Object.entries(me.labels.serviceKinds || {}).map(([value, label]) => ({ value, label }))} /></Field>
         <Field label="When"><input type="date" value={f.onDate} max={today()} onChange={(e) => set('onDate', e.target.value)} /></Field>
@@ -140,7 +140,7 @@ function AssetForm({ asset, onClose, onSaved }) {
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <Sheet wide title={asset?.id ? t('Edit {name}', { name: asset.tag }) : 'Add equipment'} onClose={onClose} footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
+    <Sheet wide title={asset?.id ? t('Edit {name}', { name: asset.tag }) : 'Add equipment'} onClose={onClose} footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>Save</Button></>}>
       <div className="form two">
         <Field label="What it is"><input value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Steam chamber" maxLength={120} /></Field>
         <Field label="Asset number" hint="The number on its sticker."><input value={f.tag} onChange={(e) => set('tag', e.target.value.toUpperCase())} placeholder="EQ-014" maxLength={40} /></Field>

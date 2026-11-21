@@ -9,7 +9,7 @@ import Icon from '../icons.jsx';
 import { t, tn } from '../i18n.js';
 import { isDesk, PairSheet, ScanSheet } from '../scan/ScanSheets.jsx';
 import {
-  Button, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, Check, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 
 export default function Counts() {
@@ -102,7 +102,7 @@ function StartCount({ onClose, onDone }) {
     try { const r = await post('/api/counts', { storeId, category: category || null, blind }); toast(t('{ref} started, {n} items to count', { ref: r.ref, n: r.lines })); onDone(r.id); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <Sheet title="Start a count" onClose={onClose} footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={go}>Start</Button></>}>
+    <Sheet title="Start a count" onClose={onClose} footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={go}>Start</Button></>}>
       <Field label="Store"><Select value={storeId} onChange={setStoreId} options={mine.map((s) => ({ value: s.id, label: s.name }))} /></Field>
       <Field label="What to count" hint="A whole store, or one category at a time: a cycle count."><Select value={category} onChange={setCategory} placeholder="Everything in the store" options={cats.map((c) => ({ value: c, label: c }))} /></Field>
       <Check checked={blind} onChange={setBlind}>{t('Blind count')}<span className="muted">: {t('counters do not see what the system expects (recommended)')}</span></Check>

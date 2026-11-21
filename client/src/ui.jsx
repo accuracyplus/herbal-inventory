@@ -16,6 +16,7 @@ import {
 import Icon from './icons.jsx';
 import { fmtQty, get } from './api.js';
 import { has, t, useLang } from './i18n.js';
+import { mayClose } from './leave.js';
 
 /**
  * One English word can mean different things in different places ("Open" is a button, a filter
@@ -183,19 +184,39 @@ export const InSheet = createContext(false);
  * at once (the person's menu, the unit switch, the welcome). A control that only changes the view,
  * inside a guarded window, carries `data-hf-no-guard`. The wrapper takes no space of its own
  * (display: contents), so the footer stays where it was.
+ *
+ * Closing a guarded window with unsaved work asks first (Sinu, 21 Nov 2026: "Ask on window
+ * close"): its X, Escape and a tap outside it here, its Cancel through <CancelButton>, Back in
+ * App.jsx. Closing after a save, or with nothing changed, asks nothing.
  */
+const CloseWindow = createContext(null);
+
 export function Sheet({ title, onClose, children, footer, wide = false, guard = true }) {
+  const box = useRef(null);
+  const close = useCallback((then = onClose) => {
+    if (guard && !mayClose(box.current)) return;
+    then?.();
+  }, [guard, onClose]);
   const inner = (
-    <>
+    <CloseWindow.Provider value={close}>
       <div className="inv-sheet__body"><InSheet.Provider value={true}>{children}</InSheet.Provider></div>
       {footer && <div className="inv-sheet__foot">{footer}</div>}
-    </>
+    </CloseWindow.Provider>
   );
   return (
-    <HfSheet open title={tx(title)} onClose={onClose} wide={wide}>
-      {guard ? <div className="inv-guard" data-hf-guard={typeof guard === 'string' ? guard : 'window'}>{inner}</div> : inner}
+    <HfSheet open title={tx(title)} onClose={onClose ? () => close() : undefined} wide={wide}>
+      {guard ? <div ref={box} className="inv-guard" data-inv-window="" data-hf-guard={typeof guard === 'string' ? guard : 'window'}>{inner}</div> : inner}
     </HfSheet>
   );
+}
+
+/**
+ * A window's Cancel: asks first when something in the window is not saved, then does what it was
+ * given (closing the window, or putting an editor away). Outside a window it just does it.
+ */
+export function CancelButton({ onClick, children = 'Cancel' }) {
+  const close = useContext(CloseWindow);
+  return <Button kind="secondary" onClick={() => (close ? close(onClick) : onClick?.())}>{children}</Button>;
 }
 
 /** A form on the page itself (Record use, Receive): guarded as a window is, for as long as it is shown. */

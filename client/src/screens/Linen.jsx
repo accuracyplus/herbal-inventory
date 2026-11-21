@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { fmtAgo, fmtDateTime, fmtQty, post } from '../api.js';
 import Icon from '../icons.jsx';
-import { Button, Card, ErrorNote, Field, Loading, Page, Quiet, Select, Sheet, Stepper, Table, useApp, useData } from '../ui.jsx';
+import { Button, CancelButton, Card, ErrorNote, Field, Loading, Page, Quiet, Select, Sheet, Stepper, Table, useApp, useData } from '../ui.jsx';
 import { t } from '../i18n.js';
 
 const FLOWS = {
@@ -94,7 +94,7 @@ function MoveSheet({ move, areas, onClose, onDone }) {
   };
   return (
     <Sheet title={`${r.name}, ${r.store_name}`} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>Save</Button></>}>
       {!move.flow && (
         <Field label="What is happening">
           <Select value={flow} onChange={setFlow} options={Object.entries(FLOWS).map(([k, f]) => ({ value: k, label: f.label }))} />

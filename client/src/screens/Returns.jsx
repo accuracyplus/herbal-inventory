@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtMoney, fmtQty, get, post } from '../api.js';
 import { t } from '../i18n.js';
 import {
-  Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, ErrorNote, Field, Loading, Note, Page, Pill, QtyInput, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 
 const on = (me, k) => !!me.settings?.[k] && me.settings[k] !== 'off';
@@ -208,7 +208,7 @@ export function RaiseReturn({ receiptId, onClose, onDone }) {
   };
   return (
     <Sheet wide title={data ? t('Return goods from {ref}', { ref: data.receipt.ref }) : 'Return goods'} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} icon="returns" onClick={save}>Raise the return</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} icon="returns" onClick={save}>Raise the return</Button></>}>
       <ErrorNote error={error} />
       {loading && <Loading />}
       {data && (

@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { KeyValues } from '@hifive/ui';
 import { fmtDate, fmtMoney, post, put } from '../api.js';
-import { Button, Card, Check, ErrorNote, Field, Loading, Page, Pill, Quiet, Sheet, Table, useApp, useData } from '../ui.jsx';
+import { Button, CancelButton, Card, Check, ErrorNote, Field, Loading, Page, Pill, Quiet, Sheet, Table, useApp, useData } from '../ui.jsx';
 import { t, tn } from '../i18n.js';
 
 // Each verdict's words are made when the pill is drawn, so they follow the language.
@@ -168,7 +168,7 @@ export function SupplierForm({ s, onClose, onSaved }) {
   };
   return (
     <Sheet title={s.id ? s.name : 'New supplier'} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>Save</Button></>}>
       <div className="form two">
         <Field label="Name" className="span2" error={tried && !f.name.trim() ? 'The supplier needs a name.' : undefined}><input value={f.name} onChange={(e) => set('name', e.target.value)} /></Field>
         <Field label="Contact person (optional)"><input value={f.contact} onChange={(e) => set('contact', e.target.value)} /></Field>

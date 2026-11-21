@@ -14,7 +14,7 @@ import { AppCtx, Boundary, Button, LegalFooter, Loading, Note, Segmented, Sheet,
 import { chooseLang, has, lang, LANGS, setLang, t, useLang } from './i18n.js';
 import FirstTour from './tour.jsx';
 import { useNewVersion } from './update.js';
-import { isUnsaved, mayLeave } from './leave.js';
+import { isUnsaved, mayCloseOpenWindows, mayLeave } from './leave.js';
 import Today from './screens/Today.jsx';
 import Stock from './screens/Stock.jsx';
 import { TransferScreen, UseScreen } from './screens/Record.jsx';
@@ -149,7 +149,10 @@ export default function App() {
       // Back or Forward to another screen with unsaved work: ask, and on "stay" put the address
       // back as it was, so the screen and what was typed stay (leave.js). Links and navigate()
       // have asked already; a "yes" there leaves nothing unsaved, so this does not ask twice.
-      if (screenOf(new URL(e.newURL || location.href).hash) !== screenOf(new URL(was).hash) && isUnsaved() && !mayLeave()) {
+      const other = screenOf(new URL(e.newURL || location.href).hash) !== screenOf(new URL(was).hash);
+      // Within a screen, Back closes a window open on it (an item, a request, a count): ask about
+      // one with unsaved work, as its X does. A window closed by its own X has asked already.
+      if (other ? isUnsaved() && !mayLeave() : !mayCloseOpenWindows()) {
         history.replaceState(history.state, '', was);
         return;
       }

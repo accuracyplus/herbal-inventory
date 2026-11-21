@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { fmtDate, fmtMoney, fmtQty, gstToday, post } from '../api.js';
 import LineEditor, { lineErrors, toPayload } from '../lines.jsx';
 import {
-  Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, Stepper, Table, useApp, useData,
+  Button, CancelButton, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, Stepper, Table, useApp, useData,
 } from '../ui.jsx';
 import { useMyStores } from './Record.jsx';
 import { Bars } from './Reports.jsx';
@@ -55,7 +55,7 @@ export function Settle({ target, onClose, onDone }) {
   };
   return (
     <Sheet title={lot.item_name} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>{isUse ? t('Record as used') : t('Return to {store}', { store: lot.store_name })}</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>{isUse ? t('Record as used') : t('Return to {store}', { store: lot.store_name })}</Button></>}>
       <div className="stack">
         <p className="muted">{forName
           ? t('{qty} {uom} with {name}, held {age}.', { qty: fmtQty(lot.qty), uom: t(lot.uom), name: forName, age: ageText(lot.ageHours) })

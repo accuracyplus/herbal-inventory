@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { fmtDate, fmtDateTime, fmtMoney, fmtQty, openPath, post, put } from '../api.js';
 import LineEditor, { newLine, toPayload } from '../lines.jsx';
 import {
-  Button, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
+  Button, CancelButton, Card, ErrorNote, Field, Loading, Note, Page, Pill, Quiet, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 import { Deliveries, DeliveryPage, DeliveryPill } from './Deliveries.jsx';
 import { priceViewer, SupplierList, SupplierPage } from './Suppliers.jsx';
@@ -153,7 +153,7 @@ function PoEditor({ po, onClose, onSaved }) {
   };
   return (
     <Sheet wide title={po.id ? t('Edit {ref}', { ref: po.ref }) : 'New purchase order'} onClose={onClose}
-      footer={<><Button kind="secondary" onClick={onClose}>Cancel</Button><Button busy={busy} onClick={save}>Save draft</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} onClick={save}>Save draft</Button></>}>
       <div className="form two">
         <Field label="Supplier"><Select value={supplierId} onChange={setSupplierId} placeholder="Choose" options={(suppliers || []).map((s) => ({ value: s.id, label: s.name }))} /></Field>
         <Field label="Deliver to"><Select value={storeId} onChange={setStoreId} options={lists.stores.map((s) => ({ value: s.id, label: s.name }))} /></Field>

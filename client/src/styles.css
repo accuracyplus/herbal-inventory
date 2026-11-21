@@ -284,3 +284,11 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
    button's place in its row, and wrap onto their own line when the row is narrow. */
 .inv-confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; flex-basis: 100%; justify-content: flex-end; }
 .inv-confirm__q { flex: 1 1 220px; font-weight: 600; color: var(--text-strong); }
+
+/* Pop-up messages (Toast) on a phone, as fixed in @hifive/ui 0.42.1 (hifive-design b2e8fc1; Reach
+   5dfe430 carries the same copy). The vendored 0.26.1 pins the box from the middle of the screen,
+   so it got only the right half and wrapped tightly; and it sat on the phone bar. Delete these
+   when Inventory takes 0.42.1 or later. Inventory's phone bar shows below 1024px, not 900px. */
+.hf-toast { width: max-content; box-sizing: border-box; }
+.hf-toast button { flex: none; white-space: nowrap; }
+@media (max-width: 1023.98px) { .hf-toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); } }

@@ -27,6 +27,12 @@
       and Inventory is as it was. src/leave.js is how Inventory uses it.
     -->
     <script src="https://hifive-id-portal.pages.dev/hub-button.js" defer></script>
+    <!--
+      HiFive ID's status check (Design Guide D-063, 21 Nov 2026) opens this page every 10 minutes
+      and needs a 200 within 8 s, a title containing "HiFive Inventory", and a script under
+      assets/index-. Before changing the title or the build's file names, tell the HiFive ID chat,
+      or the hub shows Inventory as slow.
+    -->
     <title>HiFive Inventory</title>
   </head>
   <!-- data-hf-keep-on-submit: a submitted form counts as unsaved until the server takes it (D-061). -->

@@ -14,7 +14,7 @@ import { refuse } from './errors.js';
 import { nowIso, uuid } from './data.js';
 import { auditStmt } from './audit.js';
 
-export const FILE_KINDS = { NOTE: 'Delivery note', INVOICE: 'Supplier invoice', LPO: 'LPO', OTHER: 'Other' };
+export const FILE_KINDS = { NOTE: 'Delivery note', INVOICE: 'Supplier invoice', LPO: 'LPO', OTHER: 'Other', PHOTO: 'Photo' };
 const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'application/pdf': 'pdf' };
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_PER_DOC = 12;
@@ -50,12 +50,13 @@ export async function bytesOf(file, { images = false, max = MAX_BYTES } = {}) {
 
 export async function attachFile(env, user, { docType, docId, docRef, kind, file }) {
   if (!FILE_KINDS[kind]) refuse('BAD_KIND', 'Say what this file is: the delivery note, the invoice or the LPO.');
+  // A hand-over photo (IT register, D-086) is a picture, never a PDF.
   const store = bucket(env);
-  const { bytes, mime } = await bytesOf(file);
+  const { bytes, mime } = await bytesOf(file, { images: kind === 'PHOTO' });
   const sha256 = await digestHex(bytes);
   const { results } = await env.DB.prepare(`SELECT sha256 FROM files WHERE doc_type = ? AND doc_id = ? AND removed_at IS NULL`).bind(docType, docId).all();
   if ((results || []).some((f) => f.sha256 === sha256)) refuse('ALREADY_ATTACHED', 'That file is already attached here.', 409);
-  if ((results || []).length >= MAX_PER_DOC) refuse('TOO_MANY', `At most ${MAX_PER_DOC} files on one delivery.`);
+  if ((results || []).length >= MAX_PER_DOC) refuse('TOO_MANY', docType === 'RECEIPT' ? `At most ${MAX_PER_DOC} files on one delivery.` : `At most ${MAX_PER_DOC} files on one record.`);
   const key = `${user.unitId}/${docType.toLowerCase()}/${docId}/${sha256}.${EXT[mime]}`;
   await store.put(key, bytes, { httpMetadata: { contentType: mime } });
   const row = {

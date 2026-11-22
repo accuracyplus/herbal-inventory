@@ -143,6 +143,6 @@ test('every window Cancel asks first: none is a plain button any more', () => {
     assert.ok(!/>Cancel<\/Button>/.test(src), `${f} has a Cancel that does not ask`);
     cancels += (src.match(/<CancelButton /g) || []).length;
   }
-  assert.equal(cancels, 17);
+  assert.equal(cancels, 21);   // 17, and the IT register's four windows (22 Nov)
   assert.ok(ml['You have changes that are not saved. Close this window and lose them?']);
 });

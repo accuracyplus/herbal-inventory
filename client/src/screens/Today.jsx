@@ -44,6 +44,14 @@ const WAIT = {
   'returns-approve': ['{n} return to the supplier to approve', '{n} returns to the supplier to approve'],
   'returns-credit': ['{n} return waiting for a credit note', '{n} returns waiting for a credit note'],
   'people-review': ['{n} change from HiFive ID to review: joiners, leavers, names', '{n} changes from HiFive ID to review: joiners, leavers, names'],
+  'it-purchase-approve': ['{n} IT purchase request to approve', '{n} IT purchase requests to approve'],
+  'it-email': ['{n} email account to set up', '{n} email accounts to set up'],
+  'it-buy': ['{n} approved IT purchase to buy', '{n} approved IT purchases to buy'],
+  'it-renewals': ['{n} licence renewing soon', '{n} licences renewing soon'],
+  'it-seats': ['{n} licence with every seat taken', '{n} licences with every seat taken'],
+  'it-short': ['{n} kind of device short of spares', '{n} kinds of device short of spares'],
+  'it-idle': ['{n} IT item idle', '{n} IT items idle'],
+  'it-warranty': ['{n} IT warranty ending soon', '{n} IT warranties ending soon'],
 };
 const waitText = (w) => {
   if (lang() === 'en') return w.text;

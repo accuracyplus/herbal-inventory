@@ -15,6 +15,7 @@ import stock from './ml-parts/stock.js';
 import buying from './ml-parts/buying.js';
 import control from './ml-parts/control.js';
 import reports from './ml-parts/reports.js';
+import it from './ml-parts/it.js';
 
 /** The core list below is written last, so its words win where a part repeats one: one word per idea. */
 const core = {
@@ -494,4 +495,4 @@ const core = {
   'Yes, close {month}': 'അതെ, {month} അടയ്ക്കുക',
 };
 
-export default { ...labels, ...admin, ...stock, ...buying, ...control, ...reports, ...core };
+export default { ...labels, ...admin, ...stock, ...buying, ...control, ...reports, ...it, ...core };

@@ -10,20 +10,37 @@ import {
   Button, CancelButton, Card, Check, ErrorNote, Field, Loading, Page, Pill, QtyInput, Quiet, SearchBox, Segmented, Select, Sheet, Table, useApp, useData,
 } from '../ui.jsx';
 import { t, tn } from '../i18n.js';
+import ItRegister from './ItRegister.jsx';
 
 const STANDING = { PAST: ['danger', 'Service overdue'], DUE: ['warn', 'Service due soon'], OK: ['ok', 'Serviced'], NONE: ['plain', 'No service plan'] };
 const today = () => new Date(Date.now() + 4 * 36e5).toISOString().slice(0, 10);
 
+/**
+ * Equipment and, for the roles that see it, the IT register (D-086): one screen, two registers.
+ * IT and HR land on IT; everybody else on equipment, as before.
+ */
 export default function Assets() {
+  const { can, route, navigate } = useApp();
+  const asked = route.query.get('kind');
+  const it = can('it.view') && (asked ? asked !== 'equipment' : !can('assets.edit'));
+  const switcher = can('it.view') && (
+    <Segmented label="Register" value={it ? 'it' : 'equipment'} onChange={(v) => navigate(`assets?kind=${v}`)}
+      options={[{ value: 'equipment', label: 'Equipment' }, { value: 'it', label: 'IT' }]} />
+  );
+  return it ? <ItRegister switcher={switcher} /> : <Equipment switcher={switcher} />;
+}
+
+function Equipment({ switcher }) {
   const { can, route, navigate } = useApp();
   const [q, setQ] = useState('');
   const show = route.query.get('show') || 'all';
-  const { data, error, loading, reload } = useData(`/api/assets?show=${show}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`, [show, q]);
+  const { data, error, loading, reload } = useData(`/api/assets?kind=equipment&show=${show}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`, [show, q]);
   const [editing, setEditing] = useState(null);
   const go = (v) => navigate(`assets${v === 'all' ? '' : `?show=${v}`}`);
   return (
     <Page title="Equipment" subtitle="What the unit owns and does not use up: where each piece is, its warranty, and when it is next due for service."
       actions={can('assets.edit') && <Button icon="plus" onClick={() => setEditing({})}>Add equipment</Button>}>
+      {switcher}
       <div className="toolbar"><SearchBox value={q} onChange={setQ} placeholder="Search number, name, serial or room" /></div>
       <Segmented label="Show" value={show} onChange={go} options={[{ value: 'all', label: 'In use' }, { value: 'due', label: 'Service due' }, { value: 'retired', label: 'Retired' }]} />
       <ErrorNote error={error} onRetry={reload} />

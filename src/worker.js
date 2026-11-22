@@ -62,6 +62,7 @@ import { findLots, traceLot } from './domain/recall.js';
 import { accountsExport, CHARGE_KINDS, EXPORTS } from './domain/accounts.js';
 import { cycleSchedule } from './domain/abc.js';
 import { ASSET_STATUS, getAsset, listAssets, recordService as recordAssetService, saveAsset, SERVICE_KINDS } from './domain/assets.js';
+import { actOnItRequest, addSeat, clearance, CONDITIONS, endSeat, handOver, handoverRow, HANDOVER_ACTIONS, isIt, IT_KINDS, IT_STATES, itPeople, listItRequests, raiseItRequest, REQUEST_KINDS, REQUEST_STATUS, setSpare, spares as itSpares } from './domain/itassets.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const json = (body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...JSON_HEADERS, ...extra } });
@@ -351,7 +352,7 @@ api('GET', '/api/me', async ({ env }, user) => {
     unit: user.unit, units: user.units, roles: user.roles, stores: user.stores,
     can: abilities(user),
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
-    labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: FILE_KINDS, returnReasons: RETURN_REASONS, chargeKinds: CHARGE_KINDS, exports: EXPORTS, serviceKinds: SERVICE_KINDS, assetStatus: ASSET_STATUS },
+    labels: { roles: ROLE_LABELS, hints: ROLE_HINTS, reasons: REASONS, rules: RULES, linenFlows: LINEN_FLOWS, fileKinds: Object.fromEntries(Object.entries(FILE_KINDS).filter(([k]) => k !== 'PHOTO')), returnReasons: RETURN_REASONS, chargeKinds: CHARGE_KINDS, exports: EXPORTS, serviceKinds: SERVICE_KINDS, assetStatus: ASSET_STATUS, itKinds: IT_KINDS, itStates: IT_STATES, conditions: CONDITIONS, handoverActions: HANDOVER_ACTIONS, itRequestKinds: REQUEST_KINDS, itRequestStatus: REQUEST_STATUS },
     // What this deployment has switched on, so a screen can say "not set up" before it is tried.
     has: { files: !!env.FILES, reading: !!env.AI?.run, mail: mailStatus(env).ready },
     // Approval limits in force (feature 14), so a screen can say who approves before it is tried.
@@ -509,8 +510,12 @@ api('POST', '/api/receipts/:id/files', async ({ request, env, params }, user) =>
 api('POST', '/api/receipts/:id/:action', async ({ request, env, params }, user) => json(await decideReceipt(env, user, params.id, params.action, await body(request))));
 
 api('GET', '/api/files/:id', async ({ env, params }, user) => {
-  if (!RECEIPT_VIEW(user)) return fail(403, 'AUTH', 'Your role does not allow this.');
   const f = await fileRow(env, user, params.id);
+  // Each kind of paper is for the people who may see what it is attached to: a delivery's for
+  // the store and purchasing; an IT invoice (it shows the price) for it.prices; a hand-over photo
+  // for it.view.
+  const allowed = f.doc_type === 'ASSET' ? may(user, 'it.prices') : f.doc_type === 'HANDOVER' ? may(user, 'it.view') : RECEIPT_VIEW(user);
+  if (!allowed) return fail(403, 'AUTH', 'Your role does not allow this.');
   const bytes = await readFile(env, f);
   return new Response(bytes, { headers: {
     'content-type': f.mime, 'content-length': String(bytes.length), 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff',
@@ -800,12 +805,41 @@ api('GET', '/api/abc', async ({ env, url }, user) => {
 
 api('GET', '/api/assets', async ({ env, url }, user) => {
   requireMay(user, 'stock.view');
-  return json(await listAssets(env, user, { q: text(url.searchParams.get('q'), 60), show: text(url.searchParams.get('show'), 20) }));
+  return json(await listAssets(env, user, { q: text(url.searchParams.get('q'), 60), show: text(url.searchParams.get('show'), 20), kind: text(url.searchParams.get('kind'), 20) }));
 });
 api('GET', '/api/assets/:id', async ({ env, params }, user) => { requireMay(user, 'stock.view'); return json(await getAsset(env, user, params.id)); });
-api('POST', '/api/assets', async ({ request, env }, user) => { requireMay(user, 'assets.edit'); return json(await saveAsset(env, user, await body(request)), 201); });
-api('PUT', '/api/assets/:id', async ({ request, env, params }, user) => { requireMay(user, 'assets.edit'); return json(await saveAsset(env, user, await body(request), params.id)); });
-api('POST', '/api/assets/:id/services', async ({ request, env, params }, user) => { requireMay(user, 'assets.edit'); return json(await recordAssetService(env, user, params.id, await body(request)), 201); });
+// Equipment needs assets.edit, an IT asset it.edit: saveAsset and recordService check which.
+const EDITS_ASSETS = (user) => { if (!may(user, 'assets.edit') && !may(user, 'it.edit')) throw new AuthError('Your role does not allow this.', 403); };
+api('POST', '/api/assets', async ({ request, env }, user) => { EDITS_ASSETS(user); return json(await saveAsset(env, user, await body(request)), 201); });
+api('PUT', '/api/assets/:id', async ({ request, env, params }, user) => { EDITS_ASSETS(user); return json(await saveAsset(env, user, await body(request), params.id)); });
+api('POST', '/api/assets/:id/services', async ({ request, env, params }, user) => { EDITS_ASSETS(user); return json(await recordAssetService(env, user, params.id, await body(request)), 201); });
+
+// ── The IT register (D-086, docs/it-assets.md) ───────────────────────────────
+api('GET', '/api/it/people', async ({ request, env }, user) => json(await itPeople(env, user, bearerOf(request))));
+api('POST', '/api/assets/:id/handover', async ({ request, env, params }, user) => json(await handOver(env, user, params.id, await body(request), { bearer: bearerOf(request) }), 201));
+api('POST', '/api/assets/:id/seats', async ({ request, env, params }, user) => json(await addSeat(env, user, params.id, await body(request), { bearer: bearerOf(request) }), 201));
+api('POST', '/api/assets/:id/seats/:seatId/end', async ({ request, env, params }, user) => json(await endSeat(env, user, params.id, params.seatId, { clearance: !!(await body(request))?.clearance })));
+api('POST', '/api/assets/:id/files', async ({ request, env, params }, user) => {
+  requireMay(user, 'it.edit');
+  const a = await getAsset(env, user, params.id);
+  if (!isIt(a.kind)) return fail(409, 'NOT_IT', 'Invoices are attached to IT assets here.');
+  const f = await form(request);
+  const kind = String(f?.get('kind') || 'INVOICE');
+  if (!['INVOICE', 'OTHER'].includes(kind)) return fail(422, 'BAD_KIND', 'An invoice, or another paper.');
+  return json(await attachFile(env, user, { docType: 'ASSET', docId: a.id, docRef: a.tag, kind, file: f?.get('file') }), 201);
+});
+api('POST', '/api/handovers/:id/photos', async ({ request, env, params }, user) => {
+  requireMay(user, 'it.edit');
+  const h = await handoverRow(env, user, params.id);
+  const f = await form(request);
+  return json(await attachFile(env, user, { docType: 'HANDOVER', docId: h.id, docRef: h.tag, kind: 'PHOTO', file: f?.get('file') }), 201);
+});
+api('GET', '/api/it/spares', async ({ env }, user) => json(await itSpares(env, user)));
+api('PUT', '/api/it/spares', async ({ request, env }, user) => json(await setSpare(env, user, await body(request))));
+api('GET', '/api/it/clearance', async ({ request, env }, user) => json(await clearance(env, user, bearerOf(request))));
+api('GET', '/api/it/requests', async ({ env, url }, user) => json(await listItRequests(env, user, { status: text(url.searchParams.get('status'), 20) })));
+api('POST', '/api/it/requests', async ({ request, env }, user) => json(await raiseItRequest(env, user, await body(request)), 201));
+api('POST', '/api/it/requests/:id/:action', async ({ request, env, params }, user) => json(await actOnItRequest(env, user, params.id, params.action, await body(request))));
 
 api('GET', '/api/accounts/export', async ({ env, url }, user) => {
   requireMay(user, 'accounts');

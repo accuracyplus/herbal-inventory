@@ -16,6 +16,8 @@ export const ROLE_LABELS = {
   MANAGER: 'Manager',
   UNIT_ADMIN: 'Unit administrator',
   VIEWER: 'Viewer (read-only)',
+  IT: 'IT',
+  HR: 'HR',
 };
 
 export const ROLE_HINTS = {
@@ -25,9 +27,11 @@ export const ROLE_HINTS = {
   MANAGER: 'Approves requests, purchase orders, corrections and counts; sees costs and reports; keeps the item list.',
   UNIT_ADMIN: 'Everything a manager does, plus stores, areas, people, settings and the import.',
   VIEWER: 'Sees stock and reports; records nothing.',
+  IT: 'Runs the IT register: devices, SIMs and licences, who holds them, hand-overs and exit clearance; raises IT purchase requests.',
+  HR: 'Raises new email account requests to IT and sees what IT assets cost.',
 };
 
-const ALL = ['STAFF', 'STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'];
+const ALL = ['STAFF', 'STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER', 'IT', 'HR'];
 const OPS = ['STOREKEEPER', 'MANAGER', 'UNIT_ADMIN'];
 const DECIDE = ['MANAGER', 'UNIT_ADMIN'];
 
@@ -61,13 +65,25 @@ export const RULES = {
   'return.raise':      [...OPS, 'PURCHASER'],              // send goods back against a delivery
   'return.decide':     DECIDE,
   'assets.edit':       OPS,                                // the equipment register and its services
+  // The IT register (D-086, 22 Nov 2026). Who holds which laptop or SIM is for these roles, not
+  // for everybody who sees stock; what IT costs is for IT, HR and the directors only.
+  'it.view':           ['IT', 'HR', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],
+  'it.edit':           ['IT', 'UNIT_ADMIN'],              // devices, SIMs, licences, hand-overs, clearance
+  'it.prices':         ['IT', 'HR'],                      // and the directors: see may()
+  'it.purchase':       ['IT'],                            // raise a purchase request to the facility approver
+  'it.decide':         DECIDE,                            // the facility approver
+  'it.email':          ['HR'],                            // raise a new email account request to IT
   'accounts':          ['PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],  // exports for the accounts system
   'admin':             ['UNIT_ADMIN'],
 };
 
+/** Rules the directors (group summary) hold in every unit as well as the roles named. */
+const DIRECTORS_TOO = new Set(['it.prices']);
+
 export function may(user, action) {
   const allowed = RULES[action];
   if (!allowed) return false;
+  if (DIRECTORS_TOO.has(action) && user.groupSummary) return true;
   return user.roles.some((r) => allowed.includes(r));
 }
 

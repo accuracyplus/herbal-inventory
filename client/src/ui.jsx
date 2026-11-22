@@ -469,6 +469,22 @@ export function ItemPicker({ items, storeId, onPick, exclude = [], placeholder =
   );
 }
 
+/**
+ * Somebody from HiFive ID's staff list (the IT register's hand-overs and seats): type a name or a
+ * code. Typing only searches, so it never counts as unsaved work.
+ */
+export function PersonPicker({ people, onPick, label = 'Who', placeholder = 'Type a name or an employee code' }) {
+  const options = useMemo(() => (people || []).map((p) => ({
+    value: p.code, label: p.name, sub: [p.code, p.designation, p.here ? null : p.entity].filter(Boolean).join(' · '), keywords: p.code, person: p,
+  })), [people]);
+  return (
+    <div className="inv-pass" data-hf-no-guard>
+      <Picker label={tx(label)} placeholder={tx(placeholder)} options={options} onPick={(o) => onPick(o.person)}
+        empty={(typed) => t('Nobody in HiFive ID matches “{typed}”.', { typed })} />
+    </div>
+  );
+}
+
 /** A number box that keeps what was typed, so "1." does not jump back to "1". For a table of counts. */
 export function QtyInput({ value, onChange, min = 0, step = 'any', label = 'Quantity', className = '', ...rest }) {
   return (

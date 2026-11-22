@@ -16,6 +16,7 @@
  * null = no day) and `due` for the email; Today reads `n`, `urgent`, `screen` as before.
  */
 
+import { itFacts } from './itassets.js';
 import { gstDate } from '../lib/data.js';
 import { may } from './access.js';
 import { SETTINGS } from './settings.js';
@@ -77,8 +78,10 @@ export async function unitFacts(env, unitId, now = Date.now()) {
     on('assets.on') ? one(
       `SELECT SUM(next_service_on < ?1) AS past, SUM(next_service_on >= ?1 AND next_service_on <= ?2) AS due,
               MIN(next_service_on) AS first, SUM(warranty_until >= ?1 AND warranty_until <= ?2) AS warranty
-         FROM assets WHERE unit_id = ?3 AND status <> 'RETIRED'`, today, soonDay, unitId) : null,
+         FROM assets WHERE unit_id = ?3 AND status <> 'RETIRED' AND COALESCE(kind, 'EQUIPMENT') = 'EQUIPMENT'`, today, soonDay, unitId) : null,
   ]);
+  // The IT register (D-086): idle, warranties and licences ending, shortages, requests.
+  const it = on('assets.on') ? await itFacts(env, unitId, today, soonDay, Number(set('it.idle_days')) || 30) : null;
   let cycle = null;
   if (on('abc.on')) {
     const due = (await cycleDue(env, unitId, { now })).rows.filter((r) => r.due);
@@ -88,7 +91,7 @@ export async function unitFacts(env, unitId, now = Date.now()) {
   const keepers = Number((await one(
     `SELECT COUNT(*) AS n FROM staff_units su JOIN staff s ON s.id = su.staff_id
       WHERE su.unit_id = ? AND su.active = 1 AND s.active = 1 AND su.roles LIKE '%"STOREKEEPER"%'`, unitId)).n) || 0;
-  return { unitId, today, hours, keepers, dueDays, warnDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits, equipment, cycle };
+  return { unitId, today, hours, keepers, dueDays, warnDays, requests, toIssue, orders, toReceive, deliveries, sentBack, inbox, corrections, counted, counting, held, packs, inspection, returns, credits, equipment, cycle, it };
 }
 
 /** Rows grouped by who raised them, without the person's own. */
@@ -195,6 +198,27 @@ export function waitingList(f, user) {
       add({ key: 'assets-due', screen: 'assets', filter: 'due', to: 'assets?show=due', n: past + due, urgent: past, due: past ? 'overdue' : null, days: past ? (first ? diff(t, first) : null) : diff(t, first), action: 'See the equipment', text: `Equipment: ${words}` });
     }
     if (warranty) add({ key: 'assets-warranty', screen: 'assets', n: warranty, days: null, quiet: true, text: `${plural(warranty, 'warranty', 'warranties')} ending within ${plural(f.warnDays, 'day')}` });
+  }
+
+  if (f.it) {
+    const it = f.it;
+    const req = (kind, status, mineOnly) => it.requests.filter((r) => r.kind === kind && r.status === status && (mineOnly === undefined || (mineOnly ? r.by === user.staffId : r.by !== user.staffId)));
+    const sum = (rows) => ({ n: rows.reduce((a, r) => a + r.n, 0), oldest: rows.map((r) => r.oldest).sort()[0] || null });
+    if (may(user, 'it.decide')) {
+      const p = sum(req('PURCHASE', 'PENDING', false));
+      if (p.n) add({ key: 'it-purchase-approve', screen: 'assets', to: 'assets?kind=it&tab=requests', n: p.n, days: since(t, p.oldest), action: 'Approve', text: `${plural(p.n, 'IT purchase request')} to approve` });
+    }
+    if (may(user, 'it.edit')) {
+      const e = sum(req('EMAIL_ACCOUNT', 'PENDING'));
+      if (e.n) add({ key: 'it-email', screen: 'assets', to: 'assets?kind=it&tab=requests', n: e.n, days: since(t, e.oldest), action: 'Set them up', text: `${plural(e.n, 'email account')} to set up` });
+      const b = sum(req('PURCHASE', 'APPROVED'));
+      if (b.n) add({ key: 'it-buy', screen: 'assets', to: 'assets?kind=it&tab=requests', n: b.n, days: since(t, b.oldest), action: 'Buy them', text: `${plural(b.n, 'approved IT purchase')} to buy` });
+      if (it.renewals) add({ key: 'it-renewals', screen: 'assets', to: 'assets?kind=LICENCE', n: it.renewals, days: it.firstRenewal ? diff(t, it.firstRenewal) : null, due: it.firstRenewal && it.firstRenewal < t ? 'overdue' : null, action: 'See the licences', text: `${plural(it.renewals, 'licence')} renewing within ${plural(f.warnDays, 'day')}` });
+      if (it.seatsFull) add({ key: 'it-seats', screen: 'assets', to: 'assets?kind=LICENCE', n: it.seatsFull, days: null, quiet: true, text: `${plural(it.seatsFull, 'licence')} with every seat taken` });
+      if (it.short) add({ key: 'it-short', screen: 'assets', to: 'assets?kind=it&tab=spares', n: it.short, days: null, quiet: true, text: `${plural(it.short, 'kind')} of device short of spares` });
+      if (it.idle) add({ key: 'it-idle', screen: 'assets', to: 'assets?kind=it&show=IDLE', n: it.idle, days: null, quiet: true, text: `${plural(it.idle, 'IT item')} idle` });
+      if (it.warranty) add({ key: 'it-warranty', screen: 'assets', to: 'assets?kind=it', n: it.warranty, days: null, quiet: true, text: `${plural(it.warranty, 'IT warranty', 'IT warranties')} ending within ${plural(f.warnDays, 'day')}` });
+    }
   }
 
   if (f.packs && may(user, 'stock.use')) {

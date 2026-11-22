@@ -187,11 +187,11 @@ export const pdfBytes = (words = 'delivery note') => new TextEncoder().encode(`%
 export const jpegBytes = (words = 'photo') => Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, ...new TextEncoder().encode(`${words} ${fileNo += 1}`)]);
 
 /** A file sent the way the page sends one: a form with the file and its fields. */
-export async function upload(env, path, { as = 'keeper', unit, bytes = pdfBytes(), name = 'note.pdf', type = 'application/pdf', ...fields } = {}) {
+export async function upload(env, path, { as = 'keeper', token, unit, bytes = pdfBytes(), name = 'note.pdf', type = 'application/pdf', ...fields } = {}) {
   const form = new FormData();
   for (const [k, v] of Object.entries(fields)) if (v !== undefined && v !== null) form.set(k, v);
   if (bytes) form.set('file', new File([bytes], name, { type }));
-  const headers = { origin: ORIGIN, authorization: `Bearer ${tokenFor(as)}` };
+  const headers = { origin: ORIGIN, authorization: `Bearer ${token ?? tokenFor(as)}` };
   if (unit) headers['x-unit'] = unit;
   const res = await worker.fetch(new Request(`https://worker.test${path}`, { method: 'POST', headers, body: form }), env, ctx());
   const text = await res.text();

@@ -154,6 +154,10 @@ export const SETTINGS = {
     group: 'more', when: 'assets.on', label: 'Warn about a service or warranty this many days ahead',
     hint: 'Equipment due for service, or whose warranty ends, within this many days shows on Today.', number: [1, 120], default: '14',
   },
+  'it.idle_days': {
+    group: 'more', when: 'assets.on', label: 'Call an IT device idle after this many days in stock',
+    hint: 'A device left in stock this long, or marked idle, shows on Today for IT (D-086).', number: [7, 365], default: '30',
+  },
   'abc.on': {
     group: 'more', label: 'ABC cycle counts',
     hint: 'Items are graded by how much of the unit\'s use they are worth: A items, the few that are most of it, are counted most often.',

@@ -67,7 +67,7 @@ export interface KeyValue {
 /** A short summary of labelled facts. A fact with no value is left out: never a dash. */
 export declare function KeyValues({ items, columns }: {
     items: readonly KeyValue[];
-    columns?: 2 | 3 | 4;
+    columns?: 1 | 2 | 3 | 4;
 }): import("react").JSX.Element | null;
 /** An empty section collapses to this one line (Part A rule 3). Never an empty box. */
 export declare function Quiet({ children, icon }: {

@@ -147,7 +147,6 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .inv-sheet__body > * { min-width: 0; }
 .inv-sheet__foot { position: sticky; bottom: calc(-24px - env(safe-area-inset-bottom, 0px)); z-index: 2; margin: 18px -24px calc(-24px - env(safe-area-inset-bottom, 0px)); padding: 12px 24px calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; background: var(--surface-1); border-top: 1px solid var(--line); }
 @media (min-width: 1024px) { .inv-sheet__foot { border-radius: 0 0 28px 28px; } }
-@media (max-width: 1023px) { .hf-toast { bottom: calc(92px + env(safe-area-inset-bottom)); } }
 .icon-btn { flex: none; width: 44px; height: 44px; border-radius: var(--r-pill); display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); }
 .icon-btn:hover { background: var(--surface-2); color: var(--text-strong); }
 .link { text-decoration: underline; color: inherit; min-height: 0; }
@@ -285,10 +284,3 @@ code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .inv-confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; flex-basis: 100%; justify-content: flex-end; }
 .inv-confirm__q { flex: 1 1 220px; font-weight: 600; color: var(--text-strong); }
 
-/* Pop-up messages (Toast) on a phone, as fixed in @hifive/ui 0.42.1 (hifive-design b2e8fc1; Reach
-   5dfe430 carries the same copy). The vendored 0.26.1 pins the box from the middle of the screen,
-   so it got only the right half and wrapped tightly; and it sat on the phone bar. Delete these
-   when Inventory takes 0.42.1 or later. Inventory's phone bar shows below 1024px, not 900px. */
-.hf-toast { width: max-content; box-sizing: border-box; }
-.hf-toast button { flex: none; white-space: nowrap; }
-@media (max-width: 1023.98px) { .hf-toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); } }

@@ -10,8 +10,11 @@ export interface LegalLinksProps {
     className?: string;
 }
 /**
- * The legal line at the foot of every HiFive page: "© 2026 HiFive Holdings · Terms of Use ·
- * Privacy · Disclaimer · Copyright", each link opening the HiFive ID portal's page in a new tab.
- * AppFrame and SignIn show it by default; an app with its own frame puts one <LegalLinks /> in it.
+ * The legal footer at the foot of every HiFive page (C20; redrawn as D-057, 15 Nov 2026, Sinu:
+ * "Can we design the footer better for all?"). On a phone (900px and under) two centred lines:
+ * "Terms · Privacy · Disclaimer · Copyright", then "© 2026 HiFive Holdings LLC" under them, so the
+ * copyright never shares a line with a link. On a computer one line, the copyright first. Each
+ * link opens the HiFive ID portal's page in a new tab. AppFrame and SignIn show it by default; an
+ * app with its own frame puts one <LegalLinks /> at the end of each page, outside any card.
  */
 export declare function LegalLinks({ base, year, words, lang, className }: LegalLinksProps): import("react").JSX.Element;

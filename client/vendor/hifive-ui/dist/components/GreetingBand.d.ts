@@ -17,6 +17,8 @@ export interface GreetingBandProps {
     search?: ReactNode;
     onAppearance?: () => void;
     onPrivacy?: () => void;
+    /** A ⋯ button at the end of the top row that opens the app's More sheet (Help, My access, Sign out on a phone; D-056). */
+    onMore?: () => void;
     now?: Date;
 }
-export declare function GreetingBand({ firstName, reportsTo, leads, tenure, quote, search, onAppearance, onPrivacy, now }: GreetingBandProps): import("react").JSX.Element;
+export declare function GreetingBand({ firstName, reportsTo, leads, tenure, quote, search, onAppearance, onPrivacy, onMore, now }: GreetingBandProps): import("react").JSX.Element;

@@ -21,9 +21,19 @@ export interface AppLogoProps {
 /** The palette on <html data-skin>, kept current. */
 export declare function useSkin(): string | null;
 export declare function AppLogo({ app, size, label, className }: AppLogoProps): import("react").JSX.Element;
-/** A logo with its short name underneath, as the hub's apps list and a phone's home screen show it. */
-export declare function AppLogoTile({ app, size, name }: {
+/**
+ * D-063: the amber dot on an app's logo while that app is slow. Decorative:
+ * the words (slowLine) always go beside it or are read aloud. Place it inside
+ * an element with `position: relative` (`hf-attn-host`).
+ */
+export declare function AttentionDot(): import("react").JSX.Element;
+/**
+ * A logo with its short name underneath, as the hub's apps list and a phone's home screen show it.
+ * `attention` (D-063): the app is slow right now; the dot goes on the logo and the line is read aloud.
+ */
+export declare function AppLogoTile({ app, size, name, attention }: {
     app: string;
     size?: number;
     name?: string;
+    attention?: boolean;
 }): import("react").JSX.Element;

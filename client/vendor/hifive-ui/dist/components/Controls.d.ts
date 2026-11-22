@@ -131,7 +131,8 @@ export interface ScoreGroupProps {
 export declare function ScoreGroup({ label, value, onChange, max, hint, error, ends, children }: ScoreGroupProps): import("react").JSX.Element;
 export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     pressed?: boolean;
-    count?: number;
+    /** A number, or "3 of 9" when a filter hides some. */
+    count?: number | string;
 }
 /** A filter chip: 32px, a 44px touch area around it. */
 export declare function Chip({ pressed, count, className, children, type, ...rest }: ChipProps): import("react").JSX.Element;
@@ -199,6 +200,8 @@ export interface DataTableProps<T> {
     rowHref?: (row: T) => string;
     empty?: ReactNode;
     initialSort?: SortState | null;
+    /** Told whenever the sort changes, so a screen can keep it across Back (pair with initialSort). Added 15 Nov 2026. */
+    onSortChange?: (sort: SortState | null) => void;
     /** Hide the visible caption (it stays for screen readers). */
     hideCaption?: boolean;
     /** Many columns: stay as cards until 1024px, where a grid of them first fits. */
@@ -210,7 +213,7 @@ export interface DataTableProps<T> {
  * becomes a card of label-value pairs, never a sideways-scrolling table.
  * Empty cells are left out on a phone and blank at desktop: never a dash.
  */
-export declare function DataTable<T>({ caption, columns, rows, rowKey, onRowClick, rowHref, empty, initialSort, hideCaption, wide }: DataTableProps<T>): import("react").JSX.Element;
+export declare function DataTable<T>({ caption, columns, rows, rowKey, onRowClick, rowHref, empty, initialSort, onSortChange, hideCaption, wide }: DataTableProps<T>): import("react").JSX.Element;
 /** Skeleton blocks shaped like what is coming; never a full-page spinner. */
 export declare function Skeleton({ lines, height, block }: {
     lines?: number;

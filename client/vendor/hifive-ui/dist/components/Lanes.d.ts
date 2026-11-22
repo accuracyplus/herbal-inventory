@@ -20,6 +20,17 @@ export interface LaneCard {
     chips?: ReactNode;
     /** Small things beside the title that act on their own (they must stop their events). */
     extra?: ReactNode;
+    /**
+     * A strip across the top of the card (14-15 Nov 2026, Recruitment's facility, Sinu: "the facility
+     * should be shown like Design C"): text left, aside right, in the colours given. The caller
+     * guarantees bg/fg clear 4.5:1. On a phone it is a thin strip above the row, outside its button.
+     */
+    head?: {
+        text: ReactNode;
+        aside?: ReactNode;
+        bg: string;
+        fg: string;
+    };
 }
 export interface StageLanesProps<T> {
     /** Names the whole board: "Candidate journey". */
@@ -48,5 +59,11 @@ export interface StageLanesProps<T> {
     empty?: (lane: string) => ReactNode;
     /** The stage a phone opens on; else the first with anyone in it. */
     initialLane?: string;
+    /**
+     * Everyone in a stage before the app's filters. When given and larger than what is shown,
+     * the lane head and the stage chip say "x of N" (restored 14 Nov 2026: the board's filtered
+     * counts were lost in the redesign).
+     */
+    totalOf?: (lane: string) => number;
 }
 export declare function StageLanes<T>(props: StageLanesProps<T>): import("react").JSX.Element;

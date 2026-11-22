@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { type SignInWords } from '../lib/shell';
 export interface SignInLanguage {
     value: string;
@@ -88,6 +88,41 @@ export interface SideMenuProps {
 }
 /** The side menu of an app with more than six sections or sections in groups (D-049). From 1024px only. */
 export declare function SideMenu({ label, brand, head, groups, foot }: SideMenuProps): import("react").JSX.Element;
+export interface NavItem {
+    key: string;
+    label: ReactNode;
+    href?: string;
+    onClick?: () => void;
+    current?: boolean;
+    /** No counts beside the label (Part P). Passed through to the element. */
+    attrs?: Record<string, string>;
+}
+export interface TopBarProps {
+    /** The app's logo and name, a link home. Put the name in <span className="hf-topnav__name"> so it
+     *  shortens with "…" on a narrow phone and the end buttons always fit. */
+    brand: ReactNode;
+    /** The app's areas. Shown from 1024px; below that the TabBar carries them. */
+    items?: readonly NavItem[];
+    /** At the end: search, the person's menu. */
+    end?: ReactNode;
+    label?: string;
+}
+/**
+ * The top bar inside AppFrame's panel for an app with a few areas and no side menu: the brand,
+ * the areas as tabs (from 1024px), then search and the person's menu at the end.
+ */
+export declare function TopBar({ brand, items, end, label }: TopBarProps): import("react").JSX.Element;
+export interface SubTabsProps {
+    items: readonly NavItem[];
+    /** Names the row for a screen reader: "People", "Leavers". */
+    label: string;
+}
+/**
+ * The second row of tabs inside an area ("Today · Kudos", "Who is leaving · Exit checklist ·
+ * Relieved"). Real links, the current one underlined in the brand colour. On a narrow screen the
+ * row scrolls sideways inside itself, so the page never does (D-072).
+ */
+export declare function SubTabs({ items, label }: SubTabsProps): import("react").JSX.Element | null;
 export interface AppFrameProps {
     /** A SideMenu for an app that has one (D-049); otherwise the top bar alone. */
     side?: ReactNode;

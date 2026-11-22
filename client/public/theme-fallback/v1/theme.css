@@ -1,4 +1,4 @@
-/* @hifive/tokens 1.2.8 — built 2026-11-14. Edit packages/tokens/src, not this file. */
+/* @hifive/tokens 1.3.0 — built 2026-11-22. Edit packages/tokens/src, not this file. */
 /* ============================================================
    HiFive design tokens — shared by HiFive ID and every app in the hub
    ------------------------------------------------------------
@@ -11,7 +11,7 @@
        background: rgb(var(--brand-500) / .15);
    Ramps: --brand (primary), --pop (accent), --coral (warning/attention),
           --ink (neutrals, 50 = lightest surface, 950 = darkest), --sky (third data colour)
-   Skins: <html data-skin="water|earth|air|fire|luna|sol|aami|aadi">  (default water = electric blue; air = teal)
+   Skins: <html data-skin="water|earth|air|fire|luna|sol|aami|aadi|console">  (default water = electric blue; air = teal)
    Style: <html data-style="lit|soft">                   (default lit inside apps)
    Mode : <html data-theme="light|dark">                 (default light)
    ============================================================ */
@@ -88,6 +88,19 @@
   --ink-50:241 244 246; --ink-100:224 230 234; --ink-200:195 206 213; --ink-300:156 173 184; --ink-400:111 133 147; --ink-500:79 100 114; --ink-600:59 76 88; --ink-700:43 56 66; --ink-800:30 40 49; --ink-900:19 26 31; --ink-950:11 16 19;
 }
 
+/* Console (D-078, 22 Nov 2026): the HiFive ID admin console's own teal and cool stone, kept as a
+   fixed palette. It is NOT in the Appearance sheet: the console sets data-skin="console" itself and
+   people's palette choice does not change it; light and dark still follow their mode. Brand-600 is
+   the console's #026670, ink is its grey ramp (#F9FAFB to #111827), pop its mint and "good" green,
+   coral its clay (#9E5B4A), sky the slate of its structure (#1F2937 / #273445). */
+:root[data-skin="console"] {
+  --brand-50:230 245 244; --brand-100:203 243 231; --brand-200:158 224 214; --brand-300:95 195 185; --brand-400:42 156 152; --brand-500:3 112 122; --brand-600:2 102 112; --brand-700:2 84 92; --brand-800:3 67 73; --brand-900:3 50 56;
+  --pop-50:234 248 243; --pop-100:207 240 229; --pop-200:159 237 215; --pop-300:110 211 184; --pop-400:59 179 150; --pop-500:30 143 120; --pop-600:17 107 92; --pop-700:14 88 76; --pop-800:11 69 59; --pop-900:8 50 43;
+  --coral-50:250 240 237; --coral-100:242 218 211; --coral-200:229 184 171; --coral-300:211 146 127; --coral-400:190 116 96; --coral-500:158 91 74; --coral-600:132 75 61; --coral-700:106 60 49; --coral-800:80 45 37; --coral-900:55 31 25;
+  --sky-50:238 243 248; --sky-100:217 227 238; --sky-200:181 200 220; --sky-300:141 169 198; --sky-400:104 137 173; --sky-500:77 110 147; --sky-600:61 88 118; --sky-700:46 68 92; --sky-800:39 52 69; --sky-900:31 41 55;
+  --ink-50:249 250 251; --ink-100:243 244 246; --ink-200:230 232 235; --ink-300:203 210 217; --ink-400:156 163 175; --ink-500:107 114 128; --ink-600:75 85 99; --ink-700:55 65 81; --ink-800:31 41 55; --ink-900:17 24 39; --ink-950:3 7 18;
+}
+
 /* ---- page ground behind the app column, per skin. Dark applies only when the person chose it. ---- */
 :root { --page-bg: #025ec4; --page-fg: #10172a; }
 :root[data-skin="water"] { --page-bg: #025ec4; --page-fg: #10172a; }
@@ -107,6 +120,8 @@
 :root[data-skin="aami"][data-theme="dark"] { --page-bg: #1a0a2a; --page-fg: #f3ecfa; color-scheme: dark; }
 :root[data-skin="aadi"] { --page-bg: #17566f; --page-fg: #131a1f; }
 :root[data-skin="aadi"][data-theme="dark"] { --page-bg: #131a1f; --page-fg: #e0e6ea; color-scheme: dark; }
+:root[data-skin="console"] { --page-bg: #034349; --page-fg: #111827; }
+:root[data-skin="console"][data-theme="dark"] { --page-bg: #030712; --page-fg: #e6e8eb; color-scheme: dark; }
 
 /* ---- semantic tokens: fixed meaning regardless of skin ---- */
 :root {
@@ -205,7 +220,8 @@
 :root[data-skin="water"][data-theme="dark"], :root[data-skin="water"].dark,
 :root[data-skin="earth"][data-theme="dark"], :root[data-skin="earth"].dark,
 :root[data-skin="air"][data-theme="dark"],   :root[data-skin="air"].dark,
-:root[data-skin="sol"][data-theme="dark"],   :root[data-skin="sol"].dark { --on-primary: rgb(var(--ink-950)); --primary-hover: rgb(var(--brand-300)); }
+:root[data-skin="sol"][data-theme="dark"],   :root[data-skin="sol"].dark,
+:root[data-skin="console"][data-theme="dark"], :root[data-skin="console"].dark { --on-primary: rgb(var(--ink-950)); --primary-hover: rgb(var(--brand-300)); }
 :root[data-skin="fire"][data-theme="dark"],  :root[data-skin="fire"].dark,
 :root[data-skin="aami"][data-theme="dark"],  :root[data-skin="aami"].dark,
 :root[data-skin="aadi"][data-theme="dark"],  :root[data-skin="aadi"].dark { --on-primary: #ffffff; --primary-hover: rgb(var(--brand-500)); }

@@ -11,7 +11,12 @@
 export type QuickValue = string | number | boolean;
 export interface QuickField {
     key: string;
-    type: 'scale' | 'choice' | 'text' | 'check';
+    /**
+     * person (0.41.0, D-066): a searchable picker over `QuickForm.people`, for a
+     * list too long for pills. It sends the chosen person's `code`; an optional
+     * one can be cleared, and a cleared one that started filled sends ''.
+     */
+    type: 'scale' | 'choice' | 'text' | 'check' | 'person';
     label: string;
     /** choice: the options, in order. */
     options?: string[];
@@ -35,6 +40,17 @@ export interface QuickField {
      * missing and never sent.
      */
     skipLabel?: string;
+    /**
+     * The starting answer (0.41.0, D-066: "pre-filled where known"). The field
+     * opens already answered and is sent as it stands unless the person changes it.
+     */
+    value?: QuickValue;
+}
+/** Someone a person field can pick (0.41.0). `sub`: job · facility, to tell namesakes apart. */
+export interface QuickPerson {
+    code: string;
+    name: string;
+    sub?: string | null;
 }
 /** The value a field holds when its skip button is on. Never sent. */
 export declare const SKIPPED = "__skipped__";
@@ -106,6 +122,8 @@ export interface QuickForm {
     items: QuickItem[];
     /** Where "Open in <app>" goes. */
     openUrl?: string | null;
+    /** Who a person field can pick from (0.41.0). */
+    people?: QuickPerson[];
 }
 export declare const SCALE_WORDS: string[];
 export declare const isShown: (f: QuickField, vals: Record<string, QuickValue>) => boolean;
@@ -116,7 +134,14 @@ export declare const answeredCount: (step: QuickStep, vals: Record<string, Quick
 export declare function stepProblem(step: QuickStep, vals: Record<string, QuickValue>): string | null;
 /** The fields on this step still to answer, in order. */
 export declare function missingFields(step: QuickStep, vals: Record<string, QuickValue>): QuickField[];
-/** The answers to send: only fields that are shown, trimmed, nothing for an untouched optional field. */
+/** The answers a form opens with: every field's starting `value`, if it has one. */
+export declare function startingValues(steps: QuickStep[]): Record<string, QuickValue>;
+/** The person a code names, from the form's list; null when the list does not have them. */
+export declare function personFor(people: QuickPerson[] | undefined, code: QuickValue | undefined): QuickPerson | null;
+/**
+ * The answers to send: only fields that are shown, trimmed, nothing for an untouched optional field.
+ * A person field that started filled and was cleared sends '', so the application knows to clear it.
+ */
 export declare function answersFor(steps: QuickStep[], vals: Record<string, QuickValue>): Record<string, QuickValue>;
 /** What the primary button says it is waiting for, in one line (the button is always enabled). */
 export declare function missingLine(missing: QuickField[]): string | null;

@@ -21,6 +21,8 @@ export interface WaitingRow {
     /** One verb: Rate, Confirm, Open. */
     action?: string;
     count?: number;
+    /** D-063: the owning app is slow right now. An amber dot on its logo and "<App> is slow right now. We're on it." under the row. */
+    attention?: boolean;
     onClick?: () => void;
     href?: string;
 }

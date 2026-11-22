@@ -31,6 +31,12 @@ declare global {
     }
 }
 export declare function currentPrefs(): Prefs;
+/**
+ * A fixed palette for an app that does not follow the person's choice (the admin console's
+ * "console", D-078, 22 Nov 2026). Sets data-skin and puts it back if anything else (boot.js, a
+ * stored preference) changes it; light or dark still follows the person. Returns a stop function.
+ */
+export declare function lockSkin(skin: string): () => void;
 export declare function applyPrefs(p: Partial<Prefs>): void;
 export interface AppearanceProps {
     open: boolean;

@@ -10,7 +10,7 @@
  */
 
 import { refuse } from '../lib/errors.js';
-import { isoDate, m2, nextRef, nonNegative, nowIso, positive, q3, text, uuid } from '../lib/data.js';
+import { dmy, isoDate, m2, nextRef, nonNegative, nowIso, positive, q3, text, uuid } from '../lib/data.js';
 import { auditStmt } from '../lib/audit.js';
 import { digestHex } from '../lib/files.js';
 import { escapeHtml, isEmail, MailError, mailStatus, sendMail } from '../lib/mail.js';
@@ -205,7 +205,7 @@ export async function emailPo(env, user, id, body = {}) {
   const subject = `Purchase order ${po.ref} from ${user.unit.name}`;
   const html = [
     `<p>Dear ${escapeHtml(po.supplier_contact || po.supplier_name)},</p>`,
-    `<p>Please find attached purchase order <b>${escapeHtml(po.ref)}</b> from ${escapeHtml(user.unit.name)}, to be delivered to ${escapeHtml(po.store_name)}${po.expected_date ? ` by ${escapeHtml(po.expected_date)}` : ''}.</p>`,
+    `<p>Please find attached purchase order <b>${escapeHtml(po.ref)}</b> from ${escapeHtml(user.unit.name)}, to be delivered to ${escapeHtml(po.store_name)}${po.expected_date ? ` by ${escapeHtml(dmy(po.expected_date))}` : ''}.</p>`,
     note ? `<p>${escapeHtml(note).replace(/\n/g, '<br>')}</p>` : '',
     '<p>Please send the delivery note with the goods, and reply to this email if anything on the order cannot be supplied.</p>',
     `<p>${escapeHtml(user.fullName)}<br>${escapeHtml(user.unit.name)}</p>`,

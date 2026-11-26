@@ -45,7 +45,7 @@ export interface UnitPerson {
     probation: string | null;
     joined: boolean;
 }
-/** "15 Mar 2027" from "2027-03-15"; the input itself if it is not a date. */
+/** "15-03-2027" from "2027-03-15" (D-090); the input itself if it is not a date. */
 export declare function dayWords(iso: string | null | undefined): string;
 /** "2 years 3 months", "1 year", "5 months", "New this month". */
 export declare function tenureWords(months: number | null | undefined): string;

@@ -33,6 +33,26 @@ export function text(v, max = 500) {
   return s ? s.slice(0, max) : null;
 }
 
+/**
+ * A date as a person reads it: "24-11-2026" (Design Guide D-090, Sinu 24 Nov 2026: "date in
+ * dd-mm-yyyy format always"), in PDFs, emails and refusals alike. A calendar day is read as
+ * written; a moment is its day in the Gulf. "" without a date.
+ */
+export function dmy(v) {
+  if (!v) return '';
+  const s = String(v);
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : (Number.isNaN(Date.parse(s)) ? '' : gstDate(Date.parse(s)));
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(day);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
+
+/** A month as a person reads it: "November 2026". */
+export function monthWords(ym) {
+  const m = /^(\d{4})-(\d{2})/.exec(String(ym || ''));
+  if (!m) return '';
+  return `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][Number(m[2]) - 1]} ${m[1]}`;
+}
+
 /** YYYY-MM-DD, or null. */
 export function isoDate(v) {
   const s = String(v ?? '').trim();

@@ -395,7 +395,7 @@ function Legacy({ rows }) {
       actions={<Csv name="old-app-history" rows={shown} />}>
       <div style={{ padding: '0 18px' }}><SearchBox value={q} onChange={setQ} placeholder="Filter by item, person, store or purpose" /></div>
       <Table rows={shown} rowKey={(r, i) => i} empty="No history was imported." columns={[
-        { key: 'at', label: 'When' }, { key: 'item_name', label: 'Item', primary: true }, { key: 'type', label: 'Type' },
+        { key: 'at', label: 'When', render: (r) => fmtDateTime(r.at) }, { key: 'item_name', label: 'Item', primary: true }, { key: 'type', label: 'Type' },
         { key: 'qty', label: 'Qty', align: 'right' }, { key: 'store', label: 'Store' }, { key: 'staff', label: 'Staff' }, { key: 'purpose', label: 'Purpose' },
       ]} />
     </Card>

@@ -10,7 +10,7 @@
  */
 
 import { refuse } from '../lib/errors.js';
-import { gstDate, nowIso, positive, q3, text, uuid } from '../lib/data.js';
+import { dmy, gstDate, nowIso, positive, q3, text, uuid } from '../lib/data.js';
 import { actorOf, auditStmt } from '../lib/audit.js';
 import { may, storeFor } from './access.js';
 import { consumptionFor, holderFor } from './consumption.js';
@@ -85,7 +85,7 @@ export async function useHeld(env, user, body) {
   const stmts = [];
   for (const { lot, item, qty } of lots) {
     if (lot.expiry && lot.expiry < today) {
-      refuse('ONLY_EXPIRED', `This ${item.name} expired on ${lot.expiry}. Return it to the store instead of using it.`);
+      refuse('ONLY_EXPIRED', `This ${item.name} expired on ${dmy(lot.expiry)}. Return it to the store instead of using it.`);
     }
     const { area, person, departmentId } = await consumptionFor(env, user, {
       areaId: body.areaId || lot.area_id, requester: { id: lot.person_id, name: lot.person_name },

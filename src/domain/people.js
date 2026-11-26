@@ -4,7 +4,7 @@
  */
 
 import { refuse } from '../lib/errors.js';
-import { nowIso } from '../lib/data.js';
+import { dmy, nowIso } from '../lib/data.js';
 import { auditStmt } from '../lib/audit.js';
 import { byCode, diffRoster, fetchRoster, hasLeft } from '../lib/roster.js';
 import { commit } from './stock.js';
@@ -58,7 +58,7 @@ export async function checkNewSeat(env, code, bearer) {
   try { roster = (await fetchRoster(env, bearer)).staff; } catch { return { checked: false }; }
   const r = byCode(roster).map.get(code);
   if (!r) refuse('NOT_IN_HFID', `${code} is not in HiFive ID. Check the code, or ask HR to add them to HiFive ID first.`);
-  if (hasLeft(r)) refuse('HAS_LEFT', `HiFive ID says ${String(r.full_name || code).trim()} has left${r.end_date ? ` (last day ${r.end_date})` : ''}.`);
+  if (hasLeft(r)) refuse('HAS_LEFT', `HiFive ID says ${String(r.full_name || code).trim()} has left${r.end_date ? ` (last day ${dmy(r.end_date)})` : ''}.`);
   return { checked: true, name: String(r.full_name || '').trim() || null };
 }
 

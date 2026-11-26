@@ -42,6 +42,7 @@ export { UnitPage, PersonPage, Breadcrumb, GlanceStrip, WaitingCounts, type Unit
 export { StockCard, type StockCardProps } from './components/StockCard';
 export { stockLead, stockChip, stockWhy, stockTileLabel, showStockTile, unitLine, shortDay as stockDay, type StockState, type StockUnit } from './lib/stock';
 export { dayWords, tenureWords, glanceLine, waitingLine, peopleFilters, type UnitCrumb, type UnitLevel, type UnitGlance, type UnitMonth, type UnitChild, type UnitPerson, type AppWaiting, type PeopleFilter } from './lib/units';
+export { dmy, dmyTime, dayOf, daysFrom } from './lib/dates';
 export { QuickSheet, type QuickSheetProps } from './components/QuickSheet';
 export { Toast, type ToastProps } from './components/Toast';
 export { SCALE_WORDS, SKIPPED, missingFields, answersFor, missingLine, isRequired, isShown, answeredCount, stepProblem, startingValues, personFor, type QuickPerson, type QuickForm, type QuickItem, type QuickStep, type QuickField, type QuickValue, type QuickContext } from './lib/quick';

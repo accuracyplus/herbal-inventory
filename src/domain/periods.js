@@ -10,7 +10,7 @@
  */
 
 import { refuse } from '../lib/errors.js';
-import { gstDate, nowIso, text } from '../lib/data.js';
+import { gstDate, monthWords, nowIso, text } from '../lib/data.js';
 import { auditStmt } from '../lib/audit.js';
 import { commit } from './stock.js';
 
@@ -32,7 +32,7 @@ export async function isClosed(env, unitId, dateOrIso) {
 
 export async function requireOpen(env, unitId, dateOrIso, what = 'This') {
   if (await isClosed(env, unitId, dateOrIso)) {
-    refuse('PERIOD_CLOSED', `${what} falls in ${monthOf(dateOrIso)}, which is closed for the accounts. The unit administrator can reopen it, with a reason.`, 409);
+    refuse('PERIOD_CLOSED', `${what} falls in ${monthWords(monthOf(dateOrIso))}, which is closed for the accounts. The unit administrator can reopen it, with a reason.`, 409);
   }
 }
 

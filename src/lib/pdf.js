@@ -9,6 +9,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { dmy } from './data.js';
 
 const W = 595.28; const H = 841.89; const M = 48; // A4, in points
 const INK = rgb(0.1, 0.1, 0.1); const SOFT = rgb(0.38, 0.38, 0.38); const RULE = rgb(0.8, 0.8, 0.8);
@@ -19,7 +20,7 @@ export const plain = (s) => String(s ?? '')
 
 const money = (n, cur) => `${cur} ${Number(n || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const qty = (n) => String(Math.round(Number(n) * 1000) / 1000);
-const day = (iso) => { if (!iso) return ''; const d = new Date(String(iso).length <= 10 ? `${iso}T00:00:00Z` : Date.parse(iso) + 4 * 3600e3); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); };
+const day = dmy;   // 24-11-2026 (D-090)
 
 /** Break text into lines no wider than `max` points. A single word longer than the line is cut. */
 function wrap(font, size, text, max) {

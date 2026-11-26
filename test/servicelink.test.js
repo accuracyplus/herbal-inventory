@@ -187,6 +187,7 @@ test('dates: a timestamp, a date, day first, an Excel number; never the future, 
   assert.equal(whenDone('2026-11-10 14:30', now), '2026-11-10T10:30:00.000Z');
   assert.equal(whenDone('2026-11-10', now), '2026-11-10T08:00:00.000Z');
   assert.equal(whenDone('10/11/2026 9:05', now), '2026-11-10T05:05:00.000Z');
+  assert.equal(whenDone('10-11-2026 14:30', now), '2026-11-10T10:30:00.000Z');   // as the sheet's own example (D-090)
   assert.equal(whenDone(46336.604166666664, now), '2026-11-10T10:30:00.000Z');
   assert.throws(() => whenDone('2026-11-12', now), /future/);
   assert.throws(() => whenDone('01/10/2026', now), /more than 31 days/);

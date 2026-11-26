@@ -26,8 +26,8 @@ export type StockState = {
     since: string | null;
     units: StockUnit[];
 };
-/** "3 Nov" this year, "3 Nov 2025" another year. */
-export declare function shortDay(iso: string | null | undefined, today?: Date): string;
+/** "03-11-2026" (D-090: dates read dd-mm-yyyy, always, with the year). `_today` is kept so callers need no change. */
+export declare function shortDay(iso: string | null | undefined, _today?: Date): string;
 export declare const itemsWord: (n: number) => string;
 /** The card's lead line. */
 export declare const stockLead: (holding: number) => string;

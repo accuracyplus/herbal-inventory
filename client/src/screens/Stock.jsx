@@ -91,7 +91,7 @@ export default function Stock() {
     ...(can('cost.view') ? [{ key: 'value', label: 'Value', align: 'right', render: (it) => fmtMoney(it.value, currency) }] : []),
   ];
 
-  const exportCsv = () => downloadCsv(`stock-${new Date().toISOString().slice(0, 10)}.csv`, rows, [
+  const exportCsv = () => downloadCsv(`stock-${fmtDate(new Date().toISOString())}.csv`, rows, [
     { key: 'code', label: 'Code' }, { key: 'name', label: 'Item' }, { key: 'category', label: 'Category' }, { key: 'uom', label: 'Unit' },
     ...stock.stores.map((s) => ({ label: s.name, value: (it) => it.stores.find((x) => x.storeId === s.id)?.qty ?? '' })),
     { key: 'total', label: 'Total incl. linen out and stock with people' }, { key: 'status', label: 'Status' }, { key: 'nextExpiry', label: 'Next expiry' },

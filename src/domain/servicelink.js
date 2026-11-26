@@ -118,7 +118,7 @@ export function whenDone(v, now = Date.now()) {
     else if (ymd) ms = local(ymd[1], ymd[2], ymd[3], ymd[4], ymd[5]);
     else ms = Date.parse(s);
   }
-  if (!Number.isFinite(ms)) refuse('BAD_DATE', `The date “${v}” could not be understood. Use 2026-11-10 14:30, or 10/11/2026 14:30.`);
+  if (!Number.isFinite(ms)) refuse('BAD_DATE', `The date “${v}” could not be understood. Write it as 10-11-2026 14:30.`);
   if (ms > now + 10 * 60e3) refuse('BAD_DATE', 'The date is in the future. Only completed services are recorded.');
   if (ms < now - BACK_DAYS * 864e5) refuse('BAD_DATE', `The date is more than ${BACK_DAYS} days ago, which is too old to post to stock.`);
   return new Date(ms).toISOString();
@@ -233,7 +233,7 @@ export async function takeServices(env, who, rows) {
 
 export const SHEET_COLUMNS = [
   { key: 'ref', header: 'Reference', text: true, required: true, width: 18, hint: 'The booking or invoice line number. It is what stops the same service being counted twice.' },
-  { key: 'at', header: 'Date', text: true, width: 18, hint: 'When it was done: 2026-11-10 14:30, or 10/11/2026 14:30. Empty means now.' },
+  { key: 'at', header: 'Date', text: true, width: 18, hint: 'When it was done, day first: 10-11-2026 14:30. Empty means now.' },
   { key: 'service', header: 'Service', required: true, width: 22, hint: 'Its code or exact name, as under Recipes.' },
   { key: 'times', header: 'How many', width: 10, hint: '1 if left empty.' },
   { key: 'room', header: 'Room', text: true, width: 14, hint: 'The room or area code or name.' },

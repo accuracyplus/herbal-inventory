@@ -17,7 +17,7 @@
  */
 
 import { DomainError, refuse } from '../lib/errors.js';
-import { gstDate, m2, nowIso, q3, uuid } from '../lib/data.js';
+import { dmy, gstDate, m2, nowIso, q3, uuid } from '../lib/data.js';
 
 export const KINDS = ['RECEIPT', 'ISSUE', 'TRANSFER_OUT', 'TRANSFER_IN', 'ADJUST', 'COUNT', 'OPENING', 'LINEN', 'TAKE', 'RETURN', 'RELEASE', 'SUPPLIER_RETURN'];
 export const LINEN_STATES = { available: 'qty', in_use: 'in_use', in_wash: 'in_wash' };
@@ -152,7 +152,7 @@ export async function buildPosting(env, posting, lines) {
         `SELECT id, batch_no, expiry, qty FROM batches WHERE id = ? AND store_id = ? AND item_id = ?`,
       ).bind(l.batchId, l.store.id, l.item.id).first();
       if (!b) refuse('NOT_FOUND', `That batch of ${l.item.name} is not in ${l.store.name}.`, 404);
-      if (b.qty < -qty) refuse('NOT_ENOUGH', `Batch ${b.batch_no || b.expiry || '(no number)'} of ${l.item.name} has only ${fmt(b.qty)} left.`);
+      if (b.qty < -qty) refuse('NOT_ENOUGH', `Batch ${b.batch_no || dmy(b.expiry) || '(no number)'} of ${l.item.name} has only ${fmt(b.qty)} left.`);
       parts.push({ ...l, qty, batchId: b.id, batchNo: b.batch_no, expiry: b.expiry });
       continue;
     }

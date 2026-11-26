@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import Icon from './icons.jsx';
-import { fmtMoney, fmtQty, get } from './api.js';
+import { fmtDate, fmtMoney, fmtQty, get } from './api.js';
 import { QuantityField } from '@hifive/ui';
 import { Button, Field, ItemPicker, Pill, QtyInput, Select } from './ui.jsx';
 import { isDesk, PairSheet, ScanSheet } from './scan/ScanSheets.jsx';
@@ -179,7 +179,7 @@ function BatchChoice({ line, storeId, onChange }) {
   return (
     <Field label="Batch" hint="Left as first-expiry-first, the batch closest to its date is used first, and expired stock is never handed out.">
       <Select value={line.batchId || ''} onChange={(v) => onChange(v || null)} placeholder="First to expire (recommended)"
-        options={batches.map((b) => ({ value: b.id, label: `${b.batch_no || 'No lot'} · ${b.expiry || 'no date'} · ${fmtQty(b.qty)}` }))} />
+        options={batches.map((b) => ({ value: b.id, label: `${b.batch_no || 'No lot'} · ${b.expiry ? fmtDate(b.expiry) : 'no date'} · ${fmtQty(b.qty)}` }))} />
     </Field>
   );
 }

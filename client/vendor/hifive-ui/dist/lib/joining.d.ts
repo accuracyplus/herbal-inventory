@@ -36,7 +36,7 @@ export interface Joiner {
     /** Where and when they report on day one, when Recruitment has it. */
     dayOne?: string | null;
 }
-/** "Mon 1 Dec". */
+/** "01-12-2026" (D-090: dates read dd-mm-yyyy, always). */
 export declare function shortDate(iso: string): string;
 /** "Joins Mon 1 Dec (in 5 days)", "Joins tomorrow", "Joins today", "Joined yesterday", "Joined 3 days ago". */
 export declare function whenLine(joins: string, today?: Date): string;

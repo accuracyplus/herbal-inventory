@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { downloadCsv, fmtDateTime, get, post } from '../api.js';
+import { downloadCsv, fmtDate, fmtDateTime, get, post } from '../api.js';
 import { dateLocale, t, tn } from '../i18n.js';
 import { Button, CancelButton, Card, ConfirmButton, ErrorNote, Field, Guard, Loading, Page, Quiet, Select, Sheet, Table, useApp, useData } from '../ui.jsx';
 
@@ -45,7 +45,7 @@ function Exports() {
     try {
       const rows = await get(`/api/accounts/export?kind=${kind}&from=${range.from}&to=${range.to}`);
       if (!rows.length) { toast('Nothing in those dates'); return; }
-      downloadCsv(`${kind}-${range.from}-to-${range.to}.csv`, rows, Object.keys(rows[0]).map((k) => ({ key: k, label: label(k) })));
+      downloadCsv(`${kind}-${fmtDate(range.from)}-to-${fmtDate(range.to)}.csv`, rows, Object.keys(rows[0]).map((k) => ({ key: k, label: label(k) })));
       toast(tn(rows.length, '{n} row downloaded', '{n} rows downloaded'));
     } catch (e) { setErr(e); } finally { setBusy(false); }
   };

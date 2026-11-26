@@ -8,7 +8,8 @@
  */
 
 import { markSaved, pressedGuard, savesSomething } from './leave.js';
-import { dateLocale, has, t } from './i18n.js';
+import { dmy, dmyTime } from '@hifive/ui';
+import { has, t } from './i18n.js';
 
 export const API = import.meta.env.VITE_API || '';
 const HFID_ORIGIN = import.meta.env.VITE_HFID_ORIGIN || 'https://hifive-id.sinusuresh.workers.dev';
@@ -188,25 +189,44 @@ export const fmtMoney = (n, currency = 'AED', digits = 2) => {
   return `${currency} ${Number(n).toLocaleString('en-AE', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 };
 
-export const fmtDate = (iso) => {
-  if (!iso) return '';
-  const d = iso.length === 10 ? new Date(`${iso}T00:00:00+04:00`) : new Date(iso);
-  return d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric', timeZone: GST });
+/**
+ * Dates read dd-mm-yyyy, always (Design Guide D-090, Sinu 24 Nov 2026: "date in dd-mm-yyyy format
+ * always"): screens, CSVs and PDFs alike, in English and Malayalam. A calendar day ("2026-11-24")
+ * is read as written; a moment ("2026-11-24T05:10:00.000Z") is the day and time in the Gulf.
+ * Words may follow a date, never replace it. Times are 24-hour.
+ */
+const gstMoment = (iso) => {
+  const s = String(iso ?? '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(s)) return s;   // a wall time with no zone, as written (the old app's history)
+  const ms = Date.parse(s);
+  return Number.isNaN(ms) ? s : new Date(ms + 4 * 3600e3).toISOString().slice(0, 16);
 };
 
-export const fmtDateTime = (iso) => {
-  if (!iso) return '';
-  return new Date(iso).toLocaleString(dateLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: GST });
-};
+/** "24-11-2026". */
+export const fmtDate = (iso) => (iso ? dmy(gstMoment(iso)) : '');
 
+/** "24-11-2026 09:10"; a calendar day alone stays "24-11-2026". */
+export const fmtDateTime = (iso) => (iso ? dmyTime(gstMoment(iso)) : '');
+
+/** "24-11-2026 (3 days ago)": the date first, the words after it (D-090). */
 export const fmtAgo = (iso) => {
   if (!iso) return '';
   const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 60) return t('just now');
-  if (s < 3600) return t('{n} min ago', { n: Math.round(s / 60) });
-  if (s < 86400) return t('{n} h ago', { n: Math.round(s / 3600) });
-  const d = Math.round(s / 86400);
-  return d === 1 ? t('yesterday') : t('{n} days ago', { n: d });
+  let ago;
+  if (s < 60) ago = t('just now');
+  else if (s < 3600) ago = t('{n} min ago', { n: Math.round(s / 60) });
+  else if (s < 86400) ago = t('{n} h ago', { n: Math.round(s / 3600) });
+  else { const d = Math.round(s / 86400); ago = d === 1 ? t('yesterday') : t('{n} days ago', { n: d }); }
+  return `${s < 86400 ? fmtDateTime(iso) : fmtDate(iso)} (${ago})`;
+};
+
+/** A CSV cell: a date or a moment becomes dd-mm-yyyy (D-090 has no exception for exports). */
+const csvCell = (v) => {
+  if (typeof v !== 'string') return v;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return fmtDate(v);
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return fmtDateTime(v);
+  return v;
 };
 
 export const gstToday = (offsetDays = 0) => new Date(Date.now() + offsetDays * 864e5 + 4 * 3600e3).toISOString().slice(0, 10);
@@ -215,14 +235,14 @@ export const gstToday = (offsetDays = 0) => new Date(Date.now() + offsetDays * 8
 export function downloadCsv(filename, rows, columns) {
   const cols = columns || Object.keys(rows[0] || {}).map((k) => ({ key: k, label: k }));
   const esc = (v) => {
-    const s = v === null || v === undefined ? '' : String(v);
+    const s = v === null || v === undefined ? '' : String(csvCell(v));
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const lines = [cols.map((c) => esc(c.label)).join(','), ...rows.map((r) => cols.map((c) => esc(typeof c.value === 'function' ? c.value(r) : r[c.key])).join(','))];
   const blob = new Blob([`﻿${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = filename;
+  a.download = filename.replace(/(\d{4})-(\d{2})-(\d{2})/g, '$3-$2-$1');   // file names too (D-090)
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);

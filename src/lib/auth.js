@@ -60,6 +60,21 @@ async function jwks(env) {
   return jwksCache.keys;
 }
 
+/**
+ * The signing keys as /version reports them for HiFive ID's control room (suite standard, status
+ * report; signing-key-design.md): the key names read, when, and from where. Inventory always reads
+ * HiFive ID's published keys and holds no copy, so the source is "jwks". null when they could not be
+ * read just now, so /version leaves the field out rather than saying something untrue.
+ */
+export async function signingKeysStatus(env) {
+  try {
+    const keys = await jwks(env);
+    return { kids: keys.map((k) => k.kid).filter(Boolean), readAt: new Date(jwksCache.at).toISOString(), source: 'jwks' };
+  } catch {
+    return null;
+  }
+}
+
 async function verifySignature(token, env) {
   const [h, p, s] = String(token).split('.');
   if (!h || !p || !s) throw unreadable();

@@ -7,7 +7,8 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { stampFrom, toB64 } from '../src/lib/release.js';
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 if (git('status', '--porcelain')) {
@@ -20,6 +21,11 @@ if (!existsSync(wrangler)) {
   console.error('Wrangler is not installed here. Run npm install first.');
   process.exit(1);
 }
-console.log(`Deploying ${sha} (${git('rev-parse', '--abbrev-ref', 'HEAD')})`);
-const run = spawnSync(process.execPath, [wrangler, 'deploy', '--var', `BUILD_COMMIT:${sha}`, ...process.argv.slice(2)], { stdio: 'inherit' });
+// HiFive ID's control room (suite standard, the status report format): the feature register counted
+// as it stands in this commit, and the open work this chat keeps in docs/status.json. The tests that
+// ran first (predeploy) check both files, so what is stamped is what was checked.
+const { features, status: report } = stampFrom(readFileSync('docs/feature-register.md', 'utf8'), JSON.parse(readFileSync('docs/status.json', 'utf8')));
+console.log(`Deploying ${sha} (${git('rev-parse', '--abbrev-ref', 'HEAD')}): ${features.total} features, ${features.untested} untested; ${report.openWork} open, ${report.waitingOnSinu} waiting on Sinu`);
+const run = spawnSync(process.execPath, [wrangler, 'deploy', '--var', `BUILD_COMMIT:${sha}`,
+  '--var', `RELEASE_FEATURES:${toB64(features)}`, '--var', `RELEASE_STATUS:${toB64(report)}`, ...process.argv.slice(2)], { stdio: 'inherit' });
 process.exit(run.status ?? 1);

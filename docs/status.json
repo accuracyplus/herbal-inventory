@@ -1,0 +1,15 @@
+{
+  "//": "Inventory's open work, for HiFive ID's control room (suite standard, the status report format). The Inventory chat keeps it true: add a line when work is agreed, remove it when it is done. Plain words, no staff names or personal details. scripts/deploy.mjs counts it (openWork = every line, waitingOnSinu = the lines waiting on Sinu) and sends the first five waiting on Sinu, in this order.",
+  "updated": "2026-11-27",
+  "items": [
+    { "text": "HiFive ID key so Inventory can find each facility's unit head for IT purchase approvals", "since": "2026-11-27", "waitingOnSinu": true },
+    { "text": "Inventory access in HiFive ID for the Accuracy Plus IT person", "since": "2026-11-22", "waitingOnSinu": true },
+    { "text": "Herbal Park supplier list and item prices", "since": "2026-11-13", "waitingOnSinu": true },
+    { "text": "Herbal Park treatment recipes from the doctors", "since": "2026-11-13", "waitingOnSinu": true },
+    { "text": "Send the Herbal Park staff message about Inventory", "since": "2026-11-13", "waitingOnSinu": true },
+    { "text": "One Herbal Park staff member's sign-in account", "since": "2026-11-13", "waitingOnSinu": true },
+    { "text": "Microsoft 365 sender for emailing purchase orders to suppliers", "since": "2026-11-13", "waitingOnSinu": true },
+    { "text": "First stock count at Herbal Park, to give the oils their real expiry dates", "since": "2026-11-13", "waitingOnSinu": false },
+    { "text": "First IT asset count at Accuracy Plus, including the server and every Microsoft licence", "since": "2026-11-22", "waitingOnSinu": false }
+  ]
+}

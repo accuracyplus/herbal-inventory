@@ -14,6 +14,7 @@ import {
 } from './lib/auth.js';
 import { DomainError } from './lib/errors.js';
 import { releaseReport } from './lib/release.js';
+import { unitHeadsSetUp } from './lib/unitheads.js';
 import { nowIso, sha256Hex, text, uuid } from './lib/data.js';
 import { usualFor } from './domain/usual.js';
 import { auditNow } from './lib/audit.js';
@@ -153,7 +154,7 @@ export default {
         ok: schema.ok, app: 'inventory',
         build: { commit: env.BUILD_COMMIT || null, version: meta.id || null, deployedAt: meta.timestamp || null },
         // A deploy can drop a binding without a word; these say so in one curl.
-        bindings: { files: !!env.FILES, ai: !!env.AI?.run, hfid: !!env.HFID?.fetch, mail: mailStatus(env).ready },
+        bindings: { files: !!env.FILES, ai: !!env.AI?.run, hfid: !!env.HFID?.fetch, mail: mailStatus(env).ready, unitHeads: unitHeadsSetUp(env) },
         schema, at: nowIso(),
         // HiFive ID's control room (suite standard, the status report format). Each is left out when
         // it is not known: never a 0 for "not reported".

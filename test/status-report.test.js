@@ -24,6 +24,8 @@ test('status report: the keys read from HiFive ID, and what the deploy stamped',
 
 test('status report: not stamped, or stamped wrong, is left out, never a zero', async () => {
   const bare = (await call(testEnv(), 'GET', '/version')).body;
+  assert.equal(bare.bindings.unitHeads, false, 'no unit-head key set: said so');
+  assert.equal((await call(testEnv({ HFID_CONTACTS_TOKEN: 'k' }), 'GET', '/version')).body.bindings.unitHeads, true);
   assert.equal('features' in bare, false);
   assert.equal('status' in bare, false);
   assert.deepEqual(releaseReport({ RELEASE_FEATURES: 'not base64 json', RELEASE_STATUS: toB64({ openWork: -1, waitingOnSinu: 0, waiting: [] }) }), {});

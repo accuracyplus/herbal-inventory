@@ -7,6 +7,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "sync-ui": "node scripts/sync-ui.mjs",
+    "//predeploy": "Every test, the feature register included, before the client goes out (suite standard, 27 Nov 2026).",
+    "predeploy": "npm --prefix .. test",
     "deploy": "npm run build && wrangler pages deploy dist --project-name hifive-inventory --branch main"
   },
   "dependencies": {

@@ -135,7 +135,7 @@ await step('old app history', async () => {
   return null;
 });
 
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' };
 const isApi = (path) => /^\/(api|auth|pending|hooks|version|health)(\/|$)/.test(path);
 
 function serveFile(path, res) {

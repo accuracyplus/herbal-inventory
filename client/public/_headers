@@ -15,8 +15,8 @@
 # img-src blob: — an attached delivery note is fetched with the person's sign-in and opened from
 # memory; it has no address of its own to link to.
 #
-# img-src https://hifive-design.pages.dev — the logo in the tab and on the home screen, in the
-# palette being worn (D-042; src/appIcon.js). Images only, from the same site as the theme.
+# img-src https://hifive-design.pages.dev — the icon in the tab and on the home screen, in the
+# palette being worn (D-091: /icons/v2, @hifive/ui syncAppIcons). Images only, from the same site as the theme.
 #
 # connect-src names the exact Worker origin, not https://*.workers.dev — a wildcard there would
 # let any Worker anyone has deployed receive a signed-in member of staff's requests. CSP also

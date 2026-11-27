@@ -55,6 +55,7 @@ export { MonthStrip, MonthKey, StageBar, SplitView, Stepper, Timeline, DocumentL
 export { sortRows, nextSort, stepMark, monthLine, stageLine, splitStep, splitAfter, laneStep, laneCount, MOVE_WORDS, MONTH_WORDS, type SortState, type SortDir, type StepState, type MonthState } from './lib/controls';
 export { AppLogo, AppLogoTile, AttentionDot, useSkin, type AppLogoProps } from './components/AppLogo';
 export { appIconSvg, appIconSrc, appIconKey, APP_ICON_THEMES } from './lib/appIcons';
+export { ICON_BASE, appIconFiles, syncAppIcons } from './lib/tabIcons';
 export { APPS as APP_FAMILY, logoSvg } from '@hifive/icons';
 export { AppHome, type AppHomeProps } from './components/AppHome';
 export { LegalLinks, type LegalLinksProps } from './components/LegalLinks';

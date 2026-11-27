@@ -111,6 +111,15 @@ export function testEnv(extra = {}) {
           if (extra.rosterFails) return new Response(JSON.stringify({ error: 'unknown_app', message: 'Pass ?app=<key> naming the calling application' }), { status: extra.rosterFails });
           return new Response(JSON.stringify({ as_of: new Date().toISOString(), via: 'session', staff: extra.roster ?? defaultRoster() }));
         }
+        // Facility contacts, unit heads only, for the HFID_CONTACTS_TOKEN (lib/unitheads.js). A test sets
+        // env.facilityContacts ({ entity: [primary, secondary] } as { emp_code, name }), or a number to fail.
+        if (u.pathname === '/service/facility-contacts') {
+          if (req.headers.get('authorization') !== `Bearer ${env.HFID_CONTACTS_TOKEN}`) return new Response('{"error":"invalid_token"}', { status: 401 });
+          if (typeof env.facilityContacts === 'number') return new Response('{}', { status: env.facilityContacts });
+          const facilities = Object.entries(env.facilityContacts || {}).map(([entity, [primary, secondary]]) => (
+            { entity, contacts: { unit_head: { label: 'Unit head', primary: primary || null, secondary: secondary || null, now: primary || secondary || null } } }));
+          return new Response(JSON.stringify({ facilities }));
+        }
         // /me: `me` is what HiFive ID answers (a value, or a function of the request); none = an older HiFive ID.
         if (u.pathname === '/me') {
           extra.meCalls?.push({ aud: u.searchParams.get('aud'), bearer: req.headers.get('authorization') });

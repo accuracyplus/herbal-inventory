@@ -43,3 +43,26 @@ Decided in the Inventory chat, 22 Nov 2026 (Sinu took every recommended answer):
 | Today | Equipment past or near its service date; warranties ending | Kept |
 | Hub | inventory_assets_due on "Waiting for you" | Kept |
 | Setting | assets.on, assets.warn_days | Kept |
+
+## IT purchases: unit head first, then Accounts (27 Nov 2026)
+
+Sinu, relayed by the HiFive ID chat: "IT purchase requests (SIM, phone and so on) are approved by
+the facility's unit head first, then Accounts." He took the proposal in this chat ("Yes, as
+proposed"):
+
+- **Step 1, the unit head.** It is read from HiFive ID's facility contacts when they act, the
+  Primary or the Secondary (lib/unitheads.js). Inventory keeps no list of unit heads. HiFive ID
+  needs to let Inventory read them with a service token that sees unit heads only, like Learning
+  Point's training token. That token is the `HFID_CONTACTS_TOKEN` secret.
+- **Step 2, Accounts.** It is a new seat in Inventory (`ACCOUNTS`). It sees the IT register and
+  what IT costs, and approves after the unit head. It is not the same person as the unit head.
+- **No fallback.** Without the link, with no unit head listed, or with HiFive ID not answering,
+  the first step cannot be taken, and the Requests list says why.
+- **Who can act.** Nobody approves their own request. Either step can turn it down, with a
+  reason. Only whoever raised it can withdraw it.
+- **What a unit head needs.** To open the request in Inventory, a unit head needs Inventory
+  access in HiFive ID and a seat at the facility; Viewer is enough. The hub's "Waiting for you"
+  and Today tell them by employee code.
+- **What it replaces.** The single "facility approver" (Manager or Unit administrator,
+  `it.decide`) is gone.
+- **Prices.** The unit head does not see the estimate, under the IT prices rule. Accounts does.

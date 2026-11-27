@@ -20,7 +20,7 @@ const ACTIONS = {
   inspect: 'Release or reject stock held for inspection', 'return.raise': 'Send goods back to a supplier', 'return.decide': 'Approve returns to suppliers',
   'assets.edit': 'Keep the equipment register', accounts: 'Export for the accounts system',
   'it.edit': 'Keep the IT register: hand-overs, seats, exit clearance', 'it.prices': 'See what IT costs (and the directors)',
-  'it.purchase': 'Ask to buy IT', 'it.decide': 'Approve IT purchases', 'it.email': 'Ask IT for a new email account',
+  'it.purchase': 'Ask to buy IT', 'it.accounts': 'Approve IT purchases for Accounts, after the unit head', 'it.email': 'Ask IT for a new email account',
 };
 
 const FLOWS = [

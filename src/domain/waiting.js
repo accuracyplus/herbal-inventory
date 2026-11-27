@@ -17,6 +17,7 @@
  */
 
 import { itFacts } from './itassets.js';
+import { unitHeadsOf } from '../lib/unitheads.js';
 import { gstDate } from '../lib/data.js';
 import { may } from './access.js';
 import { SETTINGS } from './settings.js';
@@ -82,6 +83,12 @@ export async function unitFacts(env, unitId, now = Date.now()) {
   ]);
   // The IT register (D-086): idle, warranties and licences ending, shortages, requests.
   const it = on('assets.on') ? await itFacts(env, unitId, today, soonDay, Number(set('it.idle_days')) || 30) : null;
+  // Purchases waiting on the unit head (Sinu, 27 Nov 2026): who that is comes from HiFive ID, asked
+  // only when one waits. Not reachable: no unit head's line, and the Requests list says why.
+  if (it && it.requests.some((r) => r.kind === 'PURCHASE' && r.status === 'PENDING')) {
+    const unit = await one(`SELECT name FROM units WHERE id = ?`, unitId);
+    try { it.heads = (await unitHeadsOf(env, unit.name))?.codes || null; } catch { it.heads = null; it.headsFailed = true; }
+  }
   let cycle = null;
   if (on('abc.on')) {
     const due = (await cycleDue(env, unitId, { now })).rows.filter((r) => r.due);
@@ -109,7 +116,7 @@ function others(rows, me) {
 const since = (today, iso) => (iso ? -Math.max(0, diff(dayOf(iso), today)) : 0);
 
 /**
- * One person's list in one unit, from the unit's facts. `user` is { staffId, roles }.
+ * One person's list in one unit, from the unit's facts. `user` is { staffId, code, roles }.
  * The order is Today's order; the hub and the email sort by `days` themselves.
  */
 export function waitingList(f, user) {
@@ -204,9 +211,15 @@ export function waitingList(f, user) {
     const it = f.it;
     const req = (kind, status, mineOnly) => it.requests.filter((r) => r.kind === kind && r.status === status && (mineOnly === undefined || (mineOnly ? r.by === user.staffId : r.by !== user.staffId)));
     const sum = (rows) => ({ n: rows.reduce((a, r) => a + r.n, 0), oldest: rows.map((r) => r.oldest).sort()[0] || null });
-    if (may(user, 'it.decide')) {
+    const code = String(user.code || '').trim().toUpperCase();
+    if (code && it.heads?.has(code)) {
       const p = sum(req('PURCHASE', 'PENDING', false));
       if (p.n) add({ key: 'it-purchase-approve', screen: 'assets', to: 'assets?kind=it&tab=requests', n: p.n, days: since(t, p.oldest), action: 'Approve', text: `${plural(p.n, 'IT purchase request')} to approve` });
+    }
+    if (may(user, 'it.accounts')) {
+      const rows = it.requests.filter((r) => r.kind === 'PURCHASE' && r.status === 'HEAD_APPROVED' && r.by !== user.staffId && r.head !== user.staffId);
+      const p = sum(rows);
+      if (p.n) add({ key: 'it-purchase-accounts', screen: 'assets', to: 'assets?kind=it&tab=requests', n: p.n, days: since(t, p.oldest), action: 'Approve', text: `${plural(p.n, 'IT purchase request')} for Accounts to approve` });
     }
     if (may(user, 'it.edit')) {
       const e = sum(req('EMAIL_ACCOUNT', 'PENDING'));

@@ -54,7 +54,7 @@ async function factsFor(env, list) {
 
 function itemsOf(p, facts) {
   const many = p.seats.length > 1;
-  return p.seats.flatMap((s) => waitingList(facts.get(s.unit_id), { staffId: p.staffId, roles: s.roles })
+  return p.seats.flatMap((s) => waitingList(facts.get(s.unit_id), { staffId: p.staffId, code: p.code, roles: s.roles })
     .filter(dated)
     .map((w) => forHfid(w, { id: s.unit_id, name: s.unit_name }, many)));
 }

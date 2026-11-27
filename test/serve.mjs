@@ -15,7 +15,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import worker from '../src/worker.js';
-import { call, defaultRoster, deliver, makeItem, receive, S, testEnv, tokenFor } from './helpers/http.js';
+import { call, defaultRoster, deliver, hfidToken, HP, makeItem, receive, S, testEnv, tokenFor } from './helpers/http.js';
 
 const port = Number(process.argv[2]) || 8791;
 const dist = join(dirname(fileURLToPath(import.meta.url)), '..', 'client', 'dist');
@@ -47,6 +47,17 @@ const MAIL = {
   },
 };
 const env = testEnv({ APP_ORIGIN: `http://localhost:${port}`, roster, aiReply, ...MAIL });
+// IT purchases in two steps (27 Nov 2026): Maya Manager is Herbal Park's unit head in the stand-in
+// HiFive ID; /__token?as=it and ?as=accounts sign in as IT and Accounts.
+env.HFID_CONTACTS_TOKEN = 'hfid_svc_local_contacts';
+env.facilityContacts = { 'Herbal Park': [{ emp_code: 'HPM001', name: 'Maya Manager' }] };
+const EXTRA = { it: { id: 'p-it', code: 'HPIT01', name: 'Ravi IT', roles: ['IT'] }, accounts: { id: 'p-acc', code: 'HPAC01', name: 'Anil Accounts', roles: ['ACCOUNTS'] } };
+for (const p of Object.values(EXTRA)) {
+  env.DB.db.prepare(`INSERT INTO staff (id, code, full_name, group_admin, active) VALUES (?,?,?,0,1)`).run(p.id, p.code, p.name);
+  env.DB.db.prepare(`INSERT INTO staff_units (staff_id, unit_id, roles, stores, active) VALUES (?,?,?,NULL,1)`).run(p.id, HP, JSON.stringify(p.roles));
+}
+const extraToken = (who) => { const p = EXTRA[who]; return p && hfidToken({ sub: `hf-${p.id}`, emp_code: p.code, name: p.name, role: 'employee', entity: 'Herbal Park' }); };
+
 const ctx = { waitUntil: () => {} };
 
 const seeded = [];
@@ -137,7 +148,7 @@ function serveFile(path, res) {
 
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
-  if (url.pathname === '/__token') { res.end(tokenFor(url.searchParams.get('as') || 'admin')); return; }
+  if (url.pathname === '/__token') { const as = url.searchParams.get('as') || 'admin'; res.end(extraToken(as) || tokenFor(as)); return; }
   if (url.pathname === '/__age') { // Make everything held look this many hours old.
     env.DB.db.prepare('UPDATE custody SET taken_at = ?').run(new Date(Date.now() - Number(url.searchParams.get('hours') || 0) * 36e5).toISOString());
     res.end('ok');

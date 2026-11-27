@@ -45,6 +45,7 @@ const WAIT = {
   'returns-credit': ['{n} return waiting for a credit note', '{n} returns waiting for a credit note'],
   'people-review': ['{n} change from HiFive ID to review: joiners, leavers, names', '{n} changes from HiFive ID to review: joiners, leavers, names'],
   'it-purchase-approve': ['{n} IT purchase request to approve', '{n} IT purchase requests to approve'],
+  'it-purchase-accounts': ['{n} IT purchase request for Accounts to approve', '{n} IT purchase requests for Accounts to approve'],
   'it-email': ['{n} email account to set up', '{n} email accounts to set up'],
   'it-buy': ['{n} approved IT purchase to buy', '{n} approved IT purchases to buy'],
   'it-renewals': ['{n} licence renewing soon', '{n} licences renewing soon'],

@@ -156,27 +156,117 @@ test('exit clearance: whoever HiFive ID says has left still holding something, t
   assert.equal(h.from_name, 'Leela Leaving');
 });
 
-test('requests: IT asks the facility approver to buy; HR asks IT for an email account', async () => {
-  const { env, as } = setup();
+const ACC = { id: 'p-acc', code: 'APAC01', name: 'Anil Accounts' };
+const HEAD = { emp_code: 'HPM001', name: 'Maya Manager' };   // the default manager, as HiFive ID's unit head
+
+/** The two-step set-up (Sinu, 27 Nov 2026): Accounts seated, and the HiFive ID link for unit heads. */
+function twoStep(contacts = { 'Herbal Park': [HEAD] }) {
+  const s = setup();
+  s.env.DB.db.prepare(`INSERT INTO staff (id, code, full_name, group_admin, active) VALUES (?,?,?,0,1)`).run(ACC.id, ACC.code, ACC.name);
+  s.env.DB.db.prepare(`INSERT INTO staff_units (staff_id, unit_id, roles, stores, active) VALUES (?,?,?,NULL,1)`).run(ACC.id, HP, JSON.stringify(['ACCOUNTS']));
+  s.env.HFID_CONTACTS_TOKEN = 'hfid_svc_test_contacts';
+  s.env.facilityContacts = contacts;
+  return s;
+}
+const raise = async (env, as) => {
   await call(env, 'PUT', '/api/settings', { as: 'admin', body: { 'assets.on': 'on' } });
   const p = await call(env, 'POST', '/api/it/requests', { ...as(IT), body: { kind: 'PURCHASE', title: '2 laptops', estimate: 6400 } });
   assert.equal(p.status, 201, JSON.stringify(p.body));
-  assert.equal((await call(env, 'POST', '/api/it/requests', { ...as(HR), body: { kind: 'PURCHASE', title: 'x' } })).status, 403, 'HR does not buy IT');
-  assert.equal((await call(env, 'POST', `/api/it/requests/${p.body.id}/approve`, { ...as(IT), body: {} })).status, 403, 'IT does not approve its own spending');
-  assert.ok((await call(env, 'GET', '/api/today', { as: 'manager' })).body.waiting.some((w) => w.key === 'it-purchase-approve'));
-  const seen = (await call(env, 'GET', '/api/it/requests', { as: 'manager' })).body[0];
-  assert.equal(seen.estimate, undefined, 'the approver sees the request, not IT’s prices');
-  assert.equal((await call(env, 'POST', `/api/it/requests/${p.body.id}/done`, { ...as(IT), body: {} })).body.error.code, 'NOT_READY');
-  assert.equal((await call(env, 'POST', `/api/it/requests/${p.body.id}/reject`, { as: 'manager', body: {} })).body.error.code, 'NOTE_REQUIRED');
-  assert.equal((await call(env, 'POST', `/api/it/requests/${p.body.id}/approve`, { as: 'manager', body: {} })).status, 200);
-  assert.ok((await call(env, 'GET', '/api/today', as(IT))).body.waiting.some((w) => w.key === 'it-buy'));
-  assert.equal((await call(env, 'POST', `/api/it/requests/${p.body.id}/done`, { ...as(IT), body: { note: 'Ordered from Sharaf' } })).status, 200);
+  return p.body.id;
+};
+const who = (w) => (typeof w === 'string' ? { as: w } : w);
+const act = (env, id, action, w, note) => call(env, 'POST', `/api/it/requests/${id}/${action}`, { ...who(w), body: note ? { note } : {} });
+const waits = async (env, w, key) => (await call(env, 'GET', '/api/today', who(w))).body.waiting.some((x) => x.key === key);
 
+test('IT purchases: the facility unit head approves first, then Accounts, then IT buys', async () => {
+  const { env, as } = twoStep();
+  const id = await raise(env, as);
+  assert.equal((await call(env, 'POST', '/api/it/requests', { ...as(HR), body: { kind: 'PURCHASE', title: 'x' } })).status, 403, 'HR does not buy IT');
+  assert.equal((await act(env, id, 'approve', as(IT))).body.error.code, 'FOUR_EYES', 'IT does not approve its own spending');
+  assert.equal((await act(env, id, 'approve', as(ACC))).body.error.code, 'NOT_UNIT_HEAD', 'Accounts does not take the first step');
+  assert.equal((await act(env, id, 'approve', 'admin')).body.error.code, 'NOT_UNIT_HEAD', 'a unit administrator is not the unit head');
+  assert.ok(await waits(env, 'manager', 'it-purchase-approve'), 'the unit head is told');
+  assert.ok(!(await waits(env, 'admin', 'it-purchase-approve')), 'nobody else is');
+  assert.ok(!(await waits(env, as(ACC), 'it-purchase-accounts')), 'Accounts waits for the unit head');
+
+  const list = (await call(env, 'GET', '/api/it/requests', { as: 'manager' })).body;
+  assert.deepEqual(list.unitHead.names, ['Maya Manager']);
+  assert.equal(list.unitHead.you, true);
+  const seen = list.rows[0];
+  assert.equal(seen.status_label, 'Waiting for the unit head');
+  assert.equal(seen.may_decide, true);
+  assert.equal(seen.estimate, undefined, 'the unit head sees the request, not IT prices');
+  assert.equal((await act(env, id, 'done', as(IT))).body.error.code, 'NOT_READY');
+  assert.equal((await act(env, id, 'reject', 'manager')).body.error.code, 'NOTE_REQUIRED');
+
+  assert.equal((await act(env, id, 'approve', 'manager', 'Yes, for the front desk')).status, 200);
+  assert.equal((await act(env, id, 'approve', 'manager')).status, 403, 'the unit head cannot take the Accounts step');
+  assert.equal((await act(env, id, 'done', as(IT))).body.error.code, 'NOT_READY', 'not bought before Accounts');
+  assert.ok(await waits(env, as(ACC), 'it-purchase-accounts'), 'now Accounts is told');
+  const forAccounts = (await call(env, 'GET', '/api/it/requests', as(ACC))).body.rows[0];
+  assert.equal(forAccounts.status, 'HEAD_APPROVED');
+  assert.equal(forAccounts.head_name, 'Maya Manager');
+  assert.equal(forAccounts.estimate, 6400, 'Accounts sees the estimate');
+  assert.equal(forAccounts.may_decide, true);
+  assert.equal((await act(env, id, 'approve', as(ACC))).status, 200);
+  assert.ok(await waits(env, as(IT), 'it-buy'));
+  assert.equal((await act(env, id, 'done', as(IT), 'Ordered from Sharaf')).status, 200);
+  const audit = env.DB.db.prepare(`SELECT action FROM audit_log WHERE action LIKE 'IT_REQUEST_%' ORDER BY at`).all().map((r) => r.action);
+  assert.deepEqual(audit.slice(-3), ['IT_REQUEST_HEAD_APPROVE', 'IT_REQUEST_APPROVE', 'IT_REQUEST_DONE']);
+});
+
+test('IT purchases: turned down at either step, with a reason; withdrawn only by who raised it', async () => {
+  const { env, as } = twoStep();
+  const a = await raise(env, as);
+  assert.equal((await act(env, a, 'reject', 'manager', 'Use the spare in the store')).status, 200);
+  const row = (await call(env, 'GET', '/api/it/requests?status=closed', as(IT))).body.rows.find((r) => r.id === a);
+  assert.equal(row.status, 'REJECTED');
+  assert.equal(row.head_note, 'Use the spare in the store');
+  const b = await raise(env, as);
+  assert.equal((await act(env, b, 'approve', 'manager')).status, 200);
+  assert.equal((await act(env, b, 'reject', as(ACC))).body.error.code, 'NOTE_REQUIRED');
+  assert.equal((await act(env, b, 'reject', as(ACC), 'Not in this month’s budget')).status, 200);
+  const c = await raise(env, as);
+  assert.equal((await act(env, c, 'cancel', 'manager')).status, 403, 'the unit head does not withdraw the request of IT');
+  assert.equal((await act(env, c, 'cancel', as(IT))).status, 200);
+});
+
+test('IT purchases: no link, no unit head in HiFive ID, or HiFive ID down: the step waits and says why', async () => {
+  // No link set up: nobody can take the first step, and the list says so.
+  const none = setup();
+  const id = await raise(none.env, none.as);
+  assert.equal((await act(none.env, id, 'approve', 'manager')).body.error.code, 'NO_HEAD_LINK');
+  assert.equal((await call(none.env, 'GET', '/api/it/requests', none.as(IT))).body.unitHead.setUp, false);
+  assert.ok(!(await waits(none.env, 'manager', 'it-purchase-approve')), 'no fallback approver');
+  // Linked, but HiFive ID lists nobody for this facility.
+  const empty = twoStep({ 'Herbal Valley': [{ emp_code: 'HVM001', name: 'Someone Else' }] });
+  const id2 = await raise(empty.env, empty.as);
+  assert.equal((await act(empty.env, id2, 'approve', 'manager')).body.error.code, 'NO_UNIT_HEAD');
+  assert.deepEqual((await call(empty.env, 'GET', '/api/it/requests', empty.as(IT))).body.unitHead.names, []);
+  // HiFive ID does not answer: refused, and the list carries the reason instead of an empty queue.
+  const down = twoStep(500);
+  const id3 = await raise(down.env, down.as);
+  assert.equal((await act(down.env, id3, 'approve', 'manager')).body.error.code, 'HFID_CONTACTS');
+  assert.match((await call(down.env, 'GET', '/api/it/requests', down.as(IT))).body.unitHead.error, /HiFive ID/);
+});
+
+test('IT purchases: the hub tells the unit head, found by employee code', async () => {
+  const { env, as } = twoStep();
+  await raise(env, as);
+  const { pendingForStaff } = await import('../src/domain/pending.js');
+  assert.ok((await pendingForStaff(env, 'HPM001')).some((w) => w.kind === 'inventory_it_purchase_approve'));
+  assert.ok(!(await pendingForStaff(env, ACC.code)).some((w) => w.kind === 'inventory_it_purchase_approve'));
+});
+
+test('requests: HR asks IT for an email account, and sees no IT purchases', async () => {
+  const { env, as } = setup();
+  await call(env, 'PUT', '/api/settings', { as: 'admin', body: { 'assets.on': 'on' } });
+  await call(env, 'POST', '/api/it/requests', { ...as(IT), body: { kind: 'PURCHASE', title: '2 laptops' } });
   const e = await call(env, 'POST', '/api/it/requests', { ...as(HR), body: { kind: 'EMAIL_ACCOUNT', forName: 'New Joiner', neededBy: '2026-12-01' } });
   assert.equal(e.status, 201, JSON.stringify(e.body));
   assert.ok((await call(env, 'GET', '/api/today', as(IT))).body.waiting.some((w) => w.key === 'it-email'));
-  const hrSees = (await call(env, 'GET', '/api/it/requests?status=closed', as(HR))).body;
-  assert.ok(hrSees.every((r) => r.kind === 'EMAIL_ACCOUNT'), 'HR sees the email requests, not IT purchases');
+  const hrSees = (await call(env, 'GET', '/api/it/requests', as(HR))).body.rows;
+  assert.ok(hrSees.length && hrSees.every((r) => r.kind === 'EMAIL_ACCOUNT'), 'HR sees the email requests, not IT purchases');
   assert.equal((await call(env, 'POST', `/api/it/requests/${e.body.id}/done`, { ...as(IT), body: { note: 'new.joiner@apml.co' } })).status, 200);
 });
 

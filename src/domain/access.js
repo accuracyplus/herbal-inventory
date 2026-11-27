@@ -18,6 +18,7 @@ export const ROLE_LABELS = {
   VIEWER: 'Viewer (read-only)',
   IT: 'IT',
   HR: 'HR',
+  ACCOUNTS: 'Accounts',
 };
 
 export const ROLE_HINTS = {
@@ -29,9 +30,10 @@ export const ROLE_HINTS = {
   VIEWER: 'Sees stock and reports; records nothing.',
   IT: 'Runs the IT register: devices, SIMs and licences, who holds them, hand-overs and exit clearance; raises IT purchase requests.',
   HR: 'Raises new email account requests to IT and sees what IT assets cost.',
+  ACCOUNTS: 'Gives the second approval on IT purchase requests, after the unit head, and sees what IT costs.',
 };
 
-const ALL = ['STAFF', 'STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER', 'IT', 'HR'];
+const ALL = ['STAFF', 'STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER', 'IT', 'HR', 'ACCOUNTS'];
 const OPS = ['STOREKEEPER', 'MANAGER', 'UNIT_ADMIN'];
 const DECIDE = ['MANAGER', 'UNIT_ADMIN'];
 
@@ -67,11 +69,13 @@ export const RULES = {
   'assets.edit':       OPS,                                // the equipment register and its services
   // The IT register (D-086, 22 Nov 2026). Who holds which laptop or SIM is for these roles, not
   // for everybody who sees stock; what IT costs is for IT, HR and the directors only.
-  'it.view':           ['IT', 'HR', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],
+  'it.view':           ['IT', 'HR', 'ACCOUNTS', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],
   'it.edit':           ['IT', 'UNIT_ADMIN'],              // devices, SIMs, licences, hand-overs, clearance
-  'it.prices':         ['IT', 'HR'],                      // and the directors: see may()
-  'it.purchase':       ['IT'],                            // raise a purchase request to the facility approver
-  'it.decide':         DECIDE,                            // the facility approver
+  'it.prices':         ['IT', 'HR', 'ACCOUNTS'],          // and the directors: see may()
+  'it.purchase':       ['IT'],                            // raise a purchase request
+  // Approving one is two steps (Sinu, 27 Nov 2026): the facility's unit head first, read from
+  // HiFive ID's facility contacts when they act (lib/unitheads.js, not a role here), then Accounts.
+  'it.accounts':       ['ACCOUNTS'],                      // the second approval
   'it.email':          ['HR'],                            // raise a new email account request to IT
   'accounts':          ['PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER'],  // exports for the accounts system
   'admin':             ['UNIT_ADMIN'],

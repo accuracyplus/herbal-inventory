@@ -26,7 +26,7 @@ import { enrolFromGrant } from '../domain/nativerole.js';
 
 export { AuthError };
 
-export const ROLES = ['STAFF', 'STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER', 'IT', 'HR'];
+export const ROLES = ['STAFF', 'STOREKEEPER', 'PURCHASER', 'MANAGER', 'UNIT_ADMIN', 'VIEWER', 'IT', 'HR', 'ACCOUNTS'];
 
 /** What a group administrator holds in whichever unit they enter. */
 const GROUP_ROLES = ['UNIT_ADMIN', 'MANAGER', 'STOREKEEPER', 'PURCHASER', 'STAFF'];

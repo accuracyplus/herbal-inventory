@@ -382,10 +382,12 @@ function Clearance() {
 function Requests() {
   const { can, me } = useApp();
   const [status, setStatus] = useState('open');
-  const { data, error, loading, reload } = useData(`/api/it/requests?status=${status}`, [status]);
+  const { data: got, error, loading, reload } = useData(`/api/it/requests?status=${status}`, [status]);
   const [raising, setRaising] = useState(null);
   const [open, setOpen] = useState(null);
-  const words = me.labels.itRequestStatus || {};
+  const data = got?.rows;
+  const head = got?.unitHead;
+  const waitsOnHead = data?.some((r) => r.kind === 'PURCHASE' && r.status === 'PENDING');
   return (
     <>
       <div className="row">
@@ -395,6 +397,7 @@ function Requests() {
         {can('it.email') && <Button kind="secondary" icon="plus" onClick={() => setRaising('EMAIL_ACCOUNT')}>Email account request</Button>}
       </div>
       <ErrorNote error={error} onRetry={reload} />
+      <UnitHeadNote head={head} waiting={waitsOnHead} unit={me.unit?.name} />
       {loading && !data && <Loading />}
       {data && !data.length && <Card><Quiet>{status === 'open' ? 'No open requests.' : 'Nothing closed yet.'}</Quiet></Card>}
       {data?.length > 0 && (
@@ -402,7 +405,7 @@ function Requests() {
           <Table caption="IT requests" rows={data} onRow={setOpen} columns={[
             { key: 'ref', label: 'Request', primary: true, render: (r) => <span className="min0"><span className="row-label">{r.title}</span><span className="row-sub">{[r.ref, t(r.kind_label)].join(' · ')}</span></span> },
             { key: 'needed_by', label: 'Needed by', render: (r) => (r.needed_by ? fmtDate(r.needed_by) : '') },
-            { key: 'status', label: 'Status', render: (r) => <Pill tone={r.status === 'PENDING' ? 'warn' : r.status === 'APPROVED' ? 'ok' : 'plain'}>{t(words[r.status] || r.status)}</Pill> },
+            { key: 'status', label: 'Status', render: (r) => <Pill tone={r.status === 'PENDING' || r.status === 'HEAD_APPROVED' ? 'warn' : r.status === 'APPROVED' ? 'ok' : 'plain'}>{t(r.status_label)}</Pill> },
             { key: 'raised_name', label: 'Raised by', render: (r) => <span className="min0"><span>{r.raised_name}</span><span className="row-sub">{fmtDate(r.raised_at)}</span></span> },
           ]} />
         </Card>
@@ -411,6 +414,21 @@ function Requests() {
       {open && <RequestSheet r={open} onClose={() => setOpen(null)} onDone={() => { setOpen(null); reload(); }} />}
     </>
   );
+}
+
+/**
+ * Who takes a purchase's first step, said above the list (Sinu, 27 Nov 2026: the facility's unit
+ * head first, then Accounts). When HiFive ID cannot be asked, it says so rather than showing an
+ * empty queue as if nothing waited.
+ */
+function UnitHeadNote({ head, waiting, unit }) {
+  if (!head) return null;
+  if (!head.setUp) return waiting ? <Note tone="warn">{t('Purchase requests wait for the unit head, and Inventory cannot ask HiFive ID who that is yet.')}</Note> : null;
+  if (head.error) return <Note tone="warn">{t('HiFive ID could not confirm the unit head just now, so purchase requests cannot be approved. Try again shortly.')}</Note>;
+  if (!head.names.length) return <Note tone="warn">{t('HiFive ID lists no unit head for {unit}, so purchase requests cannot be approved. HR adds one in HiFive ID’s facility contacts.', { unit })}</Note>;
+  return <Quiet icon="info">{head.you
+    ? t('You approve purchase requests first, as the unit head. Accounts approves them after you.')
+    : t('Purchase requests are approved by the unit head ({names}), then Accounts.', { names: head.names.join(', ') })}</Quiet>;
 }
 
 function RaiseSheet({ kind, onClose, onDone }) {
@@ -426,7 +444,7 @@ function RaiseSheet({ kind, onClose, onDone }) {
   };
   return (
     <Sheet title={kind === 'PURCHASE' ? 'IT purchase request' : 'New email account'} onClose={onClose}
-      footer={<><CancelButton onClick={onClose} /><Button busy={busy} icon="check" onClick={save}>{kind === 'PURCHASE' ? 'Send to the approver' : 'Send to IT'}</Button></>}>
+      footer={<><CancelButton onClick={onClose} /><Button busy={busy} icon="check" onClick={save}>{kind === 'PURCHASE' ? 'Send to the unit head' : 'Send to IT'}</Button></>}>
       {kind === 'PURCHASE' ? (
         <div className="form two">
           <Field label="What is to be bought" className="span2"><input value={f.title} onChange={(e) => set('title', e.target.value)} placeholder="2 laptops for the new front desk" maxLength={160} /></Field>
@@ -460,27 +478,28 @@ function RequestSheet({ r, onClose, onDone }) {
     setBusy(true); setErr(null);
     try { await post(`/api/it/requests/${r.id}/${action}`, { note }); toast(t(msg)); onDone(); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
-  const mine = r.raised_by === me.staffId;
-  const decides = r.kind === 'PURCHASE' && r.status === 'PENDING' && can('it.decide') && !mine;
+  // The server says who may decide which step (the unit head, as HiFive ID names them, then Accounts).
+  const decides = !!r.may_decide;
   const doable = can('it.edit') && ((r.kind === 'PURCHASE' && r.status === 'APPROVED') || (r.kind === 'EMAIL_ACCOUNT' && r.status === 'PENDING'));
-  const cancels = r.status === 'PENDING' && (mine || can('it.decide'));
+  const cancels = !!r.may_cancel;
   return (
     <Sheet title={`${r.ref} · ${r.title}`} onClose={onClose}
       footer={(decides || doable || cancels) && (
         <>
           {cancels && <ConfirmButton kind="ghost" busy={busy} ask="Withdraw this request?" yes="Yes, withdraw it" onConfirm={() => act('cancel', 'Withdrawn')}>Withdraw</ConfirmButton>}
           {decides && <Button kind="secondary" busy={busy} onClick={() => act('reject', 'Turned down')}>Turn down</Button>}
-          {decides && <Button busy={busy} icon="check" onClick={() => act('approve', 'Approved')}>Approve</Button>}
+          {decides && <Button busy={busy} icon="check" onClick={() => act('approve', r.status === 'PENDING' ? 'Approved, and sent to Accounts' : 'Approved')}>{r.status === 'PENDING' ? 'Approve, send to Accounts' : 'Approve'}</Button>}
           {doable && <Button busy={busy} icon="check" onClick={() => act('done', 'Done')}>{r.kind === 'PURCHASE' ? 'Bought' : 'Account made'}</Button>}
         </>
       )}>
       <KeyValues columns={2} items={[
-        { label: t('Kind'), value: t(r.kind_label) }, { label: t('Status'), value: t(me.labels.itRequestStatus?.[r.status] || r.status) },
+        { label: t('Kind'), value: t(r.kind_label) }, { label: t('Status'), value: t(r.status_label) },
         { label: t('For'), value: r.for_name && [r.for_name, r.for_code].filter(Boolean).join(' · ') },
         { label: t('Needed by'), value: r.needed_by && fmtDate(r.needed_by) },
         ...(r.estimate !== undefined ? [{ label: t('Estimate'), value: r.estimate != null ? fmtMoney(r.estimate, currency) : null }] : []),
         { label: t('Raised by'), value: `${r.raised_name}, ${fmtDateTime(r.raised_at)}` },
-        { label: t('Decided'), value: r.decided_name && `${r.decided_name}, ${fmtDateTime(r.decided_at)}${r.decision_note ? `: ${r.decision_note}` : ''}` },
+        { label: t('Unit head'), value: r.head_name && `${r.head_name}, ${fmtDateTime(r.head_at)}${r.head_note ? `: ${r.head_note}` : ''}` },
+        { label: t(r.head_name && r.decided_name !== r.head_name ? 'Accounts' : 'Decided'), value: r.decided_name && (r.decided_name !== r.head_name || r.decided_at !== r.head_at) && `${r.decided_name}, ${fmtDateTime(r.decided_at)}${r.decision_note ? `: ${r.decision_note}` : ''}` },
         { label: t('Done'), value: r.done_name && `${r.done_name}, ${fmtDateTime(r.done_at)}${r.done_note ? `: ${r.done_note}` : ''}` },
         { label: t('Detail'), value: r.details },
       ]} />

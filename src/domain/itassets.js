@@ -17,11 +17,12 @@
  * four digits of its number; a licence never by its key.
  */
 
-import { refuse } from '../lib/errors.js';
+import { DomainError, refuse } from '../lib/errors.js';
 import { gstDate, isoDate, nextRef, nowIso, text, uuid } from '../lib/data.js';
 import { auditStmt } from '../lib/audit.js';
 import { byCode, fetchRoster, hasLeft } from '../lib/roster.js';
-import { may, requireMay, requireOtherApprover } from './access.js';
+import { unitHeadsOf } from '../lib/unitheads.js';
+import { may, requireMay } from './access.js';
 import { requireFeature } from './settings.js';
 import { commit } from './stock.js';
 
@@ -33,7 +34,9 @@ export const HANDOVER_ACTIONS = {
   IDLE: 'Marked idle', STOCK: 'Back in stock', RETIRE: 'Retired',
 };
 export const REQUEST_KINDS = { PURCHASE: 'Purchase', EMAIL_ACCOUNT: 'Email account' };
-export const REQUEST_STATUS = { PENDING: 'Waiting', APPROVED: 'Approved', REJECTED: 'Turned down', DONE: 'Done', CANCELLED: 'Withdrawn' };
+export const REQUEST_STATUS = { PENDING: 'Waiting', HEAD_APPROVED: 'Waiting for Accounts', APPROVED: 'Approved', REJECTED: 'Turned down', DONE: 'Done', CANCELLED: 'Withdrawn' };
+/** A purchase waiting on its first step says whose it is; an email account waits on IT. */
+export const PURCHASE_WAITING = 'Waiting for the unit head';
 
 export const isIt = (kind) => !!IT_KINDS[kind];
 /** May this person see what this kind of asset cost? Equipment keeps its rule; IT has its own. */
@@ -282,18 +285,45 @@ export async function clearance(env, user, bearer) {
 
 // ── Requests ─────────────────────────────────────────────────────────────────
 
+/**
+ * The unit head's side of a request list or a decision: are they this facility's unit head, and
+ * could HiFive ID be asked. { setUp, isHead, names, error }. Never throws.
+ */
+export async function headCheck(env, user) {
+  try {
+    const h = await unitHeadsOf(env, user.unit.name);
+    if (!h) return { setUp: false, isHead: false, names: [], error: null };
+    return { setUp: true, isHead: !!user.code && h.codes.has(String(user.code).trim().toUpperCase()), names: h.names, error: null };
+  } catch (e) {
+    return { setUp: true, isHead: false, names: [], error: e instanceof DomainError ? e.message : 'HiFive ID could not confirm the unit head.' };
+  }
+}
+
+const statusLabel = (r) => (r.kind === 'PURCHASE' && r.status === 'PENDING' ? PURCHASE_WAITING : REQUEST_STATUS[r.status]);
+
 export async function listItRequests(env, user, { status } = {}) {
-  if (!may(user, 'it.view') && !may(user, 'it.email')) refuse('AUTH', 'Your role does not allow this.', 403);
+  const head = await headCheck(env, user);
+  if (!may(user, 'it.view') && !may(user, 'it.email') && !head.isHead) refuse('AUTH', 'Your role does not allow this.', 403);
   const open = status !== 'closed';
   const { results } = await env.DB.prepare(
-    `SELECT * FROM it_requests WHERE unit_id = ? AND status ${open ? "IN ('PENDING','APPROVED')" : "IN ('REJECTED','DONE','CANCELLED')"}
+    `SELECT * FROM it_requests WHERE unit_id = ? AND status ${open ? "IN ('PENDING','HEAD_APPROVED','APPROVED')" : "IN ('REJECTED','DONE','CANCELLED')"}
       ORDER BY raised_at DESC LIMIT 200`,
   ).bind(user.unitId).all();
   const prices = may(user, 'it.prices');
-  return (results || [])
-    // HR sees the email requests; purchases are IT's and the approver's.
-    .filter((r) => r.kind === 'EMAIL_ACCOUNT' || may(user, 'it.edit') || may(user, 'it.purchase') || may(user, 'it.decide'))
-    .map((r) => ({ ...r, estimate: prices ? r.estimate : undefined, kind_label: REQUEST_KINDS[r.kind], status_label: REQUEST_STATUS[r.status] }));
+  const seesPurchases = may(user, 'it.edit') || may(user, 'it.purchase') || may(user, 'it.accounts') || head.isHead;
+  const rows = (results || [])
+    // HR sees the email requests; purchases are IT's, the unit head's and Accounts'.
+    .filter((r) => r.kind === 'EMAIL_ACCOUNT' || seesPurchases)
+    .map((r) => ({
+      ...r, estimate: prices ? r.estimate : undefined, kind_label: REQUEST_KINDS[r.kind], status_label: statusLabel(r),
+      // What this person may do with it now; the server checks again when they do it.
+      may_decide: r.kind === 'PURCHASE' && r.raised_by !== user.staffId && (
+        (r.status === 'PENDING' && head.isHead)
+        || (r.status === 'HEAD_APPROVED' && may(user, 'it.accounts') && r.head_by !== user.staffId)),
+      may_cancel: (r.status === 'PENDING' || r.status === 'HEAD_APPROVED') && r.raised_by === user.staffId,
+    }));
+  // Said on the Requests list, so nobody reads an empty "to approve" as nothing waiting.
+  return { rows, unitHead: { setUp: head.setUp, names: head.names, error: head.error, you: head.isHead } };
 }
 
 export async function raiseItRequest(env, user, body) {
@@ -331,8 +361,11 @@ export async function raiseItRequest(env, user, body) {
 }
 
 /**
- * approve / reject (the facility approver, a purchase only, never their own), done (IT: bought,
- * or the account made), cancel (whoever raised it, while it waits).
+ * approve / reject: a purchase, in two steps (Sinu, 27 Nov 2026). While it waits on the unit head
+ * (PENDING), only the facility's unit head as HiFive ID names them may decide; once they approve
+ * (HEAD_APPROVED), only Accounts may, and not the same person. Nobody decides their own request,
+ * and there is no fallback approver: a step with nobody to take it waits, and says why.
+ * done (IT: bought, or the account made), cancel (whoever raised it, while it waits).
  */
 export async function actOnItRequest(env, user, id, action, body = {}) {
   const r = await env.DB.prepare(`SELECT * FROM it_requests WHERE id = ? AND unit_id = ?`).bind(id, user.unitId).first();
@@ -342,26 +375,45 @@ export async function actOnItRequest(env, user, id, action, body = {}) {
   const now = nowIso();
   let set;
   if (action === 'approve' || action === 'reject') {
-    requireMay(user, 'it.decide');
     if (r.kind !== 'PURCHASE') refuse('NOT_PURCHASE', 'Only a purchase request is approved.');
-    if (r.status !== 'PENDING') refuse('CLOSED', `${r.ref} is ${REQUEST_STATUS[r.status].toLowerCase()}.`, 409);
-    await requireOtherApprover(env, user, r.raised_by, 'request');
+    if (r.status !== 'PENDING' && r.status !== 'HEAD_APPROVED') refuse('CLOSED', `${r.ref} is ${REQUEST_STATUS[r.status].toLowerCase()}.`, 409);
+    if (r.raised_by === user.staffId) refuse('FOUR_EYES', 'You raised this request, so somebody else has to approve it.', 403);
     if (action === 'reject' && !note) refuse('NOTE_REQUIRED', 'Say why, so IT knows what to do instead.');
-    set = [`status = ?, decided_by = ?, decided_name = ?, decided_at = ?, decision_note = ?`, action === 'approve' ? 'APPROVED' : 'REJECTED', user.staffId, user.fullName, now, note];
+    if (r.status === 'PENDING') {
+      const head = await unitHeadsOf(env, user.unit.name);   // throws HFID_CONTACTS when HiFive ID does not answer
+      if (!head) refuse('NO_HEAD_LINK', 'Inventory cannot ask HiFive ID who the unit head is yet, so this step cannot be taken.', 503);
+      if (!head.codes.size) refuse('NO_UNIT_HEAD', `HiFive ID lists no unit head for ${user.unit.name}. HR adds one in HiFive ID's facility contacts.`, 409);
+      if (!user.code || !head.codes.has(String(user.code).trim().toUpperCase())) {
+        refuse('NOT_UNIT_HEAD', `The unit head of ${user.unit.name} approves this first (${head.names.join(' or ')}).`, 403);
+      }
+      set = action === 'approve'
+        ? [`status = 'HEAD_APPROVED', head_by = ?, head_name = ?, head_at = ?, head_note = ?`, user.staffId, user.fullName, now, note]
+        : [`status = 'REJECTED', head_by = ?, head_name = ?, head_at = ?, head_note = ?, decided_by = ?, decided_name = ?, decided_at = ?, decision_note = ?`,
+          user.staffId, user.fullName, now, note, user.staffId, user.fullName, now, note];
+    } else {
+      requireMay(user, 'it.accounts');
+      if (r.head_by === user.staffId) refuse('FOUR_EYES', 'You approved this as the unit head, so somebody else in Accounts approves it.', 403);
+      set = [`status = ?, decided_by = ?, decided_name = ?, decided_at = ?, decision_note = ?`, action === 'approve' ? 'APPROVED' : 'REJECTED', user.staffId, user.fullName, now, note];
+    }
   } else if (action === 'done') {
     requireMay(user, 'it.edit');
     const ready = r.kind === 'PURCHASE' ? r.status === 'APPROVED' : r.status === 'PENDING';
-    if (!ready) refuse('NOT_READY', r.kind === 'PURCHASE' && r.status === 'PENDING' ? `${r.ref} has not been approved yet.` : `${r.ref} is ${REQUEST_STATUS[r.status].toLowerCase()}.`, 409);
+    if (!ready) {
+      refuse('NOT_READY', r.kind === 'PURCHASE' && (r.status === 'PENDING' || r.status === 'HEAD_APPROVED')
+        ? `${r.ref} has not been approved by the unit head and Accounts yet.` : `${r.ref} is ${REQUEST_STATUS[r.status].toLowerCase()}.`, 409);
+    }
     set = [`status = 'DONE', done_name = ?, done_at = ?, done_note = ?`, user.fullName, now, note];
   } else if (action === 'cancel') {
-    if (r.raised_by !== user.staffId && !may(user, 'it.decide')) refuse('AUTH', 'Only the person who raised it, or the approver, can withdraw it.', 403);
-    if (r.status !== 'PENDING') refuse('CLOSED', `${r.ref} is ${REQUEST_STATUS[r.status].toLowerCase()}.`, 409);
+    if (r.raised_by !== user.staffId) refuse('AUTH', 'Only the person who raised it can withdraw it.', 403);
+    if (r.status !== 'PENDING' && r.status !== 'HEAD_APPROVED') refuse('CLOSED', `${r.ref} is ${REQUEST_STATUS[r.status].toLowerCase()}.`, 409);
     set = [`status = 'CANCELLED', decided_name = ?, decided_at = ?, decision_note = ?`, user.fullName, now, note];
   } else refuse('BAD_ACTION', 'Unknown action.');
   const [sql, ...args] = set;
+  const step = action === 'approve' && r.status === 'PENDING' ? 'IT_REQUEST_HEAD_APPROVE' : `IT_REQUEST_${action.toUpperCase()}`;
   await commit(env, [
-    env.DB.prepare(`UPDATE it_requests SET ${sql} WHERE id = ?`).bind(...args, r.id),
-    auditStmt(env, user, `IT_REQUEST_${action.toUpperCase()}`, r.ref, note || r.title),
+    // Only from the step it was read at: two people pressing at once cannot both move it.
+    env.DB.prepare(`UPDATE it_requests SET ${sql} WHERE id = ? AND status = ?`).bind(...args, r.id, r.status),
+    auditStmt(env, user, step, r.ref, note || r.title),
   ]);
   return { ok: true };
 }
@@ -385,8 +437,8 @@ export async function itFacts(env, unitId, today, soonDay, idleDays) {
          FROM it_spares w WHERE w.unit_id = ?`,
     ).bind(unitId).all(),
     env.DB.prepare(
-      `SELECT kind, status, raised_by AS by, COUNT(*) AS n, MIN(raised_at) AS oldest FROM it_requests
-        WHERE unit_id = ? AND status IN ('PENDING','APPROVED') GROUP BY kind, status, raised_by`,
+      `SELECT kind, status, raised_by AS by, head_by AS head, COUNT(*) AS n, MIN(raised_at) AS oldest FROM it_requests
+        WHERE unit_id = ? AND status IN ('PENDING','HEAD_APPROVED','APPROVED') GROUP BY kind, status, raised_by, head_by`,
     ).bind(unitId).all(),
   ]);
   const short = (spareRows.results || []).filter((r) => r.n < r.min_spare).length;

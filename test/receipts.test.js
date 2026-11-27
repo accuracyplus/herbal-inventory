@@ -273,7 +273,7 @@ test('files: with no storage set up the app says so, and /version shows what is 
   assert.equal(f.status, 503);
   assert.equal(f.body.error.code, 'FILES_OFF');
   const v = await call(env, 'GET', '/version', { as: null });
-  assert.deepEqual(v.body.bindings, { files: false, ai: false, hfid: true, mail: false });
+  assert.deepEqual(v.body.bindings, { files: false, ai: false, hfid: true, mail: false, unitHeads: false });
   assert.deepEqual((await call(env, 'GET', '/api/me', { as: 'keeper' })).body.has, { files: false, reading: false, mail: false });
 });
 

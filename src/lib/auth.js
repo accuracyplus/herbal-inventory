@@ -46,18 +46,116 @@ const b64urlToBytes = (s) => {
 const jsonOf = (seg) => JSON.parse(new TextDecoder().decode(b64urlToBytes(seg)));
 const unreadable = () => new AuthError('Sign in again.');
 
-// ── JWKS, cached for the isolate with a TTL so a key rotation needs no redeploy ──
-let jwksCache = { at: 0, keys: null };
+// ── JWKS ─────────────────────────────────────────────────────────────────────
+// Cached for the isolate with a TTL, so a key rotation needs no redeploy. The three rules below are
+// section 2 of hifive-id-shu/docs/signing-key-design.md. Inventory read the key set from the start,
+// so it was counted as ready and never given them; Logistics found the same gap in itself and told
+// us (28 Nov 2026, transport f8451ae). Sinu, 28 Nov 2026: "Yes, fix it".
+//
+//   1. Ten minutes is the ordinary life of a cached key set.
+//   2. A kid we have not seen means read the list again BEFORE refusing, so a newly published key
+//      is picked up at once rather than in ten minutes' time.
+//   3. If HiFive ID cannot be reached, keep the last list rather than refusing everyone, and say so
+//      in the log.
+let jwksCache = { at: 0, keys: null, retriedAt: 0 };
 
-async function jwks(env) {
-  const now = Date.now();
-  if (jwksCache.keys && now - jwksCache.at < 10 * 60 * 1000) return jwksCache.keys;
+/** The ordinary life of a cached key set. */
+const JWKS_TTL_MS = 10 * 60 * 1000;
+
+/**
+ * At most one unknown-kid re-read a minute, per isolate (as Recruitment, Performance and Logistics).
+ * Without a limit, a token carrying an invented kid would make this Worker call HiFive ID on every
+ * request, and the identity provider is the one component whose failure is everybody's failure.
+ */
+const JWKS_RETRY_MS = 60 * 1000;
+
+/** One structured line: Workers Logs indexes fields, not sentences. */
+const logKeys = (event, detail) => {
+  try {
+    console.warn(JSON.stringify({ level: 'warn', at: new Date().toISOString(), event, ...detail }));
+  } catch { /* logging must never be the thing that fails */ }
+};
+
+/**
+ * Read the key set from HiFive ID (through the service binding) and remember it. An empty key set
+ * is a failure, not an answer: remembering one would refuse every sign-in for ten minutes with
+ * nothing to fall back on.
+ */
+async function readJwks(env) {
   if (!env.HFID_JWKS_URL) throw new AuthError('HiFive ID is not configured.');
   const res = await hfidFetch(env, jwksPath(env));
-  if (!res.ok) throw new AuthError('Could not reach HiFive ID.');
+  if (!res.ok) throw new Error(`the key set answered ${res.status}`);
   const body = await res.json();
-  jwksCache = { at: now, keys: body.keys || [] };
-  return jwksCache.keys;
+  const keys = Array.isArray(body?.keys) ? body.keys : null;
+  if (!keys?.length) throw new Error('the key set held no keys');
+  jwksCache = { ...jwksCache, at: Date.now(), keys };
+  return keys;
+}
+
+/**
+ * The key set, refreshed when stale, and the one already in hand when it cannot be (rule 3).
+ * Before, a failed refresh threw and dropped a list that was merely ten minutes old, so a bad
+ * minute at HiFive ID signed everybody out of Inventory too.
+ */
+async function jwks(env) {
+  const now = Date.now();
+  if (jwksCache.keys?.length && now - jwksCache.at < JWKS_TTL_MS) return jwksCache.keys;
+  try {
+    return await readJwks(env);
+  } catch (e) {
+    if (jwksCache.keys?.length) {
+      logKeys('jwks_stale', {
+        why: String(e?.message || e).slice(0, 120),
+        ageMinutes: Math.round((now - jwksCache.at) / 60000),
+        kids: jwksCache.keys.map((k) => k.kid).filter(Boolean),
+      });
+      return jwksCache.keys;
+    }
+    // Nothing has ever been read, so there is nothing to carry on with.
+    throw e instanceof AuthError ? e : new AuthError('Could not reach HiFive ID.');
+  }
+}
+
+/**
+ * The key a token names (rule 2). The line this replaced:
+ *
+ *     const jwk = keys.find((k) => k.kid === header.kid) || keys[0];
+ *
+ * On a kid it had not seen, that tried the first key instead, the signature failed, and the
+ * person was told "Sign in again." for up to ten minutes, with nothing in the log naming the kid.
+ *
+ * A token with NO kid still takes the first key, on purpose: HiFive ID lists its signing key
+ * first, so a token already in flight is not refused. It is logged, because it should stop.
+ */
+async function keyForKid(env, kid) {
+  let keys = await jwks(env);
+  const found = (ks) => (kid ? ks.find((k) => k.kid === kid) : null);
+
+  let jwk = found(keys);
+  if (!jwk && kid) {
+    const now = Date.now();
+    if (now - jwksCache.retriedAt >= JWKS_RETRY_MS) {
+      jwksCache = { ...jwksCache, retriedAt: now };
+      try {
+        keys = await readJwks(env);
+        jwk = found(keys);
+        if (jwk) logKeys('jwks_new_kid', { kid });
+      } catch (e) {
+        // The re-read failing changes nothing: we still hold the list we had.
+        logKeys('jwks_reread_failed', { kid, why: String(e?.message || e).slice(0, 120) });
+      }
+    }
+  }
+
+  if (jwk) return jwk;
+  if (!kid && keys.length) {
+    logKeys('jwks_token_without_kid', { using: keys[0].kid || 'the first key' });
+    return keys[0];
+  }
+  // Refused rather than tried against a key that cannot verify it, which would read as a bad
+  // signature, the one thing this is not.
+  logKeys('jwks_unknown_kid', { kid, known: keys.map((k) => k.kid).filter(Boolean) });
+  return null;
 }
 
 /**
@@ -82,9 +180,8 @@ async function verifySignature(token, env) {
   try { header = jsonOf(h); } catch { throw unreadable(); }
   if (header.alg !== 'RS256') throw unreadable();
 
-  const keys = await jwks(env);
-  const jwk = keys.find((k) => k.kid === header.kid) || keys[0];
-  if (!jwk) throw new AuthError('Sign in again.');
+  const jwk = await keyForKid(env, header.kid);
+  if (!jwk) throw unreadable();
   let ok;
   let claims;
   try {

@@ -21,7 +21,7 @@ const rows = readFileSync(join(root, 'docs/feature-register.md'), 'utf8').split(
 const titles = new Map();
 for (const f of readdirSync(join(root, 'test')).filter((n) => n.endsWith('.test.js'))) {
   const src = readFileSync(join(root, 'test', f), 'utf8');
-  titles.set(f, [...src.matchAll(/^test\((['"`])((?:\\.|(?!\1).)*)\1/gm)].map((m) => m[2].replace(/\\(.)/g, '$1')));
+  titles.set(f, [...src.matchAll(/^\s*test\((['"`])((?:\\.|(?!\1).)*)\1/gm)].map((m) => m[2].replace(/\\(.)/g, '$1')));
 }
 
 /** "client Record.jsx" is a screen; anything else is a path from the repository root. */

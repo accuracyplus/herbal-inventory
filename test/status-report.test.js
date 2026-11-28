@@ -33,11 +33,11 @@ test('status report: not stamped, or stamped wrong, is left out, never a zero', 
   assert.deepEqual(releaseReport({ RELEASE_STATUS: toB64({ openWork: 1, waitingOnSinu: 1, waiting: [{ text: 'x', since: '27-11-2026' }] }) }), {}, 'a machine date is yyyy-mm-dd');
 });
 
-test('status report: keys HiFive ID cannot give are left out; keys read in the last 10 minutes say when', async () => {
+test('status report: keys never read say unavailable; keys read in the last 10 minutes say when', async () => {
   // A fresh copy of the module is a server that has read no keys yet.
   const cold = await import(`../src/lib/auth.js?cold=${Date.now()}`);
   const down = { ...testEnv(), HFID: { fetch: async () => new Response('{}', { status: 503 }) } };
-  assert.equal(await cold.signingKeysStatus(down), null);
+  assert.deepEqual(await cold.signingKeysStatus(down), { kids: null, readAt: null, source: 'unavailable' });
   // A server that read them earlier reports that read, with its time, while they are still kept.
   const warm = await import(`../src/lib/auth.js?warm=${Date.now()}`);
   const up = testEnv();

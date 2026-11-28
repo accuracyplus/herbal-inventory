@@ -160,17 +160,35 @@ async function keyForKid(env, kid) {
 
 /**
  * The signing keys as /version reports them for HiFive ID's control room (suite standard, status
- * report; signing-key-design.md): the key names read, when, and from where. Inventory always reads
- * HiFive ID's published keys and holds no copy, so the source is "jwks". null when they could not be
- * read just now, so /version leaves the field out rather than saying something untrue.
+ * report; signing-key-design.md). Inventory reads HiFive ID's published keys and holds no copy.
+ * The words match Logistics (transport 5f6a037), so the suite has one vocabulary for the field
+ * (Sinu, 28 Nov 2026: "Yes, match Logistics"):
+ *
+ *   source 'jwks'        read inside the ten-minute window: current
+ *   source 'stale'       older than that and a refresh did not work, so the list is being carried
+ *   source 'unavailable' nothing has ever been read in this isolate; kids and readAt are null
+ *
+ * 'stale' is the point: a carried list has the same kids as a healthy one, right up to the day the
+ * keys change. It gives up after two seconds (hfidFetch has no timeout of its own) and then reports
+ * the list in hand, if any: this app would accept those kids that second, so the report says so.
  */
-export async function signingKeysStatus(env) {
+export async function signingKeysStatus(env, { waitMs = 2000 } = {}) {
+  let answered = null;
   try {
-    const keys = await jwks(env);
-    return { kids: keys.map((k) => k.kid).filter(Boolean), readAt: new Date(jwksCache.at).toISOString(), source: 'jwks' };
-  } catch {
-    return null;
-  }
+    answered = await Promise.race([
+      jwks(env),
+      new Promise((resolve) => setTimeout(() => resolve(null), waitMs)),
+    ]);
+  } catch { /* whatever is in hand is reported below; a version endpoint does not throw */ }
+  const held = Array.isArray(answered) && answered.length
+    ? answered
+    : (jwksCache.keys?.length ? jwksCache.keys : null);
+  if (!held) return { kids: null, readAt: null, source: 'unavailable' };
+  return {
+    kids: held.map((k) => k?.kid).filter((k) => typeof k === 'string' && k),
+    readAt: jwksCache.at ? new Date(jwksCache.at).toISOString() : null,
+    source: jwksCache.at && Date.now() - jwksCache.at < JWKS_TTL_MS ? 'jwks' : 'stale',
+  };
 }
 
 async function verifySignature(token, env) {

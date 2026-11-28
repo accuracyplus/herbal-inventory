@@ -156,10 +156,11 @@ export default {
         // A deploy can drop a binding without a word; these say so in one curl.
         bindings: { files: !!env.FILES, ai: !!env.AI?.run, hfid: !!env.HFID?.fetch, mail: mailStatus(env).ready, unitHeads: unitHeadsSetUp(env) },
         schema, at: nowIso(),
-        // HiFive ID's control room (suite standard, the status report format). Each is left out when
-        // it is not known: never a 0 for "not reported".
+        // HiFive ID's control room (suite standard, the status report format). Counts are left out
+        // when not known, never a 0. The keys always report, and `source` says whether the list is
+        // current ('jwks'), carried through failing refreshes ('stale') or never read ('unavailable').
         hifiveKeyMode: 'jwks',
-        ...(keys ? { signingKeys: keys } : {}),
+        signingKeys: keys,
         ...releaseReport(env),
       }, schema.ok ? 200 : 503);
     }

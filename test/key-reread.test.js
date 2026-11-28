@@ -58,6 +58,7 @@ async function freshApp(published) {
       fetch: async () => {
         hfid.calls += 1;
         if (hfid.keys === 'down') return new Response('no', { status: 503 });
+        if (hfid.keys === 'hang') return new Promise(() => {});
         return new Response(JSON.stringify({ keys: hfid.keys }));
       },
     },
@@ -216,8 +217,63 @@ describe('what /version reports about the keys', () => {
     mock.timers.enable({ apis: ['Date'], now: Date.now() + 11 * 60 * 1000 });
     try {
       hfid.keys = 'down';
-      assert.deepEqual((await auth.signingKeysStatus(env))?.kids, ['hifive-id-2026-07'],
+      assert.deepEqual((await auth.signingKeysStatus(env)).kids, ['hifive-id-2026-07'],
         'the control room row went blank because HiFive ID had a bad minute');
+    } finally {
+      mock.timers.reset();
+    }
+  });
+
+  /*
+   * The words match Logistics (transport 5f6a037), so the suite has one vocabulary for the field.
+   * The kids alone cannot tell a current list from the same list carried through failing
+   * refreshes, and that second state looks healthy right up to the day the keys change.
+   */
+  test('says when the list was read, and that it is current', async () => {
+    const current = keyPair('hifive-id-2026-07');
+    const { auth, env } = await freshApp([current.jwk]);
+    const s = await auth.signingKeysStatus(env);
+    assert.deepEqual(s.kids, ['hifive-id-2026-07']);
+    assert.equal(s.source, 'jwks');
+    assert.match(s.readAt, /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/, 'readAt is not an ISO instant');
+    assert.ok(Math.abs(Date.parse(s.readAt) - Date.now()) < 5000, 'readAt is not when it was read');
+  });
+
+  test('and says plainly when it is carrying an old list instead', async () => {
+    const current = keyPair('hifive-id-2026-07');
+    const { auth, env, hfid } = await freshApp([current.jwk]);
+    const first = await auth.signingKeysStatus(env);
+    mock.timers.enable({ apis: ['Date'], now: Date.now() + 11 * 60 * 1000 });
+    try {
+      hfid.keys = 'down';
+      const s = await auth.signingKeysStatus(env);
+      assert.deepEqual(s.kids, ['hifive-id-2026-07']);
+      assert.equal(s.source, 'stale', 'a list being carried is reported as current');
+      assert.equal(s.readAt, first.readAt, 'readAt moved, though nothing was read');
+    } finally {
+      mock.timers.reset();
+    }
+  });
+
+  test('and reports nothing at all rather than inventing a source', async () => {
+    const { auth, env } = await freshApp('down');
+    assert.deepEqual(await auth.signingKeysStatus(env), { kids: null, readAt: null, source: 'unavailable' });
+  });
+
+  test('and stops waiting after two seconds, reporting the list in hand', async () => {
+    const current = keyPair('hifive-id-2026-07');
+    const { auth, env, hfid } = await freshApp([current.jwk]);
+    await auth.signingKeysStatus(env);
+    mock.timers.enable({ apis: ['Date'], now: Date.now() + 11 * 60 * 1000 });
+    try {
+      // HiFive ID hangs rather than fails: the control room stops waiting at six seconds, so
+      // Inventory must answer well before then with what it holds.
+      hfid.keys = 'hang';
+      const t0 = performance.now();
+      const s = await auth.signingKeysStatus(env, { waitMs: 50 });
+      assert.ok(performance.now() - t0 < 1000, 'it waited on a HiFive ID that was not answering');
+      assert.deepEqual(s.kids, ['hifive-id-2026-07']);
+      assert.equal(s.source, 'stale');
     } finally {
       mock.timers.reset();
     }

@@ -1,12 +1,7 @@
 {
   "//": "Inventory's open work, for HiFive ID's control room (suite standard, the status report format). The Inventory chat keeps it true: add a line when work is agreed, remove it when it is done. Plain words, no staff names or personal details. scripts/deploy.mjs counts it (openWork = every line, waitingOnSinu = the lines waiting on Sinu) and sends the first five waiting on Sinu, in this order.",
-  "updated": "2026-11-27",
+  "updated": "2026-11-28",
   "items": [
-    {
-      "text": "Create the unit-head key in HiFive ID's console and put it into Inventory, for IT purchase approvals",
-      "since": "2026-11-27",
-      "waitingOnSinu": true
-    },
     {
       "text": "Herbal Park supplier list and item prices",
       "since": "2026-11-13",

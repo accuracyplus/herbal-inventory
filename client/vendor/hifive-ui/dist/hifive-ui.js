@@ -1180,7 +1180,7 @@ function rs({ open: e, onClose: n, onSave: a, onReplayTour: i }) {
     /* @__PURE__ */ s("div", { className: "hf-ap__row", children: [
       /* @__PURE__ */ t("p", { className: "hf-cap", style: { margin: "0 0 10px" }, children: "Colours" }),
       /* @__PURE__ */ t("div", { className: "hf-swatches", role: "radiogroup", "aria-label": "Colours", children: ni.map(([d, f]) => /* @__PURE__ */ s("button", { type: "button", role: "radio", "aria-checked": r.skin === d, className: "hf-swatch", onClick: () => u({ skin: d }), children: [
-        /* @__PURE__ */ t("span", { className: "hf-swatch__dot", style: { background: `linear-gradient(135deg, ${Ht[d][0]} 0 52%, ${Ht[d][1]} 52% 100%)` }, children: r.skin === d && /* @__PURE__ */ t(he, { size: 18, strokeWidth: 3 }) }),
+        /* @__PURE__ */ t("span", { className: "hf-swatch__dot", style: { background: `linear-gradient(135deg, ${Ht[d][0]} 0 52%, ${Ht[d][1]} 52% 100%)` }, children: r.skin === d && /* @__PURE__ */ t(he, { size: 18, strokeWidth: 2 }) }),
         /* @__PURE__ */ t("span", { className: "hf-swatch__name", children: f })
       ] }, d)) })
     ] }),
@@ -1779,7 +1779,7 @@ function As(e, n) {
   return `mailto:${a}?subject=${encodeURIComponent(i)}`;
 }
 function mt({ kind: e, small: n }) {
-  return /* @__PURE__ */ t("span", { className: `hf-jt__mark is-${e}${n ? " hf-jt__mark--sm" : ""}`, "aria-hidden": "true", children: e === "done" ? /* @__PURE__ */ t(he, { size: 12, strokeWidth: 3 }) : e === "held" ? "!" : null });
+  return /* @__PURE__ */ t("span", { className: `hf-jt__mark is-${e}${n ? " hf-jt__mark--sm" : ""}`, "aria-hidden": "true", children: e === "done" ? /* @__PURE__ */ t(he, { size: 12, strokeWidth: 2 }) : e === "held" ? "!" : null });
 }
 const gi = (e) => e.state === "ready" ? "done" : e.state === "held" ? "held" : "open", bi = (e) => e.state === "done" ? "done" : "open";
 function yi({ j: e }) {
@@ -2126,7 +2126,7 @@ function Ns({ label: e, sub: n, id: a, className: i, ...r }) {
   const l = ve(), o = a ?? l;
   return /* @__PURE__ */ s("label", { htmlFor: o, className: ["hf-tick", i ?? ""].join(" "), children: [
     /* @__PURE__ */ t("input", { id: o, type: "checkbox", ...r }),
-    /* @__PURE__ */ t("span", { className: "hf-tick__box", "aria-hidden": "true", children: /* @__PURE__ */ t(he, { size: 14, strokeWidth: 3 }) }),
+    /* @__PURE__ */ t("span", { className: "hf-tick__box", "aria-hidden": "true", children: /* @__PURE__ */ t(he, { size: 14, strokeWidth: 2 }) }),
     /* @__PURE__ */ s("span", { className: "hf-tick__t", children: [
       e,
       n && /* @__PURE__ */ t("span", { className: "hf-tick__s", children: n })
@@ -2237,10 +2237,10 @@ function Ei({ label: e, children: n }) {
   return /* @__PURE__ */ t("div", { className: "hf-chips", role: "group", "aria-label": e, children: n });
 }
 const Oi = {
-  ok: /* @__PURE__ */ t(he, { size: 14, strokeWidth: 2.5, "aria-hidden": "true" }),
-  warn: /* @__PURE__ */ t(kt, { size: 14, strokeWidth: 2.5, "aria-hidden": "true" }),
-  danger: /* @__PURE__ */ t(Re, { size: 14, strokeWidth: 2.5, "aria-hidden": "true" }),
-  plain: /* @__PURE__ */ t(ma, { size: 10, strokeWidth: 3, "aria-hidden": "true" })
+  ok: /* @__PURE__ */ t(he, { size: 14, strokeWidth: 2, "aria-hidden": "true" }),
+  warn: /* @__PURE__ */ t(kt, { size: 14, strokeWidth: 2, "aria-hidden": "true" }),
+  danger: /* @__PURE__ */ t(Re, { size: 14, strokeWidth: 2, "aria-hidden": "true" }),
+  plain: /* @__PURE__ */ t(ma, { size: 10, strokeWidth: 2, "aria-hidden": "true" })
 };
 function Ss({ tone: e, icon: n, children: a }) {
   return /* @__PURE__ */ s("span", { className: `hf-status hf-status--${e}`, children: [
@@ -3287,9 +3287,9 @@ function Ws(e) {
   ] });
 }
 const qn = {
-  rated: /* @__PURE__ */ t(he, { size: 14, strokeWidth: 2.5 }),
+  rated: /* @__PURE__ */ t(he, { size: 14, strokeWidth: 2 }),
   missing: /* @__PURE__ */ t("span", { className: "hf-month__bang", children: "!" }),
-  skipped: /* @__PURE__ */ t(Ye, { size: 14, strokeWidth: 2.5 }),
+  skipped: /* @__PURE__ */ t(Ye, { size: 14, strokeWidth: 2 }),
   future: /* @__PURE__ */ t("span", { className: "hf-month__dot" })
 };
 function js({ months: e, label: n = "Monthly ratings" }) {
@@ -3318,7 +3318,7 @@ function qs({ steps: e, selected: n, onSelect: a, label: i }) {
   return /* @__PURE__ */ t("ol", { className: "hf-steps", "aria-label": i, children: e.map((r, l) => {
     const o = Di(r.state, l), c = /* @__PURE__ */ s(j, { children: [
       /* @__PURE__ */ s("span", { className: "hf-step__rail", "aria-hidden": "true", children: [
-        /* @__PURE__ */ t("span", { className: "hf-step__dot", children: o.mark === "tick" ? /* @__PURE__ */ t(he, { size: 16, strokeWidth: 3 }) : o.mark === "dash" ? /* @__PURE__ */ t(Ye, { size: 16, strokeWidth: 3 }) : l + 1 }),
+        /* @__PURE__ */ t("span", { className: "hf-step__dot", children: o.mark === "tick" ? /* @__PURE__ */ t(he, { size: 16, strokeWidth: 2 }) : o.mark === "dash" ? /* @__PURE__ */ t(Ye, { size: 16, strokeWidth: 2 }) : l + 1 }),
         l < e.length - 1 && /* @__PURE__ */ t("span", { className: "hf-step__line" })
       ] }),
       /* @__PURE__ */ s("span", { className: "hf-step__b", children: [
@@ -3512,7 +3512,7 @@ function Xs(e) {
       /* @__PURE__ */ s("div", { className: "hf-signin__one", lang: e.lang, children: [
         /* @__PURE__ */ t("h2", { children: n.oneTitle }),
         /* @__PURE__ */ t("ul", { children: n.ticks.map((a) => /* @__PURE__ */ s("li", { children: [
-          /* @__PURE__ */ t("span", { className: "hf-signin__tick", "aria-hidden": "true", children: /* @__PURE__ */ t(he, { size: 14, strokeWidth: 2.5 }) }),
+          /* @__PURE__ */ t("span", { className: "hf-signin__tick", "aria-hidden": "true", children: /* @__PURE__ */ t(he, { size: 14, strokeWidth: 2 }) }),
           a
         ] }, a)) })
       ] })

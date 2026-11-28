@@ -7,6 +7,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { appIconFiles, syncAppIcons } from '../client/vendor/hifive-ui/dist/hifive-ui.js';
 
 const at = (p) => new URL(`../client/${p}`, import.meta.url);
@@ -56,6 +58,22 @@ test('the first-paint script uses the same palettes and the same addresses as th
   assert.ok(files.ico.startsWith('https://hifive-design.pages.dev/icons/v2/sol/inventory'));
   assert.ok(boot.includes("'https://hifive-design.pages.dev/icons/v2/' + skin + '/inventory'"));
   for (const end of ["'-180.png'", "'.svg'", "'.ico'", "'-192.png'"]) assert.ok(boot.includes(`AT + ${end}`), `first paint uses ${end}`);
+});
+
+test('no old app mark anywhere: the only pictures kept are the glass set, every page links it', () => {
+  // Recruitment found its old hand-drawn mark on pages the icon switch had missed (28 Nov 2026);
+  // Inventory's old app page and logo.png were still in this branch, and are gone.
+  const files = execFileSync('git', ['ls-files'], { cwd: fileURLToPath(new URL('..', import.meta.url)), encoding: 'utf8' })
+    .split('\n').filter((f) => f && !f.startsWith('client/vendor/'));
+  const pictures = files.filter((f) => /\.(png|jpe?g|webp|gif|svg|ico)$/i.test(f)).sort();
+  assert.deepEqual(pictures, ['client/public/apple-touch-icon.png', 'client/public/favicon.ico', 'client/public/favicon.svg',
+    'client/public/icons/icon-192.png', 'client/public/icons/icon-512.png', 'client/public/icons/icon-maskable-512.png']);
+  for (const page of files.filter((f) => f.endsWith('.html'))) {
+    assert.match(readFileSync(new URL(`../${page}`, import.meta.url), 'utf8'), /href="\/favicon\.svg"/, `${page} wears the glass icon`);
+  }
+  for (const f of files.filter((x) => /^(src|client\/src|client\/public)\/.*\.(js|jsx|css|html)$/.test(x))) {
+    assert.doesNotMatch(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'), /logo\.(png|svg|jpe?g)|<img[^>]+logo/i, `${f}: no old logo`);
+  }
 });
 
 test('the page may load those images', () => {

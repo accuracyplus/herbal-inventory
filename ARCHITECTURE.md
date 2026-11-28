@@ -302,8 +302,11 @@ the record is `hifive-design/docs/adoption/inventory.md`).
   view. Anything that goes wrong leaves the page as it is.
 - **Shell.** A side menu on a computer (sixteen places in four groups do not fit a top bar); a
   top bar and five tabs on a phone, the fifth opening everything else.
-- **Still to do** from the adoption's own audit: the app logo (a lucide icon stands in until the
-  logo family has a symbol for Inventory); windows that open over another window (scanning from
+- **App icon.** The glass app icon (D-091): the library's `AppLogo` in the app, the glass Water set
+  under the suite's file names in client/public, switched to the palette worn by `syncAppIcons`.
+  The old app's page and hand-drawn logo are gone from this branch (28 Nov 2026), and
+  test/app-icon.test.js fails if an old mark comes back.
+- **Still to do** from the adoption's own audit: windows that open over another window (scanning from
   inside a sheet), which the guide does not allow; and, on the screens that were not prototyped,
   a few main buttons that are still disabled until the form is complete.
 

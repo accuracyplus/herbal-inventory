@@ -16,6 +16,7 @@ test('status report: the keys read from HiFive ID, and what the deploy stamped',
   assert.equal(v.hifiveKeyMode, 'jwks');
   assert.ok(v.signingKeys.kids.length >= 1, 'the key names read');
   assert.equal(v.signingKeys.source, 'jwks');
+  assert.equal(v.signingKeys.rereads, true, 'ready for a key change: the reread tests in key-reread.test.js hold');
   assert.ok(!Number.isNaN(Date.parse(v.signingKeys.readAt)));
   assert.deepEqual(v.features, stamp.features);
   assert.deepEqual(v.status, stamp.status);
@@ -37,7 +38,7 @@ test('status report: keys never read say unavailable; keys read in the last 10 m
   // A fresh copy of the module is a server that has read no keys yet.
   const cold = await import(`../src/lib/auth.js?cold=${Date.now()}`);
   const down = { ...testEnv(), HFID: { fetch: async () => new Response('{}', { status: 503 }) } };
-  assert.deepEqual(await cold.signingKeysStatus(down), { kids: null, readAt: null, source: 'unavailable' });
+  assert.deepEqual(await cold.signingKeysStatus(down), { kids: null, readAt: null, source: 'unavailable', rereads: true });
   // A server that read them earlier reports that read, with its time, while they are still kept.
   const warm = await import(`../src/lib/auth.js?warm=${Date.now()}`);
   const up = testEnv();

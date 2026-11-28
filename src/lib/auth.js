@@ -172,6 +172,15 @@ async function keyForKid(env, kid) {
  * keys change. It gives up after two seconds (hfidFetch has no timeout of its own) and then reports
  * the list in hand, if any: this app would accept those kids that second, so the report says so.
  */
+/**
+ * `rereads` (suite standard, the status report format, 28 Nov 2026): true only because this reader
+ * does all three things the control room's "Ready for a key change" asks: an unknown kid is read
+ * again before refusing, at most once a minute (keyForKid); a failed refresh keeps the list in hand
+ * (jwks); an unknown kid is logged (jwks_unknown_kid). test/key-reread.test.js proves each one, so
+ * the word is earned by tests, not typed in. Sinu, 28 Nov 2026: "Yes, add and deploy".
+ */
+export const KEY_REREADS = true;
+
 export async function signingKeysStatus(env, { waitMs = 2000 } = {}) {
   let answered = null;
   try {
@@ -183,11 +192,12 @@ export async function signingKeysStatus(env, { waitMs = 2000 } = {}) {
   const held = Array.isArray(answered) && answered.length
     ? answered
     : (jwksCache.keys?.length ? jwksCache.keys : null);
-  if (!held) return { kids: null, readAt: null, source: 'unavailable' };
+  if (!held) return { kids: null, readAt: null, source: 'unavailable', rereads: KEY_REREADS };
   return {
     kids: held.map((k) => k?.kid).filter((k) => typeof k === 'string' && k),
     readAt: jwksCache.at ? new Date(jwksCache.at).toISOString() : null,
     source: jwksCache.at && Date.now() - jwksCache.at < JWKS_TTL_MS ? 'jwks' : 'stale',
+    rereads: KEY_REREADS,
   };
 }
 

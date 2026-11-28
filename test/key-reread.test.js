@@ -235,6 +235,7 @@ describe('what /version reports about the keys', () => {
     const s = await auth.signingKeysStatus(env);
     assert.deepEqual(s.kids, ['hifive-id-2026-07']);
     assert.equal(s.source, 'jwks');
+    assert.equal(s.rereads, true, 'the control room cannot show Inventory ready for a key change');
     assert.match(s.readAt, /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/, 'readAt is not an ISO instant');
     assert.ok(Math.abs(Date.parse(s.readAt) - Date.now()) < 5000, 'readAt is not when it was read');
   });
@@ -257,7 +258,7 @@ describe('what /version reports about the keys', () => {
 
   test('and reports nothing at all rather than inventing a source', async () => {
     const { auth, env } = await freshApp('down');
-    assert.deepEqual(await auth.signingKeysStatus(env), { kids: null, readAt: null, source: 'unavailable' });
+    assert.deepEqual(await auth.signingKeysStatus(env), { kids: null, readAt: null, source: 'unavailable', rereads: true });
   });
 
   test('and stops waiting after two seconds, reporting the list in hand', async () => {
